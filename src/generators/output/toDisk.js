@@ -33,7 +33,7 @@ module.exports = async (env, spinner) => {
   }
 
   if (env == 'local') {
-    fs.outputFile(`${outputDir}/css/${globalConfig.build.tailwind.css}`, css)
+    await fs.outputFile(`${outputDir}/css/${globalConfig.build.tailwind.css}`, css)
   }
 
   await helpers.asyncForEach(templates, async file => {

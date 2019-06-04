@@ -33,7 +33,7 @@
     "color-shorthand-hex-to-six-digit": "^2.10.17",
     "css-mqpacker": "^7.0.0",
     "deepmerge": "^3.2.0",
-    "email-comb": "^2.0.10",
+    "email-comb": "^3.0.2",
     "front-matter": "^3.0.1",
     "fs-extra": "^7.0.1",
     "glob-promise": "^3.4.0",

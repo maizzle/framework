@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@fullhuman/postcss-purgecss": "^1.1.0",
-    "browser-sync": "2.26.3",
+    "browser-sync": "^2.26.7",
     "color-shorthand-hex-to-six-digit": "^2.10.17",
     "css-mqpacker": "^7.0.0",
     "deepmerge": "^3.2.0",
@@ -40,7 +40,7 @@
     "html-minifier": "^3.5.21",
     "is-url-superb": "^3.0.0",
     "juice": "^5.2.0",
-    "marked": "^0.6.1",
+    "marked": "^0.6.2",
     "nunjucks": "^3.2.0",
     "nunjucks-markdown": "^2.0.1",
     "ora": "^3.4.0",

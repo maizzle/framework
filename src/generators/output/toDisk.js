@@ -23,8 +23,11 @@ module.exports = async (env, spinner) => {
   const outputDir = path.resolve(`${globalConfig.build.destination.path}`)
 
   await fs.remove(outputDir)
-  await fs.copy(globalConfig.build.assets.source, `${outputDir}/${globalConfig.build.assets.destination}`)
   await fs.copy(globalConfig.build.templates.source, outputDir)
+
+  if (fs.pathExistsSync(globalConfig.build.assets.source)) {
+    await fs.copy(globalConfig.build.assets.source, `${outputDir}/${globalConfig.build.assets.destination}`)
+  }
 
   let templates = await glob(`${outputDir}/**/*.+(${globalConfig.build.templates.filetypes || 'html|njk|nunjucks'})`)
 

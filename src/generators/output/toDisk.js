@@ -41,7 +41,6 @@ module.exports = async (env, spinner) => {
 
   await helpers.asyncForEach(templates, async file => {
 
-    let parts = path.parse(file)
     let html = await fs.readFile(file, 'utf8')
     let frontMatter = fm(html)
     let config = deepmerge(globalConfig, frontMatter.attributes)
@@ -92,6 +91,7 @@ module.exports = async (env, spinner) => {
           return fs.move(file, config.permalink, { overwrite: true })
         }
 
+        const parts = path.parse(file)
         fs.rename(file, `${parts.dir}/${parts.name}.${ext}`)
       })
 

@@ -1,12 +1,12 @@
+const isUrl = require('is-url-superb')
+
 module.exports = async (html, config) => {
 
-  let url = config.baseImageURL
+  const url = config.baseImageURL
 
-  // TODO: check for a 'valid' URL?
-  if (url && url.length > 0) {
-    return html.replace(/src=("|')([^("|')]*)("|')/gi, 'src="' + url + '$2"')
-      .replace(/background=("|')([^("|')]*)("|')/gi, 'background="' + url + '$2"')
-      .replace(/background(-image)?:\s?url\(("|')?([^("|')]*)("|')?\)/gi, "background-image: url('" + url + "$3')")
+  if (isUrl(url)) {
+    return html.replace(/(background="|src=")(?!https?:\/\/)\/?/ig, '$1' + url)
+      .replace(/(background(-image)?:\s?url\('?)(?!'?https?:\/\/)\/?/ig, '$1' + url)
   }
 
   return html

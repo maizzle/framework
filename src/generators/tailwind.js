@@ -46,8 +46,7 @@ module.exports = {
           throw Error("Tailwind CSS was compiled to empty string.")
         }
 
-        // Temporary fix for Tailwind CSS escaped characters
-        return result.css.replace(/\\-/g, '-')
+        return result.css
       })
     }
     catch (err) {
@@ -71,8 +70,7 @@ module.exports = {
           throw Error("Tailwind CSS was compiled to empty string.")
         }
 
-        // Temporary fix for Tailwind CSS escaped characters
-        return result.css.replace(/\\-/g, '-')
+        return result.css
       })
     } catch (err) {
       throw err

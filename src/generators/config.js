@@ -9,23 +9,25 @@ module.exports = {
     try {
       baseConfig = require(path.resolve(process.cwd(), './config'))
     }
-    catch (err) {
-      throw err
+    catch (error) {
+      throw error
     }
 
     if (env) {
       try {
         envConfig = require(path.resolve(process.cwd(), `./config${env}`))
       } catch (error) {
-        envConfig = {}
+        if (error.code == 'MODULE_NOT_FOUND') {
+          throw `Error: No 'config${env}.js' file found`
+        }
       }
     }
 
     try {
       return deepmerge(baseConfig, envConfig)
     }
-    catch (err) {
-      throw err
+    catch (error) {
+      throw error
     }
   },
 }

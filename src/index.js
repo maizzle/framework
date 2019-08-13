@@ -17,7 +17,7 @@ const self = module.exports = {
     await self.build()
 
     require('./generators/config')
-      .getMerged()
+      .getMerged('local')
       .then(config => {
         let { open = true } = config.browsersync;
         let watchPaths = config.browsersync.watch || []

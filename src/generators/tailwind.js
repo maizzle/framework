@@ -26,7 +26,6 @@ module.exports = {
 
       const tailwindConfigFile = config.build.tailwind.config || 'tailwind.config.js'
 
-      const mqpackerPlugin = env == 'local' ? () => { } : mqpacker()
       const mergeLonghandPlugin = env == 'local' ? () => { } : mergeLonghand()
       const purgeCssPlugin = env == 'local' ? () => { } : purgecss({ content: purgeSources, whitelist: purgeWhitelist, whitelistPatterns: purgewhitelistPatterns })
 
@@ -37,7 +36,7 @@ module.exports = {
         postcssNested(),
         tailwind(tailwindConfigFile),
         purgeCssPlugin,
-        mqpackerPlugin,
+        mqpacker({sort: true}),
         mergeLonghandPlugin
       ])
       .process(file, { from: undefined })

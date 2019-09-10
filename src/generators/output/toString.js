@@ -1,3 +1,6 @@
+const path = require('path')
+const fs = require('fs-extra')
+
 const marked = require('marked')
 const fm = require('front-matter')
 const deepmerge = require('deepmerge')
@@ -9,14 +12,14 @@ const posthtmlContent = require('posthtml-content')
 const Tailwind = require('../tailwind')
 const Transformers = require('../../transformers')
 
-module.exports = async (html, options) => {
+module.exports = async (str, options) => {
   try {
-    if (html && html.length < 1) {
+    if (str && str.length < 1) {
       throw RangeError(`received empty string`)
     }
 
-    if (typeof html !== 'string') {
-      throw TypeError(`first argument must be a string, received ${html}`)
+    if (typeof str !== 'string') {
+      throw TypeError(`first argument must be a string, received ${str}`)
     }
 
     const css = options && options.tailwind && typeof options.tailwind.css == 'string' ? options.tailwind.css : ''
@@ -27,9 +30,19 @@ module.exports = async (html, options) => {
       throw TypeError(`Received invalid Maizzle config: ${maizzleConfig}`)
     }
 
-    const frontMatter = fm(html)
+    const frontMatter = fm(str)
+    let html = frontMatter.body
+    let tailwindHTML = html
+
     const config = deepmerge(maizzleConfig, frontMatter.attributes)
-    const compiledCSS = await Tailwind.fromString(css, html, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit() })
+    const layout = config.layout || config.build.layout
+
+    if (fs.existsSync(layout)) {
+      html = `{% extends "${layout}" %}\n${html}`
+      tailwindHTML = fs.readFileSync(path.resolve(process.cwd(), layout), 'utf8') + html
+    }
+
+    const compiledCSS = await Tailwind.fromString(css, tailwindHTML, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit(); })
 
     marked.setOptions({
       renderer: new marked.Renderer(),
@@ -37,7 +50,7 @@ module.exports = async (html, options) => {
     })
 
     const nunjucks = NunjucksEnvironment.init()
-    html = nunjucks.renderString(frontMatter.body, { page: config, css: compiledCSS })
+    html = nunjucks.renderString(html, { page: config, css: compiledCSS })
 
     html = await posthtml([
       posthtmlContent({

@@ -3,6 +3,7 @@ const minify = require('./minify')
 const prettify = require('./prettify')
 const ensureSixHEX = require('./sixHEX')
 const addURLParams = require('./addURLParams')
+const replaceStrings = require('./replaceStrings')
 const removeUnusedCSS = require('./removeUnusedCSS')
 const removeInlineSizes = require('./removeInlineSizes')
 const applyBaseImageUrl = require('./applyBaseImageUrl')
@@ -21,6 +22,7 @@ exports.process = async (html, config, env) => {
   html = await ensureSixHEX(html, env)
   html = await prettify(html, config)
   html = await minify(html, config)
+  html = await replaceStrings(html, config)
 
   return html
 }

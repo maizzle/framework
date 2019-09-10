@@ -22,7 +22,7 @@ module.exports = async (str, options) => {
       throw TypeError(`first argument must be a string, received ${str}`)
     }
 
-    const css = options && options.tailwind && typeof options.tailwind.css == 'string' ? options.tailwind.css : ''
+    const css = options && options.tailwind && typeof options.tailwind.css == 'string' ? options.tailwind.css : '@tailwind utilities;'
     const tailwindConfig  = options && options.tailwind && typeof options.tailwind.config == 'object' ?  options.tailwind.config : null
     const maizzleConfig  = options && options.maizzle && typeof options.maizzle.config == 'object' ?  options.maizzle.config : null
 

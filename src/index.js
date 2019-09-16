@@ -3,7 +3,7 @@ const bs = require("browser-sync")
 const Output = require('./generators/output')
 
 const self = module.exports = {
-  render: async (html, options) => Output.toString(html, options).catch(err => console.error(err)),
+  render: async (html, options) => Output.toString(html, options),
   build: async env => {
     env = env || 'local'
     let start = new Date()

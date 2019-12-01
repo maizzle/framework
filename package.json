@@ -39,7 +39,7 @@
     "glob-promise": "^3.4.0",
     "html-minifier": "^4.0.0",
     "is-url-superb": "^3.0.0",
-    "juice": "^5.2.0",
+    "juice": "^6.0.0",
     "marked": "^0.7.0",
     "nunjucks": "^3.2.0",
     "nunjucks-markdown": "^2.0.1",

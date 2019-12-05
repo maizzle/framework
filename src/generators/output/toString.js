@@ -6,9 +6,6 @@ const fm = require('front-matter')
 const deepmerge = require('deepmerge')
 const NunjucksEnvironment = require('../../nunjucks')
 
-const posthtml = require('posthtml')
-const posthtmlContent = require('posthtml-content')
-
 const Tailwind = require('../tailwind')
 const Transformers = require('../../transformers')
 
@@ -51,12 +48,6 @@ module.exports = async (str, options) => {
 
     const nunjucks = NunjucksEnvironment.init()
     html = nunjucks.renderString(html, { page: config, css: compiledCSS })
-
-    html = await posthtml([
-      posthtmlContent({
-        tailwind: css => Tailwind.fromString(css, html, tailwindConfig, config)
-      })
-    ]).process(html).then(res => res.html)
 
     html = await Transformers.process(html, config)
 

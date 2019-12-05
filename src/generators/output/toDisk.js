@@ -8,9 +8,6 @@ const helpers = require('../../utils/helpers')
 const stripHTML = require('string-strip-html')
 const NunjucksEnvironment = require('../../nunjucks')
 
-const posthtml = require('posthtml')
-const posthtmlContent = require('posthtml-content')
-
 const Config = require('../config')
 const Tailwind = require('../tailwind')
 const Transformers = require('../../transformers')
@@ -59,12 +56,6 @@ module.exports = async (env, spinner) => {
 
     html = `{% extends "${layout}" %}\n${frontMatter.body}`
     html = nunjucks.renderString(html, { page: config, env: env, css: css })
-
-    html = await posthtml([
-      posthtmlContent({
-        tailwind: css => Tailwind.fromString(css, html, false)
-      })
-    ]).process(html).then(res => res.html)
 
     if (!html) {
       throw Error(`Could not render HTML for ${file}`)

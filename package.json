@@ -51,6 +51,7 @@
     "posthtml": "^0.12.0",
     "posthtml-content": "^0.0.2",
     "pretty": "^2.0.0",
+    "prevent-widows": "^1.0.2",
     "query-string": "^6.4.0",
     "string-strip-html": "^4.0.10",
     "tailwindcss": "^1.0.0"

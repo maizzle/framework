@@ -1,5 +1,6 @@
 const inline = require('./inline')
 const minify = require('./minify')
+const posthtml = require('./posthtml')
 const prettify = require('./prettify')
 const ensureSixHEX = require('./sixHEX')
 const addURLParams = require('./addURLParams')
@@ -12,6 +13,7 @@ const applyExtraAttributes = require('./applyExtraAttributes')
 
 exports.process = async (html, config, env) => {
 
+  html = await posthtml(html, config)
   html = await inline(html, config)
   html = await removeUnusedCSS(html, config)
   html = await removeInlineSizes(html, config)

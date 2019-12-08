@@ -39,7 +39,7 @@ module.exports = async (str, options) => {
       tailwindHTML = fs.readFileSync(path.resolve(process.cwd(), layout), 'utf8') + html
     }
 
-    const compiledCSS = await Tailwind.fromString(css, tailwindHTML, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit(); })
+    const compiledCSS = options && options.tailwind && typeof options.tailwind.compiled == 'string' ? options.tailwind.compiled : await Tailwind.fromString(css, tailwindHTML, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit(); })
 
     marked.setOptions({
       renderer: new marked.Renderer(),
@@ -47,7 +47,7 @@ module.exports = async (str, options) => {
     })
 
     const nunjucks = NunjucksEnvironment.init()
-    html = nunjucks.renderString(html, { page: config, css: compiledCSS })
+    html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
 
     html = await Transformers.process(html, config)
 

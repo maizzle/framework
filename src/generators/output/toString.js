@@ -46,7 +46,7 @@ module.exports = async (str, options) => {
       ...config.markdown
     })
 
-    const nunjucks = NunjucksEnvironment.init()
+    const nunjucks = await NunjucksEnvironment.init()
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
 
     html = await Transformers.process(html, config)

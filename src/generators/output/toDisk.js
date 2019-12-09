@@ -5,6 +5,7 @@ const glob = require('glob-promise')
 const deepmerge = require('deepmerge')
 const helpers = require('../../utils/helpers')
 const stripHTML = require('string-strip-html')
+// const NunjucksEnvironment = require('../../nunjucks')
 
 const Config = require('../config')
 const Tailwind = require('../tailwind')
@@ -31,6 +32,8 @@ module.exports = async (env, spinner) => {
     throw RangeError(`No "${filetypes}" templates found in \`${globalConfig.build.templates.source}\`. If the path is correct, please check your \`build.templates.filetypes\` config setting.`)
   }
 
+  // const nunjucks = NunjucksEnvironment.init()
+
   await helpers.asyncForEach(templates, async file => {
     let html = await fs.readFile(file, 'utf8')
     const frontMatter = fm(html)
@@ -43,6 +46,7 @@ module.exports = async (env, spinner) => {
       maizzle: {
         config: config
       },
+      // nunjucks: nunjucks,
       env: env
     })
 

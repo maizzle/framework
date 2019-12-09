@@ -19,10 +19,6 @@ module.exports = async (env, spinner) => {
   await fs.remove(outputDir)
   await fs.copy(globalConfig.build.templates.source, outputDir)
 
-  if (fs.pathExistsSync(globalConfig.build.assets.source)) {
-    await fs.copy(globalConfig.build.assets.source, `${outputDir}/${globalConfig.build.assets.destination}`)
-  }
-
   let filetypes = globalConfig.build.templates.filetypes || 'html|njk|nunjucks'
 
   if (Array.isArray(filetypes)) {
@@ -79,6 +75,10 @@ module.exports = async (env, spinner) => {
         fs.rename(file, `${parts.dir}/${parts.name}.${ext}`)
       })
   })
+
+  if (fs.pathExistsSync(globalConfig.build.assets.source)) {
+    await fs.copy(globalConfig.build.assets.source, `${outputDir}/${globalConfig.build.assets.destination}`)
+  }
 
   return templates.length
 }

@@ -35,6 +35,7 @@ module.exports = async (env, spinner) => {
     let html = await fs.readFile(file, 'utf8')
     const frontMatter = fm(html)
     const config = deepmerge(globalConfig, frontMatter.attributes)
+    config.isMerged = true
 
     html = await render(html, {
       tailwind: {

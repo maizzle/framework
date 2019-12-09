@@ -19,7 +19,7 @@ module.exports = async (str, options) => {
       throw TypeError(`first argument must be a string, received ${str}`)
     }
 
-    const css = options && options.tailwind && typeof options.tailwind.css === 'string' ? options.tailwind.css : '@tailwind utilities;'
+    const postCSS = options && options.tailwind && typeof options.tailwind.css === 'string' ? options.tailwind.css : '@tailwind utilities;'
     const tailwindConfig = options && options.tailwind && typeof options.tailwind.config === 'object' ? options.tailwind.config : null
     const maizzleConfig = options && options.maizzle && typeof options.maizzle.config === 'object' ? options.maizzle.config : null
 
@@ -29,17 +29,24 @@ module.exports = async (str, options) => {
 
     const frontMatter = fm(str)
     let html = frontMatter.body
-    let tailwindHTML = html
 
-    const config = deepmerge(maizzleConfig, frontMatter.attributes)
+    const config = maizzleConfig.isMerged ? maizzleConfig : deepmerge(maizzleConfig, frontMatter.attributes)
     const layout = config.layout || config.build.layout
 
-    if (fs.existsSync(layout)) {
-      html = `{% extends "${layout}" %}\n${html}`
-      tailwindHTML = fs.readFileSync(path.resolve(process.cwd(), layout), 'utf8') + html
-    }
+    html = `{% extends "${layout}" %}\n${html}`
 
-    const compiledCSS = options && options.tailwind && typeof options.tailwind.compiled === 'string' ? options.tailwind.compiled : await Tailwind.fromString(css, tailwindHTML, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit() })
+    let compiledCSS = options.tailwind.compiled || ''
+
+    if (options.tailwind.compiled === '') {
+      await fs.ensureFile(layout)
+        .then(async () => {
+          const tailwindHTML = await fs.readFile(path.resolve(process.cwd(), layout), 'utf8') + html
+          compiledCSS = await Tailwind.fromString(postCSS, tailwindHTML, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit() })
+        })
+        .catch(err => {
+          throw err
+        })
+    }
 
     marked.setOptions({
       renderer: new marked.Renderer(),
@@ -48,7 +55,6 @@ module.exports = async (str, options) => {
 
     const nunjucks = await NunjucksEnvironment.init()
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
-
     html = await Transformers.process(html, config)
 
     return html

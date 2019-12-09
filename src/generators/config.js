@@ -18,7 +18,7 @@ module.exports = {
         envConfig = require(path.resolve(process.cwd(), `./config${env}`))
       } catch (error) {
         if (error.code === 'MODULE_NOT_FOUND') {
-          throw new Error(`no 'config${env}.js' file found`)
+          throw new Error(`no 'config${env}.js' file found in project root`)
         }
       }
     }

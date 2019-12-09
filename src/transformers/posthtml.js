@@ -4,7 +4,6 @@ const preventWidows = require('prevent-widows')
 const posthtmlContent = require('posthtml-content')
 
 module.exports = async (html, config) => {
-
   const plugins = [
     posthtmlContent({ tailwind: css => Tailwind.fromString(css, html, false) }),
     preventWidows.posthtml()

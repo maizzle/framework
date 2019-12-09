@@ -12,7 +12,6 @@ const Tailwind = require('../tailwind')
 const render = require('./toString')
 
 module.exports = async (env, spinner) => {
-
   const globalConfig = await Config.getMerged(env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit() })
   const css = await Tailwind.fromFile(globalConfig, env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit() })
   const outputDir = path.resolve(`${globalConfig.build.destination.path}`)
@@ -30,47 +29,46 @@ module.exports = async (env, spinner) => {
     filetypes = filetypes.join('|')
   }
 
-  let templates = await glob(`${outputDir}/**/*.+(${filetypes || 'html|njk|nunjucks'})`)
+  const templates = await glob(`${outputDir}/**/*.+(${filetypes || 'html|njk|nunjucks'})`)
 
   if (templates.length < 1) {
     throw RangeError(`No "${filetypes}" templates found in \`${globalConfig.build.templates.source}\`. If the path is correct, please check your \`build.templates.filetypes\` config setting.`)
   }
 
   await helpers.asyncForEach(templates, async file => {
-
     let html = await fs.readFile(file, 'utf8')
-    let frontMatter = fm(html)
-    let config = deepmerge(globalConfig, frontMatter.attributes)
+    const frontMatter = fm(html)
+    const config = deepmerge(globalConfig, frontMatter.attributes)
 
     html = await render(html, {
       tailwind: {
-        compiled: css,
+        compiled: css
       },
       maizzle: {
-        config: config,
+        config: config
       },
-      env: env,
+      env: env
     })
 
-    let ext = config.build.destination.extension || 'html'
+    const ext = config.build.destination.extension || 'html'
 
     fs.outputFile(file, html)
       .then(() => {
         if (config.plaintext) {
-          let plaintext = stripHTML(html,
-          {
-            dumpLinkHrefsNearby: {
-              enabled: true,
-              putOnNewLine: true,
-              wrapHeads: '[',
-              wrapTails: ']',
-            }
-          })
+          const plaintext = stripHTML(html,
+            {
+              dumpLinkHrefsNearby: {
+                enabled: true,
+                putOnNewLine: true,
+                wrapHeads: '[',
+                wrapTails: ']'
+              }
+            })
 
-          let filepath = config.permalink || file
-          let plaintextPath = path.join(path.dirname(filepath), path.basename(filepath, path.extname(filepath)) + '.txt')
+          const filepath = config.permalink || file
+          const plaintextPath = path.join(path.dirname(filepath), path.basename(filepath, path.extname(filepath)) + '.txt')
 
-          fs.outputFileSync(plaintextPath, plaintext);
+          fs.outputFileSync(plaintextPath, plaintext)
         }
 
         if (config.permalink) {
@@ -80,7 +78,6 @@ module.exports = async (env, spinner) => {
         const parts = path.parse(file)
         fs.rename(file, `${parts.dir}/${parts.name}.${ext}`)
       })
-
   })
 
   return templates.length

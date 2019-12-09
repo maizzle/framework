@@ -1,19 +1,19 @@
-class componentExtension {
-  constructor(e) {
+class ComponentExtension {
+  constructor (e) {
     this.engine = e
     this.tags = ['component']
 
     this.parse = function (parser, nodes, lexer) {
       // get the tag token
-      let tok = parser.nextToken()
+      const tok = parser.nextToken()
 
       // parse the args and move after the block end. passing true
       // as the second arg is required if there are no parentheses
-      let args = parser.parseSignature(null, true)
+      const args = parser.parseSignature(null, true)
       parser.advanceAfterBlockEnd(tok.value)
 
       // parse the body and possibly the error block, which is optional
-      let body = parser.parseUntilBlocks('endcomponent')
+      const body = parser.parseUntilBlocks('endcomponent')
       parser.advanceAfterBlockEnd()
 
       // See above for notes about CallExtension
@@ -25,7 +25,7 @@ class componentExtension {
         return
       }
 
-      if (typeof data == 'function') {
+      if (typeof data === 'function') {
         return new this.engine.runtime.SafeString(this.engine.render(path, { content: data() }))
       }
 
@@ -34,4 +34,4 @@ class componentExtension {
   }
 }
 
-module.exports = componentExtension
+module.exports = ComponentExtension

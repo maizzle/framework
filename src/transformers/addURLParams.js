@@ -4,17 +4,17 @@ const helpers = require('../utils/helpers')
 const isUrl = require('is-url-superb')
 
 module.exports = async (html, config) => {
-
   if (config.urlParameters && !helpers.isEmptyObject(config.urlParameters)) {
-    let $ = cheerio.load(html, { decodeEntities: false })
+    const $ = cheerio.load(html, { decodeEntities: false })
 
     $('a').each((i, el) => {
-      let url = $(el).attr('href')
-      let parsed = qs.parseUrl($(el).attr('href'))
-      let pattern = new RegExp(/^(https?:\/\/)/gm)
+      const url = $(el).attr('href')
+      const parsed = qs.parseUrl($(el).attr('href'))
+      const pattern = new RegExp(/^(https?:\/\/)/gm)
 
-      if (!isUrl(url) || !pattern.test(parsed.url))
+      if (!isUrl(url) || !pattern.test(parsed.url)) {
         return
+      }
 
       let params = parsed.query
 

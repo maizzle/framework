@@ -12,7 +12,6 @@ const removeInlineBgColor = require('./removeInlineBgcolor')
 const applyExtraAttributes = require('./applyExtraAttributes')
 
 exports.process = async (html, config, env) => {
-
   html = await posthtml(html, config)
   html = await inline(html, config)
   html = await removeUnusedCSS(html, config)

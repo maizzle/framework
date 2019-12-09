@@ -11,13 +11,14 @@ const purgecss = require('@fullhuman/postcss-purgecss')
 module.exports = {
   fromFile: async (config, env) => {
     try {
-      let extraPurgeSources = (config.cleanup.purgeCSS && config.cleanup.purgeCSS.content) ? config.cleanup.purgeCSS.content : []
-      let purgeSources = [
+      const extraPurgeSources = (config.cleanup.purgeCSS && config.cleanup.purgeCSS.content) ? config.cleanup.purgeCSS.content : []
+      const purgeSources = [
         `./${config.build.templates.source}/**/*.*`,
         ...extraPurgeSources
       ]
 
-      let purgeWhitelist, purgewhitelistPatterns = []
+      let purgeWhitelist
+      let purgewhitelistPatterns = []
 
       if (config.cleanup.purgeCSS) {
         purgeWhitelist = config.cleanup.purgeCSS.whitelist || []
@@ -26,51 +27,50 @@ module.exports = {
 
       const tailwindConfigFile = config.build.tailwind.config || 'tailwind.config.js'
 
-      const mergeLonghandPlugin = env == 'local' ? () => { } : mergeLonghand()
-      const purgeCssPlugin = env == 'local' ? () => { } : purgecss({ content: purgeSources, whitelist: purgeWhitelist, whitelistPatterns: purgewhitelistPatterns })
+      const mergeLonghandPlugin = env === 'local' ? () => { } : mergeLonghand()
+      const purgeCssPlugin = env === 'local' ? () => { } : purgecss({ content: purgeSources, whitelist: purgeWhitelist, whitelistPatterns: purgewhitelistPatterns })
 
       const file = await fs.readFile(path.resolve(config.build.tailwind.css))
 
       return await postcss([
-        atImport({path: [path.dirname(config.build.tailwind.css)]}),
+        atImport({ path: [path.dirname(config.build.tailwind.css)] }),
         postcssNested(),
         tailwind(tailwindConfigFile),
         purgeCssPlugin,
-        mqpacker({sort: true}),
+        mqpacker({ sort: true }),
         mergeLonghandPlugin
       ])
-      .process(file, { from: undefined })
-      .then(result => {
-        if (!result.css.trim()) {
-          throw Error("Tailwind CSS was compiled to empty string.")
-        }
+        .process(file, { from: undefined })
+        .then(result => {
+          if (!result.css.trim()) {
+            throw new Error('Tailwind CSS was compiled to empty string.')
+          }
 
-        return result.css
-      })
-    }
-    catch (err) {
+          return result.css
+        })
+    } catch (err) {
       throw err
     }
   },
   fromString: async (css, html, tailwindConfig) => {
     try {
-      const tailwindPlugin = typeof tailwindConfig == 'object' ? tailwind(tailwindConfig) : tailwind()
+      const tailwindPlugin = typeof tailwindConfig === 'object' ? tailwind(tailwindConfig) : tailwind()
 
       return await postcss([
         postcssNested(),
         tailwindPlugin,
-        purgecss({ content: [{raw: html}] }),
+        purgecss({ content: [{ raw: html }] }),
         mqpacker(),
         mergeLonghand()
       ])
-      .process(css, { from: undefined })
-      .then(result => {
-        if (!result.css.trim()) {
-          throw Error("Tailwind CSS was compiled to empty string.")
-        }
+        .process(css, { from: undefined })
+        .then(result => {
+          if (!result.css.trim()) {
+            throw new Error('Tailwind CSS was compiled to empty string.')
+          }
 
-        return result.css
-      })
+          return result.css
+        })
     } catch (err) {
       throw err
     }

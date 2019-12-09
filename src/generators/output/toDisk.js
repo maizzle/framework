@@ -23,13 +23,13 @@ module.exports = async (env, spinner) => {
     await fs.copy(globalConfig.build.assets.source, `${outputDir}/${globalConfig.build.assets.destination}`)
   }
 
-  let filetypes = globalConfig.build.templates.filetypes
+  let filetypes = globalConfig.build.templates.filetypes || 'html|njk|nunjucks'
 
   if (Array.isArray(filetypes)) {
     filetypes = filetypes.join('|')
   }
 
-  const templates = await glob(`${outputDir}/**/*.+(${filetypes || 'html|njk|nunjucks'})`)
+  const templates = await glob(`${outputDir}/**/*.+(${filetypes})`)
 
   if (templates.length < 1) {
     throw RangeError(`No "${filetypes}" templates found in \`${globalConfig.build.templates.source}\`. If the path is correct, please check your \`build.templates.filetypes\` config setting.`)

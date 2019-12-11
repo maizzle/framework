@@ -31,7 +31,7 @@ module.exports = async (str, options) => {
     let html = frontMatter.body
 
     const config = maizzleConfig.isMerged ? maizzleConfig : deepmerge(maizzleConfig, frontMatter.attributes)
-    const layout = config.layout || config.build.layout
+    const layout = config.layout && config.build.layout
 
     let compiledCSS = options.tailwind.compiled || null
 
@@ -60,7 +60,7 @@ module.exports = async (str, options) => {
     })
 
     const nunjucks = await NunjucksEnvironment.init()
-    html = `{% extends "${layout}" %}\n${html}`
+    html = layout ? `{% extends "${layout}" %}\n${html}` : html
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
 
     html = html

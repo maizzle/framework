@@ -67,7 +67,7 @@ module.exports = async (str, options) => {
       // replace \/ in class names from head
       .replace(/(\..+-)(\w+)(\\\/)/g, '$1$2-')
       // replace / in class names from body
-      .replace(/(\w+)(\/)/g, '$1-')
+      .replace(/(-|:|_)(\w+)(\/)/g, '$1$2-')
       // replace \: in class names from head
       .replace(/(\.\w+)(\\:)/g, '$1-')
       // replace : in class names from body

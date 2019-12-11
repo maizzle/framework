@@ -75,6 +75,10 @@ module.exports = async (str, options) => {
     const nunjucks = await NunjucksEnvironment.init()
     html = `{% extends "${layout}" %}\n${html}`
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
+
+    const slashRegex = new RegExp('(?:-)(.)(/)(.)', 'g')
+    html = html.replace('\\/', '-').replace(slashRegex, '-$1-$3')
+
     html = await Transformers.process(html, config)
 
     return html

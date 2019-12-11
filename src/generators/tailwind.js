@@ -59,7 +59,10 @@ module.exports = {
       return await postcss([
         postcssNested(),
         tailwindPlugin,
-        purgecss({ content: [{ raw: html }] }),
+        purgecss({
+          content: [{ raw: html }],
+          defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || []
+        }),
         mqpacker(),
         mergeLonghand()
       ])

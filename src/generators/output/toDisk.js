@@ -1,20 +1,17 @@
 const path = require('path')
 const fs = require('fs-extra')
-const marked = require('marked')
 const fm = require('front-matter')
 const glob = require('glob-promise')
 const deepmerge = require('deepmerge')
 const helpers = require('../../utils/helpers')
 const stripHTML = require('string-strip-html')
-const NunjucksEnvironment = require('../../nunjucks')
 
 const Config = require('../config')
 const Tailwind = require('../tailwind')
-const Transformers = require('../../transformers')
+
+const render = require('./toString')
 
 module.exports = async (env, spinner) => {
-
-  const nunjucks = NunjucksEnvironment.init()
   const globalConfig = await Config.getMerged(env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit() })
   const css = await Tailwind.fromFile(globalConfig, env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit() })
   const outputDir = path.resolve(`${globalConfig.build.destination.path}`)
@@ -22,66 +19,53 @@ module.exports = async (env, spinner) => {
   await fs.remove(outputDir)
   await fs.copy(globalConfig.build.templates.source, outputDir)
 
-  if (fs.pathExistsSync(globalConfig.build.assets.source)) {
-    await fs.copy(globalConfig.build.assets.source, `${outputDir}/${globalConfig.build.assets.destination}`)
-  }
-
-  let filetypes = globalConfig.build.templates.filetypes
+  let filetypes = globalConfig.build.templates.filetypes || 'html|njk|nunjucks'
 
   if (Array.isArray(filetypes)) {
     filetypes = filetypes.join('|')
   }
 
-  let templates = await glob(`${outputDir}/**/*.+(${filetypes || 'html|njk|nunjucks'})`)
+  const templates = await glob(`${outputDir}/**/*.+(${filetypes})`)
 
   if (templates.length < 1) {
-    throw `No "${filetypes}" templates found in \`${globalConfig.build.templates.source}\`. If the path is correct, please check your \`build.templates.filetypes\` config setting.`
-  }
-
-  if (env == 'local') {
-    await fs.outputFile(`${outputDir}/css/${globalConfig.build.tailwind.css}`, css)
+    throw RangeError(`No "${filetypes}" templates found in \`${globalConfig.build.templates.source}\`. If the path is correct, please check your \`build.templates.filetypes\` config setting.`)
   }
 
   await helpers.asyncForEach(templates, async file => {
-
     let html = await fs.readFile(file, 'utf8')
-    let frontMatter = fm(html)
-    let config = deepmerge(globalConfig, frontMatter.attributes)
-    let layout = config.layout || config.build.layout
+    const frontMatter = fm(html)
+    const config = deepmerge(globalConfig, frontMatter.attributes)
+    config.isMerged = true
 
-    marked.setOptions({
-      renderer: new marked.Renderer(),
-      ...config.markdown
+    html = await render(html, {
+      tailwind: {
+        compiled: css
+      },
+      maizzle: {
+        config: config
+      },
+      env: env
     })
 
-    html = `{% extends "${layout}" %}\n${frontMatter.body}`
-    html = nunjucks.renderString(html, { page: config, env: env, css: css })
-
-    if (!html) {
-      throw Error(`Could not render HTML for ${file}`)
-    }
-
-    html = await Transformers.process(html, config, env)
-
-    let ext = config.build.destination.extension || 'html'
+    const ext = config.build.destination.extension || 'html'
 
     fs.outputFile(file, html)
       .then(() => {
         if (config.plaintext) {
-          let plaintext = stripHTML(html,
-          {
-            dumpLinkHrefsNearby: {
-              enabled: true,
-              putOnNewLine: true,
-              wrapHeads: '[',
-              wrapTails: ']',
-            }
-          })
+          const plaintext = stripHTML(html,
+            {
+              dumpLinkHrefsNearby: {
+                enabled: true,
+                putOnNewLine: true,
+                wrapHeads: '[',
+                wrapTails: ']'
+              }
+            })
 
-          let filepath = config.permalink || file
-          let plaintextPath = path.join(path.dirname(filepath), path.basename(filepath, path.extname(filepath)) + '.txt')
+          const filepath = config.permalink || file
+          const plaintextPath = path.join(path.dirname(filepath), path.basename(filepath, path.extname(filepath)) + '.txt')
 
-          fs.outputFileSync(plaintextPath, plaintext);
+          fs.outputFileSync(plaintextPath, plaintext)
         }
 
         if (config.permalink) {
@@ -91,8 +75,11 @@ module.exports = async (env, spinner) => {
         const parts = path.parse(file)
         fs.rename(file, `${parts.dir}/${parts.name}.${ext}`)
       })
-
   })
+
+  if (fs.pathExistsSync(globalConfig.build.assets.source)) {
+    await fs.copy(globalConfig.build.assets.source, `${outputDir}/${globalConfig.build.assets.destination}`)
+  }
 
   return templates.length
 }

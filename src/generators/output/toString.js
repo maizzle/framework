@@ -24,7 +24,7 @@ module.exports = async (str, options) => {
     const maizzleConfig = options && options.maizzle && typeof options.maizzle.config === 'object' ? options.maizzle.config : null
 
     if (!maizzleConfig) {
-      throw TypeError(`Received invalid Maizzle config: ${maizzleConfig}`)
+      throw TypeError(`received invalid Maizzle config: ${maizzleConfig}`)
     }
 
     const frontMatter = fm(str)
@@ -35,9 +35,13 @@ module.exports = async (str, options) => {
 
     html = `{% extends "${layout}" %}\n${html}`
 
-    let compiledCSS = options.tailwind.compiled || ''
+    let compiledCSS = options.tailwind.compiled || null
 
-    if (options.tailwind.compiled === '') {
+    if (!compiledCSS) {
+      if (!tailwindConfig) {
+        throw TypeError(`received invalid Tailwind CSS config: ${tailwindConfig}`)
+      }
+
       await fs.ensureFile(layout)
         .then(async () => {
           const tailwindHTML = await fs.readFile(path.resolve(process.cwd(), layout), 'utf8') + html

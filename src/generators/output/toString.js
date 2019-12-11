@@ -5,6 +5,7 @@ const marked = require('marked')
 const fm = require('front-matter')
 const deepmerge = require('deepmerge')
 const NunjucksEnvironment = require('../../nunjucks')
+const { flattenObject } = require('../../utils/helpers')
 
 const Tailwind = require('../tailwind')
 const Transformers = require('../../transformers')
@@ -40,9 +41,25 @@ module.exports = async (str, options) => {
         throw TypeError(`received invalid Tailwind CSS config: ${tailwindConfig}`)
       }
 
+      const defaultVariants = ['responsive', 'group-hover', 'focus-within', 'first', 'last', 'odd', 'even', 'hover', 'focus', 'active', 'visited', 'disabled'].join('|')
+      const configVariants = Object.values(flattenObject(tailwindConfig.variants)).join('|')
+      const prefixes = [
+        Object.keys(tailwindConfig.theme.screens).join('|'),
+        [defaultVariants, configVariants].join('|')
+      ].join('|')
+
+      const cssColons = `(${prefixes})(\\:)`
+      const htmlColons = `(${prefixes})(:).+?\\s`
+
+      const cssRegex = new RegExp(cssColons, 'g')
+      const htmlRegex = new RegExp(htmlColons, 'g')
+
+      html = html.replace(cssRegex, '$1-').replace(htmlRegex, '$1-')
+
       await fs.ensureFile(layout)
         .then(async () => {
           const tailwindHTML = await fs.readFile(path.resolve(process.cwd(), layout), 'utf8') + html
+          tailwindConfig.separator = '-'
           compiledCSS = await Tailwind.fromString(postCSS, tailwindHTML, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit() })
         })
         .catch(err => {

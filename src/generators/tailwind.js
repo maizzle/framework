@@ -28,7 +28,12 @@ module.exports = {
       const tailwindConfigFile = config.build.tailwind.config || 'tailwind.config.js'
 
       const mergeLonghandPlugin = env === 'local' ? () => { } : mergeLonghand()
-      const purgeCssPlugin = env === 'local' ? () => { } : purgecss({ content: purgeSources, whitelist: purgeWhitelist, whitelistPatterns: purgewhitelistPatterns })
+      const purgeCssPlugin = env === 'local' ? () => { } : purgecss({
+        content: purgeSources,
+        defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],
+        whitelist: purgeWhitelist,
+        whitelistPatterns: purgewhitelistPatterns
+      })
 
       const file = await fs.readFile(path.resolve(config.build.tailwind.css))
 

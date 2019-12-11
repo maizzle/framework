@@ -5,7 +5,6 @@ const marked = require('marked')
 const fm = require('front-matter')
 const deepmerge = require('deepmerge')
 const NunjucksEnvironment = require('../../nunjucks')
-const { flattenObject } = require('../../utils/helpers')
 
 const Tailwind = require('../tailwind')
 const Transformers = require('../../transformers')
@@ -41,20 +40,8 @@ module.exports = async (str, options) => {
         throw TypeError(`received invalid Tailwind CSS config: ${tailwindConfig}`)
       }
 
-      const defaultVariants = ['responsive', 'group-hover', 'focus-within', 'first', 'last', 'odd', 'even', 'hover', 'focus', 'active', 'visited', 'disabled'].join('|')
-      const configVariants = Object.values(flattenObject(tailwindConfig.variants)).join('|')
-      const prefixes = [
-        Object.keys(tailwindConfig.theme.screens).join('|'),
-        [defaultVariants, configVariants].join('|')
-      ].join('|')
-
-      const cssColons = `(${prefixes})(\\:)`
-      const htmlColons = `(${prefixes})(:).+?\\s`
-
-      const cssRegex = new RegExp(cssColons, 'g')
-      const htmlRegex = new RegExp(htmlColons, 'g')
-
-      html = html.replace(cssRegex, '$1-').replace(htmlRegex, '$1-')
+      // replace : in css classes from body
+      html = html.replace(/("|\s\w+?)(:)/g, '$1-')
 
       await fs.ensureFile(layout)
         .then(async () => {
@@ -76,8 +63,15 @@ module.exports = async (str, options) => {
     html = `{% extends "${layout}" %}\n${html}`
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
 
-    const slashRegex = new RegExp('(?:-)(.)(/)(.)', 'g')
-    html = html.replace('\\/', '-').replace(slashRegex, '-$1-$3')
+    html = html
+      // replace \/ in class names from head
+      .replace(/(\..+-)(\w+)(\\\/)/g, '$1$2-')
+      // replace / in class names from body
+      .replace(/(\w+)(\/)/g, '$1-')
+      // replace \: in class names from head
+      .replace(/(\.\w+)(\\:)/g, '$1-')
+      // replace : in class names from body
+      .replace(/(\w)(\s\w+)(:)(\w)/g, '$1$2-$4')
 
     html = await Transformers.process(html, config)
 

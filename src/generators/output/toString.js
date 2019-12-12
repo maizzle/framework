@@ -36,9 +36,6 @@ module.exports = async (str, options) => {
       await options.afterConfig(config)
     }
 
-    const hasLayout = config.layout && config.build.layout
-    const layoutPath = config.layout || config.build.layout
-
     let compiledCSS = options.tailwind.compiled || null
 
     if (!compiledCSS) {
@@ -49,9 +46,9 @@ module.exports = async (str, options) => {
       // replace : in css classes from body
       html = html.replace(/("|\s\w+?)(:)/g, '$1-')
 
-      await fs.ensureFile(layoutPath)
+      await fs.ensureFile(config.layout)
         .then(async () => {
-          const tailwindHTML = await fs.readFile(path.resolve(process.cwd(), layoutPath), 'utf8') + html
+          const tailwindHTML = await fs.readFile(path.resolve(process.cwd(), config.layout), 'utf8') + html
           tailwindConfig.separator = '-'
           compiledCSS = await Tailwind.fromString(postCSS, tailwindHTML, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit() })
         })
@@ -71,7 +68,7 @@ module.exports = async (str, options) => {
       await options.beforeRender(nunjucks, config)
     }
 
-    html = hasLayout ? `{% extends "${hasLayout}" %}\n${html}` : html
+    html = `{% extends "${config.layout}" %}\n${html}`
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
 
     html = html

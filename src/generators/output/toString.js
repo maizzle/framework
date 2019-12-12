@@ -31,6 +31,7 @@ module.exports = async (str, options) => {
     let html = frontMatter.body
 
     const config = maizzleConfig.isMerged ? maizzleConfig : deepmerge(maizzleConfig, frontMatter.attributes)
+    const layout = config.layout || config.build.layout
 
     if (typeof options.afterConfig === 'function') {
       await options.afterConfig(config)
@@ -46,9 +47,9 @@ module.exports = async (str, options) => {
       // replace : in css classes from body
       html = html.replace(/("|\s\w+?)(:)/g, '$1-')
 
-      await fs.ensureFile(config.layout)
+      await fs.ensureFile(layout)
         .then(async () => {
-          const tailwindHTML = await fs.readFile(path.resolve(process.cwd(), config.layout), 'utf8') + html
+          const tailwindHTML = await fs.readFile(path.resolve(process.cwd(), layout), 'utf8') + html
           tailwindConfig.separator = '-'
           compiledCSS = await Tailwind.fromString(postCSS, tailwindHTML, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit() })
         })
@@ -68,8 +69,14 @@ module.exports = async (str, options) => {
       await options.beforeRender(nunjucks, config)
     }
 
-    html = `{% extends "${config.layout}" %}\n${html}`
+    html = `{% extends "${layout}" %}\n${html}`
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
+
+    while (fm(html).attributes.layout) {
+      const front = fm(html)
+      html = `{% extends "${front.attributes.layout}" %}\n{% block template %}${front.body}{% endblock %}`
+      html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
+    }
 
     html = html
       // replace \/ in class names from head

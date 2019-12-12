@@ -71,6 +71,12 @@ module.exports = async (str, options) => {
     html = `{% extends "${config.layout}" %}\n${html}`
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
 
+    while (fm(html).attributes.layout) {
+      const front = fm(html)
+      html = `{% extends "${front.attributes.layout}" %}\n{% block template %}${front.body}{% endblock %}`
+      html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
+    }
+
     html = html
       // replace \/ in class names from head
       .replace(/(\..+-)(\w+)(\\\/)/g, '$1$2-')

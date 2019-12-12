@@ -31,6 +31,11 @@ module.exports = async (str, options) => {
     let html = frontMatter.body
 
     const config = maizzleConfig.isMerged ? maizzleConfig : deepmerge(maizzleConfig, frontMatter.attributes)
+
+    if (typeof options.afterConfig === 'function') {
+      await options.afterConfig(config)
+    }
+
     const hasLayout = config.layout && config.build.layout
     const layoutPath = config.layout || config.build.layout
 
@@ -61,6 +66,11 @@ module.exports = async (str, options) => {
     })
 
     const nunjucks = await NunjucksEnvironment.init()
+
+    if (typeof options.beforeRender === 'function') {
+      await options.beforeRender(nunjucks, config)
+    }
+
     html = hasLayout ? `{% extends "${hasLayout}" %}\n${html}` : html
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
 
@@ -74,7 +84,15 @@ module.exports = async (str, options) => {
       // replace : in class names from body
       .replace(/(\w)(\s\w+)(:)(\w)/g, '$1$2-$4')
 
+    if (typeof options.afterRender === 'function') {
+      html = await options.afterRender(html, config)
+    }
+
     html = await Transformers.process(html, config)
+
+    if (typeof options.afterTransformers === 'function') {
+      html = await options.afterTransformers(html, config)
+    }
 
     return html
   } catch (error) {

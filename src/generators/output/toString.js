@@ -31,7 +31,7 @@ module.exports = async (str, options) => {
     let html = frontMatter.body
 
     const config = maizzleConfig.isMerged ? maizzleConfig : deepmerge(maizzleConfig, frontMatter.attributes)
-    let layout = config.layout || config.build.layout
+    const layout = config.layout || config.build.layout
 
     if (typeof options.afterConfig === 'function') {
       await options.afterConfig(config)

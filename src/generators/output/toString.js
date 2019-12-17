@@ -31,7 +31,7 @@ module.exports = async (str, options) => {
     let html = frontMatter.body
 
     const config = maizzleConfig.isMerged ? maizzleConfig : deepmerge(maizzleConfig, frontMatter.attributes)
-    const layout = config.layout || config.build.layout
+    let layout = config.layout || config.build.layout
 
     if (typeof options.afterConfig === 'function') {
       await options.afterConfig(config)
@@ -69,6 +69,7 @@ module.exports = async (str, options) => {
       await options.beforeRender(nunjucks, config)
     }
 
+    // make layout null if in node, just render html as it is... somehow...
     html = `{% extends "${layout}" %}\n${html}`
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
 
@@ -82,7 +83,7 @@ module.exports = async (str, options) => {
       // replace \/ in class names from head
       .replace(/(\..+-)(\w+)(\\\/)/g, '$1$2-')
       // replace / in class names from body
-      .replace(/(-|:|_)(\w+)(\/)/g, '$1$2-')
+      .replace(/(-\w+)(\/)(?<!(?:href=|src=|background[:=]).+)/g, '$1-')
       // replace \: in class names from head
       .replace(/(\.\w+)(\\:)/g, '$1-')
       // replace : in class names from body

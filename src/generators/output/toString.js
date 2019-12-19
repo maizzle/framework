@@ -44,13 +44,9 @@ module.exports = async (str, options) => {
         throw TypeError(`received invalid Tailwind CSS config: ${tailwindConfig}`)
       }
 
-      // replace : in css classes from body
-      html = html.replace(/("|\s\w+?)(:)/g, '$1-')
-
       await fs.ensureFile(layout)
         .then(async () => {
           const tailwindHTML = await fs.readFile(path.resolve(process.cwd(), layout), 'utf8') + html
-          tailwindConfig.separator = '-'
           compiledCSS = await Tailwind.fromString(postCSS, tailwindHTML, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit() })
         })
         .catch(err => {
@@ -69,8 +65,7 @@ module.exports = async (str, options) => {
       await options.beforeRender(nunjucks, config)
     }
 
-    // make layout null if in node, just render html as it is... somehow...
-    html = `{% extends "${layout}" %}\n${html}`
+    html = options.env ? `{% extends "${layout}" %}\n${html}` : html
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
 
     while (fm(html).attributes.layout) {
@@ -80,14 +75,11 @@ module.exports = async (str, options) => {
     }
 
     html = html
-      // replace \/ in class names from head
-      .replace(/(\..+-)(\w+)(\\\/)/g, '$1$2-')
-      // replace / in class names from body
-      .replace(/(-\w+)(\/)(?<!(?:href=|src=|background[:=]).+)/g, '$1-')
-      // replace \: in class names from head
-      .replace(/(\.\w+)(\\:)/g, '$1-')
-      // replace : in class names from body
-      .replace(/(\w)(\s\w+)(:)(\w)/g, '$1$2-$4')
+      .replace(/(\..+-)(\w+)(\\\/)/g, '$1$2-') // replace \/ in class names from head
+      .replace(/(\.\w+)(\\:)/g, '$1-') // replace \: in class names from head
+      .replace(/class\s*=\s*["'][^"']*[/:][^"']*["']/g, (group) => { // replace special characters in class names from body
+        return group.replace(/\/|:/g, '-')
+      })
 
     if (typeof options.afterRender === 'function') {
       html = await options.afterRender(html, config)

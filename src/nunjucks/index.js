@@ -3,8 +3,8 @@ const nunjucks = require('nunjucks')
 const markdown = require('nunjucks-markdown')
 const ComponentExtension = require('../nunjucks/tags/component')
 
-module.exports.init = async () => {
-  const nunjucksEnv = nunjucks.configure({ autoescape: false, noCache: true })
+module.exports.init = async (path) => {
+  const nunjucksEnv = nunjucks.configure(path, { autoescape: false, noCache: true })
 
   nunjucksEnv.addExtension('componentExtension', new ComponentExtension(nunjucks))
 

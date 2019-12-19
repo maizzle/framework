@@ -59,7 +59,8 @@ module.exports = async (str, options) => {
       ...config.markdown
     })
 
-    const nunjucks = await NunjucksEnvironment.init()
+    const basePath = config.build.nunjucks && config.build.nunjucks.path ? config.build.nunjucks.path : process.cwd()
+    const nunjucks = await NunjucksEnvironment.init(basePath)
 
     if (typeof options.beforeRender === 'function') {
       await options.beforeRender(nunjucks, config)

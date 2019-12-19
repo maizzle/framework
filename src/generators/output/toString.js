@@ -59,19 +59,21 @@ module.exports = async (str, options) => {
       ...config.markdown
     })
 
-    const basePath = config.build.nunjucks && config.build.nunjucks.path ? config.build.nunjucks.path : process.cwd()
-    const nunjucks = await NunjucksEnvironment.init(basePath)
+    const nunjucks = await NunjucksEnvironment.init(config.build.nunjucks)
 
     if (typeof options.beforeRender === 'function') {
       await options.beforeRender(nunjucks, config)
     }
 
-    html = options.env ? `{% extends "${layout}" %}\n${html}` : html
+    const blockStart = config.build.nunjucks && config.build.nunjucks.tags ? config.build.nunjucks.tags.blockStart : '{%'
+    const blockEnd = config.build.nunjucks && config.build.nunjucks.tags ? config.build.nunjucks.tags.blockEnd : '%}'
+
+    html = options.env ? `${blockStart} extends "${layout}" ${blockEnd}\n${html}` : html
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
 
     while (fm(html).attributes.layout) {
       const front = fm(html)
-      html = `{% extends "${front.attributes.layout}" %}\n{% block template %}${front.body}{% endblock %}`
+      html = `${blockStart} extends "${front.attributes.layout}" ${blockEnd}\n${blockStart} block template ${blockEnd}${front.body}${blockStart} endblock ${blockEnd}`
       html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
     }
 

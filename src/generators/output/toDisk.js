@@ -3,8 +3,8 @@ const fs = require('fs-extra')
 const fm = require('front-matter')
 const glob = require('glob-promise')
 const deepmerge = require('deepmerge')
-const helpers = require('../../utils/helpers')
 const stripHTML = require('string-strip-html')
+const { asyncForEach } = require('../../utils/helpers')
 
 const Config = require('../config')
 const Tailwind = require('../tailwind')
@@ -14,10 +14,17 @@ const render = require('./toString')
 module.exports = async (env, spinner) => {
   const globalConfig = await Config.getMerged(env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit() })
   const css = await Tailwind.fromFile(globalConfig, env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit() })
-  const outputDir = path.resolve(`${globalConfig.build.destination.path}`)
+
+  const sourceDir = globalConfig.build.templates.source
+  const outputDir = globalConfig.build.destination.path
 
   await fs.remove(outputDir)
-  await fs.copy(globalConfig.build.templates.source, outputDir)
+
+  if (Array.isArray(sourceDir)) {
+    await asyncForEach(sourceDir, path => fs.copy(path, outputDir))
+  } else {
+    await fs.copy(sourceDir, outputDir)
+  }
 
   let filetypes = globalConfig.build.templates.filetypes || 'html|njk|nunjucks'
 
@@ -28,10 +35,10 @@ module.exports = async (env, spinner) => {
   const templates = await glob(`${outputDir}/**/*.+(${filetypes})`)
 
   if (templates.length < 1) {
-    throw RangeError(`No "${filetypes}" templates found in \`${globalConfig.build.templates.source}\`. If the path is correct, please check your \`build.templates.filetypes\` config setting.`)
+    throw RangeError(`No "${filetypes}" templates found in \`${sourceDir}\`. If the path is correct, please check your \`build.templates.filetypes\` config setting.`)
   }
 
-  await helpers.asyncForEach(templates, async file => {
+  await asyncForEach(templates, async file => {
     let html = await fs.readFile(file, 'utf8')
     const frontMatter = fm(html)
     const config = deepmerge(globalConfig, frontMatter.attributes)

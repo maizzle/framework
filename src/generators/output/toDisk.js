@@ -37,6 +37,8 @@ module.exports = async (env, spinner) => {
     const config = deepmerge(globalConfig, frontMatter.attributes)
     config.isMerged = true
 
+    const events = config.events || []
+
     html = await render(html, {
       tailwind: {
         compiled: css
@@ -44,7 +46,8 @@ module.exports = async (env, spinner) => {
       maizzle: {
         config: config
       },
-      env: env
+      env: env,
+      ...events
     })
 
     const ext = config.build.destination.extension || 'html'

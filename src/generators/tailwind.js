@@ -11,26 +11,24 @@ const purgecss = require('@fullhuman/postcss-purgecss')
 module.exports = {
   fromFile: async (config, env) => {
     try {
-      const extraPurgeSources = (config.cleanup.purgeCSS && config.cleanup.purgeCSS.content) ? config.cleanup.purgeCSS.content : []
+      const purgeCSSOpts = config.cleanup.purgeCSS
+      const tailwindConfigFile = config.build.tailwind.config || 'tailwind.config.js'
+
+      const extraPurgeSources = (purgeCSSOpts && purgeCSSOpts.content) ? purgeCSSOpts.content : []
       const purgeSources = [
         `./${config.build.templates.source}/**/*.*`,
         ...extraPurgeSources
       ]
 
-      let purgeWhitelist
-      let purgewhitelistPatterns = []
-
-      if (config.cleanup.purgeCSS) {
-        purgeWhitelist = config.cleanup.purgeCSS.whitelist || []
-        purgewhitelistPatterns = config.cleanup.purgeCSS.whitelistPatterns || []
-      }
-
-      const tailwindConfigFile = config.build.tailwind.config || 'tailwind.config.js'
+      const extractor = purgeCSSOpts.extractor || /[\w-/:]+(?<!:)/g
+      const purgeWhitelist = purgeCSSOpts.whitelist || []
+      const purgewhitelistPatterns = purgeCSSOpts.whitelistPatterns || []
 
       const mergeLonghandPlugin = env === 'local' ? () => { } : mergeLonghand()
+
       const purgeCssPlugin = env === 'local' ? () => { } : purgecss({
         content: purgeSources,
-        defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],
+        defaultExtractor: content => content.match(extractor) || [],
         whitelist: purgeWhitelist,
         whitelistPatterns: purgewhitelistPatterns
       })
@@ -57,16 +55,22 @@ module.exports = {
       throw err
     }
   },
-  fromString: async (css, html, tailwindConfig) => {
+  fromString: async (css, html, tailwindConfig, maizzleConfig) => {
     try {
       const tailwindPlugin = typeof tailwindConfig === 'object' ? tailwind(tailwindConfig) : tailwind()
+
+      const extractor = maizzleConfig.cleanup.purgeCSS.extractor || /[\w-/:]+(?<!:)/g
+      const purgeWhitelist = maizzleConfig.cleanup.purgeCSS.whitelist || []
+      const purgewhitelistPatterns = maizzleConfig.cleanup.purgeCSS.whitelistPatterns || []
 
       return await postcss([
         postcssNested(),
         tailwindPlugin,
         purgecss({
           content: [{ raw: html }],
-          defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || []
+          defaultExtractor: content => content.match(extractor) || [],
+          whitelist: purgeWhitelist,
+          whitelistPatterns: purgewhitelistPatterns
         }),
         mqpacker(),
         mergeLonghand()

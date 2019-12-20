@@ -60,6 +60,7 @@ module.exports = {
       const tailwindPlugin = typeof tailwindConfig === 'object' ? tailwind(tailwindConfig) : tailwind()
 
       const extractor = maizzleConfig.cleanup.purgeCSS.extractor || /[\w-/:]+(?<!:)/g
+      const purgeContent = maizzleConfig.cleanup.purgeCSS.content || []
       const purgeWhitelist = maizzleConfig.cleanup.purgeCSS.whitelist || []
       const purgewhitelistPatterns = maizzleConfig.cleanup.purgeCSS.whitelistPatterns || []
 
@@ -67,7 +68,10 @@ module.exports = {
         postcssNested(),
         tailwindPlugin,
         purgecss({
-          content: [{ raw: html }],
+          content: [
+            ...purgeContent,
+            { raw: html }
+          ],
           defaultExtractor: content => content.match(extractor) || [],
           whitelist: purgeWhitelist,
           whitelistPatterns: purgewhitelistPatterns

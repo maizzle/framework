@@ -60,7 +60,7 @@ module.exports = {
       const tailwindPlugin = typeof tailwindConfig === 'object' ? tailwind(tailwindConfig) : tailwind()
 
       const extractor = maizzleConfig.cleanup.purgeCSS.extractor || /[\w-/:]+(?<!:)/g
-      const purgeContent = maizzleConfig.cleanup.purgeCSS.content || [];
+      const purgeContent = maizzleConfig.cleanup.purgeCSS.content || []
       const purgeWhitelist = maizzleConfig.cleanup.purgeCSS.whitelist || []
       const purgewhitelistPatterns = maizzleConfig.cleanup.purgeCSS.whitelistPatterns || []
 

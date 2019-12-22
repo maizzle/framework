@@ -14,9 +14,11 @@ module.exports = {
       const purgeCSSOpts = config.cleanup.purgeCSS
       const tailwindConfigFile = config.build.tailwind.config || 'tailwind.config.js'
 
+      const templateSources = Array.isArray(config.build.templates.source) ? config.build.templates.source.map(item => `${item}/**/*.*`) : [`./${config.build.templates.source}/**/*.*`]
+
       const extraPurgeSources = (purgeCSSOpts && purgeCSSOpts.content) ? purgeCSSOpts.content : []
       const purgeSources = [
-        `./${config.build.templates.source}/**/*.*`,
+        ...templateSources,
         ...extraPurgeSources
       ]
 

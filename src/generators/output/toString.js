@@ -1,6 +1,3 @@
-const path = require('path')
-const fs = require('fs-extra')
-
 const marked = require('marked')
 const fm = require('front-matter')
 const deepmerge = require('deepmerge')
@@ -19,7 +16,7 @@ module.exports = async (str, options) => {
       throw TypeError(`first argument must be a string, received ${str}`)
     }
 
-    const postCSS = options && options.tailwind && typeof options.tailwind.css === 'string' ? options.tailwind.css : '@tailwind components; @tailwind utilities;'
+    const css = options && options.tailwind && typeof options.tailwind.css === 'string' ? options.tailwind.css : '@tailwind components; @tailwind utilities;'
     const tailwindConfig = options && options.tailwind && typeof options.tailwind.config === 'object' ? options.tailwind.config : null
     const maizzleConfig = options && options.maizzle && typeof options.maizzle.config === 'object' ? options.maizzle.config : null
 
@@ -44,14 +41,7 @@ module.exports = async (str, options) => {
         throw TypeError(`received invalid Tailwind CSS config: ${tailwindConfig}`)
       }
 
-      await fs.ensureFile(layout)
-        .then(async () => {
-          const tailwindHTML = await fs.readFile(path.resolve(process.cwd(), layout), 'utf8') + html
-          compiledCSS = await Tailwind.fromString(postCSS, tailwindHTML, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit() })
-        })
-        .catch(err => {
-          throw err
-        })
+      compiledCSS = await Tailwind.fromString(css, html, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit() })
     }
 
     marked.setOptions({

@@ -58,7 +58,7 @@ module.exports = async (str, options) => {
     const blockStart = config.build.nunjucks && config.build.nunjucks.tags ? config.build.nunjucks.tags.blockStart : '{%'
     const blockEnd = config.build.nunjucks && config.build.nunjucks.tags ? config.build.nunjucks.tags.blockEnd : '%}'
 
-    html = options.env ? `${blockStart} extends "${layout}" ${blockEnd}\n${html}` : html
+    html = layout ? `${blockStart} extends "${layout}" ${blockEnd}\n${html}` : html
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
 
     while (fm(html).attributes.layout) {

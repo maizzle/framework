@@ -91,7 +91,7 @@ module.exports = async (env, spinner) => {
     await fs.copy(globalConfig.build.assets.source, `${outputDir}/${globalConfig.build.assets.destination}`)
   }
 
-  if (typeof globalConfig.events.afterBuild === 'function') {
+  if (globalConfig.events && typeof globalConfig.events.afterBuild === 'function') {
     const files = await glob(`${outputDir}/**/*.*`)
     globalConfig.events.afterBuild(files)
   }

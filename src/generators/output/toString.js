@@ -68,7 +68,7 @@ module.exports = async (str, options) => {
     }
 
     html = html
-      .replace(/(\..+)(\\:|\\\/)/g, '$1-') // replace \/ and \: in class names from head
+      .replace(/(\..+)(\\:|\\\/)/g, group => group.replace(/\\:|\\\//g, '-')) // replace \/ and \: in class names from head
       .replace(/class\s*=\s*["'][^"']*[/:][^"']*["']/g, group => group.replace(/\/|:/g, '-')) // replace special characters in class names from body
 
     if (typeof options.afterRender === 'function') {

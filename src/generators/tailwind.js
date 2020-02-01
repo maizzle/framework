@@ -8,6 +8,8 @@ const postcssNested = require('postcss-nested')
 const mergeLonghand = require('postcss-merge-longhand')
 const purgecss = require('@fullhuman/postcss-purgecss')
 
+const defaultPurgeCSSExtractor = /[\w-/:%]+(?<!:)/g
+
 module.exports = {
   fromFile: async (config, env) => {
     try {
@@ -22,7 +24,7 @@ module.exports = {
         ...extraPurgeSources
       ]
 
-      const extractor = purgeCSSOpts.extractor || /[\w-/:]+(?<!:)/g
+      const extractor = purgeCSSOpts.extractor || defaultPurgeCSSExtractor
       const purgeWhitelist = purgeCSSOpts.whitelist || []
       const purgewhitelistPatterns = purgeCSSOpts.whitelistPatterns || []
 
@@ -61,7 +63,7 @@ module.exports = {
     try {
       const tailwindPlugin = typeof tailwindConfig === 'object' ? tailwind(tailwindConfig) : tailwind()
 
-      const extractor = maizzleConfig.cleanup.purgeCSS.extractor || /[\w-/:]+(?<!:)/g
+      const extractor = maizzleConfig.cleanup.purgeCSS.extractor || defaultPurgeCSSExtractor
       const purgeContent = maizzleConfig.cleanup.purgeCSS.content || []
       const purgeWhitelist = maizzleConfig.cleanup.purgeCSS.whitelist || []
       const purgewhitelistPatterns = maizzleConfig.cleanup.purgeCSS.whitelistPatterns || []

@@ -68,8 +68,18 @@ module.exports = async (str, options) => {
     }
 
     html = html
-      .replace(/(\..+)(\\:|\\\/)/g, group => group.replace(/\\:|\\\//g, '-')) // replace \/ and \: in class names from head
-      .replace(/class\s*=\s*["'][^"']*[/:][^"']*["']/g, group => group.replace(/\/|:/g, '-')) // replace special characters in class names from body
+      // Rewrite class names in `<head>` CSS
+      .replace(/(\..+)(\\:|\\\/|\\%)/g, group => {
+        return group
+          .replace(/\\:|\\\//g, '-') // replace `\/` and `\:` with `-`
+          .replace(/\\%/g, 'pc') // replace `%` with `pc`
+      })
+      // Rewrite class names in `<body>` HTML
+      .replace(/class\s*=\s*["'][^"']*[/:][^"']*["']/g, group => {
+        return group
+          .replace(/\/|:/g, '-') // replace `\/` and `\:` with `-`
+          .replace(/%/g, 'pc') // replace `%` with `pc`
+      })
 
     if (typeof options.afterRender === 'function') {
       html = await options.afterRender(html, config)

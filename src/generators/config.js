@@ -10,7 +10,11 @@ module.exports = {
     try {
       baseConfig = require(path.resolve(process.cwd(), './config'))
     } catch (error) {
-      throw error
+      try {
+        baseConfig = require(path.resolve(process.cwd(), './config.local'))
+      } catch (error) {
+        throw error
+      }
     }
 
     if (env) {

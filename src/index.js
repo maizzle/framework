@@ -19,7 +19,6 @@ const self = module.exports = {
     require('./generators/config')
       .getMerged('local')
       .then(config => {
-        const { open = true } = config.browsersync
         const watchPaths = config.browsersync.watch || []
         bs.create()
         bs.init({
@@ -27,11 +26,11 @@ const self = module.exports = {
             baseDir: config.build.destination.path,
             directory: config.browsersync.directory
           },
-          ui: config.browsersync.ui || {port: 3001},
+          ui: config.browsersync.ui || { port: 3001 },
           port: config.browsersync.port || 3000,
           notify: config.browsersync.notify,
           tunnel: config.browsersync.tunnel,
-          open
+          open: config.browsersync.open || false
         })
           .watch(
             [

@@ -27,6 +27,7 @@ const self = module.exports = {
             baseDir: config.build.destination.path,
             directory: config.browsersync.directory
           },
+          ui: config.browsersync.ui || {port: 3001},
           port: config.browsersync.port || 3000,
           notify: config.browsersync.notify,
           tunnel: config.browsersync.tunnel,

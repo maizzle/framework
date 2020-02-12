@@ -28,7 +28,6 @@ module.exports = async (str, options) => {
     let html = frontMatter.body
 
     const config = maizzleConfig.isMerged ? maizzleConfig : deepmerge(maizzleConfig, frontMatter.attributes)
-    const layout = config.layout || config.build.layout
 
     if (typeof options.afterConfig === 'function') {
       await options.afterConfig(config)
@@ -55,17 +54,7 @@ module.exports = async (str, options) => {
       await options.beforeRender(nunjucks, config)
     }
 
-    const blockStart = config.build.nunjucks && config.build.nunjucks.tags ? config.build.nunjucks.tags.blockStart : '{%'
-    const blockEnd = config.build.nunjucks && config.build.nunjucks.tags ? config.build.nunjucks.tags.blockEnd : '%}'
-
-    html = layout ? `${blockStart} extends "${layout}" ${blockEnd}\n${html}` : html
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
-
-    while (fm(html).attributes.layout) {
-      const front = fm(html)
-      html = `${blockStart} extends "${front.attributes.layout}" ${blockEnd}\n${blockStart} block template ${blockEnd}${front.body}${blockStart} endblock ${blockEnd}`
-      html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
-    }
 
     html = html
       // Rewrite class names in `<head>` CSS

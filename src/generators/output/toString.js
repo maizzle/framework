@@ -1,10 +1,9 @@
 const marked = require('marked')
 const fm = require('front-matter')
 const deepmerge = require('deepmerge')
-const NunjucksEnvironment = require('../../nunjucks')
-
 const Tailwind = require('../tailwind')
 const Transformers = require('../../transformers')
+const NunjucksEnvironment = require('../../nunjucks')
 
 module.exports = async (str, options) => {
   try {
@@ -56,25 +55,11 @@ module.exports = async (str, options) => {
 
     html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
 
-    html = html
-      // Rewrite class names in `<head>` CSS
-      .replace(/(\..+)(\\:|\\\/|\\%)/g, group => {
-        return group
-          .replace(/\\:|\\\//g, '-') // replace `\/` and `\:` with `-`
-          .replace(/\\%/g, 'pc') // replace `%` with `pc`
-      })
-      // Rewrite class names in `<body>` HTML
-      .replace(/class\s*=\s*["'][^"']*[/:][^"']*["']/g, group => {
-        return group
-          .replace(/\/|:/g, '-') // replace `\/` and `\:` with `-`
-          .replace(/%/g, 'pc') // replace `%` with `pc`
-      })
-
     if (typeof options.afterRender === 'function') {
       html = await options.afterRender(html, config)
     }
 
-    html = await Transformers.process(html, config)
+    html = await Transformers.process(html, config, options.env)
 
     if (typeof options.afterTransformers === 'function') {
       html = await options.afterTransformers(html, config)

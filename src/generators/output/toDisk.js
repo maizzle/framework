@@ -97,7 +97,7 @@ module.exports = async (env, spinner) => {
 
   if (globalConfig.events && typeof globalConfig.events.afterBuild === 'function') {
     const files = await glob(`${outputDir}/**/*.*`)
-    globalConfig.events.afterBuild(files)
+    await globalConfig.events.afterBuild(files)
   }
 
   return templates.length

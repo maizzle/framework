@@ -38,6 +38,10 @@ module.exports = async (env, spinner) => {
     throw RangeError(`No "${filetypes}" templates found in \`${sourceDir}\`. If the path is correct, please check your \`build.templates.filetypes\` config setting.`)
   }
 
+  if (globalConfig.events && typeof globalConfig.events.beforeCreate === 'function') {
+    await globalConfig.events.beforeCreate(globalConfig)
+  }
+
   await asyncForEach(templates, async file => {
     let html = await fs.readFile(file, 'utf8')
     const frontMatter = fm(html)

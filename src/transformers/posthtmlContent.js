@@ -4,7 +4,7 @@ const posthtmlContent = require('posthtml-content')
 
 module.exports = async (html, config) => {
   let replacements = config.transformContents || {}
-  replacements.tailwind = (css) => Tailwind.fromString(css, html, false, config)
+  replacements.postcss = (css) => Tailwind.fromString(css, html, false, config)
 
   replacements = Object.keys(replacements)
     .sort()

@@ -1,7 +1,7 @@
 {
   "name": "@maizzle/framework",
   "version": "0.8.0",
-  "description": "Maizzle is an email framework that helps you quickly build emails with utility-first CSS and advanced, email-specific post-processing.",
+  "description": "Maizzle is a framework that helps you quickly build HTML emails with Tailwind CSS and customizable, email-specific post-processing.",
   "license": "MIT",
   "main": "src/index.js",
   "repository": {
@@ -13,13 +13,14 @@
   "author": "Cosmin Popovici (https://github.com/cossssmin)",
   "keywords": [
     "maizzle",
-    "email",
     "tailwind-css",
-    "email-framework",
     "responsive-email",
+    "email-framework",
+    "email-marketing",
+    "email-campaigns",
+    "html-emails",
     "email-template",
-    "email-boilerplate",
-    "email-campaigns"
+    "email-boilerplate"
   ],
   "publishConfig": {
     "access": "public"

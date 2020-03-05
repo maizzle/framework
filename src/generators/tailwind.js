@@ -8,7 +8,7 @@ const postcssNested = require('postcss-nested')
 const mergeLonghand = require('postcss-merge-longhand')
 const purgecss = require('@fullhuman/postcss-purgecss')
 
-const defaultPurgeCSSExtractor = /[\w-/:%]+(?<!:)/g
+const defaultPurgeCSSExtractor = /[\w-/:%.]+(?<!:)/g
 
 module.exports = {
   fromFile: async (config, env) => {

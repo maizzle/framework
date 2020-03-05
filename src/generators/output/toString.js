@@ -1,4 +1,3 @@
-const marked = require('marked')
 const fm = require('front-matter')
 const deepmerge = require('deepmerge')
 const Tailwind = require('../tailwind')
@@ -41,11 +40,6 @@ module.exports = async (str, options) => {
 
       compiledCSS = await Tailwind.fromString(css, html, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit() })
     }
-
-    marked.setOptions({
-      renderer: new marked.Renderer(),
-      ...config.markdown
-    })
 
     const nunjucks = await NunjucksEnvironment.init(config.build.nunjucks)
 

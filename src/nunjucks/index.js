@@ -1,6 +1,4 @@
-const marked = require('marked')
 const nunjucks = require('nunjucks')
-const markdown = require('nunjucks-markdown')
 const ComponentExtension = require('../nunjucks/tags/component')
 
 module.exports.init = async (config) => {
@@ -10,8 +8,6 @@ module.exports.init = async (config) => {
   const nunjucksEnv = nunjucks.configure(basePath, { autoescape: false, noCache: true, tags: tags })
 
   nunjucksEnv.addExtension('componentExtension', new ComponentExtension(nunjucks))
-
-  markdown.register(nunjucksEnv, marked)
 
   return nunjucksEnv
 }

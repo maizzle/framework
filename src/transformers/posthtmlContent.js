@@ -3,11 +3,16 @@ const Tailwind = require('../generators/tailwind')
 const posthtmlContent = require('posthtml-content')
 
 module.exports = async (html, config) => {
-  html = await posthtml([
-    posthtmlContent({
-      tailwind: css => Tailwind.fromString(css, html, false, config)
-    })
-  ]).process(html).then(res => res.html)
+  let replacements = config.transformContents || {}
+  replacements.tailwind = (css) => Tailwind.fromString(css, html, false, config)
+
+  replacements = Object.keys(replacements)
+    .sort()
+    .reduce((acc, key) => ({
+      ...acc, [key]: replacements[key]
+    }), {})
+
+  html = await posthtml([posthtmlContent(replacements)]).process(html).then(res => res.html)
 
   return html
 }

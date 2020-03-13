@@ -26,7 +26,7 @@ module.exports = async (env, spinner) => {
     await fs.copy(sourceDir, outputDir)
   }
 
-  let filetypes = config.build.templates.filetypes || 'html|njk|nunjucks'
+  let filetypes = config.build.templates.filetypes || 'html'
 
   if (Array.isArray(filetypes)) {
     filetypes = filetypes.join('|')
@@ -35,7 +35,7 @@ module.exports = async (env, spinner) => {
   const templates = await glob(`${outputDir}/**/*.+(${filetypes})`)
 
   if (templates.length < 1) {
-    throw RangeError(`No "${filetypes}" templates found in \`${sourceDir}\`. If the path is correct, please check your \`build.templates.filetypes\` config setting.`)
+    throw RangeError(`No files of type "${filetypes}" found in \`${sourceDir}\`. If the path is correct, please check your \`build.templates.filetypes\` config setting.`)
   }
 
   if (config.events && typeof config.events.beforeCreate === 'function') {
@@ -47,7 +47,9 @@ module.exports = async (env, spinner) => {
     const frontMatter = fm(html)
     const templateConfig = deepmerge(config, frontMatter.attributes)
     const events = templateConfig.events || []
+
     templateConfig.isMerged = true
+    templateConfig.env = env
 
     html = await render(html, {
       tailwind: {
@@ -56,7 +58,6 @@ module.exports = async (env, spinner) => {
       maizzle: {
         config: templateConfig
       },
-      env: env,
       ...events
     })
 

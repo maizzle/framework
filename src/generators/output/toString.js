@@ -48,6 +48,10 @@ module.exports = async (html, options) => {
 
     html = await posthtml(html, config)
 
+    while (Object.keys(fm(html).attributes).length > 0) {
+      html = fm(html).body
+    }
+
     if (typeof options.afterRender === 'function') {
       html = await options.afterRender(html, config)
     }

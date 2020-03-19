@@ -12,6 +12,7 @@ const removeUnusedCSS = require('./removeUnusedCSS')
 const removeInlineSizes = require('./removeInlineSizes')
 const applyBaseImageUrl = require('./applyBaseImageUrl')
 const removeInlineBgColor = require('./removeInlineBgcolor')
+const removeAttributes = require('./posthtmlRemoveAttributes')
 const applyExtraAttributes = require('./applyExtraAttributes')
 
 exports.process = async (html, config, env) => {
@@ -23,6 +24,7 @@ exports.process = async (html, config, env) => {
   html = await removeUnusedCSS(html, config)
   html = await removeInlineSizes(html, config)
   html = await removeInlineBgColor(html, config)
+  html = await removeAttributes(html, config)
   html = await applyExtraAttributes(html, config)
   html = await applyBaseImageUrl(html, config)
   html = await addURLParams(html, config)

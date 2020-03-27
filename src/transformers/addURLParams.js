@@ -1,34 +1,17 @@
-const qs = require('query-string')
-const cheerio = require('cheerio')
-const helpers = require('../utils/helpers')
-const isUrl = require('is-url-superb')
+const posthtml = require('posthtml')
+const urlParams = require('posthtml-url-parameters')
 
 module.exports = async (html, config) => {
-  if (config.urlParameters && !helpers.isEmptyObject(config.urlParameters)) {
-    const $ = cheerio.load(html, { decodeEntities: false })
+  const { _options, ...parameters } = config.urlParameters
+  const { tags, qs } = _options || {}
 
-    $('a').each((i, el) => {
-      const url = $(el).attr('href')
-      const parsed = qs.parseUrl($(el).attr('href'))
-      const pattern = new RegExp(/^(https?:\/\/)/gm)
-
-      if (!isUrl(url) || !pattern.test(parsed.url)) {
-        return
-      }
-
-      let params = parsed.query
-
-      Object.keys(config.urlParameters).forEach((item) => {
-        params[item] = config.urlParameters[item]
-      })
-
-      params = qs.stringify(params)
-
-      $(el).attr('href', `${parsed.url}?${params}`)
+  html = await posthtml([
+    urlParams({
+      parameters: parameters,
+      tags: tags,
+      qs: qs
     })
-
-    return $.html()
-  }
+  ]).process(html).then(result => result.html)
 
   return html
 }

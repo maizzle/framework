@@ -1,10 +1,10 @@
 const cheerio = require('cheerio')
 
 module.exports = async (html, config) => {
-  if (config.applyExtraAttributes) {
+  if (config.extraAttributes) {
     const $ = cheerio.load(html, { decodeEntities: false })
 
-    Object.entries(config.applyExtraAttributes).map(([el, attrs]) => {
+    Object.entries(config.extraAttributes).map(([el, attrs]) => {
       if (el.length > 0) {
         Object.entries(attrs).forEach(attr => {
           const $el = $(el)

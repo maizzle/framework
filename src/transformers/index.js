@@ -11,9 +11,9 @@ const posthtmlContent = require('./posthtmlContent')
 const removeUnusedCSS = require('./removeUnusedCSS')
 const removeInlineSizes = require('./removeInlineSizes')
 const applyBaseImageUrl = require('./applyBaseImageUrl')
+const applyExtraAttributes = require('./extraAttributes')
 const removeInlineBgColor = require('./removeInlineBgcolor')
 const removeAttributes = require('./posthtmlRemoveAttributes')
-const applyExtraAttributes = require('./applyExtraAttributes')
 
 exports.process = async (html, config, env) => {
   html = await safeClassNames(html, env)

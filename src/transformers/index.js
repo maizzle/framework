@@ -15,8 +15,8 @@ const applyExtraAttributes = require('./extraAttributes')
 const removeInlineBgColor = require('./removeInlineBgcolor')
 const removeAttributes = require('./posthtmlRemoveAttributes')
 
-exports.process = async (html, config, env) => {
-  html = await safeClassNames(html, env)
+exports.process = async (html, config) => {
+  html = await safeClassNames(html, config)
   html = await posthtmlContent(html, config)
   html = await markdown(html, config)
   html = await preventWidows(html)
@@ -28,7 +28,7 @@ exports.process = async (html, config, env) => {
   html = await applyExtraAttributes(html, config)
   html = await applyBaseImageUrl(html, config)
   html = await addURLParams(html, config)
-  html = await ensureSixHEX(html, env)
+  html = await ensureSixHEX(html, config)
   html = await prettify(html, config)
   html = await minify(html, config)
   html = await replaceStrings(html, config)

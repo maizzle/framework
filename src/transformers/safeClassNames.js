@@ -1,20 +1,10 @@
-module.exports = async (html, env) => {
-  if (env !== 'local') {
-    return html
-      // Rewrite class names in `<head>` CSS
-      .replace(/(\..+)(\\:|\\\/|\\%|\\\.)/g, group => {
-        return group
-          .replace(/\\:|\\\//g, '-') // replace `\/` and `\:` with `-`
-          .replace(/\\%/g, 'pc') // replace `\%` with `pc`
-          .replace(/\\\./g, '_') // replace `\.` with `_`
-      })
-      // Rewrite class names in `<body>` HTML
-      .replace(/class\s*=\s*["'][^"']*[/:][^"']*["']/g, group => {
-        return group
-          .replace(/\/|:/g, '-') // replace `\/` and `\:` with `-`
-          .replace(/%/g, 'pc') // replace `%` with `pc`
-          .replace(/\./g, '_') // replace `.` with `_`
-      })
+const posthtml = require('posthtml')
+const safeClassNames = require('posthtml-safe-class-names')
+
+module.exports = async (html, config) => {
+  if (config.env !== 'local') {
+    const replacements = config.cleanup && config.cleanup.safeClassNames ? config.cleanup.safeClassNames : {}
+    html = await posthtml([safeClassNames({ replacements: replacements })]).process(html).then(result => result.html)
   }
 
   return html

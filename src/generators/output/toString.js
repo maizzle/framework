@@ -56,7 +56,7 @@ module.exports = async (html, options) => {
       html = await options.afterRender(html, config)
     }
 
-    html = await Transformers.process(html, config, options.env)
+    html = await Transformers.process(html, config)
 
     if (typeof options.afterTransformers === 'function') {
       html = await options.afterTransformers(html, config)

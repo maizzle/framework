@@ -55,6 +55,7 @@
     "posthtml-markdown": "^0.1.0",
     "posthtml-modules": "^0.5.0",
     "posthtml-remove-attributes": "^1.0.0",
+    "posthtml-safe-class-names": "^1.0.0",
     "posthtml-url-parameters": "^1.0.1",
     "pretty": "^2.0.0",
     "prevent-widows": "^1.0.2",

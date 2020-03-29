@@ -13,7 +13,7 @@ const removeUnusedCSS = require('./removeUnusedCSS')
 const removeInlineSizes = require('./removeInlineSizes')
 const applyExtraAttributes = require('./extraAttributes')
 const removeInlineBgColor = require('./removeInlineBgcolor')
-const removeAttributes = require('./posthtmlRemoveAttributes')
+const removeAttributes = require('./removeAttributes')
 
 exports.process = async (html, config) => {
   html = await safeClassNames(html, config)

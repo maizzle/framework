@@ -1,9 +1,9 @@
 const cheerio = require('cheerio')
 
 module.exports = async (html, config) => {
-  if (config.cleanup && config.cleanup.keepOnlyAttributeSizes) {
+  if (config.keepOnlyAttributeSizes) {
     const $ = cheerio.load(html, { decodeEntities: false })
-    Object.entries(config.cleanup.keepOnlyAttributeSizes).map(([k, v]) => {
+    Object.entries(config.keepOnlyAttributeSizes).map(([k, v]) => {
       v = Object.values(v)
       if (v.length > 0) {
         $(v).each((i, el) => {

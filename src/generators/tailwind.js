@@ -13,7 +13,7 @@ const defaultPurgeCSSExtractor = /[\w-/:%.]+(?<!:)/g
 module.exports = {
   fromFile: async (config, env) => {
     try {
-      const purgeCSSOpts = config.cleanup.purgeCSS
+      const purgeCSSOpts = config.purgeCSS || {}
       const tailwindConfigFile = config.build.tailwind.config || 'tailwind.config.js'
 
       const templateSources = Array.isArray(config.build.posthtml.templates.root) ? config.build.posthtml.templates.root.map(item => `${item}/**/*.*`) : [`./${config.build.posthtml.templates.root}/**/*.*`]
@@ -63,10 +63,10 @@ module.exports = {
     try {
       const tailwindPlugin = typeof tailwindConfig === 'object' ? tailwind(tailwindConfig) : tailwind()
 
-      const extractor = maizzleConfig.cleanup.purgeCSS.extractor || defaultPurgeCSSExtractor
-      const purgeContent = maizzleConfig.cleanup.purgeCSS.content || []
-      const purgeWhitelist = maizzleConfig.cleanup.purgeCSS.whitelist || []
-      const purgewhitelistPatterns = maizzleConfig.cleanup.purgeCSS.whitelistPatterns || []
+      const extractor = maizzleConfig.purgeCSS.extractor || defaultPurgeCSSExtractor
+      const purgeContent = maizzleConfig.purgeCSS.content || []
+      const purgeWhitelist = maizzleConfig.purgeCSS.whitelist || []
+      const purgewhitelistPatterns = maizzleConfig.purgeCSS.whitelistPatterns || []
 
       return await postcss([
         postcssNested(),

@@ -30,9 +30,9 @@ const removeInlineBGColor = (options = {}) => tree => {
 }
 
 module.exports = async (html, config) => {
-  const prefers = config.cleanup.preferBgColorAttribute
+  const prefers = config.preferBgColorAttribute
   const tags = prefers ? prefers.tags : []
-  if (prefers || (prefers && prefers.enabled)) {
+  if ((typeof prefers === 'boolean' && prefers) || (prefers && prefers.enabled)) {
     html = await posthtml([removeInlineBGColor({ tags: tags })]).process(html).then(response => response.html)
   }
 

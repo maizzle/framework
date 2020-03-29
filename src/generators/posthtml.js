@@ -12,9 +12,9 @@ module.exports = async (html, config) => {
   ]
 
   return posthtml([
-    layouts({ ...config.build.layouts, strict: false }),
+    layouts({ strict: false, ...config.build.posthtml.layouts }),
     includes(),
-    modules(config.build.modules),
+    modules({ ...config.build.posthtml.modules }),
     expressions({ locals: { page: config } })
   ]).process(html, { directives: directives }).then(result => fm(result.html).body)
 }

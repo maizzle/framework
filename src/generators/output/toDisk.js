@@ -15,7 +15,7 @@ module.exports = async (env, spinner) => {
   const config = await Config.getMerged(env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit() })
   const css = await Tailwind.fromFile(config, env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit() })
 
-  const sourceDir = config.build.templates.source
+  const sourceDir = config.build.posthtml.templates.root
   const outputDir = config.build.destination.path
 
   await fs.remove(outputDir)
@@ -26,7 +26,7 @@ module.exports = async (env, spinner) => {
     await fs.copy(sourceDir, outputDir)
   }
 
-  let filetypes = config.build.templates.filetypes || 'html'
+  let filetypes = config.build.posthtml.templates.extensions || 'html'
 
   if (Array.isArray(filetypes)) {
     filetypes = filetypes.join('|')
@@ -35,7 +35,7 @@ module.exports = async (env, spinner) => {
   const templates = await glob(`${outputDir}/**/*.+(${filetypes})`)
 
   if (templates.length < 1) {
-    throw RangeError(`No files of type "${filetypes}" found in \`${sourceDir}\`. If the path is correct, please check your \`build.templates.filetypes\` config setting.`)
+    throw RangeError(`No files of type "${filetypes}" found in \`${sourceDir}\`. If the path is correct, please check \`build.templates.extensions\` in your config.`)
   }
 
   if (config.events && typeof config.events.beforeCreate === 'function') {

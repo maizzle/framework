@@ -6,10 +6,15 @@ const includes = require('posthtml-include')
 const expressions = require('posthtml-expressions')
 
 module.exports = async (html, config) => {
+  const directives = [
+    { name: '?php', start: '<', end: '>' },
+    ...config.build.posthtml.directives
+  ]
+
   return posthtml([
     layouts({ ...config.build.layouts, strict: false }),
     includes(),
     modules(config.build.modules),
     expressions({ locals: { page: config } })
-  ]).process(html).then(result => fm(result.html).body)
+  ]).process(html, { directives: directives }).then(result => fm(result.html).body)
 }

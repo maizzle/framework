@@ -1,19 +1,37 @@
-const cheerio = require('cheerio')
+const posthtml = require('posthtml')
+const parseAttrs = require('posthtml-attrs-parser')
+const { isEmptyObject } = require('../utils/helpers')
 
 module.exports = async (html, config) => {
-  if (config.keepOnlyAttributeSizes) {
-    const $ = cheerio.load(html, { decodeEntities: false })
-    Object.entries(config.keepOnlyAttributeSizes).map(([k, v]) => {
-      v = Object.values(v)
-      if (v.length > 0) {
-        $(v).each((i, el) => {
-          $(el).css(k, '')
-        })
-      }
-    })
-
-    return $.html()
+  if (!isEmptyObject(config.keepOnlyAttributeSizes)) {
+    html = await posthtml([removeInlineSizes(config.keepOnlyAttributeSizes)]).process(html).then(result => result.html)
   }
 
   return html
+}
+
+const removeInlineSizes = (mappings = {}) => tree => {
+  const process = node => {
+    const attrs = parseAttrs(node.attrs)
+    const tag = node.tag ? node.tag.toUpperCase() : ''
+
+    Object.entries(mappings).map(([attribute, tags]) => {
+      tags = Object.values(tags)
+      if (!tags.includes(tag)) return node
+
+      tags.forEach(tag => {
+        delete attrs.style[attribute]
+      })
+    })
+
+    node.attrs = attrs.compose()
+
+    if (attrs.style) {
+      node.attrs.style = node.attrs.style.substr(-1) === ';' ? node.attrs.style : node.attrs.style + ';'
+    }
+
+    return node
+  }
+
+  return tree.walk(process)
 }

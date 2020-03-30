@@ -4,6 +4,8 @@ const removeAttributes = require('posthtml-remove-attributes')
 module.exports = async (html, config, options = config.build.posthtml.options || {}) => {
   const attributes = typeof config.removeAttributes === 'object' ? config.removeAttributes : []
 
+  attributes.push({ name: 'style' })
+
   // Allow ommiting `value` key when removing empty attributes
   attributes.map(attr => {
     attr.value = attr.value || ''

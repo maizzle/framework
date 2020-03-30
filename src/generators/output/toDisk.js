@@ -49,16 +49,20 @@ module.exports = async (env, spinner) => {
     const events = templateConfig.events || []
     templateConfig.isMerged = true
 
-    html = await render(html, {
-      tailwind: {
-        compiled: css
-      },
-      maizzle: {
-        config: templateConfig
-      },
-      env: env,
-      ...events
-    })
+    try {
+      html = await render(html, {
+        tailwind: {
+          compiled: css
+        },
+        maizzle: {
+          config: templateConfig
+        },
+        env: env,
+        ...events
+      })
+    } catch (err) {
+      throw `Error building file ${file}: ${err}`
+    }
 
     const ext = templateConfig.build.destination.extension || 'html'
 

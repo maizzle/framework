@@ -3,11 +3,12 @@ const fs = require('fs-extra')
 const fm = require('front-matter')
 const glob = require('glob-promise')
 const deepmerge = require('deepmerge')
-const stripHTML = require('string-strip-html')
 const { asyncForEach } = require('../../utils/helpers')
+const removePlaintextTags = require('../../transformers/plaintext')
 
 const Config = require('../config')
 const Tailwind = require('../tailwind')
+const Plaintext = require('../plaintext')
 
 const render = require('./toString')
 
@@ -63,25 +64,14 @@ module.exports = async (env, spinner) => {
 
     const ext = templateConfig.build.destination.extension || 'html'
 
+    if (templateConfig.plaintext) {
+      await Plaintext.output(html, file, templateConfig)
+    }
+
+    html = removePlaintextTags(html, config)
+
     fs.outputFile(file, html)
       .then(() => {
-        if (templateConfig.plaintext) {
-          const plaintext = stripHTML(html,
-            {
-              dumpLinkHrefsNearby: {
-                enabled: true,
-                putOnNewLine: true,
-                wrapHeads: '[',
-                wrapTails: ']'
-              }
-            })
-
-          const filepath = templateConfig.permalink || file
-          const plaintextPath = path.join(path.dirname(filepath), path.basename(filepath, path.extname(filepath)) + '.txt')
-
-          fs.outputFileSync(plaintextPath, plaintext)
-        }
-
         if (templateConfig.permalink) {
           return fs.move(file, templateConfig.permalink, { overwrite: true })
         }

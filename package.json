@@ -36,7 +36,7 @@
     "deepmerge": "^4.2.2",
     "email-comb": "^3.8.19",
     "front-matter": "^3.0.2",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^9.0.0",
     "glob-promise": "^3.4.0",
     "html-minifier": "^4.0.0",
     "is-url-superb": "^3.0.0",

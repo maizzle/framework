@@ -34,7 +34,7 @@ const self = module.exports = {
         })
           .watch(
             [
-              `./${config.build.templates.source}/**/*.*`,
+              `./${config.build.posthtml.templates.source}/**/*.*`,
               `./${config.build.assets.source}/**/*.*`,
               './tailwind.config.js',
               ...watchPaths

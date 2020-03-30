@@ -6,12 +6,12 @@ const Transformers = require('../../transformers')
 
 module.exports = async (html, options) => {
   try {
-    if (html && html.length < 1) {
-      throw RangeError('received empty string')
+    if (typeof html !== 'string') {
+      throw TypeError(`first argument must be an HTML string, received ${html}`)
     }
 
-    if (typeof html !== 'string') {
-      throw TypeError(`first argument must be a string, received ${html}`)
+    if (html.length < 1) {
+      throw RangeError('received empty string')
     }
 
     let config = options && options.maizzle && typeof options.maizzle.config === 'object' ? options.maizzle.config : null

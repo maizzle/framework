@@ -48,7 +48,7 @@
     "postcss-merge-longhand": "^4.0.11",
     "postcss-nested": "^4.1.2",
     "posthtml": "^0.12.0",
-    "posthtml-content": "^0.0.2",
+    "posthtml-content": "^0.0.3",
     "posthtml-markdown": "^0.1.0",
     "pretty": "^2.0.0",
     "prevent-widows": "^1.0.2",

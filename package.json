@@ -52,7 +52,7 @@
     "posthtml-expressions": "^1.2.0",
     "posthtml-extend": "^0.3.0",
     "posthtml-include": "^1.4.0",
-    "posthtml-markdown": "^0.1.0",
+    "posthtml-md2html": "^0.0.2",
     "posthtml-modules": "^0.5.0",
     "posthtml-remove-attributes": "^1.0.0",
     "posthtml-safe-class-names": "^1.0.0",

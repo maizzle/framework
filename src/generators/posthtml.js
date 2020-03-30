@@ -10,7 +10,7 @@ module.exports = async (html, config) => {
     layouts({ strict: false, ...config.build.posthtml.layouts }),
     includes(),
     modules({ ...config.build.posthtml.modules }),
-    ...config.build.posthtml.plugins || [],
-    expressions({ locals: { page: config } })
+    expressions({ locals: { page: config } }),
+    ...config.build.posthtml.plugins || []
   ]).process(html, { ...config.build.posthtml.options || {} }).then(result => fm(result.html).body)
 }

@@ -1,6 +1,17 @@
 const posthtml = require('posthtml')
 const parseAttrs = require('posthtml-attrs-parser')
 
+module.exports = async (html, config, options = config.build.posthtml.options || {}) => {
+  const prefers = config.preferBgColorAttribute
+
+  if ((typeof prefers === 'boolean' && prefers) || (prefers && prefers.enabled)) {
+    const tags = prefers ? prefers.tags : []
+    html = await posthtml([removeInlineBGColor({ tags: tags })]).process(html, options).then(result => result.html)
+  }
+
+  return html
+}
+
 const removeInlineBGColor = (options = {}) => tree => {
   options.tags = options.tags || ['body', 'marquee', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr']
 
@@ -27,14 +38,4 @@ const removeInlineBGColor = (options = {}) => tree => {
   }
 
   return tree.walk(process)
-}
-
-module.exports = async (html, config) => {
-  const prefers = config.preferBgColorAttribute
-  const tags = prefers ? prefers.tags : []
-  if ((typeof prefers === 'boolean' && prefers) || (prefers && prefers.enabled)) {
-    html = await posthtml([removeInlineBGColor({ tags: tags })]).process(html).then(response => response.html)
-  }
-
-  return html
 }

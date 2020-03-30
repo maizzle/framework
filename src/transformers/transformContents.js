@@ -2,11 +2,9 @@ const posthtml = require('posthtml')
 const Tailwind = require('../generators/tailwind')
 const posthtmlContent = require('posthtml-content')
 
-module.exports = async (html, config) => {
+module.exports = async (html, config, options = config.build.posthtml.options || {}) => {
   const replacements = config.transformContents || {}
   replacements.postcss = css => Tailwind.fromString(css, html, false, config)
 
-  html = await posthtml([posthtmlContent(replacements)]).process(html).then(result => result.html)
-
-  return html
+  return posthtml([posthtmlContent(replacements)]).process(html, options).then(result => result.html)
 }

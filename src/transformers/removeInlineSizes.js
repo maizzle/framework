@@ -2,9 +2,9 @@ const posthtml = require('posthtml')
 const parseAttrs = require('posthtml-attrs-parser')
 const { isEmptyObject } = require('../utils/helpers')
 
-module.exports = async (html, config) => {
+module.exports = async (html, config, options = config.build.posthtml.options || {}) => {
   if (!isEmptyObject(config.keepOnlyAttributeSizes)) {
-    html = await posthtml([removeInlineSizes(config.keepOnlyAttributeSizes)]).process(html).then(result => result.html)
+    html = await posthtml([removeInlineSizes(config.keepOnlyAttributeSizes)]).process(html, options).then(result => result.html)
   }
 
   return html
@@ -20,7 +20,7 @@ const removeInlineSizes = (mappings = {}) => tree => {
       if (!tags.includes(tag)) return node
 
       tags.forEach(tag => {
-        delete attrs.style[attribute]
+        if (attrs.style) delete attrs.style[attribute]
       })
     })
 

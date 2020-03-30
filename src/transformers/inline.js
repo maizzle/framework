@@ -4,9 +4,7 @@ module.exports = async (html, config) => {
   const options = config.inlineCSS
 
   if (options && options.enabled) {
-    if (options.styleToAttribute) {
-      juice.styleToAttribute = options.styleToAttribute || juice.styleToAttribute
-    }
+    juice.styleToAttribute = options.styleToAttribute || juice.styleToAttribute
 
     if (typeof options.applySizeAttribute === 'object') {
       juice.widthElements = typeof options.applySizeAttribute.width === 'object' ? Object.values(options.applySizeAttribute.width) : juice.widthElements

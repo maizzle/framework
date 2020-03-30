@@ -1,7 +1,8 @@
 const cheerio = require('cheerio')
+const { isEmptyObject } = require('../utils/helpers')
 
 module.exports = async (html, config) => {
-  if (config.extraAttributes) {
+  if (config.extraAttributes && !isEmptyObject(config.extraAttributes)) {
     const $ = cheerio.load(html, { decodeEntities: false })
 
     Object.entries(config.extraAttributes).map(([el, attrs]) => {

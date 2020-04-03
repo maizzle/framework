@@ -1,9 +1,10 @@
 const posthtml = require('posthtml')
 const parseAttrs = require('posthtml-attrs-parser')
-const { isEmptyObject } = require('../utils/helpers')
+const { getPropValue, isObject } = require('../utils/helpers')
 
-module.exports = async (html, config, options = config.build.posthtml.options || {}) => {
-  if (!isEmptyObject(config.keepOnlyAttributeSizes)) {
+module.exports = async (html, config) => {
+  if (!isObject(config.keepOnlyAttributeSizes)) {
+    const options = getPropValue(config, 'build.posthtml.options') || {}
     html = await posthtml([removeInlineSizes(config.keepOnlyAttributeSizes)]).process(html, options).then(result => result.html)
   }
 

@@ -3,6 +3,7 @@ const deepmerge = require('deepmerge')
 const Tailwind = require('../tailwind')
 const posthtml = require('../posthtml')
 const Transformers = require('../../transformers')
+const { getPropValue } = require('../../utils/helpers')
 
 module.exports = async (html, options) => {
   try {
@@ -14,13 +15,15 @@ module.exports = async (html, options) => {
       throw RangeError('received empty string')
     }
 
-    let config = options && options.maizzle && typeof options.maizzle.config === 'object' ? options.maizzle.config : null
-    const tailwindConfig = options && options.tailwind && typeof options.tailwind.config === 'object' ? options.tailwind.config : null
+    // let config = options && options.maizzle && typeof options.maizzle.config === 'object' ? options.maizzle.config : null
+    let config = getPropValue(options, 'maizzle.config') || {}
+    // const tailwindConfig = options && options.tailwind && typeof options.tailwind.config === 'object' ? options.tailwind.config : null
+    const tailwindConfig = getPropValue(options, 'tailwind.config') || {}
     const css = options && options.tailwind && typeof options.tailwind.css === 'string' ? options.tailwind.css : '@tailwind components; @tailwind utilities;'
 
-    if (!config) {
-      throw TypeError(`received invalid Maizzle config: ${config}`)
-    }
+    // if (!config) {
+    //   throw TypeError(`received invalid Maizzle config: ${config}`)
+    // }
 
     if (!config.isMerged) {
       const frontMatter = fm(html)
@@ -31,9 +34,9 @@ module.exports = async (html, options) => {
     config.css = options.tailwind && options.tailwind.compiled ? options.tailwind.compiled : null
 
     if (!config.css) {
-      if (!tailwindConfig) {
-        throw TypeError(`received invalid Tailwind CSS config: ${tailwindConfig}`)
-      }
+      // if (!tailwindConfig) {
+      //   throw TypeError(`received invalid Tailwind CSS config: ${tailwindConfig}`)
+      // }
 
       config.css = await Tailwind.fromString(css, html, tailwindConfig, config).catch(err => { console.log(err); process.exit() })
     }

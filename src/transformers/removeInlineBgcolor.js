@@ -1,8 +1,10 @@
 const posthtml = require('posthtml')
 const parseAttrs = require('posthtml-attrs-parser')
+const { getPropValue } = require('../utils/helpers')
 
-module.exports = async (html, config, options = config.build.posthtml.options || {}) => {
+module.exports = async (html, config) => {
   const prefers = config.preferBgColorAttribute
+  const options = getPropValue(config, 'build.posthtml.options') || {}
 
   if ((typeof prefers === 'boolean' && prefers) || (prefers && prefers.enabled)) {
     const tags = prefers ? prefers.tags : []

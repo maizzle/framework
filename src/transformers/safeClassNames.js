@@ -1,9 +1,12 @@
 const posthtml = require('posthtml')
+const { getPropValue } = require('../utils/helpers')
 const safeClassNames = require('posthtml-safe-class-names')
 
-module.exports = async (html, config, options = config.build.posthtml.options || {}) => {
+module.exports = async (html, config) => {
   if (config.env !== 'local') {
     const replacements = config.safeClassNames || {}
+    const options = getPropValue(config, 'build.posthtml.options') || {}
+
     html = posthtml([safeClassNames({ replacements: replacements })]).process(html, options).then(result => result.html)
   }
 

@@ -25,8 +25,10 @@ module.exports = async (html, options) => {
       config = deepmerge(config, frontMatter.attributes)
     }
 
-    if (!getPropValue(config, 'tailwind.compiled')) {
+    if (!getPropValue(options, 'tailwind.compiled')) {
       config.css = await Tailwind.fromString(cssString, html, tailwindConfig, config).catch(error => { console.log(error); process.exit(1) })
+    } else {
+      config.css = options.tailwind.compiled
     }
 
     if (options && typeof options.beforeRender === 'function') {

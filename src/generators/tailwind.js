@@ -14,7 +14,7 @@ const defaultPurgeCSSExtractor = /[\w-/:%.]+(?<!:)/g
 module.exports = {
   fromFile: async (config, env) => {
     const purgeCSSOpts = config.purgeCSS || {}
-    const tailwindConfigFile = getPropValue(config, 'build.tailwind.config') || {}
+    const tailwindConfigFile = getPropValue(config, 'build.tailwind.config') || 'tailwind.config.js'
     const templatesRoot = getPropValue(config, 'build.posthtml.templates.root')
 
     const templateSources = Array.isArray(templatesRoot) ? templatesRoot.map(item => `${item}/**/*.*`) : [`./${templatesRoot}/**/*.*`]
@@ -41,7 +41,7 @@ module.exports = {
     const userFilePath = getPropValue(config, 'build.tailwind.css')
 
     const cssString = await fs.pathExists(userFilePath)
-      .then(() => fs.readFile(path.resolve(userFilePath)))
+      .then(() => fs.readFile(path.resolve(userFilePath), 'utf8'))
       .catch(() => '@tailwind components; @tailwind utilities;')
 
     return postcss([

@@ -28,7 +28,7 @@ module.exports = async (html, options) => {
       config = deepmerge(config, frontMatter.attributes)
     }
 
-    config.css = options.tailwind.compiled || null
+    config.css = options.tailwind && options.tailwind.compiled ? options.tailwind.compiled : null
 
     if (!config.css) {
       if (!tailwindConfig) {

@@ -14,7 +14,7 @@ const self = module.exports = {
       .catch(error => { spinner.fail('Build failed'); console.error(error); process.exit(1) })
   },
   serve: async () => {
-    await self.build()
+    await self.build().catch(error => { console.error(error); process.exit(1) })
 
     require('./generators/config')
       .getMerged('local')
@@ -40,7 +40,11 @@ const self = module.exports = {
               ...watchPaths
             ]
           )
-          .on('change', async () => { await self.build(); bs.reload() })
+          .on('change', async () => {
+            await self.build()
+              .then(() => bs.reload())
+              .catch(error => { console.error(error); process.exit(1) })
+          })
       })
   }
 }

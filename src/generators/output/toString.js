@@ -15,15 +15,9 @@ module.exports = async (html, options) => {
       throw RangeError('received empty string')
     }
 
-    // let config = options && options.maizzle && typeof options.maizzle.config === 'object' ? options.maizzle.config : null
     let config = getPropValue(options, 'maizzle.config') || {}
-    // const tailwindConfig = options && options.tailwind && typeof options.tailwind.config === 'object' ? options.tailwind.config : null
     const tailwindConfig = getPropValue(options, 'tailwind.config') || {}
-    const css = options && options.tailwind && typeof options.tailwind.css === 'string' ? options.tailwind.css : '@tailwind components; @tailwind utilities;'
-
-    // if (!config) {
-    //   throw TypeError(`received invalid Maizzle config: ${config}`)
-    // }
+    const cssString = getPropValue(options, 'tailwind.css') || '@tailwind components; @tailwind utilities;'
 
     if (!config.isMerged) {
       const frontMatter = fm(html)
@@ -31,17 +25,11 @@ module.exports = async (html, options) => {
       config = deepmerge(config, frontMatter.attributes)
     }
 
-    config.css = options.tailwind && options.tailwind.compiled ? options.tailwind.compiled : null
-
-    if (!config.css) {
-      // if (!tailwindConfig) {
-      //   throw TypeError(`received invalid Tailwind CSS config: ${tailwindConfig}`)
-      // }
-
-      config.css = await Tailwind.fromString(css, html, tailwindConfig, config).catch(err => { console.log(err); process.exit() })
+    if (!getPropValue(config, 'tailwind.compiled')) {
+      config.css = await Tailwind.fromString(cssString, html, tailwindConfig, config).catch(error => { console.log(error); process.exit(1) })
     }
 
-    if (typeof options.beforeRender === 'function') {
+    if (options && typeof options.beforeRender === 'function') {
       await options.beforeRender(config)
     }
 
@@ -51,13 +39,13 @@ module.exports = async (html, options) => {
       html = fm(html).body
     }
 
-    if (typeof options.afterRender === 'function') {
+    if (options && typeof options.afterRender === 'function') {
       html = await options.afterRender(html, config)
     }
 
     html = await Transformers.process(html, config)
 
-    if (typeof options.afterTransformers === 'function') {
+    if (options && typeof options.afterTransformers === 'function') {
       html = await options.afterTransformers(html, config)
     }
 

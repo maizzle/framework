@@ -36,7 +36,8 @@ module.exports = async (env, spinner) => {
   const templates = await glob(`${outputDir}/**/*.+(${filetypes})`)
 
   if (templates.length < 1) {
-    throw RangeError(`No files of type "${filetypes}" found in \`${sourceDir}\`. If the path is correct, please check \`build.templates.extensions\` in your config.`)
+    spinner.fail(`Error: no files with the .${filetypes} extension found in ${path.resolve(outputDir)}`).fail('Build failed')
+    process.exit(1)
   }
 
   if (config.events && typeof config.events.beforeCreate === 'function') {

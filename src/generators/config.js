@@ -24,6 +24,8 @@ module.exports = {
         if (error.code === 'MODULE_NOT_FOUND') {
           throw new Error(`no 'config${env}.js' file found in project root`)
         }
+
+        throw error
       }
     }
 

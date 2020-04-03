@@ -11,7 +11,7 @@ const self = module.exports = {
 
     return Output.toDisk(env, spinner)
       .then(total => spinner.succeed(`Built ${total} templates in ${new Date() - start} ms.`))
-      .catch(err => { spinner.fail('Build failed'); console.error(err); process.exit() })
+      .catch(error => { spinner.fail('Build failed'); console.error(error); process.exit(1) })
   },
   serve: async () => {
     await self.build()

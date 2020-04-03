@@ -12,5 +12,8 @@ module.exports = async (html, config) => {
     modules({ ...config.build.posthtml.modules }),
     expressions({ locals: { page: config } }),
     ...config.build.posthtml.plugins || []
-  ]).process(html, { ...config.build.posthtml.options || {} }).then(result => fm(result.html).body)
+  ])
+    .process(html, { ...config.build.posthtml.options || {} })
+    .then(result => fm(result.html).body)
+    .catch(error => { throw error })
 }

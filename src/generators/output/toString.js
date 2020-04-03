@@ -28,10 +28,6 @@ module.exports = async (html, options) => {
       config = deepmerge(config, frontMatter.attributes)
     }
 
-    if (typeof options.afterConfig === 'function') {
-      await options.afterConfig(config)
-    }
-
     config.css = options.tailwind.compiled || null
 
     if (!config.css) {

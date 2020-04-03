@@ -13,8 +13,8 @@ const Plaintext = require('../plaintext')
 const render = require('./toString')
 
 module.exports = async (env, spinner) => {
-  const config = await Config.getMerged(env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit() })
-  const css = await Tailwind.fromFile(config, env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit() })
+  const config = await Config.getMerged(env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit(1) })
+  const css = await Tailwind.fromFile(config, env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit(1) })
 
   const sourceDir = config.build.posthtml.templates.root
   const outputDir = config.build.destination.path

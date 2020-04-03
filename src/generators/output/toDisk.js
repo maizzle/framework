@@ -52,15 +52,25 @@ module.exports = async (env, spinner) => {
     templateConfig.isMerged = true
     templateConfig.env = env
 
-    html = await render(html, {
-      tailwind: {
-        compiled: css
-      },
-      maizzle: {
-        config: templateConfig
-      },
-      ...events
-    })
+    try {
+      html = await render(html, {
+        tailwind: {
+          compiled: css
+        },
+        maizzle: {
+          config: templateConfig
+        },
+        ...events
+      })
+    } catch (error) {
+      if (templateConfig.build.fail) {
+        spinner.warn(`Failed to compile ${file}`)
+        if (templateConfig.build.fail === 'verbose') console.error(error)
+      } else {
+        spinner.fail(`Failed to compile ${file}`)
+        throw error
+      }
+    }
 
     const ext = templateConfig.build.destination.extension || 'html'
 

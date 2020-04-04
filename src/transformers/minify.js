@@ -1,8 +1,8 @@
-const { minify } = require('html-minifier')
+const { crush } = require('html-crush')
 
 module.exports = async (html, config) => {
   if (config.minify && config.minify.enabled) {
-    return minify(html, config.minify)
+    html = crush(html, config.minify).result
   }
 
   return html

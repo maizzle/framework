@@ -38,7 +38,7 @@
     "front-matter": "^3.0.2",
     "fs-extra": "^8.1.0",
     "glob-promise": "^3.4.0",
-    "html-minifier": "^4.0.0",
+    "html-crush": "^1.9.24",
     "is-url-superb": "^3.0.0",
     "juice": "^6.0.0",
     "ora": "^4.0.3",

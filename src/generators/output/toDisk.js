@@ -64,12 +64,17 @@ module.exports = async (env, spinner) => {
         ...events
       })
     } catch (error) {
-      if (templateConfig.build.fail) {
-        spinner.warn(`Failed to compile ${file}`)
-        if (templateConfig.build.fail === 'verbose') console.error(error)
-      } else {
-        spinner.fail(`Failed to compile ${file}`)
-        throw error
+      switch (templateConfig.build.fail) {
+        case 'silent':
+          spinner.warn(`Failed to compile ${file}`)
+          break
+        case 'verbose':
+          spinner.warn(`Failed to compile ${file}`)
+          console.error(error)
+          break
+        default:
+          spinner.fail(`Failed to compile ${file}`)
+          throw error
       }
     }
 

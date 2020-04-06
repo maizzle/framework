@@ -7,8 +7,8 @@ const expressions = require('posthtml-expressions')
 const { getPropValue } = require('../utils/helpers')
 
 module.exports = async (html, config) => {
-  const layoutsOpts = getPropValue(config, 'build.posthtml.layouts') || {}
-  const modulesOpts = getPropValue(config, 'build.posthtml.modules') || {}
+  const layoutsOpts = getPropValue(config, 'build.layouts') || {}
+  const modulesOpts = getPropValue(config, 'build.modules') || {}
   const posthtmlOpts = getPropValue(config, 'build.posthtml.options') || {}
   const posthtmlPlugins = getPropValue(config, 'build.posthtml.plugins') || []
 

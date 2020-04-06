@@ -1,5 +1,6 @@
 const fm = require('front-matter')
 const posthtml = require('posthtml')
+const fetch = require('posthtml-fetch')
 const layouts = require('posthtml-extend')
 const modules = require('posthtml-modules')
 const includes = require('posthtml-include')
@@ -9,14 +10,18 @@ const { getPropValue } = require('../utils/helpers')
 module.exports = async (html, config) => {
   const layoutsOpts = getPropValue(config, 'build.layouts') || {}
   const modulesOpts = getPropValue(config, 'build.modules') || {}
+  const fetchOpts = getPropValue(config, 'build.posthtml.fetch') || {}
+  const includeOpts = getPropValue(config, 'build.posthtml.include') || {}
   const posthtmlOpts = getPropValue(config, 'build.posthtml.options') || {}
   const posthtmlPlugins = getPropValue(config, 'build.posthtml.plugins') || []
+  const expressionsOpts = getPropValue(config, 'build.posthtml.expressions') || {}
 
   return posthtml([
     layouts({ strict: false, ...layoutsOpts }),
-    includes(),
+    includes({ ...includeOpts }),
+    fetch({ ...fetchOpts }),
     modules({ ...modulesOpts }),
-    expressions({ locals: { page: config } }),
+    expressions({ ...expressionsOpts, locals: { page: config } }),
     ...posthtmlPlugins
   ])
     .process(html, { ...posthtmlOpts })

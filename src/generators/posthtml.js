@@ -10,8 +10,8 @@ const { getPropValue } = require('../utils/helpers')
 module.exports = async (html, config) => {
   const layoutsOpts = getPropValue(config, 'build.layouts') || {}
   const modulesOpts = getPropValue(config, 'build.modules') || {}
+  const includeOpts = getPropValue(config, 'build.includes') || {}
   const fetchOpts = getPropValue(config, 'build.posthtml.fetch') || {}
-  const includeOpts = getPropValue(config, 'build.posthtml.include') || {}
   const posthtmlOpts = getPropValue(config, 'build.posthtml.options') || {}
   const posthtmlPlugins = getPropValue(config, 'build.posthtml.plugins') || []
   const expressionsOpts = getPropValue(config, 'build.posthtml.expressions') || {}

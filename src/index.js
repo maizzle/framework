@@ -20,10 +20,12 @@ const self = module.exports = {
     require('./generators/config')
       .getMerged('local')
       .then(config => {
-        const watchPaths = getPropValue(config, 'browsersync.watch') || []
+        const bsOptions = getPropValue(config, 'browsersync') || {}
+        const watchPaths = bsOptions.watch || []
         const templatesRoot = getPropValue(config, 'build.templates.root')
         const baseDir = getPropValue(config, 'build.destination.path') || 'build_local'
-        const bsOptions = getPropValue(config, 'browsersync') || {}
+
+        watchPaths.push('tailwind.config.js')
 
         if (Array.isArray(templatesRoot)) {
           templatesRoot.forEach(root => watchPaths.push(root))

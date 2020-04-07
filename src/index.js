@@ -21,26 +21,29 @@ const self = module.exports = {
       .getMerged('local')
       .then(config => {
         const watchPaths = getPropValue(config, 'browsersync.watch') || []
+        const templatesRoot = getPropValue(config, 'build.templates.root')
+        const baseDir = getPropValue(config, 'build.destination.path') || 'build_local'
+        const bsOptions = getPropValue(config, 'browsersync') || {}
+
+        if (Array.isArray(templatesRoot)) {
+          templatesRoot.forEach(root => watchPaths.push(root))
+        } else if (typeof templatesRoot === 'string') {
+          watchPaths.push(templatesRoot)
+        }
+
         bs.create()
         bs.init({
           server: {
-            baseDir: getPropValue(config, 'build.destination.path') || 'build_local',
-            directory: getPropValue(config, 'browsersync.directory') || true
+            baseDir: baseDir,
+            directory: bsOptions.directory || true
           },
-          ui: getPropValue(config, 'browsersync.ui') || { port: 3001 },
-          port: getPropValue(config, 'browsersync.port') || 3000,
-          notify: getPropValue(config, 'browsersync.notify') || false,
-          tunnel: getPropValue(config, 'browsersync.tunnel') || false,
-          open: getPropValue(config, 'browsersync.open') || false
+          ui: bsOptions.ui || { port: 3001 },
+          port: bsOptions.port || 3000,
+          notify: bsOptions.notify || false,
+          tunnel: bsOptions.tunnel || false,
+          open: bsOptions.open || false
         })
-          .watch(
-            [
-              `./${getPropValue(config, 'build.templates.root') || 'src/templates'}/**/*.*`,
-              `./${getPropValue(config, 'build.assets.source') || 'src/assets/images'}/**/*.*`,
-              './tailwind.config.js',
-              ...watchPaths
-            ]
-          )
+          .watch(watchPaths)
           .on('change', async () => {
             await self.build()
               .then(() => bs.reload())

@@ -15,7 +15,7 @@ module.exports = {
   fromFile: async (config, env) => {
     const purgeCSSOpts = config.purgeCSS || {}
     const tailwindConfigFile = getPropValue(config, 'build.tailwind.config') || 'tailwind.config.js'
-    const templatesRoot = getPropValue(config, 'build.posthtml.templates.root')
+    const templatesRoot = getPropValue(config, 'build.templates.root')
 
     const templateSources = Array.isArray(templatesRoot) ? templatesRoot.map(item => `${item}/**/*.*`) : [`./${templatesRoot}/**/*.*`]
 

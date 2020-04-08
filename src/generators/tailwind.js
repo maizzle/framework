@@ -19,7 +19,7 @@ module.exports = {
 
     const templateSources = Array.isArray(templatesRoot) ? templatesRoot.map(item => `${item}/**/*.*`) : [`./${templatesRoot}/**/*.*`]
 
-    const extraPurgeSources = (purgeCSSOpts && purgeCSSOpts.content) ? purgeCSSOpts.content : []
+    const extraPurgeSources = purgeCSSOpts.content || []
     const purgeSources = [
       ...templateSources,
       ...extraPurgeSources

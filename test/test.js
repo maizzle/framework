@@ -1,5 +1,6 @@
 const test = require('ava')
 const Maizzle = require('../src')
+const Config = require('../src/generators/config')
 
 const {join} = require('path')
 const {readFileSync} = require('fs')
@@ -32,4 +33,10 @@ test('It throws if first argument is an empty string', async t => {
   await t.throwsAsync(async () => {
     await renderString('')
   }, {instanceOf: RangeError, message: 'received empty string'})
+})
+
+test('It throws if a config is not found for the specified environment', async t => {
+  await t.throwsAsync(async () => {
+    await Config.getMerged('production')
+  }, {instanceOf: Error, message: `no 'config.production.js' file found in project root`})
 })

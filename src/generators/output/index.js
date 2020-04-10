@@ -1,4 +1,4 @@
 module.exports = {
-  toDisk: require('./toDisk'),
-  toString: require('./toString')
+  toDisk: require('./to-disk'),
+  toString: require('./to-string')
 }

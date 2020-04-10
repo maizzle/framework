@@ -1,5 +1,5 @@
 const juice = require('juice')
-const { isObject, isEmptyObject, getPropValue } = require('../utils/helpers')
+const {isObject, isEmptyObject, getPropValue} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
   const options = getPropValue(config, 'inlineCSS') || {}
@@ -17,7 +17,7 @@ module.exports = async (html, config) => {
     }
 
     if (isObject(options.excludedProperties)) {
-      juice.excludedProperties = !isEmptyObject(options.excludedProperties) ? Object.values(options.excludedProperties) : juice.excludedProperties
+      juice.excludedProperties = isEmptyObject(options.excludedProperties) ? juice.excludedProperties : Object.values(options.excludedProperties)
     }
 
     if (isObject(options.codeBlocks) && !isEmptyObject(options.codeBlocks)) {
@@ -26,7 +26,7 @@ module.exports = async (html, config) => {
       })
     }
 
-    return juice(html, { removeStyleTags: removeStyleTags })
+    return juice(html, {removeStyleTags})
   }
 
   return html

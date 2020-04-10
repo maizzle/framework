@@ -5,7 +5,7 @@ const tailwind = require('tailwindcss')
 const mqpacker = require('css-mqpacker')
 const atImport = require('postcss-import')
 const postcssNested = require('postcss-nested')
-const { getPropValue, isEmptyObject } = require('../utils/helpers')
+const {getPropValue, isEmptyObject} = require('../utils/helpers')
 const mergeLonghand = require('postcss-merge-longhand')
 const purgecss = require('@fullhuman/postcss-purgecss')
 
@@ -13,21 +13,21 @@ const defaultPurgeCSSExtractor = /[\w-/:%.]+(?<!:)/g
 
 module.exports = {
   fromFile: async (config, env) => {
-    const purgeCSSOpts = config.purgeCSS || {}
+    const purgeCSSOptions = config.purgeCSS || {}
     const tailwindConfigFile = getPropValue(config, 'build.tailwind.config') || 'tailwind.config.js'
     const templatesRoot = getPropValue(config, 'build.templates.root')
 
     const templateSources = Array.isArray(templatesRoot) ? templatesRoot.map(item => `${item}/**/*.*`) : [`./${templatesRoot}/**/*.*`]
 
-    const extraPurgeSources = purgeCSSOpts.content || []
+    const extraPurgeSources = purgeCSSOptions.content || []
     const purgeSources = [
       ...templateSources,
       ...extraPurgeSources
     ]
 
-    const extractor = purgeCSSOpts.extractor || defaultPurgeCSSExtractor
-    const purgeWhitelist = purgeCSSOpts.whitelist || []
-    const purgewhitelistPatterns = purgeCSSOpts.whitelistPatterns || []
+    const extractor = purgeCSSOptions.extractor || defaultPurgeCSSExtractor
+    const purgeWhitelist = purgeCSSOptions.whitelist || []
+    const purgewhitelistPatterns = purgeCSSOptions.whitelistPatterns || []
 
     const mergeLonghandPlugin = env === 'local' ? () => { } : mergeLonghand()
 
@@ -45,21 +45,21 @@ module.exports = {
       .catch(() => '@tailwind components; @tailwind utilities;')
 
     return postcss([
-      atImport({ path: userFilePath ? path.dirname(userFilePath) : [] }),
+      atImport({path: userFilePath ? path.dirname(userFilePath) : []}),
       postcssNested(),
       tailwind(tailwindConfigFile),
       purgeCssPlugin,
-      mqpacker({ sort: true }),
+      mqpacker({sort: true}),
       mergeLonghandPlugin
     ])
-      .process(cssString, { from: undefined })
+      .process(cssString, {from: undefined})
       .then(result => result.css)
       .catch(error => {
         throw error
       })
   },
   fromString: async (css, html, tailwindConfig, maizzleConfig) => {
-    const tailwindPlugin = !isEmptyObject(tailwindConfig) ? tailwind(tailwindConfig) : tailwind()
+    const tailwindPlugin = isEmptyObject(tailwindConfig) ? tailwind() : tailwind(tailwindConfig)
 
     const extractor = getPropValue(maizzleConfig, 'purgeCSS.extractor') || defaultPurgeCSSExtractor
     const purgeContent = getPropValue(maizzleConfig, 'purgeCSS.content') || []
@@ -72,7 +72,7 @@ module.exports = {
       purgecss({
         content: [
           ...purgeContent,
-          { raw: html }
+          {raw: html}
         ],
         defaultExtractor: content => content.match(extractor) || [],
         whitelist: purgeWhitelist,
@@ -81,7 +81,7 @@ module.exports = {
       mqpacker(),
       mergeLonghand()
     ])
-      .process(css, { from: undefined })
+      .process(css, {from: undefined})
       .then(result => result.css)
       .catch(error => {
         throw error

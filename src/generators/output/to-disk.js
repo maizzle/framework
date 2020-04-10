@@ -4,17 +4,23 @@ const fm = require('front-matter')
 const glob = require('glob-promise')
 const deepmerge = require('deepmerge')
 const removePlaintextTags = require('../../transformers/plaintext')
-const { asyncForEach, getPropValue } = require('../../utils/helpers')
+const {asyncForEach, getPropValue} = require('../../utils/helpers')
 
 const Config = require('../config')
 const Tailwind = require('../tailwind')
 const Plaintext = require('../plaintext')
 
-const render = require('./toString')
+const render = require('./to-string')
 
 module.exports = async (env, spinner) => {
-  const config = await Config.getMerged(env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit(1) })
-  const css = await Tailwind.fromFile(config, env).catch(err => { spinner.fail('Build failed'); console.log(err); process.exit(1) })
+  const config = await Config.getMerged(env).catch(error => {
+    spinner.fail('Build failed')
+    throw error
+  })
+  const css = await Tailwind.fromFile(config, env).catch(error => {
+    spinner.fail('Build failed')
+    throw error
+  })
 
   const sourceDir = getPropValue(config, 'build.templates.root') || 'src/templates'
   const outputDir = getPropValue(config, 'build.destination.path') || `build_${env}`
@@ -38,11 +44,12 @@ module.exports = async (env, spinner) => {
 
   const templates = await glob(`${outputDir}/**/*.+(${filetypes})`)
 
-  if (templates.length < 1) {
+  if (templates.length === 0) {
     spinner
       .fail(`Error: no files with the .${filetypes} extension found in your \`templates.root\` path${Array.isArray(sourceDir) ? 's' : ''}`)
       .fail('Build failed')
-    process.exit(1)
+
+    throw new Error('no templates found')
   }
 
   if (config.events && typeof config.events.beforeCreate === 'function') {
@@ -92,7 +99,7 @@ module.exports = async (env, spinner) => {
     fs.outputFile(file, html)
       .then(async () => {
         if (templateConfig.permalink) {
-          await fs.move(file, templateConfig.permalink, { overwrite: true })
+          await fs.move(file, templateConfig.permalink, {overwrite: true})
         }
 
         const extension = getPropValue(templateConfig, 'build.destination.extension') || 'html'
@@ -104,7 +111,7 @@ module.exports = async (env, spinner) => {
       })
   })
 
-  const assets = getPropValue(config, 'build.assets') || { source: '', destination: 'assets' }
+  const assets = getPropValue(config, 'build.assets') || {source: '', destination: 'assets'}
 
   if (fs.pathExistsSync(assets.source)) {
     await fs.copy(assets.source, `${outputDir}/${assets.destination}`)

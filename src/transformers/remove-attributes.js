@@ -1,15 +1,15 @@
 const posthtml = require('posthtml')
 const removeAttributes = require('posthtml-remove-attributes')
-const { getPropValue, isObject } = require('../utils/helpers')
+const {getPropValue, isObject} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
   const options = getPropValue(config, 'build.posthtml.options') || {}
   const attributes = isObject(config.removeAttributes) ? config.removeAttributes : []
 
-  attributes.push({ name: 'style' })
+  attributes.push({name: 'style'})
 
   // Allow ommiting `value` key when removing empty attributes
-  attributes.map(attr => {
+  attributes.forEach(attr => {
     attr.value = attr.value || ''
   })
 

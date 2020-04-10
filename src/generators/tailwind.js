@@ -5,7 +5,7 @@ const tailwind = require('tailwindcss')
 const mqpacker = require('css-mqpacker')
 const atImport = require('postcss-import')
 const postcssNested = require('postcss-nested')
-const { getPropValue } = require('../utils/helpers')
+const { getPropValue, isEmptyObject } = require('../utils/helpers')
 const mergeLonghand = require('postcss-merge-longhand')
 const purgecss = require('@fullhuman/postcss-purgecss')
 
@@ -65,7 +65,7 @@ module.exports = {
       })
   },
   fromString: async (css, html, tailwindConfig, maizzleConfig) => {
-    const tailwindPlugin = typeof tailwindConfig === 'object' ? tailwind(tailwindConfig) : tailwind()
+    const tailwindPlugin = !isEmptyObject(tailwindConfig) ? tailwind(tailwindConfig) : tailwind()
 
     const extractor = getPropValue(maizzleConfig, 'purgeCSS.extractor') || defaultPurgeCSSExtractor
     const purgeContent = getPropValue(maizzleConfig, 'purgeCSS.content') || []
@@ -88,13 +88,7 @@ module.exports = {
       mergeLonghand()
     ])
       .process(css, { from: undefined })
-      .then(result => {
-        if (!result.css.trim()) {
-          throw new Error('Tailwind CSS was compiled to empty string.')
-        }
-
-        return result.css
-      })
+      .then(result => result.css)
       .catch(error => {
         throw error
       })

@@ -21,3 +21,9 @@ const processFile = (t, name, options = {}, log = false) => {
 test('It compiles HTML string if no options are passed', t => {
   return processFile(t, 'basic')
 })
+
+test('It throws if first argument is not an HTML string', async t => {
+	await t.throwsAsync(async () => {
+		await renderString(false)
+	}, {instanceOf: TypeError, message: 'first argument must be an HTML string, received false'})
+})

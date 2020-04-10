@@ -23,13 +23,13 @@ test('It compiles HTML string if no options are passed', t => {
 })
 
 test('It throws if first argument is not an HTML string', async t => {
-	await t.throwsAsync(async () => {
-		await renderString(false)
-	}, {instanceOf: TypeError, message: 'first argument must be an HTML string, received false'})
+  await t.throwsAsync(async () => {
+    await renderString(false)
+  }, {instanceOf: TypeError, message: 'first argument must be an HTML string, received false'})
 })
 
 test('It throws if first argument is an empty string', async t => {
-	await t.throwsAsync(async () => {
-		await renderString('')
-	}, {instanceOf: RangeError, message: 'received empty string'})
+  await t.throwsAsync(async () => {
+    await renderString('')
+  }, {instanceOf: RangeError, message: 'received empty string'})
 })

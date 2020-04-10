@@ -53,13 +53,7 @@ module.exports = {
       mergeLonghandPlugin
     ])
       .process(cssString, { from: undefined })
-      .then(result => {
-        if (!result.css.trim()) {
-          throw new Error('Tailwind CSS was compiled to empty string.')
-        }
-
-        return result.css
-      })
+      .then(result => result.css)
       .catch(error => {
         throw error
       })

@@ -1,9 +1,9 @@
 const { comb } = require('email-comb')
 
 module.exports = async (html, config) => {
-  const opts = config.cleanup.removeUnusedCSS
+  const opts = config.removeUnusedCSS || {}
 
-  if (config.cleanup && opts && opts.enabled) {
+  if (opts.enabled) {
     return comb(html, opts).result
   }
 

@@ -1,6 +1,7 @@
 const ora = require('ora')
 const bs = require('browser-sync')
 const Output = require('./generators/output')
+const { getPropValue } = require('./utils/helpers')
 
 const self = module.exports = {
   render: async (html, options) => Output.toString(html, options),
@@ -11,36 +12,43 @@ const self = module.exports = {
 
     return Output.toDisk(env, spinner)
       .then(total => spinner.succeed(`Built ${total} templates in ${new Date() - start} ms.`))
-      .catch(err => { spinner.fail('Build failed'); console.error(err); process.exit() })
+      .catch(error => { spinner.fail('Build failed'); console.error(error); process.exit(1) })
   },
   serve: async () => {
-    await self.build()
+    await self.build().catch(error => { console.error(error); process.exit(1) })
 
     require('./generators/config')
       .getMerged('local')
       .then(config => {
-        const watchPaths = config.browsersync.watch || []
+        const bsOptions = getPropValue(config, 'build.browsersync') || {}
+        const watchPaths = bsOptions.watch || []
+        const templatesRoot = getPropValue(config, 'build.templates.root')
+        const baseDir = getPropValue(config, 'build.destination.path') || 'build_local'
+
+        if (Array.isArray(templatesRoot)) {
+          templatesRoot.forEach(root => watchPaths.push(root))
+        } else if (typeof templatesRoot === 'string') {
+          watchPaths.push(templatesRoot)
+        }
+
         bs.create()
         bs.init({
           server: {
-            baseDir: config.build.destination.path,
-            directory: config.browsersync.directory
+            baseDir: baseDir,
+            directory: bsOptions.directory || true
           },
-          ui: config.browsersync.ui || { port: 3001 },
-          port: config.browsersync.port || 3000,
-          notify: config.browsersync.notify,
-          tunnel: config.browsersync.tunnel,
-          open: config.browsersync.open || false
+          ui: bsOptions.ui || { port: 3001 },
+          port: bsOptions.port || 3000,
+          notify: bsOptions.notify || false,
+          tunnel: bsOptions.tunnel || false,
+          open: bsOptions.open || false
         })
-          .watch(
-            [
-              `./${config.build.templates.source}/**/*.*`,
-              `./${config.build.assets.source}/**/*.*`,
-              './tailwind.config.js',
-              ...watchPaths
-            ]
-          )
-          .on('change', async () => { await self.build(); bs.reload() })
+          .watch(watchPaths)
+          .on('change', async () => {
+            await self.build()
+              .then(() => bs.reload())
+              .catch(error => { console.error(error); process.exit(1) })
+          })
       })
   }
 }

@@ -1,7 +1,7 @@
 const sixHex = require('color-shorthand-hex-to-six-digit')
 
-module.exports = async (html, env) => {
-  if (env !== 'local') {
+module.exports = async (html, config) => {
+  if (config.env !== 'local') {
     return sixHex(html)
   }
 

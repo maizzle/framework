@@ -4,5 +4,7 @@ module.exports = {
       await callback(array[index], index, array)
     }
   },
-  isEmptyObject: obj => Object.entries(obj).length === 0 && obj.constructor === Object
+  isObject: obj => typeof obj === 'object' && obj !== null,
+  isEmptyObject: obj => Object.entries(obj).length === 0 && obj.constructor === Object,
+  getPropValue: (object, path = '') => path.split('.').reduce((o, x) => o === undefined ? o : o[x], object)
 }

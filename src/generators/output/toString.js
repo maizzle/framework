@@ -1,61 +1,53 @@
 const fm = require('front-matter')
 const deepmerge = require('deepmerge')
 const Tailwind = require('../tailwind')
+const posthtml = require('../posthtml')
 const Transformers = require('../../transformers')
-const NunjucksEnvironment = require('../../nunjucks')
+const { getPropValue } = require('../../utils/helpers')
 
-module.exports = async (str, options) => {
+module.exports = async (html, options) => {
   try {
-    if (str && str.length < 1) {
+    if (typeof html !== 'string') {
+      throw TypeError(`first argument must be an HTML string, received ${html}`)
+    }
+
+    if (html.length < 1) {
       throw RangeError('received empty string')
     }
 
-    if (typeof str !== 'string') {
-      throw TypeError(`first argument must be a string, received ${str}`)
+    let config = getPropValue(options, 'maizzle.config') || {}
+    const tailwindConfig = getPropValue(options, 'tailwind.config') || {}
+    const cssString = getPropValue(options, 'tailwind.css') || '@tailwind components; @tailwind utilities;'
+
+    if (!config.isMerged) {
+      const frontMatter = fm(html)
+      html = frontMatter.body
+      config = deepmerge(config, frontMatter.attributes)
     }
 
-    const css = options && options.tailwind && typeof options.tailwind.css === 'string' ? options.tailwind.css : '@tailwind components; @tailwind utilities;'
-    const tailwindConfig = options && options.tailwind && typeof options.tailwind.config === 'object' ? options.tailwind.config : null
-    const maizzleConfig = options && options.maizzle && typeof options.maizzle.config === 'object' ? options.maizzle.config : null
-
-    if (!maizzleConfig) {
-      throw TypeError(`received invalid Maizzle config: ${maizzleConfig}`)
+    if (!getPropValue(options, 'tailwind.compiled')) {
+      config.css = await Tailwind.fromString(cssString, html, tailwindConfig, config).catch(error => { console.log(error); process.exit(1) })
+    } else {
+      config.css = options.tailwind.compiled
     }
 
-    const frontMatter = fm(str)
-    let html = frontMatter.body
-
-    const config = maizzleConfig.isMerged ? maizzleConfig : deepmerge(maizzleConfig, frontMatter.attributes)
-
-    if (typeof options.afterConfig === 'function') {
-      await options.afterConfig(config)
+    if (options && typeof options.beforeRender === 'function') {
+      await options.beforeRender(config)
     }
 
-    let compiledCSS = options.tailwind.compiled || null
+    html = await posthtml(html, config)
 
-    if (!compiledCSS) {
-      if (!tailwindConfig) {
-        throw TypeError(`received invalid Tailwind CSS config: ${tailwindConfig}`)
-      }
-
-      compiledCSS = await Tailwind.fromString(css, html, tailwindConfig, maizzleConfig).catch(err => { console.log(err); process.exit() })
+    while (Object.keys(fm(html).attributes).length > 0) {
+      html = fm(html).body
     }
 
-    const nunjucks = await NunjucksEnvironment.init(config.build.nunjucks)
-
-    if (typeof options.beforeRender === 'function') {
-      await options.beforeRender(nunjucks, config)
-    }
-
-    html = nunjucks.renderString(html, { page: config, env: options.env, css: compiledCSS })
-
-    if (typeof options.afterRender === 'function') {
+    if (options && typeof options.afterRender === 'function') {
       html = await options.afterRender(html, config)
     }
 
-    html = await Transformers.process(html, config, options.env)
+    html = await Transformers.process(html, config)
 
-    if (typeof options.afterTransformers === 'function') {
+    if (options && typeof options.afterTransformers === 'function') {
       html = await options.afterTransformers(html, config)
     }
 

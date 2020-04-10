@@ -1,20 +1,13 @@
-module.exports = async (html, env) => {
-  if (env !== 'local') {
-    return html
-      // Rewrite class names in `<head>` CSS
-      .replace(/(\..+)(\\:|\\\/|\\%|\\\.)/g, group => {
-        return group
-          .replace(/\\:|\\\//g, '-') // replace `\/` and `\:` with `-`
-          .replace(/\\%/g, 'pc') // replace `\%` with `pc`
-          .replace(/\\\./g, '_') // replace `\.` with `_`
-      })
-      // Rewrite class names in `<body>` HTML
-      .replace(/class\s*=\s*["'][^"']*[/:][^"']*["']/g, group => {
-        return group
-          .replace(/\/|:/g, '-') // replace `\/` and `\:` with `-`
-          .replace(/%/g, 'pc') // replace `%` with `pc`
-          .replace(/\./g, '_') // replace `.` with `_`
-      })
+const posthtml = require('posthtml')
+const { getPropValue } = require('../utils/helpers')
+const safeClassNames = require('posthtml-safe-class-names')
+
+module.exports = async (html, config) => {
+  if (typeof config.env === 'string' && config.env !== 'local') {
+    const replacements = config.safeClassNames || {}
+    const options = getPropValue(config, 'build.posthtml.options') || {}
+
+    html = posthtml([safeClassNames({ replacements: replacements })]).process(html, options).then(result => result.html)
   }
 
   return html

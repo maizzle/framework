@@ -169,3 +169,12 @@ test('transform contents', t => {
     }
   }))
 })
+
+test('url parameters', t => {
+  return processFile(t, 'url-params', maizzleConfig({
+    urlParameters: {
+      source: 'email',
+      campaign: '@CampaignName@'
+    }
+  }))
+})

@@ -135,3 +135,13 @@ test('removes plaintext tag', t => {
 
   t.is(html, expected('plaintext'))
 })
+
+test('replaces strings', t => {
+  return processFile(t, 'replace-strings', maizzleConfig({
+    replaceStrings: {
+      test: 'replace strings test',
+      '{head}': '<%=',
+      '{tail}': '%>'
+    }
+  }))
+})

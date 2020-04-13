@@ -1,9 +1,9 @@
 const path = require('path')
-const fs = require('fs-extra')
 const stripHTML = require('string-strip-html')
+const {getPropValue} = require('../utils/helpers')
 
-module.exports.output = async (html, filePath, config) => {
-  filePath = config.permalink || filePath
+module.exports.prepare = async (html, filePath, config) => {
+  filePath = getPropValue(config, 'permalink') || filePath
   const destination = path.join(path.dirname(filePath), path.basename(filePath, path.extname(filePath)) + '.txt')
 
   const plaintext = stripHTML(html,
@@ -16,5 +16,5 @@ module.exports.output = async (html, filePath, config) => {
       }
     })
 
-  fs.outputFile(destination, plaintext)
+  return {destination, plaintext}
 }

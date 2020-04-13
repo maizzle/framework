@@ -91,7 +91,8 @@ module.exports = async (env, spinner) => {
     }
 
     if (templateConfig.plaintext) {
-      await Plaintext.output(html, file, templateConfig)
+      await Plaintext.prepare(html, file, templateConfig)
+        .then(({destination, plaintext}) => fs.outputFile(destination, plaintext))
     }
 
     html = removePlaintextTags(html, config)

@@ -10,7 +10,7 @@ const expected = file => readFileSync(join(__dirname, 'expected', `${file}.html`
 
 const clean = html => html.replace(/[^\S\r\n]+$/gm, '').trim()
 
-const maizzleConfig = options => {
+const maizzleConfig = (options = {}) => {
   return {
     maizzle: {
       config: {
@@ -27,7 +27,7 @@ const processFile = (t, name, options = {}, log = false) => {
     .then(html => t.is(html, expected(name).trim()))
 }
 
-test('removes inline sizes', t => {
+test('remove inline sizes', t => {
   return processFile(t, 'remove-inline-sizes', maizzleConfig({
     inlineCSS: {
       enabled: true,
@@ -39,7 +39,7 @@ test('removes inline sizes', t => {
   }))
 })
 
-test('removes inline background-color', t => {
+test('remove inline background-color', t => {
   return processFile(t, 'remove-inline-bgcolor', maizzleConfig({
     inlineCSS: {
       enabled: true,
@@ -48,7 +48,7 @@ test('removes inline background-color', t => {
   }))
 })
 
-test('removes inline background-color (with tags)', t => {
+test('remove inline background-color (with tags)', t => {
   return processFile(t, 'remove-inline-bgcolor-tags', maizzleConfig({
     inlineCSS: {
       enabled: true,
@@ -83,7 +83,7 @@ test('inline CSS', t => {
   }))
 })
 
-test('removes unused CSS', t => {
+test('remove unused CSS', t => {
   return processFile(t, 'email-comb', maizzleConfig({
     removeUnusedCSS: {
       enabled: true,
@@ -94,7 +94,7 @@ test('removes unused CSS', t => {
   }))
 })
 
-test('removes attributes', t => {
+test('remove attributes', t => {
   return processFile(t, 'remove-attributes', maizzleConfig({
     removeAttributes: [
       {name: 'role', value: 'article'},
@@ -147,7 +147,7 @@ test('removes plaintext tag', t => {
   t.is(html, expected('plaintext'))
 })
 
-test('replaces strings', t => {
+test('replace strings', t => {
   return processFile(t, 'replace-strings', maizzleConfig({
     replaceStrings: {
       test: 'replace strings test',
@@ -155,4 +155,8 @@ test('replaces strings', t => {
       '{tail}': '%>'
     }
   }))
+})
+
+test('six digit hex', t => {
+  return processFile(t, 'six-hex', maizzleConfig())
 })

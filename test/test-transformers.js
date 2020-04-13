@@ -27,6 +27,18 @@ const processFile = (t, name, options = {}, log = false) => {
     .then(html => t.is(html, expected(name).trim()))
 }
 
+test('removes inline sizes', t => {
+  return processFile(t, 'remove-inline-sizes', maizzleConfig({
+    inlineCSS: {
+      enabled: true,
+      keepOnlyAttributeSizes: {
+        width: ['TABLE'],
+        height: ['TD']
+      }
+    }
+  }))
+})
+
 test('removes inline background-color', t => {
   return processFile(t, 'remove-inline-bgcolor', maizzleConfig({
     inlineCSS: {

@@ -1,11 +1,13 @@
 const posthtml = require('posthtml')
 const parseAttrs = require('posthtml-attrs-parser')
-const {getPropValue, isObject} = require('../utils/helpers')
+const {getPropValue, isEmptyObject} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
-  if (!isObject(config.keepOnlyAttributeSizes)) {
+  const settings = getPropValue(config, 'inlineCSS.keepOnlyAttributeSizes') || {}
+
+  if (!isEmptyObject(settings)) {
     const options = getPropValue(config, 'build.posthtml.options') || {}
-    html = await posthtml([removeInlineSizes(config.keepOnlyAttributeSizes)]).process(html, options).then(result => result.html)
+    html = await posthtml([removeInlineSizes(settings)]).process(html, options).then(result => result.html)
   }
 
   return html
@@ -18,6 +20,7 @@ const removeInlineSizes = (mappings = {}) => tree => {
 
     Object.entries(mappings).forEach(([attribute, tags]) => {
       tags = Object.values(tags)
+
       if (!tags.includes(tag)) {
         return node
       }
@@ -30,10 +33,6 @@ const removeInlineSizes = (mappings = {}) => tree => {
     })
 
     node.attrs = attrs.compose()
-
-    if (attrs.style) {
-      node.attrs.style = node.attrs.style.slice(-1) === ';' ? node.attrs.style : node.attrs.style + ';'
-    }
 
     return node
   }

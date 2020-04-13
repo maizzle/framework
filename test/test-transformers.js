@@ -65,3 +65,15 @@ test('inline CSS', t => {
     }
   }))
 })
+
+test('minify', t => {
+  return processFile(t, 'minify', maizzleConfig({
+    minify: {
+      enabled: true,
+      lineLengthLimit: 500,
+      removeIndentations: true,
+      removeLineBreaks: true,
+      breakToTheLeftOf: ['<table']
+    }
+  }))
+})

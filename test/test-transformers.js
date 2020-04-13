@@ -83,6 +83,17 @@ test('inline CSS', t => {
   }))
 })
 
+test('removes unused CSS', t => {
+  return processFile(t, 'email-comb', maizzleConfig({
+    removeUnusedCSS: {
+      enabled: true,
+      removeHTMLComments: false,
+      removeCSSComments: false,
+      whitelist: ['.preserve*']
+    }
+  }))
+})
+
 test('removes attributes', t => {
   return processFile(t, 'remove-attributes', maizzleConfig({
     removeAttributes: [

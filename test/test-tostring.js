@@ -7,19 +7,12 @@ const {readFileSync} = require('fs')
 const fixture = file => readFileSync(join(__dirname, 'fixtures', `${file}.html`), 'utf8')
 const expected = file => readFileSync(join(__dirname, 'expected', `${file}.html`), 'utf8')
 
-const clean = html => html.replace(/[^\S\r\n]+$/gm, '').trim()
-const env = {maizzle: {config: {env: 'node'}}}
+const renderString = (string, options = {}) => Maizzle.render(string, options).then(html => html)
 
-const renderString = (string, options = {}) => Maizzle.render(string, {...env, ...options}).then(html => html)
+test('It compiles HTML string if no options are passed', async t => {
+  const html = await renderString(fixture('basic'))
 
-const processFile = (t, name, options = {}, log = false) => {
-  return renderString(fixture(name), {...env, ...options})
-    .then(result => log ? console.log(result) : clean(result))
-    .then(html => t.is(html, expected(name).trim()))
-}
-
-test('It compiles HTML string if no options are passed', t => {
-  return processFile(t, 'basic')
+  t.is(html, expected('basic'))
 })
 
 test('It throws if first argument is not an HTML string', async t => {

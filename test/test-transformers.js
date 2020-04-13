@@ -1,0 +1,38 @@
+const test = require('ava')
+const Maizzle = require('../src')
+
+const {join} = require('path')
+const {readFileSync} = require('fs')
+
+const fixture = file => readFileSync(join(__dirname, 'fixtures', `${file}.html`), 'utf8')
+const expected = file => readFileSync(join(__dirname, 'expected', `${file}.html`), 'utf8')
+
+const clean = html => html.replace(/[^\S\r\n]+$/gm, '').trim()
+
+const maizzleConfig = options => {
+  return {
+    maizzle: {
+      config: {
+        env: 'node',
+        ...options
+      }
+    }
+  }
+}
+
+const processFile = (t, name, options = {}, log = false) => {
+  return Maizzle.render(fixture(name), {...options})
+    .then(result => log ? console.log(result) : clean(result))
+    .then(html => t.is(html, expected(name).trim()))
+}
+
+test('It applies extra attributes', t => {
+  return processFile(t, 'extra-attributes', maizzleConfig({
+    extraAttributes: {
+      div: {
+        role: 'article',
+        class: 'text-center'
+      }
+    }
+  }))
+})

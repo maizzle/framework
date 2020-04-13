@@ -29,7 +29,4 @@ module.exports = async (html, config) => {
   ])
     .process(html, {...posthtmlOptions})
     .then(result => fm(result.html).body)
-    .catch(error => {
-      throw error
-    })
 }

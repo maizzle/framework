@@ -1,14 +1,18 @@
 const posthtml = require('posthtml')
 const parseAttrs = require('posthtml-attrs-parser')
-const {getPropValue} = require('../utils/helpers')
+const {getPropValue, isObject} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
-  const prefers = config.preferBgColorAttribute
+  const prefers = getPropValue(config, 'inlineCSS.preferBgColorAttribute')
   const options = getPropValue(config, 'build.posthtml.options') || {}
 
-  if ((typeof prefers === 'boolean' && prefers) || (prefers && prefers.enabled)) {
-    const tags = prefers ? prefers.tags : []
-    html = await posthtml([removeInlineBGColor({tags})]).process(html, options).then(result => result.html)
+  if ((typeof prefers === 'boolean' && prefers)) {
+    return posthtml([removeInlineBGColor()]).process(html, options).then(result => result.html)
+  }
+
+  if (isObject(prefers) && prefers.enabled) {
+    const tags = getPropValue(prefers, 'tags')
+    return posthtml([removeInlineBGColor({tags})]).process(html, options).then(result => result.html)
   }
 
   return html
@@ -35,7 +39,6 @@ const removeInlineBGColor = (options = {}) => tree => {
       attrs.bgcolor = attrs.style['background-color']
       delete attrs.style['background-color']
       node.attrs = attrs.compose()
-      node.attrs.style = node.attrs.style.slice(-1) === ';' ? node.attrs.style : node.attrs.style + ';'
     }
 
     return node

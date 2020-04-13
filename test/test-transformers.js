@@ -27,18 +27,22 @@ const processFile = (t, name, options = {}, log = false) => {
     .then(html => t.is(html, expected(name).trim()))
 }
 
-test('base image URL', t => {
-  return processFile(t, 'base-image-url', maizzleConfig({
-    baseImageURL: 'https://example.com/'
+test('removes inline background-color', t => {
+  return processFile(t, 'remove-inline-bgcolor', maizzleConfig({
+    inlineCSS: {
+      enabled: true,
+      preferBgColorAttribute: true
+    }
   }))
 })
 
-test('extra attributes', t => {
-  return processFile(t, 'extra-attributes', maizzleConfig({
-    extraAttributes: {
-      div: {
-        role: 'article',
-        class: 'text-center'
+test('removes inline background-color (with tags)', t => {
+  return processFile(t, 'remove-inline-bgcolor-tags', maizzleConfig({
+    inlineCSS: {
+      enabled: true,
+      preferBgColorAttribute: {
+        enabled: true,
+        tags: ['td']
       }
     }
   }))
@@ -67,6 +71,41 @@ test('inline CSS', t => {
   }))
 })
 
+test('removes attributes', t => {
+  return processFile(t, 'remove-attributes', maizzleConfig({
+    removeAttributes: [
+      {name: 'role', value: 'article'},
+      {name: 'contenteditable'}
+    ]
+  }))
+})
+
+test('extra attributes', t => {
+  return processFile(t, 'extra-attributes', maizzleConfig({
+    extraAttributes: {
+      div: {
+        role: 'article',
+        class: 'text-center'
+      }
+    }
+  }))
+})
+test('base image URL', t => {
+  return processFile(t, 'base-image-url', maizzleConfig({
+    baseImageURL: 'https://example.com/'
+  }))
+})
+
+test('prettify', t => {
+  return processFile(t, 'prettify', maizzleConfig({
+    prettify: {
+      enabled: true,
+      indent_inner_html: true, // eslint-disable-line
+      ocd: true
+    }
+  }))
+})
+
 test('minify', t => {
   return processFile(t, 'minify', maizzleConfig({
     minify: {
@@ -83,23 +122,4 @@ test('removes plaintext tag', t => {
   const html = removePlaintextTags(fixture('plaintext'), {})
 
   t.is(html, expected('plaintext'))
-})
-
-test('prettify', t => {
-  return processFile(t, 'prettify', maizzleConfig({
-    prettify: {
-      enabled: true,
-      indent_inner_html: true, // eslint-disable-line
-      ocd: true
-    }
-  }))
-})
-
-test('remove-attributes', t => {
-  return processFile(t, 'remove-attributes', maizzleConfig({
-    removeAttributes: [
-      {name: 'role', value: 'article'},
-      {name: 'contenteditable'}
-    ]
-  }))
 })

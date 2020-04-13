@@ -2,9 +2,13 @@ const path = require('path')
 const deepmerge = require('deepmerge')
 
 module.exports = {
-  getMerged: async env => {
-    let baseConfig = {}
-    let envConfig = {}
+  getMerged: async (env = 'local') => {
+    if (typeof env !== 'string') {
+      throw new TypeError(`env name must be a string, received ${env}`)
+    }
+
+    let baseConfig = {env}
+    let envConfig = {env}
 
     for (const module of ['./config', './config.local']) {
       try {
@@ -15,12 +19,8 @@ module.exports = {
     if (typeof env === 'string' && env !== 'local') {
       try {
         envConfig = require(path.resolve(process.cwd(), `./config.${env}`))
-      } catch (error) {
-        if (error.code === 'MODULE_NOT_FOUND') {
-          throw new Error(`no 'config.${env}.js' file found in project root`)
-        }
-
-        throw error
+      } catch {
+        throw new Error(`could not load 'config.${env}.js'`)
       }
     }
 

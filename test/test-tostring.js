@@ -18,6 +18,12 @@ const processFile = (t, name, options = {}, log = false) => {
     .then(html => t.is(html, expected(name).trim()))
 }
 
+test('It throws if  toDisk', async t => {
+  await t.throwsAsync(async () => {
+    await Maizzle.build('production')
+  }, {instanceOf: Error, message: `could not load 'config.production.js'`})
+})
+
 test('It compiles HTML string if no options are passed', t => {
   return processFile(t, 'basic')
 })

@@ -94,3 +94,12 @@ test('prettify', t => {
     }
   }))
 })
+
+test('remove-attributes', t => {
+  return processFile(t, 'remove-attributes', maizzleConfig({
+    removeAttributes: [
+      {name: 'role', value: 'article'},
+      {name: 'contenteditable'}
+    ]
+  }))
+})

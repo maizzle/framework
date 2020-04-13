@@ -26,12 +26,41 @@ const processFile = (t, name, options = {}, log = false) => {
     .then(html => t.is(html, expected(name).trim()))
 }
 
-test('It applies extra attributes', t => {
+test('base image URL', t => {
+  return processFile(t, 'base-image-url', maizzleConfig({
+    baseImageURL: 'https://example.com/'
+  }))
+})
+
+test('extra attributes', t => {
   return processFile(t, 'extra-attributes', maizzleConfig({
     extraAttributes: {
       div: {
         role: 'article',
         class: 'text-center'
+      }
+    }
+  }))
+})
+
+test('inline CSS', t => {
+  return processFile(t, 'inline', maizzleConfig({
+    inlineCSS: {
+      enabled: true,
+      removeStyleTags: false,
+      styleToAttribute: {
+        'text-align': 'align'
+      },
+      applySizeAttribute: {
+        width: ['TABLE'],
+        height: ['TD']
+      },
+      excludedProperties: ['cursor'],
+      codeBlocks: {
+        ASP: {
+          start: '<%',
+          end: '%>'
+        }
       }
     }
   }))

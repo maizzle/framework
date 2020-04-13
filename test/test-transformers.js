@@ -1,5 +1,6 @@
 const test = require('ava')
 const Maizzle = require('../src')
+const removePlaintextTags = require('../src/transformers/plaintext')
 
 const {join} = require('path')
 const {readFileSync} = require('fs')
@@ -76,4 +77,10 @@ test('minify', t => {
       breakToTheLeftOf: ['<table']
     }
   }))
+})
+
+test('removes plaintext tag', t => {
+  const html = removePlaintextTags(fixture('plaintext'), {})
+
+  t.is(html, expected('plaintext'))
 })

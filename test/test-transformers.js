@@ -84,3 +84,13 @@ test('removes plaintext tag', t => {
 
   t.is(html, expected('plaintext'))
 })
+
+test('prettify', t => {
+  return processFile(t, 'prettify', maizzleConfig({
+    prettify: {
+      enabled: true,
+      indent_inner_html: true, // eslint-disable-line
+      ocd: true
+    }
+  }))
+})

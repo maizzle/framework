@@ -160,3 +160,12 @@ test('replace strings', t => {
 test('six digit hex', t => {
   return processFile(t, 'six-hex', maizzleConfig())
 })
+
+test('transform contents', t => {
+  return processFile(t, 'transform-contents', maizzleConfig({
+    transformContents: {
+      foo: text => text.replace(/foo/g, 'Foo is the way'),
+      bar: text => text.replace(/bar/g, 'Bar all day')
+    }
+  }))
+})

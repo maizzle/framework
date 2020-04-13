@@ -27,9 +27,7 @@ module.exports = async (html, options) => {
   if (typeof getPropValue(options, 'tailwind.compiled') === 'string') {
     config.css = options.tailwind.compiled
   } else {
-    config.css = await Tailwind.fromString(cssString, html, tailwindConfig, config).catch(error => {
-      throw error
-    })
+    config.css = await Tailwind.fromString(cssString, html, tailwindConfig, config)
   }
 
   if (options && typeof options.beforeRender === 'function') {

@@ -26,3 +26,42 @@ test('It throws if first argument is an empty string', async t => {
     await renderString('')
   }, {instanceOf: RangeError, message: 'received empty string'})
 })
+
+test('it runs the `beforeRender` event', async t => {
+  const html = await renderString(`<div>{{ page.foo }}</div>`, {
+    beforeRender(config) {
+      config.foo = 'bar'
+    }
+  })
+
+  t.is(html, `<div>bar</div>`)
+})
+
+test('it runs the `afterRender` event', async t => {
+  const result = await renderString(`<div>foo</div>`, {
+    afterRender(html, config) {
+      config.replaceStrings = {
+        foo: 'baz'
+      }
+
+      return html
+    }
+  })
+
+  t.is(result, `<div>baz</div>`)
+})
+
+test('it runs the `afterTransformers` event', async t => {
+  const result = await renderString(`<div>foo</div>`, {
+    maizzle: {
+      config: {
+        title: 'bar'
+      }
+    },
+    afterTransformers(html, config) {
+      return html.replace('foo', config.title)
+    }
+  })
+
+  t.is(result, `<div>bar</div>`)
+})

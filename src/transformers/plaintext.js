@@ -1,7 +1,10 @@
 const posthtml = require('posthtml')
+const {getPropValue} = require('../utils/helpers')
 
-module.exports = (html, config, options = config.build.posthtml.options || {}) => {
-  return posthtml([plaintext()]).process(html, { ...options, sync: true }).html
+module.exports = (html, config) => {
+  const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {}
+
+  return posthtml([plaintext()]).process(html, {...posthtmlOptions, sync: true}).html
 }
 
 const plaintext = () => tree => {

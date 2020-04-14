@@ -1,5 +1,5 @@
-const { crush } = require('html-crush')
-const { isObject } = require('../utils/helpers')
+const {crush} = require('html-crush')
+const {isObject} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
   if (isObject(config.minify) && config.minify.enabled) {

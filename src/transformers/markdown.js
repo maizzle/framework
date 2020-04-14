@@ -1,6 +1,6 @@
 const posthtml = require('posthtml')
 const markdown = require('posthtml-md2html')
-const { getPropValue } = require('../utils/helpers')
+const {getPropValue} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
   const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {}

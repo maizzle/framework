@@ -1,21 +1,29 @@
 const ora = require('ora')
 const bs = require('browser-sync')
 const Output = require('./generators/output')
-const { getPropValue } = require('./utils/helpers')
+const {getPropValue} = require('./utils/helpers')
 
-const self = module.exports = {
+const self = module.exports = { // eslint-disable-line
   render: async (html, options) => Output.toString(html, options),
-  build: async env => {
+  build: async (env, config) => {
     env = env || 'local'
     const start = new Date()
     const spinner = ora('Building emails...').start()
 
-    return Output.toDisk(env, spinner)
-      .then(total => spinner.succeed(`Built ${total} templates in ${new Date() - start} ms.`))
-      .catch(error => { spinner.fail('Build failed'); console.error(error); process.exit(1) })
+    return Output.toDisk(env, spinner, config)
+      .then(response => {
+        spinner.succeed(`Built ${response.count} templates in ${new Date() - start} ms.`)
+        return response.files
+      })
+      .catch(error => {
+        spinner.fail('Build failed')
+        throw error
+      })
   },
   serve: async () => {
-    await self.build().catch(error => { console.error(error); process.exit(1) })
+    await self.build().catch(error => {
+      throw error
+    })
 
     require('./generators/config')
       .getMerged('local')
@@ -34,10 +42,10 @@ const self = module.exports = {
         bs.create()
         bs.init({
           server: {
-            baseDir: baseDir,
+            baseDir,
             directory: bsOptions.directory || true
           },
-          ui: bsOptions.ui || { port: 3001 },
+          ui: bsOptions.ui || {port: 3001},
           port: bsOptions.port || 3000,
           notify: bsOptions.notify || false,
           tunnel: bsOptions.tunnel || false,
@@ -47,7 +55,9 @@ const self = module.exports = {
           .on('change', async () => {
             await self.build()
               .then(() => bs.reload())
-              .catch(error => { console.error(error); process.exit(1) })
+              .catch(error => {
+                throw error
+              })
           })
       })
   }

@@ -26,6 +26,8 @@
     "access": "public"
   },
   "scripts": {
+    "test": "nyc ava -s",
+    "pretest": "xo",
     "release": "np"
   },
   "dependencies": {
@@ -66,13 +68,10 @@
     "tailwindcss": "^1.2.0"
   },
   "devDependencies": {
-    "eslint": "^6.8.0",
-    "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1",
-    "np": "*"
+    "ava": "^3.6.0",
+    "np": "*",
+    "nyc": "^15.0.1",
+    "xo": "^0.29.0"
   },
   "engines": {
     "node": ">=10"

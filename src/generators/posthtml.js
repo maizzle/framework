@@ -6,28 +6,27 @@ const layouts = require('posthtml-extend')
 const modules = require('posthtml-modules')
 const includes = require('posthtml-include')
 const expressions = require('posthtml-expressions')
-const { getPropValue } = require('../utils/helpers')
+const {getPropValue} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
-  const layoutsOpts = getPropValue(config, 'build.layouts') || {}
-  const modulesOpts = getPropValue(config, 'build.components') || {}
-  const includeOpts = getPropValue(config, 'build.includes') || {}
-  const fetchOpts = getPropValue(config, 'build.posthtml.fetch') || {}
-  const outlookOpts = getPropValue(config, 'build.posthtml.outlook') || {}
-  const posthtmlOpts = getPropValue(config, 'build.posthtml.options') || {}
+  const layoutsOptions = getPropValue(config, 'build.layouts') || {}
+  const modulesOptions = getPropValue(config, 'build.components') || {}
+  const includeOptions = getPropValue(config, 'build.includes') || {}
+  const fetchOptions = getPropValue(config, 'build.posthtml.fetch') || {}
+  const outlookOptions = getPropValue(config, 'build.posthtml.outlook') || {}
+  const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {}
   const posthtmlPlugins = getPropValue(config, 'build.posthtml.plugins') || []
-  const expressionsOpts = getPropValue(config, 'build.posthtml.expressions') || {}
+  const expressionsOptions = getPropValue(config, 'build.posthtml.expressions') || {}
 
   return posthtml([
-    layouts({ strict: false, ...layoutsOpts }),
-    includes({ ...includeOpts }),
-    outlook({ ...outlookOpts }),
-    fetch({ ...fetchOpts }),
-    modules({ tag: 'component', attribute: 'src', ...modulesOpts }),
-    expressions({ ...expressionsOpts, locals: { page: config } }),
+    layouts({strict: false, ...layoutsOptions}),
+    includes({...includeOptions}),
+    outlook({...outlookOptions}),
+    fetch({...fetchOptions}),
+    modules({tag: 'component', attribute: 'src', ...modulesOptions}),
+    expressions({...expressionsOptions, locals: {page: config}}),
     ...posthtmlPlugins
   ])
-    .process(html, { ...posthtmlOpts })
+    .process(html, {...posthtmlOptions})
     .then(result => fm(result.html).body)
-    .catch(error => { throw error })
 }

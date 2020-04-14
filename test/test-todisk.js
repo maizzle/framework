@@ -22,6 +22,7 @@ test('throws if no templates found', async t => {
 test('outputs files at the correct location', async t => {
   const files = await Maizzle.build('production', {
     build: {
+      fail: 'silent',
       destination: {
         path: t.context.folder
       },
@@ -57,6 +58,7 @@ test('outputs files at the correct location when multiple template sources are u
 test('processes all files in the `filetypes` option', async t => {
   const files = await Maizzle.build('production', {
     build: {
+      fail: 'silent',
       destination: {
         path: t.context.folder
       },
@@ -75,6 +77,7 @@ test('processes all files in the `filetypes` option', async t => {
 test('outputs files with the correct extension', async t => {
   await Maizzle.build('production', {
     build: {
+      fail: 'silent',
       destination: {
         path: t.context.folder,
         extension: 'blade.php'
@@ -92,6 +95,7 @@ test('outputs files with the correct extension', async t => {
 test('outputs plaintext files if option is enabled', async t => {
   const files = await Maizzle.build('production', {
     plaintext: true,
+    fail: 'silent',
     build: {
       destination: {
         path: t.context.folder
@@ -111,6 +115,7 @@ test('outputs plaintext files if option is enabled', async t => {
 test('copies assets to destination', async t => {
   await Maizzle.build('production', {
     build: {
+      fail: 'silent',
       assets: {
         source: 'test/stubs/assets',
         destination: 'images'
@@ -184,6 +189,7 @@ test('warns if a template cannot be rendered and `fail` option is `silent`', asy
 test('runs the `beforeCreate` event', async t => {
   const files = await Maizzle.build('production', {
     build: {
+      fail: 'silent',
       destination: {
         path: t.context.folder
       },
@@ -208,6 +214,7 @@ test('runs the `beforeCreate` event', async t => {
 test('runs the `afterBuild` event', async t => {
   const files = await Maizzle.build('production', {
     build: {
+      fail: 'silent',
       destination: {
         path: t.context.folder
       },

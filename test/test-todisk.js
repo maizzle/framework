@@ -54,24 +54,6 @@ test('It outputs files at the correct location when multiple template sources ar
   await fs.remove(t.context.folder)
 })
 
-test('It outputs files at the correct location if permalink is used', async t => {
-  const files = await Maizzle.build('production', {
-    permalink: `./${t.context.folder}/custom-permalink.html`,
-    build: {
-      fail: 'silent',
-      templates: {
-        root: 'test/stubs/empty'
-      }
-    }
-  })
-
-  t.is(files.length, 1)
-  t.is(fs.readdirSync(t.context.folder).includes('custom-permalink.html'), true)
-
-  await fs.remove('build_production')
-  await fs.remove(t.context.folder)
-})
-
 test('It processes all files in the `filetypes` option', async t => {
   const files = await Maizzle.build('production', {
     build: {

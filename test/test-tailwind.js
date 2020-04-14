@@ -1,13 +1,13 @@
 const test = require('ava')
 const Tailwind = require('../src/generators/tailwind')
 
-test('It throws if CSS provided to fromString is not a CSS string', async t => {
+test('throws if CSS provided to fromString is not a CSS string', async t => {
   await t.throwsAsync(async () => {
     await Tailwind.fromString(null, '<div class="text-center">Test</a>', {}, {})
   }, {instanceOf: Error, message: 'PostCSS received null instead of CSS string'})
 })
 
-test('It uses default Tailwind if no config specified', async t => {
+test('uses default Tailwind if no config specified', async t => {
   const config = {
     purgeCSS: {
       content: [{raw: '<div class="xl:z-0"></div>'}]
@@ -18,7 +18,7 @@ test('It uses default Tailwind if no config specified', async t => {
   t.is(css, '@media (min-width: 1280px) { .xl\\:z-0 {\n    z-index: 0\n  }\n}')
 })
 
-test('It uses purgeCSS options provided in the config', async t => {
+test('uses purgeCSS options provided in the config', async t => {
   const config = {
     build: {
       tailwind: {

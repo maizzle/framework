@@ -7,19 +7,19 @@ test.beforeEach(t => {
   t.context.log = console.log()
 })
 
-test('It throws if config cannot be computed', async t => {
+test('throws if config cannot be computed', async t => {
   await t.throwsAsync(async () => {
     await Maizzle.build('production')
   }, {instanceOf: Error, message: `could not load 'config.production.js'`})
 })
 
-test('It throws if no templates found', async t => {
+test('throws if no templates found', async t => {
   await t.throwsAsync(async () => {
     await Maizzle.build('local')
   }, {instanceOf: Error, message: 'no templates found'})
 })
 
-test('It outputs files at the correct location', async t => {
+test('outputs files at the correct location', async t => {
   const files = await Maizzle.build('production', {
     build: {
       destination: {
@@ -36,7 +36,7 @@ test('It outputs files at the correct location', async t => {
   await fs.remove(t.context.folder)
 })
 
-test('It outputs files at the correct location when multiple template sources are used', async t => {
+test('outputs files at the correct location when multiple template sources are used', async t => {
   const files = await Maizzle.build('production', {
     build: {
       fail: 'silent',
@@ -54,7 +54,7 @@ test('It outputs files at the correct location when multiple template sources ar
   await fs.remove(t.context.folder)
 })
 
-test('It processes all files in the `filetypes` option', async t => {
+test('processes all files in the `filetypes` option', async t => {
   const files = await Maizzle.build('production', {
     build: {
       destination: {
@@ -72,7 +72,7 @@ test('It processes all files in the `filetypes` option', async t => {
   await fs.remove(t.context.folder)
 })
 
-test('It outputs files with the correct extension', async t => {
+test('outputs files with the correct extension', async t => {
   await Maizzle.build('production', {
     build: {
       destination: {
@@ -89,7 +89,7 @@ test('It outputs files with the correct extension', async t => {
   await fs.remove(t.context.folder)
 })
 
-test('It outputs plaintext files if option is enabled', async t => {
+test('outputs plaintext files if option is enabled', async t => {
   const files = await Maizzle.build('production', {
     plaintext: true,
     build: {
@@ -108,7 +108,7 @@ test('It outputs plaintext files if option is enabled', async t => {
   await fs.remove(t.context.folder)
 })
 
-test('It copies assets to destination', async t => {
+test('copies assets to destination', async t => {
   await Maizzle.build('production', {
     build: {
       assets: {
@@ -128,7 +128,7 @@ test('It copies assets to destination', async t => {
   await fs.remove(t.context.folder)
 })
 
-test('It throws and exits if a template cannot be rendered and `fail` option is undefined', async t => {
+test('throws and exits if a template cannot be rendered and `fail` option is undefined', async t => {
   await t.throwsAsync(async () => {
     await Maizzle.build('production', {
       build: {
@@ -145,7 +145,7 @@ test('It throws and exits if a template cannot be rendered and `fail` option is 
   await fs.remove(t.context.folder)
 })
 
-test('It warns if a template cannot be rendered and `fail` option is `verbose`', async t => {
+test('warns if a template cannot be rendered and `fail` option is `verbose`', async t => {
   const files = await Maizzle.build('production', {
     build: {
       fail: 'verbose',
@@ -163,7 +163,7 @@ test('It warns if a template cannot be rendered and `fail` option is `verbose`',
   await fs.remove(t.context.folder)
 })
 
-test('It warns if a template cannot be rendered and `fail` option is `silent`', async t => {
+test('warns if a template cannot be rendered and `fail` option is `silent`', async t => {
   const files = await Maizzle.build('production', {
     build: {
       fail: 'silent',
@@ -181,7 +181,7 @@ test('It warns if a template cannot be rendered and `fail` option is `silent`', 
   await fs.remove(t.context.folder)
 })
 
-test('It runs the `beforeCreate` event', async t => {
+test('runs the `beforeCreate` event', async t => {
   const files = await Maizzle.build('production', {
     build: {
       destination: {
@@ -205,7 +205,7 @@ test('It runs the `beforeCreate` event', async t => {
   await fs.remove(t.context.folder)
 })
 
-test('It runs the `afterBuild` event', async t => {
+test('runs the `afterBuild` event', async t => {
   const files = await Maizzle.build('production', {
     build: {
       destination: {

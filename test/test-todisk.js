@@ -56,7 +56,7 @@ test('It outputs files at the correct location when multiple template sources ar
 
 test('It outputs files at the correct location if permalink is used', async t => {
   const files = await Maizzle.build('production', {
-    permalink: `${t.context.folder}/custom-permalink.html`,
+    permalink: `./${t.context.folder}/custom-permalink.html`,
     build: {
       fail: 'silent',
       templates: {

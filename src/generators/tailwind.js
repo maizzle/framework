@@ -40,6 +40,8 @@ module.exports = {
     const tailwindConfig = isObject(config) ? getPropValue(config, 'build.tailwind.config') || {} : {}
     const tailwindPlugin = isEmptyObject(tailwindConfig) ? tailwind() : tailwind(tailwindConfig)
 
+    const postcssUserPlugins = getPropValue(config, 'build.postcss.plugins') || []
+
     const userFilePath = getPropValue(config, 'build.tailwind.css')
 
     const cssString = await fs.pathExists(userFilePath)
@@ -51,7 +53,8 @@ module.exports = {
       tailwindPlugin,
       purgeCssPlugin,
       mqpacker({sort: true}),
-      mergeLonghandPlugin
+      mergeLonghandPlugin,
+      ...postcssUserPlugins
     ])
       .process(cssString, {from: undefined})
       .then(result => result.css)
@@ -63,6 +66,8 @@ module.exports = {
     const purgeContent = getPropValue(maizzleConfig, 'purgeCSS.content') || []
     const purgeWhitelist = getPropValue(maizzleConfig, 'purgeCSS.whitelist') || []
     const purgewhitelistPatterns = getPropValue(maizzleConfig, 'purgeCSS.whitelistPatterns') || []
+
+    const postcssUserPlugins = getPropValue(maizzleConfig, 'build.postcss.plugins') || []
 
     return postcss([
       postcssNested(),
@@ -77,7 +82,8 @@ module.exports = {
         whitelistPatterns: purgewhitelistPatterns
       }),
       mqpacker(),
-      mergeLonghand()
+      mergeLonghand(),
+      ...postcssUserPlugins
     ])
       .process(css, {from: undefined})
       .then(result => result.css)

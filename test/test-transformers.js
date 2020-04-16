@@ -8,7 +8,7 @@ const {readFileSync} = require('fs')
 const fixture = file => readFileSync(join(__dirname, 'fixtures', `${file}.html`), 'utf8')
 const expected = file => readFileSync(join(__dirname, 'expected', `${file}.html`), 'utf8')
 
-const clean = html => html.replace(/[^\S\r\n]+$/gm, '').trim()
+const clean = html => html.replace(/[^\S\n]+$/gm, '').trim()
 
 const maizzleConfig = (options = {}) => {
   return {
@@ -123,8 +123,7 @@ test('prettify', t => {
   return processFile(t, 'prettify', maizzleConfig({
     prettify: {
       enabled: true,
-      indent_inner_html: true, // eslint-disable-line
-      ocd: true
+      indent_inner_html: true // eslint-disable-line
     }
   }))
 })
@@ -142,9 +141,10 @@ test('minify', t => {
 })
 
 test('removes plaintext tag', t => {
-  const html = removePlaintextTags(fixture('plaintext'), {})
+  let html = removePlaintextTags(fixture('plaintext'), {})
+  html = html.replace(/[^\S\r\n]+$/gm, '').trim()
 
-  t.is(html, expected('plaintext'))
+  t.is(html, expected('plaintext').trim())
 })
 
 test('replace strings', t => {

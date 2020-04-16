@@ -102,8 +102,8 @@ module.exports = async (env, spinner, config = {}) => {
         const extension = getPropValue(templateConfig, 'build.destination.extension') || 'html'
 
         if (extension !== 'html') {
-          const parts = path.parse(file)
-          await fs.rename(file, `${parts.dir}/${parts.name}.${extension}`)
+          const parts = path.parse(destination)
+          await fs.rename(destination, `${parts.dir}/${parts.name}.${extension}`)
         }
       })
   })

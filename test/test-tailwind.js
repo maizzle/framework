@@ -42,3 +42,36 @@ test('uses purgeCSS options provided in the config', async t => {
   const css = await Tailwind.fromFile(config, 'production')
   t.is(css, '.max-w-\\@2x {\n  max-width: 200%\n} .text-black {\n  color: #000\n} .z-0 {\n  z-index: 0\n} .z-10 {\n  z-index: 10\n}')
 })
+
+test('uses postcss plugins from the config when compiling from string', async t => {
+  const maizzleConfig = {
+    build: {
+      postcss: {
+        plugins: [
+          require('autoprefixer')({overrideBrowserslist: ['> 0.1%']})
+        ]
+      }
+    }
+  }
+  const css = await Tailwind.fromString('.test {transform: scale(0.5)}', '<div class="test">Test</a>', {}, maizzleConfig)
+  t.not(css, undefined)
+  t.is(css, '.test {\n  -webkit-transform: scale(0.5);\n          transform: scale(0.5)\n}')
+})
+
+test('uses postcss plugins from the config when compiling from file', async t => {
+  const config = {
+    build: {
+      postcss: {
+        plugins: [
+          require('autoprefixer')({overrideBrowserslist: ['> 0.01%']})
+        ]
+      }
+    },
+    purgeCSS: {
+      content: [{raw: '<div class="object-cover"></div>'}]
+    }
+  }
+  const css = await Tailwind.fromFile(config)
+  t.not(css, undefined)
+  t.is(css, '.object-cover {\n  -o-object-fit: cover;\n     object-fit: cover\n}')
+})

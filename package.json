@@ -41,7 +41,6 @@
     "fs-extra": "^9.0.0",
     "glob-promise": "^3.4.0",
     "html-crush": "^1.9.24",
-    "is-url-superb": "^3.0.0",
     "juice": "^6.0.0",
     "ora": "^4.0.3",
     "postcss": "^7.0.27",

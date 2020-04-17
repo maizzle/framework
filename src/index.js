@@ -16,7 +16,6 @@ const self = module.exports = { // eslint-disable-line
         return response.files
       })
       .catch(error => {
-        spinner.fail('Build failed')
         throw error
       })
   },

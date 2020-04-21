@@ -55,7 +55,7 @@ test('uses postcss plugins from the config when compiling from string', async t 
   }
   const css = await Tailwind.fromString('.test {transform: scale(0.5)}', '<div class="test">Test</a>', {}, maizzleConfig)
   t.not(css, undefined)
-  t.is(css, '.test {\n  -webkit-transform: scale(0.5);\n          transform: scale(0.5)\n}')
+  t.is(css, '.test {\n  -webkit-transform: scale(0.5);\n      -ms-transform: scale(0.5);\n          transform: scale(0.5)\n}')
 })
 
 test('uses postcss plugins from the config when compiling from file', async t => {

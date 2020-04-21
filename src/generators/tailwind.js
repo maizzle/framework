@@ -17,7 +17,7 @@ module.exports = {
     const templatesRoot = getPropValue(config, 'build.templates.root')
 
     const templateSources = Array.isArray(templatesRoot) ? templatesRoot.map(item => `${item}/**/*.*`) : [`./${templatesRoot}/**/*.*`]
-    const extraPurgeSources = purgeCSSOptions.content || []
+    const extraPurgeSources = purgeCSSOptions.content || ['src/layouts/**/*.*', 'src/partials/**/*.*', 'src/components/**/*.*']
 
     const purgeSources = [
       ...templateSources,

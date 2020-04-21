@@ -28,8 +28,8 @@ const self = module.exports = { // eslint-disable-line
       .getMerged('local')
       .then(config => {
         const bsOptions = getPropValue(config, 'build.browsersync') || {}
-        const watchPaths = bsOptions.watch || []
         const templatesRoot = getPropValue(config, 'build.templates.root')
+        const watchPaths = bsOptions.watch || ['src/**/*.*', 'tailwind.config.js']
         const baseDir = getPropValue(config, 'build.destination.path') || 'build_local'
 
         if (Array.isArray(templatesRoot)) {

@@ -114,13 +114,14 @@ module.exports = async (env, spinner, config = {}) => {
     await fs.copy(assets.source, `${outputDir}/${assets.destination}`)
   }
 
+  const files = await glob(`${outputDir}/**/*.*`)
+
   if (config.events && typeof config.events.afterBuild === 'function') {
-    const files = await glob(`${outputDir}/**/*.*`)
     await config.events.afterBuild(files)
   }
 
   return {
-    files: await glob(`${outputDir}/**/*.*`),
+    files,
     count: templates.length
   }
 }

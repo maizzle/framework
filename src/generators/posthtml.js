@@ -21,6 +21,9 @@ module.exports = async (html, config) => {
   const fetchPlugin = fetch({...fetchOptions})
 
   const modulesOptions = getPropValue(config, 'build.components') || {}
+  // Fake `from` option so we can reference modules relatively
+  const modulesRoot = modulesOptions.root || 'src/components'
+  const modulesFrom = modulesOptions.from || `${modulesRoot}/fake`
 
   const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {}
   const posthtmlPlugins = getPropValue(config, 'build.posthtml.plugins') || []
@@ -33,12 +36,19 @@ module.exports = async (html, config) => {
     includePlugin,
     outlookPlugin,
     fetchPlugin,
-    modules({tag: 'component', attribute: 'src', plugins: [
-      includePlugin,
-      outlookPlugin,
-      fetchPlugin,
-      expressionsPlugin
-    ], ...modulesOptions}),
+    modules({
+      from: modulesFrom,
+      root: modulesRoot,
+      tag: 'component',
+      attribute: 'src',
+      plugins: [
+        includePlugin,
+        outlookPlugin,
+        fetchPlugin,
+        expressionsPlugin
+      ],
+      ...modulesOptions
+    }),
     expressionsPlugin,
     ...posthtmlPlugins
   ])

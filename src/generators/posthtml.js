@@ -4,15 +4,11 @@ const fetch = require('posthtml-fetch')
 const outlook = require('posthtml-mso')
 const layouts = require('posthtml-extend')
 const modules = require('posthtml-modules')
-const includes = require('posthtml-include')
-const expressions = require('posthtml-expressions')
 const {getPropValue} = require('../utils/helpers')
+const expressions = require('posthtml-expressions')
 
 module.exports = async (html, config) => {
   const layoutsOptions = getPropValue(config, 'build.layouts') || {}
-
-  const includeOptions = getPropValue(config, 'build.includes') || {}
-  const includePlugin = includes({...includeOptions})
 
   const outlookOptions = getPropValue(config, 'build.posthtml.outlook') || {}
   const outlookPlugin = outlook({...outlookOptions})
@@ -33,7 +29,6 @@ module.exports = async (html, config) => {
 
   return posthtml([
     layouts({strict: false, ...layoutsOptions}),
-    includePlugin,
     outlookPlugin,
     fetchPlugin,
     modules({
@@ -42,7 +37,6 @@ module.exports = async (html, config) => {
       tag: 'component',
       attribute: 'src',
       plugins: [
-        includePlugin,
         outlookPlugin,
         fetchPlugin,
         expressionsPlugin

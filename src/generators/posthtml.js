@@ -18,7 +18,7 @@ module.exports = async (html, config) => {
 
   const modulesOptions = getPropValue(config, 'build.components') || {}
   // Fake `from` option so we can reference modules relatively
-  const modulesRoot = modulesOptions.root || 'src/components'
+  const modulesRoot = modulesOptions.root || './'
   const modulesFrom = modulesOptions.from || `${modulesRoot}/fake`
 
   const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {}

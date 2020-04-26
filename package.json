@@ -26,8 +26,8 @@
     "access": "public"
   },
   "scripts": {
-    "test": "nyc ava -s",
-    "pretest": "xo",
+    "test": "xo && nyc ava -s",
+    "style": "xo",
     "release": "np"
   },
   "dependencies": {

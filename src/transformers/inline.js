@@ -1,4 +1,6 @@
 const juice = require('juice')
+const posthtml = require('posthtml')
+const mergeLonghand = require('posthtml-postcss-merge-longhand')
 const {isObject, isEmptyObject, getPropValue} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
@@ -26,7 +28,16 @@ module.exports = async (html, config) => {
       })
     }
 
-    return juice(html, {removeStyleTags})
+    html = juice(html, {removeStyleTags})
+
+    const mergeLonghandConfig = getPropValue(options, 'mergeLonghand') || {enabled: false}
+    const tags = getPropValue(mergeLonghandConfig, 'tags') || []
+
+    if (mergeLonghandConfig || mergeLonghandConfig.enabled) {
+      html = await posthtml([mergeLonghand({tags})]).process(html).then(result => result.html)
+    }
+
+    return html
   }
 
   return html

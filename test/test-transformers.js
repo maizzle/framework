@@ -72,6 +72,10 @@ test('inline CSS', t => {
         width: ['TABLE'],
         height: ['TD']
       },
+      mergeLonghand: {
+        enabled: true,
+        tags: ['td', 'div']
+      },
       excludedProperties: ['cursor'],
       codeBlocks: {
         ASP: {

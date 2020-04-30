@@ -20,27 +20,13 @@ test('uses default Tailwind if no config specified', async t => {
 
 test('uses purgeCSS options provided in the config', async t => {
   const config = {
-    build: {
-      tailwind: {
-        config: {
-          theme: {
-            screens: {},
-            maxWidth: {
-              '@2x': '200%'
-            }
-          }
-        }
-      }
-    },
     purgeCSS: {
-      content: [{raw: '<div class="max-w-@2x text-black"></div>'}],
-      extractor: /[\w-/:%.@]+(?<!:)/g,
-      whitelist: ['z-10'],
-      whitelistPatterns: [/z-0/]
+      content: [{raw: '<div class="z-0"></div>'}],
+      whitelist: ['z-10']
     }
   }
   const css = await Tailwind.fromFile(config, 'production')
-  t.is(css, '.max-w-\\@2x {\n  max-width: 200%\n} .text-black {\n  color: #000\n} .z-0 {\n  z-index: 0\n} .z-10 {\n  z-index: 10\n}')
+  t.is(css, '.z-0 {\n  z-index: 0\n} .z-10 {\n  z-index: 10\n}')
 })
 
 test('uses postcss plugins from the config when compiling from string', async t => {
@@ -61,17 +47,23 @@ test('uses postcss plugins from the config when compiling from string', async t 
 test('uses postcss plugins from the config when compiling from file', async t => {
   const config = {
     build: {
+      tailwind: {
+        config: {
+          target: 'ie11'
+        }
+      },
       postcss: {
         plugins: [
-          require('autoprefixer')({overrideBrowserslist: ['ie >= 9']})
+          require('autoprefixer')({overrideBrowserslist: ['> 0.1%']})
         ]
       }
     },
     purgeCSS: {
-      content: [{raw: '<div class="rotate-90"></div>'}]
+      content: [{raw: '<div class="object-fill"></div>'}]
     }
   }
   const css = await Tailwind.fromFile(config)
+
   t.not(css, undefined)
-  t.is(css, '.rotate-90 {\n  -ms-transform: rotate(90deg);\n      transform: rotate(90deg)\n}')
+  t.is(css, '.object-fill {\n  -o-object-fit: fill;\n     object-fit: fill\n}')
 })

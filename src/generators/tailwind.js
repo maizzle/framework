@@ -8,14 +8,14 @@ const atImport = require('postcss-import')
 const postcssNested = require('postcss-nested')
 const mergeLonghand = require('postcss-merge-longhand')
 const purgecss = require('@fullhuman/postcss-purgecss')
-const {getPropValue, isObject} = require('../utils/helpers')
+const {getPropValue, isObject, isEmptyObject} = require('../utils/helpers')
 
 const defaultPurgeCSSExtractor = /[\w-/:%.]+(?<!:)/g
 
 module.exports = {
   fromFile: async (config, env) => {
-    const tailwindConfig = isObject(config) ? getPropValue(config, 'build.tailwind.config') || {} : 'tailwind.config.js'
-    const tailwindConfigObject = importCwd.silent(`./${tailwindConfig}`) || tailwindConfig
+    const tailwindConfig = getPropValue(config, 'build.tailwind.config') || 'tailwind.config.js'
+    const tailwindConfigObject = importCwd.silent(`./${tailwindConfig}`) || {}
 
     const purgeCSSOptions = getPropValue(config, 'purgeCSS') || {}
 
@@ -54,7 +54,7 @@ module.exports = {
     const cssString = await fs.pathExists(userFilePath)
       .then(exists => exists ? fs.readFile(path.resolve(userFilePath), 'utf8') : '@tailwind components; @tailwind utilities;')
 
-    const tailwindPlugin = tailwind({
+    const tailwindPlugin = isEmptyObject(tailwindConfigObject) ? tailwind() : tailwind({
       target: 'ie11',
       ...tailwindConfigObject,
       purge: {

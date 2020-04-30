@@ -14,10 +14,15 @@ const defaultPurgeCSSExtractor = /[\w-/:%.]+(?<!:)/g
 
 module.exports = {
   fromFile: async (config, env) => {
+    const tailwindConfig = isObject(config) ? getPropValue(config, 'build.tailwind.config') || {} : 'tailwind.config.js'
+    const tailwindConfigObject = importCwd.silent(`./${tailwindConfig}`) || tailwindConfig
+
     const purgeCSSOptions = getPropValue(config, 'purgeCSS') || {}
+
     const templatesRoot = getPropValue(config, 'build.templates.root')
 
     const templateSources = Array.isArray(templatesRoot) ? templatesRoot.map(item => `${item}/**/*.*`) : [`./${templatesRoot}/**/*.*`]
+    const tailwindSources = Array.isArray(tailwindConfigObject.purge) ? tailwindConfigObject.purge : (isObject(tailwindConfigObject.purge) ? tailwindConfigObject.purge.content : [])
     const extraPurgeSources = purgeCSSOptions.content || []
 
     const purgeSources = [
@@ -25,12 +30,13 @@ module.exports = {
       'src/partials/**/*.*',
       'src/components/**/*.*',
       ...templateSources,
+      ...tailwindSources,
       ...extraPurgeSources
     ]
 
-    const extractor = purgeCSSOptions.extractor || defaultPurgeCSSExtractor
-    const purgeWhitelist = purgeCSSOptions.whitelist || []
-    const purgewhitelistPatterns = purgeCSSOptions.whitelistPatterns || []
+    const extractor = getPropValue(tailwindConfigObject, 'purge.options.extractor') || purgeCSSOptions.extractor || defaultPurgeCSSExtractor
+    const purgeWhitelist = getPropValue(tailwindConfigObject, 'purge.options.whitelist') || purgeCSSOptions.whitelist || []
+    const purgewhitelistPatterns = getPropValue(tailwindConfigObject, 'purge.options.whitelistPatterns') || purgeCSSOptions.whitelistPatterns || []
 
     const purgeCssPlugin = env === 'local' ? () => {} : purgecss({
       content: purgeSources,
@@ -41,16 +47,20 @@ module.exports = {
 
     const mergeLonghandPlugin = env === 'local' ? () => {} : mergeLonghand()
 
-    const tailwindConfig = isObject(config) ? getPropValue(config, 'build.tailwind.config') || {} : 'tailwind.config.js'
-    const tailwindConfigObject = importCwd.silent(`./${tailwindConfig}`) || tailwindConfig
-    const tailwindPlugin = tailwind({target: 'ie11', ...tailwindConfigObject})
-
     const postcssUserPlugins = getPropValue(config, 'build.postcss.plugins') || []
 
     const userFilePath = getPropValue(config, 'build.tailwind.css')
 
     const cssString = await fs.pathExists(userFilePath)
       .then(exists => exists ? fs.readFile(path.resolve(userFilePath), 'utf8') : '@tailwind components; @tailwind utilities;')
+
+    const tailwindPlugin = tailwind({
+      target: 'ie11',
+      ...tailwindConfigObject,
+      purge: {
+        enabled: false
+      }
+    })
 
     return postcss([
       atImport({path: userFilePath ? path.dirname(userFilePath) : []}),

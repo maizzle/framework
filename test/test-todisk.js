@@ -105,14 +105,19 @@ test('outputs plaintext files if option is enabled', async t => {
         path: t.context.folder
       },
       templates: {
-        root: 'test/stubs/templates'
+        root: 'test/stubs/plaintext/'
       }
     }
   })
 
-  const expected = files.filter(file => file.includes('.txt'))
+  const plaintext = files.filter(file => file.includes('.txt'))
+  const html = files.filter(file => file.includes('.html'))
+  const plaintextContent = await fs.readFile(plaintext[0], 'utf8')
+  const htmlContent = await fs.readFile(html[0], 'utf8')
 
-  t.is(expected.length, 2)
+  t.is(plaintext.length, 1)
+  t.is(plaintextContent, 'Show in HTML\nShow in plaintext')
+  t.is(htmlContent, '<div>Show in HTML</div>\n\n')
 })
 
 test('copies assets to destination', async t => {

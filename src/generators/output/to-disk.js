@@ -90,10 +90,11 @@ module.exports = async (env, spinner, config = {}) => {
 
     if (templateConfig.plaintext) {
       await Plaintext.prepare(html, file, templateConfig)
-        .then(({destination, plaintext}) => fs.outputFile(destination, plaintext))
+        .then(async ({destination, plaintext}) => {
+          await fs.outputFile(destination, plaintext)
+          html = removePlaintextTags(html, config)
+        })
     }
-
-    html = removePlaintextTags(html, config)
 
     const destination = templateConfig.permalink || file
 

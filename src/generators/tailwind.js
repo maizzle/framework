@@ -8,7 +8,7 @@ const atImport = require('postcss-import')
 const postcssNested = require('postcss-nested')
 const mergeLonghand = require('postcss-merge-longhand')
 const purgecss = require('@fullhuman/postcss-purgecss')
-const {getPropValue, isObject, isEmptyObject} = require('../utils/helpers')
+const {getPropValue, isObject} = require('../utils/helpers')
 
 const defaultPurgeCSSExtractor = /[\w-/:%.]+(?<!:)/g
 
@@ -22,7 +22,7 @@ module.exports = {
     const templatesRoot = getPropValue(config, 'build.templates.root')
 
     const templateSources = Array.isArray(templatesRoot) ? templatesRoot.map(item => `${item}/**/*.*`) : [`./${templatesRoot}/**/*.*`]
-    const tailwindSources = Array.isArray(tailwindConfigObject.purge) ? tailwindConfigObject.purge : (isObject(tailwindConfigObject.purge) ? tailwindConfigObject.purge.content : [])
+    const tailwindSources = Array.isArray(tailwindConfigObject.purge) ? tailwindConfigObject.purge : (isObject(tailwindConfigObject.purge) ? tailwindConfigObject.purge.content || [] : [])
     const extraPurgeSources = purgeCSSOptions.content || []
 
     const purgeSources = [
@@ -74,21 +74,30 @@ module.exports = {
       .process(cssString, {from: undefined})
       .then(result => result.css)
   },
-  fromString: async (css, html, tailwindConfig, maizzleConfig) => {
-    const tailwindPlugin = isEmptyObject(tailwindConfig) ? tailwind() : tailwind(tailwindConfig)
+  fromString: async (css, html, tailwindConfig = {}, maizzleConfig = {}) => {
+    const extractor = getPropValue(tailwindConfig, 'purge.options.extractor') || getPropValue(maizzleConfig, 'purgeCSS.extractor') || defaultPurgeCSSExtractor
+    const purgeWhitelist = getPropValue(tailwindConfig, 'purge.options.whitelist') || getPropValue(maizzleConfig, 'purgeCSS.whitelist') || []
+    const purgewhitelistPatterns = getPropValue(tailwindConfig, 'purge.options.whitelistPatterns') || getPropValue(maizzleConfig, 'purgeCSS.whitelistPatterns') || []
 
-    const extractor = getPropValue(maizzleConfig, 'purgeCSS.extractor') || defaultPurgeCSSExtractor
+    const tailwindSources = Array.isArray(tailwindConfig.purge) ? tailwindConfig.purge : (isObject(tailwindConfig.purge) ? tailwindConfig.purge.content || [] : [])
     const purgeContent = getPropValue(maizzleConfig, 'purgeCSS.content') || []
-    const purgeWhitelist = getPropValue(maizzleConfig, 'purgeCSS.whitelist') || []
-    const purgewhitelistPatterns = getPropValue(maizzleConfig, 'purgeCSS.whitelistPatterns') || []
 
     const postcssUserPlugins = getPropValue(maizzleConfig, 'build.postcss.plugins') || []
+
+    const tailwindPlugin = tailwind({
+      target: 'ie11',
+      ...tailwindConfig,
+      purge: {
+        enabled: false
+      }
+    })
 
     return postcss([
       postcssNested(),
       tailwindPlugin,
       purgecss({
         content: [
+          ...tailwindSources,
           ...purgeContent,
           {raw: html}
         ],

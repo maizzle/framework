@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const postcss = require('postcss')
+const importCwd = require('import-cwd')
 const tailwind = require('tailwindcss')
 const mqpacker = require('css-mqpacker')
 const atImport = require('postcss-import')
@@ -40,8 +41,9 @@ module.exports = {
 
     const mergeLonghandPlugin = env === 'local' ? () => {} : mergeLonghand()
 
-    const tailwindConfig = isObject(config) ? getPropValue(config, 'build.tailwind.config') || {} : {}
-    const tailwindPlugin = isEmptyObject(tailwindConfig) ? tailwind() : tailwind(tailwindConfig)
+    const tailwindConfig = isObject(config) ? getPropValue(config, 'build.tailwind.config') || {} : 'tailwind.config.js'
+    const tailwindConfigObject = importCwd.silent(`./${tailwindConfig}`) || tailwindConfig
+    const tailwindPlugin = tailwind({target: 'ie11', ...tailwindConfigObject})
 
     const postcssUserPlugins = getPropValue(config, 'build.postcss.plugins') || []
 

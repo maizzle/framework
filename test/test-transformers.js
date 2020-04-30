@@ -12,6 +12,11 @@ const clean = html => html.replace(/[^\S\n]+$/gm, '').trim()
 
 const maizzleConfig = (options = {}) => {
   return {
+    tailwind: {
+      config: {
+        target: 'ie11'
+      }
+    },
     maizzle: {
       config: {
         env: 'node',

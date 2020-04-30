@@ -63,15 +63,15 @@ test('uses postcss plugins from the config when compiling from file', async t =>
     build: {
       postcss: {
         plugins: [
-          require('autoprefixer')({overrideBrowserslist: ['> 0.01%']})
+          require('autoprefixer')({overrideBrowserslist: ['ie >= 9']})
         ]
       }
     },
     purgeCSS: {
-      content: [{raw: '<div class="object-cover"></div>'}]
+      content: [{raw: '<div class="rotate-90"></div>'}]
     }
   }
   const css = await Tailwind.fromFile(config)
   t.not(css, undefined)
-  t.is(css, '.object-cover {\n  -o-object-fit: cover;\n     object-fit: cover\n}')
+  t.is(css, '.rotate-90 {\n  -ms-transform: rotate(90deg);\n      transform: rotate(90deg)\n}')
 })

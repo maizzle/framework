@@ -27,7 +27,9 @@ module.exports = async (html, config) => {
         return $element.addClass(value)
       }
 
-      return $element.attr(name, value)
+      if (!$element.attr(name)) {
+        return $element.attr(name, value)
+      }
     })
   })
 

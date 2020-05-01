@@ -36,6 +36,7 @@ module.exports = async (html, config) => {
       root: modulesRoot,
       tag: 'component',
       attribute: 'src',
+      initial: true,
       plugins: [
         outlookPlugin,
         fetchPlugin,

@@ -47,11 +47,6 @@ test('uses postcss plugins from the config when compiling from string', async t 
 test('uses postcss plugins from the config when compiling from file', async t => {
   const config = {
     build: {
-      tailwind: {
-        config: {
-          target: 'ie11'
-        }
-      },
       postcss: {
         plugins: [
           require('autoprefixer')({overrideBrowserslist: ['> 0.1%']})

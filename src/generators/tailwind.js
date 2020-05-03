@@ -1,21 +1,20 @@
 const path = require('path')
 const fs = require('fs-extra')
 const postcss = require('postcss')
-const importCwd = require('import-cwd')
 const tailwind = require('tailwindcss')
 const mqpacker = require('css-mqpacker')
 const atImport = require('postcss-import')
 const postcssNested = require('postcss-nested')
 const mergeLonghand = require('postcss-merge-longhand')
 const purgecss = require('@fullhuman/postcss-purgecss')
-const {getPropValue, isObject, isEmptyObject} = require('../utils/helpers')
+const {getPropValue, isObject, isEmptyObject, requireUncached} = require('../utils/helpers')
 
 const defaultPurgeCSSExtractor = /[\w-/:%.]+(?<!:)/g
 
 module.exports = {
   fromFile: async (config, env) => {
     const tailwindConfig = getPropValue(config, 'build.tailwind.config') || 'tailwind.config.js'
-    const tailwindConfigObject = importCwd.silent(`./${tailwindConfig}`) || {}
+    const tailwindConfigObject = isObject(tailwindConfig) ? {} : requireUncached(path.resolve(process.cwd(), tailwindConfig))
 
     const purgeCSSOptions = getPropValue(config, 'purgeCSS') || {}
 

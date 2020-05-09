@@ -7,7 +7,7 @@ module.exports = async (html, config) => {
   const replacements = config.transform || {}
   const options = getPropValue(config, 'build.posthtml.options') || {}
 
-  replacements.postcss = css => Tailwind.fromString(css, html, false, config)
+  replacements.postcss = css => Tailwind.compile(css, html, {}, config)
 
   return posthtml([posthtmlContent(replacements)]).process(html, options).then(result => result.html)
 }

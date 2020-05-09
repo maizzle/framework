@@ -16,6 +16,13 @@ test('compiles HTML string if no options are passed', async t => {
   t.is(html, expected('basic').trim())
 })
 
+test('inheritance', async t => {
+  let html = await renderString(fixture('inheritance'))
+  html = html.replace(/[^\S\r\n]+$/gm, '').trim()
+
+  t.is(html, expected('inheritance').trim())
+})
+
 test('throws if first argument is not an HTML string', async t => {
   await t.throwsAsync(async () => {
     await renderString(false)

@@ -43,8 +43,8 @@ module.exports = async (html, config) => {
       ],
       ...modulesOptions
     }),
-    expressionsPlugin,
-    ...posthtmlPlugins
+    ...posthtmlPlugins,
+    expressionsPlugin
   ])
     .process(html, {...posthtmlOptions})
     .then(result => fm(result.html).body)

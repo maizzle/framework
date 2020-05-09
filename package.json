@@ -26,7 +26,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "xo && nyc ava",
+    "test": "xo && nyc ava -s",
     "style": "xo",
     "release": "np"
   },

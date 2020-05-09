@@ -59,7 +59,14 @@ module.exports = {
 
     const userFilePath = getPropValue(maizzleConfig, 'build.tailwind.css')
 
-    css = await fs.pathExists(userFilePath).then(exists => exists ? fs.readFile(path.resolve(userFilePath), 'utf8') : `@tailwind components;\n ${css}\n @tailwind utilities;`)
+    css = await fs.pathExists(userFilePath).then(async exists => {
+      if (exists) {
+        const userFileCSS = await fs.readFile(path.resolve(userFilePath), 'utf8')
+        return css + userFileCSS
+      }
+
+      return `@tailwind components;\n ${css}\n @tailwind utilities;`
+    })
 
     return postcss([
       atImport({path: userFilePath ? path.dirname(userFilePath) : []}),

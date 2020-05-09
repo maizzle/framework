@@ -15,6 +15,22 @@ test('uses Tailwind defaults if no config specified', async t => {
   t.is(css, '@media (min-width: 1280px) {\n\n  .xl\\:z-0 {\n    z-index: 0\n  }\n}')
 })
 
+test('uses CSS file provided in environment config', async t => {
+  const config = {
+    env: 'node',
+    build: {
+      tailwind: {
+        css: './test/stubs/main.css'
+      }
+    }
+  }
+
+  const css = await Tailwind.compile('', '<div class="text-center foo">test</div>', {}, config)
+
+  t.not(css, undefined)
+  t.is(css, '.text-center {\n  text-align: center;\n}\n\n.foo {\n  color: red;\n}\n')
+})
+
 test('uses purgeCSS options provided in the config', async t => {
   const config = {
     purgeCSS: {

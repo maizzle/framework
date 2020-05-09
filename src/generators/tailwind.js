@@ -12,13 +12,13 @@ const {getPropValue, isObject, isEmptyObject, requireUncached} = require('../uti
 const defaultPurgeCSSExtractor = /[\w-/:%.]+(?<!:)/g
 
 module.exports = {
-  fromFile: async (config, env) => {
-    const tailwindConfig = getPropValue(config, 'build.tailwind.config') || 'tailwind.config.js'
-    const tailwindConfigObject = isObject(tailwindConfig) ? {} : requireUncached(path.resolve(process.cwd(), tailwindConfig))
+  compile: async (css = '', html = '', tailwindConfig = {}, maizzleConfig = {}) => {
+    tailwindConfig = (isObject(tailwindConfig) && !isEmptyObject(tailwindConfig)) ? tailwindConfig : getPropValue(maizzleConfig, 'build.tailwind.config') || 'tailwind.config.js'
+    const tailwindConfigObject = (isObject(tailwindConfig) && !isEmptyObject(tailwindConfig)) ? tailwindConfig : requireUncached(path.resolve(process.cwd(), tailwindConfig))
 
-    const purgeCSSOptions = getPropValue(config, 'purgeCSS') || {}
+    const purgeCSSOptions = getPropValue(maizzleConfig, 'purgeCSS') || {}
 
-    const templatesRoot = getPropValue(config, 'build.templates.root')
+    const templatesRoot = getPropValue(maizzleConfig, 'build.templates.root')
 
     const templateSources = Array.isArray(templatesRoot) ? templatesRoot.map(item => `${item}/**/*.*`) : [`./${templatesRoot}/**/*.*`]
     const tailwindSources = Array.isArray(tailwindConfigObject.purge) ? tailwindConfigObject.purge : (isObject(tailwindConfigObject.purge) ? tailwindConfigObject.purge.content || [] : [])
@@ -30,28 +30,22 @@ module.exports = {
       'src/components/**/*.*',
       ...templateSources,
       ...tailwindSources,
-      ...extraPurgeSources
+      ...extraPurgeSources,
+      {raw: html}
     ]
 
     const extractor = getPropValue(tailwindConfigObject, 'purge.options.extractor') || purgeCSSOptions.extractor || defaultPurgeCSSExtractor
     const purgeWhitelist = getPropValue(tailwindConfigObject, 'purge.options.whitelist') || purgeCSSOptions.whitelist || []
     const purgewhitelistPatterns = getPropValue(tailwindConfigObject, 'purge.options.whitelistPatterns') || purgeCSSOptions.whitelistPatterns || []
 
-    const purgeCssPlugin = env === 'local' ? () => {} : purgecss({
+    const purgeCssPlugin = maizzleConfig.env === 'local' ? () => {} : purgecss({
       content: purgeSources,
       defaultExtractor: content => content.match(extractor) || [],
       whitelist: purgeWhitelist,
       whitelistPatterns: purgewhitelistPatterns
     })
 
-    const mergeLonghandPlugin = env === 'local' ? () => {} : mergeLonghand()
-
-    const postcssUserPlugins = getPropValue(config, 'build.postcss.plugins') || []
-
-    const userFilePath = getPropValue(config, 'build.tailwind.css')
-
-    const cssString = await fs.pathExists(userFilePath)
-      .then(exists => exists ? fs.readFile(path.resolve(userFilePath), 'utf8') : '@tailwind components; @tailwind utilities;')
+    const mergeLonghandPlugin = maizzleConfig.env === 'local' ? () => {} : mergeLonghand()
 
     const tailwindPlugin = isEmptyObject(tailwindConfigObject) ? tailwind() : tailwind({
       target: 'ie11',
@@ -59,6 +53,19 @@ module.exports = {
       purge: {
         enabled: false
       }
+    })
+
+    const postcssUserPlugins = getPropValue(maizzleConfig, 'build.postcss.plugins') || []
+
+    const userFilePath = getPropValue(maizzleConfig, 'build.tailwind.css')
+
+    css = await fs.pathExists(userFilePath).then(async exists => {
+      if (exists) {
+        const userFileCSS = await fs.readFile(path.resolve(userFilePath), 'utf8')
+        return css + userFileCSS
+      }
+
+      return `@tailwind components;\n ${css}\n @tailwind utilities;`
     })
 
     return postcss([
@@ -70,48 +77,7 @@ module.exports = {
       mergeLonghandPlugin,
       ...postcssUserPlugins
     ])
-      .process(cssString, {from: undefined})
-      .then(result => result.css)
-  },
-  fromString: async (css, html, tailwindConfig = {}, maizzleConfig = {}) => {
-    const extractor = getPropValue(tailwindConfig, 'purge.options.extractor') || getPropValue(maizzleConfig, 'purgeCSS.extractor') || defaultPurgeCSSExtractor
-    const purgeWhitelist = getPropValue(tailwindConfig, 'purge.options.whitelist') || getPropValue(maizzleConfig, 'purgeCSS.whitelist') || []
-    const purgewhitelistPatterns = getPropValue(tailwindConfig, 'purge.options.whitelistPatterns') || getPropValue(maizzleConfig, 'purgeCSS.whitelistPatterns') || []
-
-    const tailwindSources = Array.isArray(tailwindConfig.purge) ? tailwindConfig.purge : (isObject(tailwindConfig.purge) ? tailwindConfig.purge.content || [] : [])
-    const purgeContent = getPropValue(maizzleConfig, 'purgeCSS.content') || []
-
-    const postcssUserPlugins = getPropValue(maizzleConfig, 'build.postcss.plugins') || []
-
-    const tailwindPlugin = tailwind({
-      target: 'ie11',
-      ...tailwindConfig,
-      purge: {
-        enabled: false
-      }
-    })
-
-    return postcss([
-      postcssNested(),
-      tailwindPlugin,
-      purgecss({
-        content: [
-          ...tailwindSources,
-          ...purgeContent,
-          {raw: html}
-        ],
-        defaultExtractor: content => content.match(extractor) || [],
-        whitelist: purgeWhitelist,
-        whitelistPatterns: purgewhitelistPatterns
-      }),
-      mqpacker(),
-      mergeLonghand(),
-      ...postcssUserPlugins
-    ])
       .process(css, {from: undefined})
       .then(result => result.css)
-      .catch(error => {
-        throw error
-      })
   }
 }

@@ -173,7 +173,7 @@ test('six digit hex', t => {
 test('transform contents', t => {
   return processFile(t, 'transform', maizzleConfig({
     transform: {
-      uppercase: text => text.toUpperCase()
+      upper: text => text.toUpperCase()
     }
   }))
 })

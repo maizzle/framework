@@ -20,7 +20,7 @@ module.exports = async (env, spinner, config = {}) => {
     })
   }
 
-  const css = await Tailwind.fromFile(config, env)
+  const css = await Tailwind.compile('', '', {}, config)
 
   const sourceDir = getPropValue(config, 'build.templates.root') || 'src/templates'
   const outputDir = getPropValue(config, 'build.destination.path') || `build_${env}`

@@ -122,6 +122,7 @@ test('extra attributes', t => {
     }
   }))
 })
+
 test('base image URL', t => {
   return processFile(t, 'base-image-url', maizzleConfig({
     baseImageURL: 'https://example.com/'

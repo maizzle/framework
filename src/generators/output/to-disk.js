@@ -111,8 +111,12 @@ module.exports = async (env, spinner, config = {}) => {
 
   const assets = {source: '', destination: 'assets', ...getPropValue(config, 'build.assets')}
 
-  if (fs.pathExistsSync(assets.source)) {
-    await fs.copy(assets.source, `${outputDir}/${assets.destination}`)
+  if (Array.isArray(assets.source)) {
+    await asyncForEach(assets.source, async source => {
+      await fs.copy(source, `${outputDir}/${assets.destination}`).catch(error => spinner.warn(error.message))
+    })
+  } else {
+    await fs.copy(assets.source, `${outputDir}/${assets.destination}`).catch(error => spinner.warn(error.message))
   }
 
   const files = await glob(`${outputDir}/**/*.*`)

@@ -230,3 +230,24 @@ test('runs the `afterBuild` event', async t => {
 
   t.deepEqual(t.context.afterBuild, files)
 })
+
+test('supports multiple asset paths', async t => {
+  await Maizzle.build('production', {
+    build: {
+      fail: 'silent',
+      destination: {
+        path: t.context.folder
+      },
+      templates: {
+        root: 'test/stubs/templates'
+      },
+      assets: {
+        source: ['test/stubs/assets', 'test/stubs/plaintext'],
+        destination: 'extras'
+      }
+    }
+  })
+
+  t.true(fs.existsSync(`${t.context.folder}/extras/foo.bar`))
+  t.true(fs.existsSync(`${t.context.folder}/extras/plaintext.html`))
+})

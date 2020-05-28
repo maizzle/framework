@@ -58,7 +58,7 @@
     "posthtml-mso": "^1.0.1",
     "posthtml-postcss-merge-longhand": "^1.0.0",
     "posthtml-remove-attributes": "^1.0.0",
-    "posthtml-safe-class-names": "^1.0.2",
+    "posthtml-safe-class-names": "^1.0.3",
     "posthtml-url-parameters": "^1.0.2",
     "pretty": "^2.0.0",
     "prevent-widows": "^1.0.2",

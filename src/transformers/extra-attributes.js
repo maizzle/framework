@@ -1,5 +1,6 @@
-const cheerio = require('cheerio')
-const {isObject} = require('../utils/helpers')
+const posthtml = require('posthtml')
+const {isObject, getPropValue} = require('../utils/helpers')
+const addAttributes = require('posthtml-extra-attributes')
 
 module.exports = async (html, config) => {
   let attributes = {
@@ -17,21 +18,9 @@ module.exports = async (html, config) => {
     attributes = {...attributes, ...config.extraAttributes}
   }
 
-  const $ = cheerio.load(html, {decodeEntities: false})
+  const options = getPropValue(config, 'build.posthtml.options') || {}
 
-  Object.entries(attributes).forEach(([element, attrs]) => {
-    Object.entries(attrs).forEach(attr => {
-      const $element = $(element)
-      const [name, value] = attr
-      if (name === 'class') {
-        return $element.addClass(value)
-      }
+  html = posthtml([addAttributes({attributes})]).process(html, options).then(result => result.html)
 
-      if (!$element.attr(name)) {
-        return $element.attr(name, value)
-      }
-    })
-  })
-
-  return $.html()
+  return html
 }

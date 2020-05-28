@@ -167,6 +167,16 @@ test('replace strings', t => {
   }))
 })
 
+test('safe class names', t => {
+  return processFile(t, 'safe-class-names', maizzleConfig())
+})
+
+test('safe class names (disabled)', t => {
+  return processFile(t, 'safe-class-names-disabled', maizzleConfig({
+    safeClassNames: false
+  }))
+})
+
 test('six digit hex', t => {
   return processFile(t, 'six-hex', maizzleConfig())
 })

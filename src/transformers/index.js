@@ -16,11 +16,11 @@ const applyExtraAttributes = require('./extra-attributes')
 const removeInlineBgColor = require('./remove-inline-bgcolor')
 
 exports.process = async (html, config) => {
-  html = await safeClassNames(html, config)
   html = await transformContents(html, config)
   html = await markdown(html, config)
   html = await preventWidows(html, config)
   html = await inline(html, config)
+  html = await safeClassNames(html, config)
   html = await removeUnusedCSS(html, config)
   html = await removeInlineSizes(html, config)
   html = await removeInlineBgColor(html, config)

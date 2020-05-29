@@ -38,8 +38,7 @@ module.exports = async (html, config) => {
       attribute: 'src',
       plugins: [
         outlookPlugin,
-        fetchPlugin,
-        expressionsPlugin
+        fetchPlugin
       ],
       ...modulesOptions
     }),

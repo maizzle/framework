@@ -3,6 +3,7 @@ module.exports = {
   rules: {
     semi: 0,
     complexity: 0,
+    'unicorn/no-reduce': 0,
     'unicorn/string-content': 0,
     'promise/prefer-await-to-then': 0,
     'unicorn/no-abusive-eslint-disable': 0,

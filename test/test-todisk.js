@@ -242,7 +242,7 @@ test('supports multiple asset paths', async t => {
         root: 'test/stubs/templates'
       },
       assets: {
-        source: ['test/stubs/assets', 'test/stubs/plaintext'],
+        source: ['test/stubs/assets', 'test/stubs/plaintext', 'test/stubs/invalid'],
         destination: 'extras'
       }
     }
@@ -250,4 +250,5 @@ test('supports multiple asset paths', async t => {
 
   t.true(fs.existsSync(`${t.context.folder}/extras/foo.bar`))
   t.true(fs.existsSync(`${t.context.folder}/extras/plaintext.html`))
+  t.false(fs.existsSync(`${t.context.folder}/extras/invalid`))
 })

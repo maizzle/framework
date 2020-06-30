@@ -113,10 +113,14 @@ module.exports = async (env, spinner, config = {}) => {
 
   if (Array.isArray(assets.source)) {
     await asyncForEach(assets.source, async source => {
-      await fs.copy(source, `${outputDir}/${assets.destination}`).catch(error => spinner.warn(error.message))
+      if (fs.existsSync(source)) {
+        await fs.copy(source, `${outputDir}/${assets.destination}`).catch(error => spinner.warn(error.message))
+      }
     })
   } else {
-    await fs.copy(assets.source, `${outputDir}/${assets.destination}`).catch(error => spinner.warn(error.message))
+    if (fs.existsSync(assets.source)) {
+      await fs.copy(assets.source, `${outputDir}/${assets.destination}`).catch(error => spinner.warn(error.message))
+    }
   }
 
   const files = await glob(`${outputDir}/**/*.*`)

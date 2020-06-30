@@ -252,3 +252,14 @@ test('supports multiple asset paths', async t => {
   t.true(fs.existsSync(`${t.context.folder}/extras/plaintext.html`))
   t.false(fs.existsSync(`${t.context.folder}/extras/invalid`))
 })
+
+test('spins up local development server', async t => {
+  await fs.copy('test/stubs/templates', 'src/templates')
+
+  await Maizzle.serve()
+
+  t.true(fs.existsSync('build_local'))
+
+  await fs.remove('build_local')
+  await fs.remove('src/templates')
+})

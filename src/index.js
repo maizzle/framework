@@ -27,10 +27,21 @@ const self = module.exports = { // eslint-disable-line
     require('./generators/config')
       .getMerged('local')
       .then(config => {
-        const bsOptions = getPropValue(config, 'build.browsersync') || {}
-        const templatesRoot = getPropValue(config, 'build.templates.root')
-        const watchPaths = bsOptions.watch || ['src/**/*.*', 'tailwind.config.js']
         const baseDir = getPropValue(config, 'build.destination.path') || 'build_local'
+        const templatesRoot = getPropValue(config, 'build.templates.root')
+        const bsOptions = {
+          notify: false,
+          open: false,
+          port: 3000,
+          server: {
+            baseDir,
+            directory: true
+          },
+          tunnel: false,
+          ui: {port: 3001},
+          ...getPropValue(config, 'build.browsersync')
+        }
+        const watchPaths = bsOptions.watch || ['src/**/*.*', 'tailwind.config.js']
 
         if (Array.isArray(templatesRoot)) {
           templatesRoot.forEach(root => watchPaths.push(root))
@@ -39,17 +50,8 @@ const self = module.exports = { // eslint-disable-line
         }
 
         bs.create()
-        bs.init({
-          server: {
-            baseDir,
-            directory: bsOptions.directory || true
-          },
-          ui: bsOptions.ui || {port: 3001},
-          port: bsOptions.port || 3000,
-          notify: bsOptions.notify || false,
-          tunnel: bsOptions.tunnel || false,
-          open: bsOptions.open || false
-        })
+
+        bs.init(bsOptions)
           .watch(watchPaths)
           .on('change', async () => {
             await self.build()

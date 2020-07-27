@@ -22,7 +22,17 @@ test('throws if config cannot be computed', async t => {
 
 test('throws if no templates found', async t => {
   await t.throwsAsync(async () => {
-    await Maizzle.build('local')
+    await Maizzle.build('local', {
+      build: {
+        fail: 'silent',
+        destination: {
+          path: t.context.folder
+        },
+        templates: {
+          root: 'test/stubs/assets'
+        }
+      }
+    })
   }, {instanceOf: Error, message: 'no templates found'})
 })
 
@@ -256,7 +266,13 @@ test('supports multiple asset paths', async t => {
 test('spins up local development server', async t => {
   await fs.copy('test/stubs/templates', 'src/templates')
 
-  await Maizzle.serve()
+  await Maizzle.serve({
+    build: {
+      templates: {
+        root: 'test/stubs/templates'
+      }
+    }
+  })
 
   t.true(fs.existsSync('build_local'))
 

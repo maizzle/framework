@@ -5,8 +5,7 @@ const {getPropValue} = require('./utils/helpers')
 
 const self = module.exports = { // eslint-disable-line
   render: async (html, options) => Output.toString(html, options),
-  build: async (env, config) => {
-    env = env || 'local'
+  build: async (env = 'local', config = {}) => {
     const start = new Date()
     const spinner = ora('Building emails...').start()
 
@@ -19,8 +18,8 @@ const self = module.exports = { // eslint-disable-line
         throw error
       })
   },
-  serve: async () => {
-    await self.build().catch(error => {
+  serve: async config => {
+    await self.build('local', config).catch(error => {
       throw error
     })
 
@@ -54,7 +53,7 @@ const self = module.exports = { // eslint-disable-line
         bs.init(bsOptions)
           .watch(watchPaths)
           .on('change', async () => {
-            await self.build()
+            await self.build('local', config)
               .then(() => bs.reload())
               .catch(error => {
                 throw error

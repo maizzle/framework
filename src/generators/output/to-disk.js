@@ -12,7 +12,7 @@ const Plaintext = require('../plaintext')
 
 const render = require('./to-string')
 
-module.exports = async (env, spinner, config = {}) => {
+module.exports = async (env, spinner, config) => {
   if (isEmptyObject(config)) {
     config = await Config.getMerged(env).catch(error => {
       spinner.fail('Build failed')

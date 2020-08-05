@@ -1,4 +1,5 @@
 const test = require('ava')
+const fs = require('fs-extra')
 const Tailwind = require('../src/generators/tailwind')
 
 test('uses Tailwind defaults if no config specified', async t => {
@@ -10,9 +11,10 @@ test('uses Tailwind defaults if no config specified', async t => {
   }
 
   const css = await Tailwind.compile('', '', {}, config)
+  const expected = await fs.readFile('./test/expected/tailwind/default.css', 'utf8')
 
   t.not(css, undefined)
-  t.is(css.trim(), '@media (min-width: 1280px) {\n\n  .xl\\:z-0 {\n    z-index: 0\n  }\n}')
+  t.is(css.trim(), expected.trim())
 })
 
 test('uses CSS file provided in environment config', async t => {
@@ -25,7 +27,7 @@ test('uses CSS file provided in environment config', async t => {
     }
   }
 
-  const css = await Tailwind.compile('', '<div class="text-center foo">test</div>', {}, config)
+  const css = await Tailwind.compile('', '<div class="text-center foo">test</div>', {corePlugins: {animation: false}}, config)
 
   t.not(css, undefined)
   t.is(css.trim(), '.text-center {\n  text-align: center;\n}\n\n.foo {\n  color: red;\n}')
@@ -39,7 +41,7 @@ test('uses purgeCSS options provided in the config', async t => {
     }
   }
 
-  const css = await Tailwind.compile('', '', {}, config)
+  const css = await Tailwind.compile('', '', {corePlugins: {animation: false}}, config)
 
   t.is(css.trim(), '.z-0 {\n  z-index: 0\n}\n\n.z-10 {\n  z-index: 10\n}')
 })
@@ -56,7 +58,7 @@ test('uses postcss plugins from the config when compiling from string', async t 
     }
   }
 
-  const css = await Tailwind.compile('.test {transform: scale(0.5)}', '<div class="test">Test</a>', {}, maizzleConfig)
+  const css = await Tailwind.compile('.test {transform: scale(0.5)}', '<div class="test">Test</a>', {corePlugins: {animation: false}}, maizzleConfig)
 
   t.not(css, undefined)
   t.is(css.trim(), '.test {\n  -webkit-transform: scale(0.5);\n      -ms-transform: scale(0.5);\n          transform: scale(0.5)\n}')

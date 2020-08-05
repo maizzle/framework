@@ -14,7 +14,10 @@ const maizzleConfig = (options = {}) => {
   return {
     tailwind: {
       config: {
-        target: 'ie11'
+        target: 'ie11',
+        corePlugins: {
+          animation: false
+        }
       }
     },
     maizzle: {

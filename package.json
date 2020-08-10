@@ -42,7 +42,7 @@
     "glob-promise": "^3.4.0",
     "html-crush": "^2.0.0",
     "juice": "^7.0.0",
-    "ora": "^4.0.4",
+    "ora": "^5.0.0",
     "postcss": "^7.0.30",
     "postcss-import": "^12.0.1",
     "postcss-merge-longhand": "^4.0.11",

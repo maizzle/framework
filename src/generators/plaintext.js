@@ -14,7 +14,7 @@ module.exports.prepare = async (html, filePath, config) => {
         wrapHeads: '[',
         wrapTails: ']'
       }
-    })
+    }).result
 
   return {destination, plaintext}
 }

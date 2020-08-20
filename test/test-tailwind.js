@@ -30,7 +30,7 @@ test('uses CSS file provided in environment config', async t => {
   const css = await Tailwind.compile('', '<div class="text-center foo">test</div>', {corePlugins: {animation: false}}, config)
 
   t.not(css, undefined)
-  t.is(css.trim(), '.text-center {\n  text-align: center;\n}\n\n.foo {\n  color: red;\n}')
+  t.is(css.trim(), '.text-center {\n  text-align: center !important;\n}\n\n.foo {\n  color: red;\n}')
 })
 
 test('uses purgeCSS options provided in the config', async t => {
@@ -43,7 +43,7 @@ test('uses purgeCSS options provided in the config', async t => {
 
   const css = await Tailwind.compile('', '', {corePlugins: {animation: false}}, config)
 
-  t.is(css.trim(), '.z-0 {\n  z-index: 0\n}\n\n.z-10 {\n  z-index: 10\n}')
+  t.is(css.trim(), '.z-0 {\n  z-index: 0 !important\n}\n\n.z-10 {\n  z-index: 10 !important\n}')
 })
 
 test('uses postcss plugins from the config when compiling from string', async t => {

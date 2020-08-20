@@ -28,7 +28,6 @@ module.exports = async (html, config) => {
   const expressionsPlugin = expressions({...expressionsOptions, locals: {page: config}})
 
   return posthtml([
-    expressionsPlugin,
     layouts({strict: false, ...layoutsOptions}),
     outlookPlugin,
     fetchPlugin,

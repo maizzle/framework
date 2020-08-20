@@ -31,7 +31,7 @@
     "release": "np"
   },
   "dependencies": {
-    "@fullhuman/postcss-purgecss": "^2.2.0",
+    "@fullhuman/postcss-purgecss": "^2.3.0",
     "browser-sync": "^2.26.7",
     "color-shorthand-hex-to-six-digit": "^2.10.61",
     "css-mqpacker": "^7.0.0",
@@ -51,7 +51,7 @@
     "posthtml-attrs-parser": "^0.1.1",
     "posthtml-content": "^0.0.3",
     "posthtml-expressions": "^1.4.1",
-    "posthtml-extend": "^0.4.0",
+    "posthtml-extend": "^0.5.0",
     "posthtml-extra-attributes": "^1.0.0",
     "posthtml-fetch": "^1.2.0",
     "posthtml-markdownit": "^1.2.0",
@@ -68,9 +68,9 @@
     "tailwindcss": "^1.7.0"
   },
   "devDependencies": {
-    "ava": "^3.8.2",
+    "ava": "^3.11.1",
     "np": "*",
-    "nyc": "^15.0.1",
+    "nyc": "^15.1.0",
     "xo": "^0.33.0"
   },
   "engines": {

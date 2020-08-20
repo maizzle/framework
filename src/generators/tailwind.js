@@ -48,7 +48,10 @@ module.exports = {
     const mergeLonghandPlugin = maizzleConfig.env === 'local' ? () => {} : mergeLonghand()
 
     const tailwindPlugin = isEmptyObject(tailwindConfigObject) ? tailwind() : tailwind({
-      target: 'ie11',
+      important: true,
+      future: {
+        removeDeprecatedGapUtilities: true
+      },
       ...tailwindConfigObject,
       purge: {
         enabled: false

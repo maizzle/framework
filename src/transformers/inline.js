@@ -1,29 +1,43 @@
 const juice = require('juice')
+const posthtml = require('posthtml')
+const mergeLonghand = require('posthtml-postcss-merge-longhand')
+const {isObject, isEmptyObject, getPropValue} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
-  const options = config.inlineCSS
+  const options = getPropValue(config, 'inlineCSS') || {}
+  const removeStyleTags = typeof options.removeStyleTags === 'undefined' ? true : options.removeStyleTags
 
-  if (options && options.enabled) {
-    if (options.styleToAttribute) {
-      juice.styleToAttribute = options.styleToAttribute || juice.styleToAttribute
+  if (!isEmptyObject(options) && options.enabled) {
+    juice.styleToAttribute = isObject(options.styleToAttribute) ? options.styleToAttribute : juice.styleToAttribute
+
+    if (isObject(options.applySizeAttribute)) {
+      const widthElements = getPropValue(options, 'applySizeAttribute.width')
+      const heightElements = getPropValue(options, 'applySizeAttribute.height')
+
+      juice.widthElements = isObject(widthElements) ? Object.values(widthElements) : juice.widthElements
+      juice.heightElements = isObject(heightElements) ? Object.values(heightElements) : juice.heightElements
     }
 
-    if (typeof options.applySizeAttribute === 'object') {
-      juice.widthElements = typeof options.applySizeAttribute.width === 'object' ? Object.values(options.applySizeAttribute.width) : juice.widthElements
-      juice.heightElements = typeof options.applySizeAttribute.height === 'object' ? Object.values(options.applySizeAttribute.height) : juice.heightElements
+    if (isObject(options.excludedProperties)) {
+      juice.excludedProperties = isEmptyObject(options.excludedProperties) ? juice.excludedProperties : Object.values(options.excludedProperties)
     }
 
-    if (options.excludedProperties) {
-      juice.excludedProperties = typeof options.excludedProperties === 'object' ? Object.values(options.excludedProperties) : juice.excludedProperties
+    if (isObject(options.codeBlocks) && !isEmptyObject(options.codeBlocks)) {
+      Object.entries(options.codeBlocks).forEach(([k, v]) => {
+        juice.codeBlocks[k] = v
+      })
     }
 
-    if (options.codeBlocks) {
-      Object.entries(options.codeBlocks).forEach(
-        ([k, v]) => juice.codeBlocks[k] = v // eslint-disable-line
-      )
+    html = juice(html, {removeStyleTags})
+
+    const mergeLonghandConfig = getPropValue(options, 'mergeLonghand') || {enabled: false}
+    const tags = getPropValue(mergeLonghandConfig, 'tags') || []
+
+    if (mergeLonghandConfig || mergeLonghandConfig.enabled) {
+      html = await posthtml([mergeLonghand({tags})]).process(html).then(result => result.html)
     }
 
-    return juice(html, { removeStyleTags: true })
+    return html
   }
 
   return html

@@ -1,5 +1,6 @@
-/node_modules/
-/.idea/
-/.vscode/
+.idea
+node_modules
+.nyc_output
+.vscode
 npm-debug.log
 yarn-error.log

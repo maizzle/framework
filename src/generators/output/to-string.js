@@ -18,11 +18,9 @@ module.exports = async (html, options) => {
   const tailwindConfig = getPropValue(options, 'tailwind.config') || {}
   const cssString = getPropValue(options, 'tailwind.css') || '@tailwind components; @tailwind utilities;'
 
-  if (!config.isMerged) {
-    const frontMatter = fm(html)
-    html = frontMatter.body
-    config = deepmerge(config, frontMatter.attributes)
-  }
+  const frontMatter = fm(html)
+  html = frontMatter.body
+  config = deepmerge(config, frontMatter.attributes)
 
   if (typeof getPropValue(options, 'tailwind.compiled') === 'string') {
     config.css = options.tailwind.compiled
@@ -50,5 +48,8 @@ module.exports = async (html, options) => {
     html = await options.afterTransformers(html, config)
   }
 
-  return html
+  return {
+    html,
+    config
+  }
 }

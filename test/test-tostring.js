@@ -7,7 +7,7 @@ const {readFileSync} = require('fs')
 const fixture = file => readFileSync(join(__dirname, 'fixtures', `${file}.html`), 'utf8')
 const expected = file => readFileSync(join(__dirname, 'expected', `${file}.html`), 'utf8')
 
-const renderString = (string, options = {}) => Maizzle.render(string, options).then(html => html)
+const renderString = (string, options = {}) => Maizzle.render(string, options).then(({html}) => html)
 
 test('compiles HTML string if no options are passed', async t => {
   let html = await renderString(fixture('basic'))

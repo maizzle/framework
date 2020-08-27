@@ -31,7 +31,7 @@ const maizzleConfig = (options = {}) => {
 
 const processFile = (t, name, options = {}, log = false) => {
   return Maizzle.render(fixture(name), {...options})
-    .then(result => log ? console.log(result) : clean(result))
+    .then(({html}) => log ? console.log(html) : clean(html))
     .then(html => t.is(html, expected(name).trim()))
 }
 

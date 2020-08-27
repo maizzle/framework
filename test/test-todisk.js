@@ -66,7 +66,7 @@ test('outputs files at the correct location when multiple template sources are u
     }
   })
 
-  t.is(files.length, 3)
+  t.is(files.length, 2)
   t.true(fs.pathExistsSync(t.context.folder))
 })
 
@@ -97,25 +97,24 @@ test('outputs files with the correct extension', async t => {
         extension: 'blade.php'
       },
       templates: {
-        root: 'test/stubs/empty'
+        root: 'test/stubs/templates'
       }
     }
   })
 
-  // This is currently faking it, need to fix
-  t.true(fs.readdirSync(t.context.folder).includes('empty.html'))
+  t.true(fs.readdirSync(t.context.folder).includes('1.blade.php'))
 })
 
 test('outputs plaintext files if option is enabled', async t => {
   const files = await Maizzle.build('production', {
-    plaintext: true,
     fail: 'silent',
+    plaintext: true,
     build: {
       destination: {
         path: t.context.folder
       },
       templates: {
-        root: 'test/stubs/plaintext/'
+        root: 'test/stubs/plaintext'
       }
     }
   })
@@ -163,38 +162,6 @@ test('throws and exits if a template cannot be rendered and `fail` option is und
       }
     })
   }, {instanceOf: RangeError, message: 'received empty string'})
-})
-
-test('warns if a template cannot be rendered and `fail` option is `verbose`', async t => {
-  const files = await Maizzle.build('production', {
-    build: {
-      fail: 'verbose',
-      destination: {
-        path: t.context.folder
-      },
-      templates: {
-        root: 'test/stubs/empty'
-      }
-    }
-  })
-
-  t.true(files[0].includes('empty.html'))
-})
-
-test('warns if a template cannot be rendered and `fail` option is `silent`', async t => {
-  const files = await Maizzle.build('production', {
-    build: {
-      fail: 'silent',
-      destination: {
-        path: t.context.folder
-      },
-      templates: {
-        root: 'test/stubs/empty'
-      }
-    }
-  })
-
-  t.true(files[0].includes('empty.html'))
 })
 
 test('runs the `beforeCreate` event', async t => {

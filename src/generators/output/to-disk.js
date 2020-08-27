@@ -30,15 +30,16 @@ module.exports = async (env, spinner, config) => {
     filetypes = filetypes.join('|')
   }
 
+  let templates = []
+
   if (Array.isArray(sourceDir)) {
-    await asyncForEach(sourceDir, async source => {
-      await fs.copy(source, outputDir).catch(error => spinner.warn(error.message))
+    sourceDir.forEach(async directory => {
+      const paths = glob.sync(`${directory}/**/*.+(${filetypes})`)
+      templates.push(...paths)
     })
   } else {
-    await fs.copy(sourceDir, outputDir).catch(error => spinner.warn(error.message))
+    templates = await glob(`${sourceDir}/**/*.+(${filetypes})`)
   }
-
-  const templates = await glob(`${outputDir}/**/*.+(${filetypes})`)
 
   if (templates.length === 0) {
     spinner
@@ -68,23 +69,23 @@ module.exports = async (env, spinner, config) => {
       ...[config.events || []]
     })
       .then(async ({html, config}) => {
-        const destination = config.permalink || file
+        const destination = config.permalink || path.join(outputDir, path.basename(file))
 
         if (config.plaintext) {
-          await Plaintext.prepare(html, file, config)
-            .then(async ({destination, plaintext}) => {
-              await fs.outputFile(destination, plaintext)
+          await Plaintext.prepare(html, destination, config)
+            .then(async ({target, plaintext}) => {
+              await fs.outputFile(target, plaintext)
               html = removePlaintextTags(html, config)
             })
         }
 
-        fs.outputFile(destination, html)
+        await fs.outputFile(destination, html)
           .then(async () => {
             const extension = getPropValue(config, 'build.destination.extension') || 'html'
 
             if (extension !== 'html') {
               const parts = path.parse(destination)
-              await fs.rename(destination, `${parts.dir}/${parts.name}.${extension}`)
+              await fs.move(destination, `${parts.dir}/${parts.name}.${extension}`)
             }
           })
       })

@@ -17,10 +17,10 @@ module.exports = {
 
     const purgeCSSOptions = getPropValue(maizzleConfig, 'purgeCSS') || {}
 
-    const templatesRoot = getPropValue(maizzleConfig, 'build.templates.root')
-
-    const templateSources = Array.isArray(templatesRoot) ? templatesRoot.map(item => `${item}/**/*.*`) : [`./${templatesRoot}/**/*.*`]
+    const buildTemplates = getPropValue(maizzleConfig, 'build.templates') || []
+    const templateSources = Array.isArray(buildTemplates) ? buildTemplates.map(({source}) => `${source}/**/*.*`) : [buildTemplates].map(({source}) => `${source}/**/*.*`)
     const tailwindSources = Array.isArray(tailwindConfigObject.purge) ? tailwindConfigObject.purge : (isObject(tailwindConfigObject.purge) ? tailwindConfigObject.purge.content || [] : [])
+
     const extraPurgeSources = purgeCSSOptions.content || []
 
     const purgeSources = [

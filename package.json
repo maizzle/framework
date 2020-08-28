@@ -34,7 +34,6 @@
     "@fullhuman/postcss-purgecss": "^2.3.0",
     "browser-sync": "^2.26.12",
     "color-shorthand-hex-to-six-digit": "^2.10.65",
-    "css-mqpacker": "^7.0.0",
     "deepmerge": "^4.2.2",
     "email-comb": "^3.9.22",
     "front-matter": "^4.0.0",

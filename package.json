@@ -1,6 +1,6 @@
 {
   "name": "@maizzle/framework",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Maizzle is a framework that helps you quickly build HTML emails with Tailwind CSS and customizable, email-specific post-processing.",
   "license": "MIT",
   "main": "src/index.js",
@@ -34,7 +34,6 @@
     "@fullhuman/postcss-purgecss": "^2.3.0",
     "browser-sync": "^2.26.12",
     "color-shorthand-hex-to-six-digit": "^2.10.65",
-    "css-mqpacker": "^7.0.0",
     "deepmerge": "^4.2.2",
     "email-comb": "^3.9.22",
     "front-matter": "^4.0.0",

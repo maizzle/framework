@@ -2,7 +2,6 @@ const path = require('path')
 const fs = require('fs-extra')
 const postcss = require('postcss')
 const tailwind = require('tailwindcss')
-const mqpacker = require('css-mqpacker')
 const atImport = require('postcss-import')
 const postcssNested = require('postcss-nested')
 const mergeLonghand = require('postcss-merge-longhand')
@@ -76,7 +75,6 @@ module.exports = {
       postcssNested(),
       tailwindPlugin,
       purgeCssPlugin,
-      mqpacker({sort: true}),
       mergeLonghandPlugin,
       ...postcssUserPlugins
     ])

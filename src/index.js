@@ -26,31 +26,28 @@ const self = module.exports = { // eslint-disable-line
     require('./generators/config')
       .getMerged('local')
       .then(config => {
-        const buildTemplates = getPropValue(config, 'build.templates')
-        const templatesPaths = Array.isArray(buildTemplates) ? buildTemplates : [buildTemplates]
-        const baseDir = getPropValue(templatesPaths[0], 'destination.path') || 'build_local'
+        let templates = getPropValue(config, 'build.templates')
+        templates = Array.isArray(templates) ? templates : [templates]
 
         const bsOptions = {
           notify: false,
           open: false,
           port: 3000,
           server: {
-            baseDir,
+            baseDir: getPropValue(templates[0], 'destination.path') || 'build_local',
             directory: true
           },
           tunnel: false,
           ui: {port: 3001},
           ...getPropValue(config, 'build.browsersync')
         }
+
         const watchPaths = [
           'src/**/*.*',
           'tailwind.config.js',
+          ...new Set(templates.map(config => `${getPropValue(config, 'source') || 'src'}/**/*.*`)),
           ...new Set(bsOptions.watch)
         ]
-
-        if (templatesPaths[0]) {
-          templatesPaths.forEach(({source}) => watchPaths.push(`${source}/**/*.*`))
-        }
 
         bs.create()
 

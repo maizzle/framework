@@ -21,10 +21,8 @@ const maizzleConfig = (options = {}) => {
       }
     },
     maizzle: {
-      config: {
-        env: 'node',
-        ...options
-      }
+      env: 'node',
+      ...options
     }
   }
 }

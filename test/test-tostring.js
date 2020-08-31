@@ -37,8 +37,10 @@ test('throws if first argument is an empty string', async t => {
 
 test('runs the `beforeRender` event', async t => {
   const html = await renderString(`<div>{{ page.foo }}</div>`, {
-    beforeRender(config) {
+    beforeRender(html, config) {
       config.foo = 'bar'
+
+      return html
     }
   })
 
@@ -62,9 +64,7 @@ test('runs the `afterRender` event', async t => {
 test('runs the `afterTransformers` event', async t => {
   const result = await renderString(`<div>foo</div>`, {
     maizzle: {
-      config: {
-        title: 'bar'
-      }
+      title: 'bar'
     },
     afterTransformers(html, config) {
       return html.replace('foo', config.title)

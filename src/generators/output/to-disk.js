@@ -49,10 +49,8 @@ module.exports = async (env, spinner, config) => {
 
           await render(html, {
             maizzle: {
-              config: {
-                ...config,
-                env
-              }
+              ...config,
+              env
             },
             tailwind: {
               compiled: css

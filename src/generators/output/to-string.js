@@ -14,7 +14,7 @@ module.exports = async (html, options) => {
     throw new RangeError('received empty string')
   }
 
-  let config = getPropValue(options, 'maizzle.config') || {}
+  let config = getPropValue(options, 'maizzle') || {}
   const tailwindConfig = getPropValue(options, 'tailwind.config') || {}
   const cssString = getPropValue(options, 'tailwind.css') || '@tailwind components; @tailwind utilities;'
 
@@ -29,7 +29,7 @@ module.exports = async (html, options) => {
   }
 
   if (options && typeof options.beforeRender === 'function') {
-    await options.beforeRender(config)
+    html = await options.beforeRender(html, config)
   }
 
   html = await posthtml(html, config)

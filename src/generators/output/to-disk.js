@@ -114,13 +114,11 @@ module.exports = async (env, spinner, config) => {
 
         await glob(path.join(templateConfig.destination.path, '/**/*.*'))
           .then(contents => {
-            files = [...files, ...contents]
+            files = [...new Set([...files, ...contents])]
           })
       })
       .catch(error => spinner.warn(error.message))
   })
-
-  files = files.filter((item, pos) => files.indexOf(item) === pos)
 
   if (config.events && typeof config.events.afterBuild === 'function') {
     await config.events.afterBuild(files)

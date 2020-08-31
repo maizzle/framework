@@ -21,7 +21,7 @@ module.exports = async (env, spinner, config) => {
   const buildTemplates = getPropValue(config, 'build.templates')
   const templatesConfig = Array.isArray(buildTemplates) ? buildTemplates : [buildTemplates]
 
-  const files = []
+  let files = []
   const css = await Tailwind.compile('', '', {}, config)
 
   await asyncForEach(templatesConfig, async templateConfig => {
@@ -111,9 +111,16 @@ module.exports = async (env, spinner, config) => {
             await fs.copy(assets.source, path.join(templateConfig.destination.path, assets.destination)).catch(error => spinner.warn(error.message))
           }
         }
+
+        await glob(path.join(templateConfig.destination.path, '/**/*.*'))
+          .then(contents => {
+            files = [...files, ...contents]
+          })
       })
       .catch(error => spinner.warn(error.message))
   })
+
+  files = files.filter((item, pos) => files.indexOf(item) === pos)
 
   if (config.events && typeof config.events.afterBuild === 'function') {
     await config.events.afterBuild(files)

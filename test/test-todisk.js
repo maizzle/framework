@@ -51,7 +51,7 @@ test('outputs files at the correct location', async t => {
   })
 
   t.true(fs.pathExistsSync(t.context.folder))
-  t.is(files.length, 2)
+  t.is(files.length, 3)
 })
 
 test('outputs files at the correct location if multiple template sources are used', async t => {
@@ -76,7 +76,7 @@ test('outputs files at the correct location if multiple template sources are use
   })
 
   t.true(fs.pathExistsSync(t.context.folder))
-  t.is(files.length, 3)
+  t.is(files.length, 4)
 })
 
 test('processes all files in the `filetypes` option', async t => {

@@ -11,7 +11,7 @@ const self = module.exports = { // eslint-disable-line
 
     return Output.toDisk(env, spinner, config)
       .then(files => {
-        spinner.succeed(`Processed ${files.length} files in ${new Date() - start} ms.`)
+        spinner.succeed(`Built ${files.length} templates in ${new Date() - start} ms.`)
         return files
       })
       .catch(error => {

@@ -21,6 +21,7 @@ module.exports = async (env, spinner, config) => {
   const buildTemplates = getPropValue(config, 'build.templates')
   const templatesConfig = Array.isArray(buildTemplates) ? buildTemplates : [buildTemplates]
 
+  const parsed = []
   let files = []
   const css = await Tailwind.compile('', '', {}, config)
 
@@ -55,7 +56,7 @@ module.exports = async (env, spinner, config) => {
             tailwind: {
               compiled: css
             },
-            ...[config.events || []]
+            ...config.events
           })
             .then(async ({html, config}) => {
               const destination = config.permalink || file
@@ -78,6 +79,7 @@ module.exports = async (env, spinner, config) => {
                   }
 
                   files.push(file)
+                  parsed.push(file)
                 })
             })
             .catch(error => {
@@ -122,5 +124,5 @@ module.exports = async (env, spinner, config) => {
     await config.events.afterBuild(files)
   }
 
-  return files
+  return parsed
 }

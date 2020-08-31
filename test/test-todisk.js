@@ -51,7 +51,7 @@ test('outputs files at the correct location', async t => {
   })
 
   t.true(fs.pathExistsSync(t.context.folder))
-  t.is(files.length, 3)
+  t.is(files.length, 2)
 })
 
 test('outputs files at the correct location if multiple template sources are used', async t => {
@@ -76,7 +76,7 @@ test('outputs files at the correct location if multiple template sources are use
   })
 
   t.true(fs.pathExistsSync(t.context.folder))
-  t.is(files.length, 4)
+  t.is(files.length, 3)
 })
 
 test('processes all files in the `filetypes` option', async t => {
@@ -200,7 +200,9 @@ test('runs the `afterBuild` event', async t => {
     }
   })
 
-  t.deepEqual(t.context.afterBuild, files)
+  const getIntersection = (a, ...array) => [...new Set(a)].filter(v => array.every(b => b.includes(v)))
+
+  t.deepEqual(getIntersection(t.context.afterBuild, files), files)
 })
 
 test('supports multiple asset paths', async t => {

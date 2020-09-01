@@ -5,6 +5,7 @@ module.exports = {
     complexity: 0,
     'no-lonely-if': 0,
     'unicorn/no-reduce': 0,
+    'max-nested-callbacks': 0,
     'unicorn/string-content': 0,
     'unicorn/prefer-array-find': 0,
     'promise/prefer-await-to-then': 0,

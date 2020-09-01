@@ -10,9 +10,9 @@ const self = module.exports = { // eslint-disable-line
     const spinner = ora('Building emails...').start()
 
     return Output.toDisk(env, spinner, config)
-      .then(response => {
-        spinner.succeed(`Built ${response.count} templates in ${new Date() - start} ms.`)
-        return response.files
+      .then(files => {
+        spinner.succeed(`Built ${files.length} templates in ${new Date() - start} ms.`)
+        return files
       })
       .catch(error => {
         throw error
@@ -26,27 +26,28 @@ const self = module.exports = { // eslint-disable-line
     require('./generators/config')
       .getMerged('local')
       .then(config => {
-        const baseDir = getPropValue(config, 'build.destination.path') || 'build_local'
-        const templatesRoot = getPropValue(config, 'build.templates.root')
+        let templates = getPropValue(config, 'build.templates')
+        templates = Array.isArray(templates) ? templates : [templates]
+
         const bsOptions = {
           notify: false,
           open: false,
           port: 3000,
           server: {
-            baseDir,
+            baseDir: getPropValue(templates[0], 'destination.path') || 'build_local',
             directory: true
           },
           tunnel: false,
           ui: {port: 3001},
           ...getPropValue(config, 'build.browsersync')
         }
-        const watchPaths = bsOptions.watch || ['src/**/*.*', 'tailwind.config.js']
 
-        if (Array.isArray(templatesRoot)) {
-          templatesRoot.forEach(root => watchPaths.push(root))
-        } else if (typeof templatesRoot === 'string') {
-          watchPaths.push(templatesRoot)
-        }
+        const watchPaths = [
+          'src/**/*.*',
+          'tailwind.config.js',
+          ...new Set(templates.map(config => `${getPropValue(config, 'source') || 'src'}/**/*.*`)),
+          ...new Set(bsOptions.watch)
+        ]
 
         bs.create()
 

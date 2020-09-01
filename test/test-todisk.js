@@ -20,110 +20,118 @@ test('throws if config cannot be computed', async t => {
   }, {instanceOf: Error, message: `could not load 'config.production.js'`})
 })
 
-test('throws if no templates found', async t => {
-  await t.throwsAsync(async () => {
-    await Maizzle.build('local', {
-      build: {
-        fail: 'silent',
+test('skips if no templates found', async t => {
+  const files = await Maizzle.build('production', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: 'test/stubs/templates',
+        filetypes: 'fake',
         destination: {
           path: t.context.folder
-        },
-        templates: {
-          root: 'test/stubs/assets'
         }
       }
-    })
-  }, {instanceOf: Error, message: 'no templates found'})
+    }
+  })
+
+  t.is(files.length, 0)
 })
 
 test('outputs files at the correct location', async t => {
   const files = await Maizzle.build('production', {
     build: {
       fail: 'silent',
-      destination: {
-        path: t.context.folder
-      },
       templates: {
-        root: 'test/stubs/templates'
+        source: 'test/stubs/templates',
+        destination: {
+          path: t.context.folder
+        }
       }
     }
   })
 
-  t.is(files.length, 2)
   t.true(fs.pathExistsSync(t.context.folder))
+  t.is(files.length, 2)
 })
 
-test('outputs files at the correct location when multiple template sources are used', async t => {
-  const files = await Maizzle.build('production', {
+test('outputs files at the correct location if multiple template sources are used', async t => {
+  const files = await Maizzle.build('local', {
     build: {
       fail: 'silent',
-      destination: {
-        path: t.context.folder
-      },
-      templates: {
-        root: ['test/stubs/templates', 'test/stubs/empty']
-      }
+      templates: [
+        {
+          source: 'test/stubs/templates',
+          destination: {
+            path: t.context.folder
+          }
+        },
+        {
+          source: 'test/stubs/plaintext',
+          destination: {
+            path: t.context.folder
+          }
+        }
+      ]
     }
   })
 
-  t.is(files.length, 3)
   t.true(fs.pathExistsSync(t.context.folder))
+  t.is(files.length, 3)
 })
 
 test('processes all files in the `filetypes` option', async t => {
   const files = await Maizzle.build('production', {
     build: {
       fail: 'silent',
-      destination: {
-        path: t.context.folder
-      },
       templates: {
-        extensions: ['html', 'mzl'],
-        root: 'test/stubs/templates'
+        source: 'test/stubs/templates',
+        filetypes: ['html', 'mzl'],
+        destination: {
+          path: t.context.folder
+        }
       }
     }
   })
 
-  t.is(files.length, 2)
   t.true(fs.pathExistsSync(t.context.folder))
+  t.is(files.length, 3)
 })
 
 test('outputs files with the correct extension', async t => {
   await Maizzle.build('production', {
     build: {
       fail: 'silent',
-      destination: {
-        path: t.context.folder,
-        extension: 'blade.php'
-      },
       templates: {
-        root: 'test/stubs/empty'
+        source: 'test/stubs/templates',
+        destination: {
+          path: t.context.folder,
+          extension: 'blade.php'
+        }
       }
     }
   })
 
-  // This is currently faking it, need to fix
-  t.true(fs.readdirSync(t.context.folder).includes('empty.html'))
+  t.true(fs.readdirSync(t.context.folder).includes('1.blade.php'))
 })
 
 test('outputs plaintext files if option is enabled', async t => {
-  const files = await Maizzle.build('production', {
-    plaintext: true,
+  await Maizzle.build('production', {
     fail: 'silent',
     build: {
-      destination: {
-        path: t.context.folder
-      },
       templates: {
-        root: 'test/stubs/plaintext/'
+        source: 'test/stubs/plaintext',
+        destination: {
+          path: t.context.folder
+        },
+        plaintext: true
       }
     }
   })
 
-  const plaintext = files.filter(file => file.includes('.txt'))
-  const html = files.filter(file => file.includes('.html'))
-  const plaintextContent = await fs.readFile(plaintext[0], 'utf8')
-  const htmlContent = await fs.readFile(html[0], 'utf8')
+  const plaintext = fs.readdirSync(t.context.folder).filter(file => file.includes('.txt'))
+  const html = fs.readdirSync(t.context.folder).filter(file => file.includes('.html'))
+  const plaintextContent = await fs.readFile(`${t.context.folder}/${plaintext[0]}`, 'utf8')
+  const htmlContent = await fs.readFile(`${t.context.folder}/${html[0]}`, 'utf8')
 
   t.is(plaintext.length, 1)
   t.is(plaintextContent, 'Show in HTML\nShow in plaintext')
@@ -134,78 +142,32 @@ test('copies assets to destination', async t => {
   await Maizzle.build('production', {
     build: {
       fail: 'silent',
-      assets: {
-        source: 'test/stubs/assets',
-        destination: 'images'
-      },
-      destination: {
-        path: t.context.folder
-      },
       templates: {
-        root: 'test/stubs/templates'
+        source: 'test/stubs/templates',
+        destination: {
+          path: t.context.folder
+        },
+        assets: {
+          source: 'test/stubs/assets',
+          destination: 'images'
+        }
       }
     }
   })
 
   t.is(fs.pathExistsSync(`${t.context.folder}/images`), true)
-})
-
-test('throws and exits if a template cannot be rendered and `fail` option is undefined', async t => {
-  await t.throwsAsync(async () => {
-    await Maizzle.build('production', {
-      build: {
-        destination: {
-          path: t.context.folder
-        },
-        templates: {
-          root: 'test/stubs/empty'
-        }
-      }
-    })
-  }, {instanceOf: RangeError, message: 'received empty string'})
-})
-
-test('warns if a template cannot be rendered and `fail` option is `verbose`', async t => {
-  const files = await Maizzle.build('production', {
-    build: {
-      fail: 'verbose',
-      destination: {
-        path: t.context.folder
-      },
-      templates: {
-        root: 'test/stubs/empty'
-      }
-    }
-  })
-
-  t.true(files[0].includes('empty.html'))
-})
-
-test('warns if a template cannot be rendered and `fail` option is `silent`', async t => {
-  const files = await Maizzle.build('production', {
-    build: {
-      fail: 'silent',
-      destination: {
-        path: t.context.folder
-      },
-      templates: {
-        root: 'test/stubs/empty'
-      }
-    }
-  })
-
-  t.true(files[0].includes('empty.html'))
+  t.is(fs.readdirSync(`${t.context.folder}/images`).length, 1)
 })
 
 test('runs the `beforeCreate` event', async t => {
-  const files = await Maizzle.build('production', {
+  await Maizzle.build('production', {
     build: {
       fail: 'silent',
-      destination: {
-        path: t.context.folder
-      },
       templates: {
-        root: 'test/stubs/events'
+        source: 'test/stubs/events',
+        destination: {
+          path: t.context.folder
+        }
       }
     },
     events: {
@@ -215,7 +177,7 @@ test('runs the `beforeCreate` event', async t => {
     }
   })
 
-  const html = fs.readFileSync(files[0], 'utf8').trim()
+  const html = fs.readFileSync(`${t.context.folder}/${fs.readdirSync(t.context.folder)[0]}`, 'utf8').trim()
 
   t.is(html, 'Foo is bar')
 })
@@ -224,11 +186,11 @@ test('runs the `afterBuild` event', async t => {
   const files = await Maizzle.build('production', {
     build: {
       fail: 'silent',
-      destination: {
-        path: t.context.folder
-      },
       templates: {
-        root: 'test/stubs/templates'
+        source: 'test/stubs/templates',
+        destination: {
+          path: t.context.folder
+        }
       }
     },
     events: {
@@ -238,22 +200,24 @@ test('runs the `afterBuild` event', async t => {
     }
   })
 
-  t.deepEqual(t.context.afterBuild, files)
+  const getIntersection = (a, ...array) => [...new Set(a)].filter(v => array.every(b => b.includes(v)))
+
+  t.deepEqual(getIntersection(t.context.afterBuild, files), files)
 })
 
 test('supports multiple asset paths', async t => {
   await Maizzle.build('production', {
     build: {
       fail: 'silent',
-      destination: {
-        path: t.context.folder
-      },
       templates: {
-        root: 'test/stubs/templates'
-      },
-      assets: {
-        source: ['test/stubs/assets', 'test/stubs/plaintext', 'test/stubs/invalid'],
-        destination: 'extras'
+        source: 'test/stubs/templates',
+        destination: {
+          path: t.context.folder
+        },
+        assets: {
+          source: ['test/stubs/assets', 'test/stubs/plaintext', 'test/stubs/invalid'],
+          destination: 'extras'
+        }
       }
     }
   })
@@ -263,19 +227,72 @@ test('supports multiple asset paths', async t => {
   t.false(fs.existsSync(`${t.context.folder}/extras/invalid`))
 })
 
-test('spins up local development server', async t => {
-  await fs.copy('test/stubs/templates', 'src/templates')
-
-  await Maizzle.serve({
+test('warns if a template cannot be rendered and `fail` option is undefined', async t => {
+  const files = await Maizzle.build('production', {
     build: {
       templates: {
-        root: 'test/stubs/templates'
+        source: 'test/stubs/breaking',
+        destination: {
+          path: t.context.folder
+        }
       }
     }
   })
 
-  t.true(fs.existsSync('build_local'))
+  t.false(files.includes('empty.html'))
+})
 
-  await fs.remove('build_local')
-  await fs.remove('src/templates')
+test('warns if a template cannot be rendered and `fail` option is `verbose`', async t => {
+  const files = await Maizzle.build('production', {
+    build: {
+      fail: 'verbose',
+      templates: {
+        source: 'test/stubs/breaking',
+        destination: {
+          path: t.context.folder
+        }
+      }
+    }
+  })
+
+  t.false(files.includes('empty.html'))
+})
+
+test('warns if a template cannot be rendered and `fail` option is `silent`', async t => {
+  const files = await Maizzle.build('production', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: 'test/stubs/breaking',
+        destination: {
+          path: t.context.folder
+        }
+      }
+    }
+  })
+
+  t.false(files.includes('empty.html'))
+})
+
+test('spins up local development server', async t => {
+  await Maizzle.serve({
+    build: {
+      templates: {
+        source: 'test/stubs/templates',
+        destination: {
+          path: t.context.folder
+        }
+      }
+    }
+  })
+
+  t.true(fs.existsSync(t.context.folder))
+
+  await fs.remove(t.context.folder)
+})
+
+test('throws if it cannot spin up local development server', async t => {
+  await t.throwsAsync(async () => {
+    await Maizzle.serve({})
+  }, {instanceOf: TypeError, message: `Cannot read property 'source' of undefined`})
 })

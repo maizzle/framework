@@ -11,6 +11,8 @@ const Plaintext = require('../plaintext')
 const render = require('./to-string')
 
 module.exports = async (env, spinner, config) => {
+  process.env.NODE_ENV = env || 'local'
+
   if (isEmptyObject(config)) {
     config = await Config.getMerged(env).catch(error => {
       spinner.fail('Build failed')

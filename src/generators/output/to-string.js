@@ -6,6 +6,8 @@ const Transformers = require('../../transformers')
 const {getPropValue} = require('../../utils/helpers')
 
 module.exports = async (html, options) => {
+  process.env.NODE_ENV = getPropValue(options, 'maizzle.env') || 'local'
+
   if (typeof html !== 'string') {
     throw new TypeError(`first argument must be an HTML string, received ${html}`)
   }

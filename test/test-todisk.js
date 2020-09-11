@@ -51,7 +51,7 @@ test('outputs files at the correct location', async t => {
   })
 
   t.true(fs.pathExistsSync(t.context.folder))
-  t.is(files.length, 2)
+  t.is(files.length, 3)
 })
 
 test('outputs files at the correct location if multiple template sources are used', async t => {
@@ -76,7 +76,7 @@ test('outputs files at the correct location if multiple template sources are use
   })
 
   t.true(fs.pathExistsSync(t.context.folder))
-  t.is(files.length, 3)
+  t.is(files.length, 4)
 })
 
 test('processes all files in the `filetypes` option', async t => {
@@ -115,25 +115,25 @@ test('outputs files with the correct extension', async t => {
 })
 
 test('outputs plaintext files if option is enabled', async t => {
-  await Maizzle.build('production', {
+  const files = await Maizzle.build('production', {
     fail: 'silent',
     build: {
       templates: {
         source: 'test/stubs/plaintext',
         destination: {
           path: t.context.folder
-        },
-        plaintext: true
+        }
       }
-    }
+    },
+    plaintext: true
   })
 
-  const plaintext = fs.readdirSync(t.context.folder).filter(file => file.includes('.txt'))
-  const html = fs.readdirSync(t.context.folder).filter(file => file.includes('.html'))
-  const plaintextContent = await fs.readFile(`${t.context.folder}/${plaintext[0]}`, 'utf8')
-  const htmlContent = await fs.readFile(`${t.context.folder}/${html[0]}`, 'utf8')
+  const plaintext = files.filter(file => file.includes('.txt'))
+  const html = files.filter(file => file.includes('.html'))
+  const plaintextContent = await fs.readFile(plaintext[0], 'utf8')
+  const htmlContent = await fs.readFile(html[0], 'utf8')
 
-  t.is(plaintext.length, 1)
+  t.is(plaintext[0], `${t.context.folder}/plaintext.txt`)
   t.is(plaintextContent, 'Show in HTML\nShow in plaintext')
   t.is(htmlContent, '<div>Show in HTML</div>\n\n')
 })

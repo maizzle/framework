@@ -63,7 +63,7 @@ module.exports = async (env, spinner, config) => {
             .then(async ({html, config}) => {
               const destination = config.permalink || file
 
-              if (templateConfig.plaintext) {
+              if (config.plaintext) {
                 await Plaintext.prepare(html, destination, config)
                   .then(async ({target, plaintext}) => {
                     await fs.outputFile(target, plaintext)
@@ -126,5 +126,5 @@ module.exports = async (env, spinner, config) => {
     await config.events.afterBuild(files)
   }
 
-  return parsed
+  return files
 }

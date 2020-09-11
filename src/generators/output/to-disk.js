@@ -126,5 +126,5 @@ module.exports = async (env, spinner, config) => {
     await config.events.afterBuild(files)
   }
 
-  return files
+  return {files, parsed}
 }

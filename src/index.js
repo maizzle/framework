@@ -10,8 +10,8 @@ const self = module.exports = { // eslint-disable-line
     const spinner = ora('Building emails...').start()
 
     return Output.toDisk(env, spinner, config)
-      .then(files => {
-        spinner.succeed(`Built ${files.length} templates in ${new Date() - start} ms.`)
+      .then(({files, parsed}) => {
+        spinner.succeed(`Built ${parsed.length} templates in ${new Date() - start} ms.`)
         return files
       })
       .catch(error => {

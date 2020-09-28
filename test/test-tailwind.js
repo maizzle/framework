@@ -36,8 +36,9 @@ test('uses CSS file provided in environment config', async t => {
 test('uses purgeCSS options provided in the config', async t => {
   const config = {
     purgeCSS: {
-      content: [{raw: '<div class="z-0"></div>'}],
-      whitelist: ['z-10']
+      content: [{raw: '<div class="z-0 text-center"></div>'}],
+      safelist: ['z-10'],
+      blocklist: ['text-center']
     }
   }
 

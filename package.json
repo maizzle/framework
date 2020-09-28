@@ -63,7 +63,7 @@
     "pretty": "^2.0.0",
     "prevent-widows": "^1.0.2",
     "query-string": "^6.13.1",
-    "string-strip-html": "^5.0.0",
+    "string-strip-html": "^6.0.4",
     "tailwindcss": "^1.8.5"
   },
   "devDependencies": {

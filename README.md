@@ -15,7 +15,7 @@
 
 > **Note:** This repository contains the core code of the Maizzle framework. If you want to build HTML emails using Maizzle, visit the [starter repository](https://github.com/maizzle/maizzle).
 
-Maizzle is an email framework that helps you quickly build HTML emails with [Tailwind CSS](https://tailwindcss.com/).
+Maizzle is a framework that helps you quickly build HTML emails with [Tailwind CSS](https://tailwindcss.com/).
 
 ## Documentation
 

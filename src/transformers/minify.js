@@ -3,7 +3,7 @@ const {isObject} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
   if (isObject(config.minify) && config.minify.enabled) {
-    html = crush(html, config.minify).result
+    html = crush(html, {removeLineBreaks: true, ...config.minify}).result
   }
 
   return html

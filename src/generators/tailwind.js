@@ -34,13 +34,13 @@ module.exports = {
     ]
 
     const extractor = getPropValue(tailwindConfigObject, 'purge.options.extractor') || purgeCSSOptions.extractor || defaultPurgeCSSExtractor
-    const purgeSafeList = getPropValue(tailwindConfigObject, 'purge.options.safelist') || purgeCSSOptions.safelist || []
+    const purgeSafeList = getPropValue(tailwindConfigObject, 'purge.options.safelist') || purgeCSSOptions.safelist || {}
     const purgeBlockList = getPropValue(tailwindConfigObject, 'purge.options.blocklist') || purgeCSSOptions.blocklist || []
 
     const purgeCssPlugin = maizzleConfig.env === 'local' ? () => {} : purgecss({
       content: purgeSources,
       defaultExtractor: content => content.match(extractor) || [],
-      safelist: [...purgeSafeList],
+      safelist: purgeSafeList,
       blocklist: [...purgeBlockList]
     })
 

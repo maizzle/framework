@@ -31,7 +31,7 @@
     "release": "np"
   },
   "dependencies": {
-    "@fullhuman/postcss-purgecss": "^2.3.0",
+    "@fullhuman/postcss-purgecss": "^3.0.0",
     "browser-sync": "^2.26.12",
     "color-shorthand-hex-to-six-digit": "^2.10.65",
     "deepmerge": "^4.2.2",

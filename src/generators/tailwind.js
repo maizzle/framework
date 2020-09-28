@@ -34,14 +34,14 @@ module.exports = {
     ]
 
     const extractor = getPropValue(tailwindConfigObject, 'purge.options.extractor') || purgeCSSOptions.extractor || defaultPurgeCSSExtractor
-    const purgeWhitelist = getPropValue(tailwindConfigObject, 'purge.options.whitelist') || purgeCSSOptions.whitelist || []
-    const purgewhitelistPatterns = getPropValue(tailwindConfigObject, 'purge.options.whitelistPatterns') || purgeCSSOptions.whitelistPatterns || []
+    const purgeSafeList = getPropValue(tailwindConfigObject, 'purge.options.safelist') || purgeCSSOptions.safelist || {}
+    const purgeBlockList = getPropValue(tailwindConfigObject, 'purge.options.blocklist') || purgeCSSOptions.blocklist || []
 
     const purgeCssPlugin = maizzleConfig.env === 'local' ? () => {} : purgecss({
       content: purgeSources,
       defaultExtractor: content => content.match(extractor) || [],
-      whitelist: purgeWhitelist,
-      whitelistPatterns: purgewhitelistPatterns
+      safelist: purgeSafeList,
+      blocklist: [...purgeBlockList]
     })
 
     const mergeLonghandPlugin = maizzleConfig.env === 'local' ? () => {} : mergeLonghand()

@@ -32,7 +32,7 @@ const self = module.exports = { // eslint-disable-line
 
         const watchPaths = [
           'src/**/*.*',
-          'tailwind.config.js',
+          getPropValue(config, 'build.tailwind.config') || 'tailwind.config.js',
           ...new Set(templates.map(config => `${getPropValue(config, 'source') || 'src'}/**/*.*`)),
           ...new Set(getPropValue(config, 'build.browsersync.watch'))
         ]

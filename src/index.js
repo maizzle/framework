@@ -1,5 +1,6 @@
 const ora = require('ora')
-const bs = require('browser-sync')
+const bs = require('browser-sync').create()
+const injector = require('bs-html-injector')
 const Output = require('./generators/output')
 const {getPropValue} = require('./utils/helpers')
 
@@ -29,6 +30,13 @@ const self = module.exports = { // eslint-disable-line
         let templates = getPropValue(config, 'build.templates')
         templates = Array.isArray(templates) ? templates : [templates]
 
+        const watchPaths = [
+          'src/**/*.*',
+          'tailwind.config.js',
+          ...new Set(templates.map(config => `${getPropValue(config, 'source') || 'src'}/**/*.*`)),
+          ...new Set(getPropValue(config, 'build.browsersync.watch'))
+        ]
+
         const bsOptions = {
           notify: false,
           open: false,
@@ -42,20 +50,14 @@ const self = module.exports = { // eslint-disable-line
           ...getPropValue(config, 'build.browsersync')
         }
 
-        const watchPaths = [
-          'src/**/*.*',
-          'tailwind.config.js',
-          ...new Set(templates.map(config => `${getPropValue(config, 'source') || 'src'}/**/*.*`)),
-          ...new Set(bsOptions.watch)
-        ]
-
-        bs.create()
+        bs.use(injector)
 
         bs.init(bsOptions)
-          .watch(watchPaths)
+
+        bs.watch(watchPaths)
           .on('change', async () => {
             await self.build('local', config)
-              .then(() => bs.reload())
+              .then(() => injector())
               .catch(error => {
                 throw error
               })

@@ -71,11 +71,14 @@ const self = module.exports = { // eslint-disable-line
                   const spinner = ora('Compiling...').start()
 
                   const destination = getPropValue(templates.filter(v => path.dirname(file).replace(/\\/g, '/').includes(v.source))[0], 'destination.path')
+                  const cssString = fs.existsSync(getPropValue(config, 'build.tailwind.css')) ?
+                    fs.readFileSync(getPropValue(config, 'build.tailwind.css')) :
+                    '@tailwind components; @tailwind utilities;'
 
                   await self.render(await fs.readFile(file, 'utf8'), {
                     maizzle: config,
                     tailwind: {
-                      css: getPropValue(config, 'build.tailwind.css') || '@tailwind components; @tailwind utilities;'
+                      css: cssString
                     }
                   })
                     .then(async ({html}) => {

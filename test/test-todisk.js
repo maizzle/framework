@@ -277,6 +277,9 @@ test('warns if a template cannot be rendered and `fail` option is `silent`', asy
 test('spins up local development server', async t => {
   await Maizzle.serve({
     build: {
+      browsersync: {
+        ui: false
+      },
       templates: {
         source: 'test/stubs/templates',
         destination: {
@@ -287,8 +290,30 @@ test('spins up local development server', async t => {
   })
 
   t.true(fs.existsSync(t.context.folder))
+})
 
-  await fs.remove(t.context.folder)
+test('local server does not compile unwanted file types', async t => {
+  await Maizzle.serve({
+    build: {
+      browsersync: {
+        ui: false
+      },
+      templates: {
+        source: 'test/stubs/templates',
+        destination: {
+          path: t.context.folder
+        }
+      }
+    }
+  })
+
+  fs.outputFileSync(`test/stubs/templates/1.html`, '<a href="https://example.com">Test</a>\n')
+  fs.outputFileSync(`test/stubs/templates/3.mzl`, '<a href="https://example.com">Test</a>\n')
+
+  t.is(fs.readFileSync(`${t.context.folder}/1.html`, 'utf8'), '<a href="https://example.com">Test</a>\n')
+  t.is(fs.readFileSync(`${t.context.folder}/3.mzl`, 'utf8'), '<a href="https://example.com">Test</a>\n')
+
+  fs.removeSync(t.context.folder)
 })
 
 test('throws if it cannot spin up local development server', async t => {

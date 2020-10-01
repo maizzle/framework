@@ -2,7 +2,7 @@ const ora = require('ora')
 const path = require('path')
 const fs = require('fs-extra')
 const deepmerge = require('deepmerge')
-const bs = require('browser-sync').create()
+const bs = require('browser-sync')
 const injector = require('bs-html-injector')
 const Output = require('./generators/output')
 const {getPropValue} = require('./utils/helpers')
@@ -55,6 +55,8 @@ const self = module.exports = { // eslint-disable-line
               ui: {port: 3001},
               ...getPropValue(config, 'build.browsersync')
             }
+
+            bs.create()
 
             bs.use(injector)
 

@@ -1,6 +1,7 @@
 .idea
-node_modules
-.nyc_output
+_temp*
 .vscode
+.nyc_output
+node_modules
 npm-debug.log
 yarn-error.log

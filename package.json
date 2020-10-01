@@ -43,7 +43,7 @@
     "html-crush": "^2.0.3",
     "juice": "^7.0.0",
     "ora": "^5.0.0",
-    "postcss": "^7.0.32",
+    "postcss": "^8.1.1",
     "postcss-import": "^12.0.1",
     "postcss-merge-longhand": "^4.0.11",
     "postcss-nested": "^4.2.3",

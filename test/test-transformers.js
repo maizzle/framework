@@ -2,11 +2,11 @@ const test = require('ava')
 const Maizzle = require('../src')
 const removePlaintextTags = require('../src/transformers/plaintext')
 
-const {join} = require('path')
+const path = require('path')
 const {readFileSync} = require('fs')
 
-const fixture = file => readFileSync(join(__dirname, 'fixtures', `${file}.html`), 'utf8')
-const expected = file => readFileSync(join(__dirname, 'expected', `${file}.html`), 'utf8')
+const fixture = file => readFileSync(path.join(__dirname, 'fixtures', `${file}.html`), 'utf8')
+const expected = file => readFileSync(path.join(__dirname, 'expected', `${file}.html`), 'utf8')
 
 const clean = html => html.replace(/[^\S\n]+$/gm, '').trim()
 

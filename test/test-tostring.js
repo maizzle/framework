@@ -1,11 +1,11 @@
 const test = require('ava')
 const Maizzle = require('../src')
 
-const {join} = require('path')
+const path = require('path')
 const {readFileSync} = require('fs')
 
-const fixture = file => readFileSync(join(__dirname, 'fixtures', `${file}.html`), 'utf8')
-const expected = file => readFileSync(join(__dirname, 'expected', `${file}.html`), 'utf8')
+const fixture = file => readFileSync(path.join(__dirname, 'fixtures', `${file}.html`), 'utf8')
+const expected = file => readFileSync(path.join(__dirname, 'expected', `${file}.html`), 'utf8')
 
 const renderString = (string, options = {}) => Maizzle.render(string, options).then(({html}) => html)
 

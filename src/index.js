@@ -81,7 +81,8 @@ const self = module.exports = { // eslint-disable-line
                     maizzle: config,
                     tailwind: {
                       css: cssString
-                    }
+                    },
+                    ...config.events
                   })
                     .then(async ({html}) => {
                       await fs.outputFile(path.join(destination, file.replace(fileSource, '')), html)

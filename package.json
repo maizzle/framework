@@ -13,14 +13,15 @@
   "author": "Cosmin Popovici (https://github.com/cossssmin)",
   "keywords": [
     "maizzle",
-    "tailwind-css",
+    "tailwindcss",
     "responsive-email",
     "email-framework",
+    "email-template",
     "email-marketing",
     "email-campaigns",
-    "html-emails",
-    "email-template",
-    "email-boilerplate"
+    "email-newsletter",
+    "email-boilerplate",
+    "html-emails"
   ],
   "publishConfig": {
     "access": "public"

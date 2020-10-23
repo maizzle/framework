@@ -70,7 +70,7 @@ const self = module.exports = { // eslint-disable-line
                 // Only if this file is in one of the build.templates.source paths
                 if (templates.map(o => o.source).includes(fileSource)) {
                   const start = new Date()
-                  const spinner = ora('Compiling...').start()
+                  const spinner = ora('Building email...').start()
 
                   const destination = getPropValue(templates.filter(v => path.dirname(file).replace(/\\/g, '/').includes(v.source))[0], 'destination.path')
                   const cssString = fs.existsSync(getPropValue(config, 'build.tailwind.css')) ?

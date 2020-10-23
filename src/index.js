@@ -77,6 +77,10 @@ const self = module.exports = { // eslint-disable-line
                     fs.readFileSync(getPropValue(config, 'build.tailwind.css')) :
                     '@tailwind components; @tailwind utilities;'
 
+                  if (config.events && typeof config.events.beforeCreate === 'function') {
+                    await config.events.beforeCreate(config)
+                  }
+
                   await self.render(await fs.readFile(file, 'utf8'), {
                     maizzle: config,
                     tailwind: {

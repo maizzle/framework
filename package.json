@@ -65,7 +65,7 @@
     "prevent-widows": "^1.0.2",
     "query-string": "^6.13.1",
     "string-strip-html": "^6.0.4",
-    "tailwindcss": "^1.8.5"
+    "tailwindcss": "^1.9.5"
   },
   "devDependencies": {
     "ava": "^3.12.1",

@@ -21,7 +21,7 @@ module.exports = async (html, config) => {
   const modulesRoot = modulesOptions.root || './'
   const modulesFrom = modulesOptions.from || `${modulesRoot}/fake`
 
-  const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {}
+  const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {decodeEntities: false}
   const posthtmlPlugins = getPropValue(config, 'build.posthtml.plugins') || []
 
   const expressionsOptions = getPropValue(config, 'build.posthtml.expressions') || {}

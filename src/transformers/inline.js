@@ -30,11 +30,12 @@ module.exports = async (html, config) => {
 
     html = juice(html, {removeStyleTags})
 
+    const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {decodeEntities: false}
     const mergeLonghandConfig = getPropValue(options, 'mergeLonghand') || {enabled: false}
     const tags = getPropValue(mergeLonghandConfig, 'tags') || []
 
     if (mergeLonghandConfig.enabled || (typeof mergeLonghandConfig === 'boolean' && mergeLonghandConfig)) {
-      html = await posthtml([mergeLonghand({tags})]).process(html).then(result => result.html)
+      html = await posthtml([mergeLonghand({tags})]).process(html, posthtmlOptions).then(result => result.html)
     }
 
     return html

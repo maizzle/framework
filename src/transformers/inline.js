@@ -33,7 +33,7 @@ module.exports = async (html, config) => {
     const mergeLonghandConfig = getPropValue(options, 'mergeLonghand') || {enabled: false}
     const tags = getPropValue(mergeLonghandConfig, 'tags') || []
 
-    if (mergeLonghandConfig || mergeLonghandConfig.enabled) {
+    if (mergeLonghandConfig.enabled || (typeof mergeLonghandConfig === 'boolean' && mergeLonghandConfig)) {
       html = await posthtml([mergeLonghand({tags})]).process(html).then(result => result.html)
     }
 

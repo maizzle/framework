@@ -3,7 +3,7 @@ const preventWidows = require('prevent-widows')
 const {getPropValue} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
-  const options = getPropValue(config, 'build.posthtml.options') || {}
+  const options = getPropValue(config, 'build.posthtml.options') || {decodeEntities: false}
 
   return posthtml([preventWidows.posthtml()]).process(html, options).then(result => result.html)
 }

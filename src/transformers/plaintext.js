@@ -2,7 +2,7 @@ const posthtml = require('posthtml')
 const {getPropValue} = require('../utils/helpers')
 
 module.exports = (html, config) => {
-  const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {}
+  const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {decodeEntities: false}
 
   return posthtml([plaintext()]).process(html, {...posthtmlOptions, sync: true}).html
 }

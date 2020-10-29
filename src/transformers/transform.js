@@ -5,7 +5,7 @@ const {getPropValue} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
   const replacements = config.transform || {}
-  const options = getPropValue(config, 'build.posthtml.options') || {}
+  const options = getPropValue(config, 'build.posthtml.options') || {decodeEntities: false}
 
   replacements.postcss = css => Tailwind.compile(css, html, {}, config)
 

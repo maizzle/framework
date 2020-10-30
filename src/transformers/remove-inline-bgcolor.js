@@ -4,7 +4,7 @@ const {getPropValue, isObject} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
   const prefers = getPropValue(config, 'inlineCSS.preferBgColorAttribute')
-  const options = getPropValue(config, 'build.posthtml.options') || {decodeEntities: false}
+  const options = getPropValue(config, 'build.posthtml.options') || {}
 
   if ((typeof prefers === 'boolean' && prefers)) {
     return posthtml([removeInlineBGColor()]).process(html, options).then(result => result.html)

@@ -4,7 +4,7 @@ const {getPropValue} = require('../utils/helpers')
 const deepmerge = require('deepmerge')
 
 module.exports = async (html, config) => {
-  const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {decodeEntities: false}
+  const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {}
   const userMarkdownOptions = getPropValue(config, 'markdown') || {}
   const markdownOptions = deepmerge({markdownit: {html: true}}, userMarkdownOptions)
 

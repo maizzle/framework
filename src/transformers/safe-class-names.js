@@ -9,7 +9,7 @@ module.exports = async (html, config) => {
 
   if (typeof config.env === 'string' && config.env !== 'local') {
     const replacements = config.safeClassNames || {}
-    const options = getPropValue(config, 'build.posthtml.options') || {decodeEntities: false}
+    const options = getPropValue(config, 'build.posthtml.options') || {}
 
     html = posthtml([safeClassNames({replacements})]).process(html, options).then(result => result.html)
   }

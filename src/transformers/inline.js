@@ -30,7 +30,7 @@ module.exports = async (html, config) => {
 
     html = juice(html, {removeStyleTags})
 
-    const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {decodeEntities: false}
+    const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {}
     const mergeLonghandConfig = getPropValue(options, 'mergeLonghand') || {enabled: false}
     const tags = getPropValue(mergeLonghandConfig, 'tags') || []
 

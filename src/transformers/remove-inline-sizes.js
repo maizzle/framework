@@ -6,7 +6,7 @@ module.exports = async (html, config) => {
   const settings = getPropValue(config, 'inlineCSS.keepOnlyAttributeSizes') || {}
 
   if (!isEmptyObject(settings)) {
-    const options = getPropValue(config, 'build.posthtml.options') || {decodeEntities: false}
+    const options = getPropValue(config, 'build.posthtml.options') || {}
     html = await posthtml([removeInlineSizes(settings)]).process(html, options).then(result => result.html)
   }
 

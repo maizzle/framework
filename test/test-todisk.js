@@ -30,6 +30,11 @@ test('skips if no templates found', async t => {
         destination: {
           path: t.context.folder
         }
+      },
+      tailwind: {
+        config: {
+          purge: false
+        }
       }
     }
   })
@@ -45,6 +50,11 @@ test('outputs files at the correct location', async t => {
         source: 'test/stubs/templates',
         destination: {
           path: t.context.folder
+        }
+      },
+      tailwind: {
+        config: {
+          purge: false
         }
       }
     }
@@ -89,6 +99,11 @@ test('processes all files in the `filetypes` option', async t => {
         destination: {
           path: t.context.folder
         }
+      },
+      tailwind: {
+        config: {
+          purge: false
+        }
       }
     }
   })
@@ -107,6 +122,11 @@ test('outputs files with the correct extension', async t => {
           path: t.context.folder,
           extension: 'blade.php'
         }
+      },
+      tailwind: {
+        config: {
+          purge: false
+        }
       }
     }
   })
@@ -122,6 +142,11 @@ test('outputs plaintext files if option is enabled', async t => {
         source: 'test/stubs/plaintext',
         destination: {
           path: t.context.folder
+        }
+      },
+      tailwind: {
+        config: {
+          purge: false
         }
       }
     },
@@ -151,6 +176,11 @@ test('copies assets to destination', async t => {
           source: 'test/stubs/assets',
           destination: 'images'
         }
+      },
+      tailwind: {
+        config: {
+          purge: false
+        }
       }
     }
   })
@@ -167,6 +197,11 @@ test('runs the `beforeCreate` event', async t => {
         source: 'test/stubs/events',
         destination: {
           path: t.context.folder
+        }
+      },
+      tailwind: {
+        config: {
+          purge: false
         }
       }
     },
@@ -190,6 +225,11 @@ test('runs the `afterBuild` event', async t => {
         source: 'test/stubs/templates',
         destination: {
           path: t.context.folder
+        }
+      },
+      tailwind: {
+        config: {
+          purge: false
         }
       }
     },
@@ -218,6 +258,11 @@ test('supports multiple asset paths', async t => {
           source: ['test/stubs/assets', 'test/stubs/plaintext', 'test/stubs/invalid'],
           destination: 'extras'
         }
+      },
+      tailwind: {
+        config: {
+          purge: false
+        }
       }
     }
   })
@@ -235,6 +280,11 @@ test('warns if a template cannot be rendered and `fail` option is undefined', as
         destination: {
           path: t.context.folder
         }
+      },
+      tailwind: {
+        config: {
+          purge: false
+        }
       }
     }
   })
@@ -251,6 +301,11 @@ test('warns if a template cannot be rendered and `fail` option is `verbose`', as
         destination: {
           path: t.context.folder
         }
+      },
+      tailwind: {
+        config: {
+          purge: false
+        }
       }
     }
   })
@@ -266,6 +321,11 @@ test('warns if a template cannot be rendered and `fail` option is `silent`', asy
         source: 'test/stubs/breaking',
         destination: {
           path: t.context.folder
+        }
+      },
+      tailwind: {
+        config: {
+          purge: false
         }
       }
     }

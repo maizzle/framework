@@ -5,10 +5,10 @@ const deepmerge = require('deepmerge')
 const bs = require('browser-sync')
 const injector = require('bs-html-injector')
 const Output = require('./generators/output')
+const Plaintext = require('./generators/plaintext')
 const {getPropValue} = require('./utils/helpers')
 
 const self = module.exports = { // eslint-disable-line
-  render: async (html, options) => Output.toString(html, options),
   build: async (env = 'local', config = {}) => {
     const start = new Date()
     const spinner = ora('Building emails...').start()
@@ -22,6 +22,8 @@ const self = module.exports = { // eslint-disable-line
         throw error
       })
   },
+  render: async (html, options) => Output.toString(html, options),
+  plaintext: async (html, config = {}) => Plaintext.generate(html, false, config),
   serve: async config => {
     await self
       .build('local', config)

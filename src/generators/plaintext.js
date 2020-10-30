@@ -2,9 +2,8 @@ const path = require('path')
 const stripHTML = require('string-strip-html')
 const {getPropValue} = require('../utils/helpers')
 
-module.exports.generate = async (html, filePath, config) => {
-  filePath = getPropValue(config, 'permalink') || filePath
-  const target = path.join(path.dirname(filePath), path.basename(filePath, path.extname(filePath)) + '.txt')
+module.exports.generate = async (html, destination, config) => {
+  destination = getPropValue(config, 'permalink') || destination
 
   const plaintext = stripHTML(html,
     {
@@ -16,5 +15,9 @@ module.exports.generate = async (html, filePath, config) => {
       }
     }).result
 
-  return {plaintext, target}
+  if (typeof destination === 'string') {
+    destination = path.join(path.dirname(destination), path.basename(destination, path.extname(destination)) + '.txt')
+  }
+
+  return {plaintext, destination}
 }

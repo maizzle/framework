@@ -65,8 +65,8 @@ module.exports = async (env, spinner, config) => {
 
               if (config.plaintext) {
                 await Plaintext.generate(html, destination, config)
-                  .then(async ({plaintext, target}) => {
-                    await fs.outputFile(target, plaintext)
+                  .then(async ({plaintext, destination}) => {
+                    await fs.outputFile(destination, plaintext)
                     html = removePlaintextTags(html, config)
                   })
               }

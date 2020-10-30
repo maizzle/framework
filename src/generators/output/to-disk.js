@@ -11,7 +11,7 @@ const Plaintext = require('../plaintext')
 const render = require('./to-string')
 
 module.exports = async (env, spinner, config) => {
-  process.env.NODE_ENV = env || 'local'
+  process.env.NODE_ENV = env === 'local' ? 'local' : 'production'
 
   if (isEmptyObject(config)) {
     config = await Config.getMerged(env).catch(error => {

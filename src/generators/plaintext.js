@@ -2,7 +2,7 @@ const path = require('path')
 const stripHTML = require('string-strip-html')
 const {getPropValue} = require('../utils/helpers')
 
-module.exports.prepare = async (html, filePath, config) => {
+module.exports.generate = async (html, filePath, config) => {
   filePath = getPropValue(config, 'permalink') || filePath
   const target = path.join(path.dirname(filePath), path.basename(filePath, path.extname(filePath)) + '.txt')
 
@@ -16,5 +16,5 @@ module.exports.prepare = async (html, filePath, config) => {
       }
     }).result
 
-  return {target, plaintext}
+  return {plaintext, target}
 }

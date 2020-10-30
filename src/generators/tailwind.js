@@ -48,10 +48,8 @@ module.exports = {
 
     const tailwindPlugin = isEmptyObject(tailwindConfigObject) ? tailwind() : tailwind({
       important: true,
-      ...tailwindConfigObject,
-      purge: {
-        enabled: false
-      }
+      purge: false,
+      ...tailwindConfigObject
     })
 
     const postcssUserPlugins = getPropValue(maizzleConfig, 'build.postcss.plugins') || []

@@ -48,10 +48,6 @@ module.exports = {
 
     const tailwindPlugin = isEmptyObject(tailwindConfigObject) ? tailwind() : tailwind({
       important: true,
-      future: {
-        removeDeprecatedGapUtilities: true,
-        purgeLayersByDefault: true
-      },
       ...tailwindConfigObject,
       purge: {
         enabled: false

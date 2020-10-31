@@ -134,7 +134,7 @@ test('outputs files with the correct extension', async t => {
   t.true(fs.readdirSync(t.context.folder).includes('1.blade.php'))
 })
 
-test('outputs plaintext files if option is enabled', async t => {
+test('outputs plaintext files', async t => {
   const files = await Maizzle.build('production', {
     fail: 'silent',
     build: {
@@ -161,6 +161,13 @@ test('outputs plaintext files if option is enabled', async t => {
   t.is(plaintext[0], `${t.context.folder}/plaintext.txt`)
   t.is(plaintextContent, 'Show in HTML\nShow in plaintext')
   t.is(htmlContent, '<div>Show in HTML</div>\n\n')
+})
+
+test('renders plaintext string', async t => {
+  const html = await fs.readFile('test/stubs/plaintext/plaintext.html', 'utf8')
+  const {plaintext} = await Maizzle.plaintext(html)
+
+  t.is(plaintext, 'Show in HTML\nShow in plaintext')
 })
 
 test('copies assets to destination', async t => {

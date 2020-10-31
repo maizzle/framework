@@ -62,8 +62,10 @@ module.exports = async (env, spinner, config) => {
           })
             .then(async ({html, config}) => {
               const destination = config.permalink || file
+              const plaintextConfig = getPropValue(config, 'plaintext.enabled') || config.plaintext
+              const isPlaintextEnabled = typeof plaintextConfig === 'boolean' && plaintextConfig
 
-              if (config.plaintext) {
+              if (isPlaintextEnabled) {
                 await Plaintext.generate(html, destination, config)
                   .then(async ({plaintext, destination}) => {
                     await fs.outputFile(destination, plaintext)

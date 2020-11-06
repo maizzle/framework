@@ -21,7 +21,12 @@ module.exports = async (html, config) => {
   const posthtmlPlugins = getPropValue(config, 'build.posthtml.plugins') || []
 
   const expressionsOptions = getPropValue(config, 'build.posthtml.expressions') || {}
-  const expressionsPlugin = expressions({...expressionsOptions, locals: {page: config}})
+  const locals = {
+    ...getPropValue(expressionsOptions, 'locals') || {},
+    ...getPropValue(config, 'locals') || {},
+    page: config
+  }
+  const expressionsPlugin = expressions({...expressionsOptions, locals})
 
   return posthtml([
     layouts({strict: false, ...layoutsOptions}),

@@ -9,8 +9,6 @@ const {requireUncached} = require('../utils/helpers')
 const mergeLonghand = require('postcss-merge-longhand')
 const purgecss = require('@fullhuman/postcss-purgecss')
 
-const defaultPurgeCSSExtractor = /[\w-/:%.]+(?<!:)/g
-
 module.exports = {
   compile: async (css = '', html = '', tailwindConfig = {}, maizzleConfig = {}) => {
     tailwindConfig = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : get(maizzleConfig, 'build.tailwind.config', 'tailwind.config.js')
@@ -34,13 +32,23 @@ module.exports = {
       {raw: html}
     ]
 
-    const extractor = get(tailwindConfigObject, 'purge.options.extractor') || purgeCSSOptions.extractor || defaultPurgeCSSExtractor
+    const tailwindExtractor = content => {
+      // Capture as liberally as possible, including things like `h-(screen-1.5)`
+      const broadMatches = content.match(/[^<>"'`\s]*[^<>"'`\s:]/g) || []
+
+      // Capture classes within other delimiters like .block(class="w-1/2") in Pug
+      const innerMatches = content.match(/[^<>"'`\s.()]*[^<>"'`\s.():]/g) || []
+
+      return broadMatches.concat(innerMatches)
+    }
+
+    const extractor = get(tailwindConfigObject, 'purge.options.defaultExtractor') || purgeCSSOptions.defaultExtractor || tailwindExtractor
     const purgeSafeList = get(tailwindConfigObject, 'purge.options.safelist') || purgeCSSOptions.safelist || {}
     const purgeBlockList = get(tailwindConfigObject, 'purge.options.blocklist') || purgeCSSOptions.blocklist || []
 
     const purgeCssPlugin = maizzleConfig.env === 'local' ? () => {} : purgecss({
       content: purgeSources,
-      defaultExtractor: content => content.match(extractor) || [],
+      defaultExtractor: content => [...extractor(content)],
       safelist: purgeSafeList,
       blocklist: [...purgeBlockList]
     })

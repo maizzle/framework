@@ -1,6 +1,6 @@
 {
   "name": "@maizzle/framework",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "description": "Maizzle is a framework that helps you quickly build HTML emails with Tailwind CSS.",
   "license": "MIT",
   "main": "src/index.js",

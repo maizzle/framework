@@ -1,12 +1,11 @@
 const posthtml = require('posthtml')
+const {get, merge} = require('lodash')
 const markdown = require('posthtml-markdownit')
-const {getPropValue} = require('../utils/helpers')
-const deepmerge = require('deepmerge')
 
 module.exports = async (html, config) => {
-  const posthtmlOptions = getPropValue(config, 'build.posthtml.options') || {}
-  const userMarkdownOptions = getPropValue(config, 'markdown') || {}
-  const markdownOptions = deepmerge({markdownit: {html: true}}, userMarkdownOptions)
+  const userMarkdownOptions = get(config, 'markdown', {})
+  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+  const markdownOptions = merge({markdownit: {html: true}}, userMarkdownOptions)
 
   return posthtml([
     markdown({...markdownOptions})

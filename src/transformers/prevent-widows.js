@@ -1,9 +1,9 @@
+const {get} = require('lodash')
 const posthtml = require('posthtml')
 const preventWidows = require('prevent-widows')
-const {getPropValue} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
-  const options = getPropValue(config, 'build.posthtml.options') || {}
+  const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
-  return posthtml([preventWidows.posthtml()]).process(html, options).then(result => result.html)
+  return posthtml([preventWidows.posthtml()]).process(html, posthtmlOptions).then(result => result.html)
 }

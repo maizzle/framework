@@ -1,5 +1,5 @@
 const path = require('path')
-const deepmerge = require('deepmerge')
+const {merge} = require('lodash')
 
 module.exports = {
   getMerged: async (env = 'local') => {
@@ -24,6 +24,6 @@ module.exports = {
       }
     }
 
-    return deepmerge(baseConfig, envConfig)
+    return merge(baseConfig, envConfig)
   }
 }

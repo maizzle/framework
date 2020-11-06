@@ -1,12 +1,11 @@
 const ora = require('ora')
 const path = require('path')
 const fs = require('fs-extra')
-const deepmerge = require('deepmerge')
 const bs = require('browser-sync')
+const {get, merge} = require('lodash')
 const injector = require('bs-html-injector')
 const Output = require('./generators/output')
 const Plaintext = require('./generators/plaintext')
-const {getPropValue} = require('./utils/helpers')
 
 const self = module.exports = { // eslint-disable-line
   build: async (env = 'local', config = {}) => {
@@ -31,18 +30,18 @@ const self = module.exports = { // eslint-disable-line
         require('./generators/config')
           .getMerged('local')
           .then(localConfig => {
-            config = deepmerge(config, localConfig)
+            config = merge(config, localConfig)
 
-            let templates = getPropValue(config, 'build.templates')
+            let templates = get(config, 'build.templates')
             templates = Array.isArray(templates) ? templates : [templates]
 
-            const baseDir = getPropValue(templates[0], 'destination.path') || 'build_local'
+            const baseDir = get(templates[0], 'destination.path', 'build_local')
 
             const watchPaths = [
               'src/**/*.*',
-              getPropValue(config, 'build.tailwind.config') || 'tailwind.config.js',
-              ...new Set(templates.map(config => `${getPropValue(config, 'source') || 'src'}/**/*.*`)),
-              ...new Set(getPropValue(config, 'build.browsersync.watch'))
+              get(config, 'build.tailwind.config', 'tailwind.config.js'),
+              ...new Set(templates.map(config => `${get(config, 'source', 'src')}/**/*.*`)),
+              ...new Set(get(config, 'build.browsersync.watch', []))
             ]
 
             const bsOptions = {
@@ -55,7 +54,7 @@ const self = module.exports = { // eslint-disable-line
               },
               tunnel: false,
               ui: {port: 3001},
-              ...getPropValue(config, 'build.browsersync')
+              ...get(config, 'build.browsersync', {})
             }
 
             bs.create()
@@ -67,17 +66,15 @@ const self = module.exports = { // eslint-disable-line
             bs.watch(watchPaths)
               .on('change', async file => {
                 file = file.replace(/\\/g, '/')
-                const fileSource = getPropValue(templates.filter(v => path.dirname(file).replace(/\\/g, '/').includes(v.source))[0], 'source')
+                const fileSource = get(templates.filter(v => path.dirname(file).replace(/\\/g, '/').includes(v.source))[0], 'source')
 
                 // Only if this file is in one of the build.templates.source paths
                 if (templates.map(o => o.source).includes(fileSource)) {
                   const start = new Date()
                   const spinner = ora('Building email...').start()
 
-                  const destination = getPropValue(templates.filter(v => path.dirname(file).replace(/\\/g, '/').includes(v.source))[0], 'destination.path')
-                  const cssString = fs.existsSync(getPropValue(config, 'build.tailwind.css')) ?
-                    fs.readFileSync(getPropValue(config, 'build.tailwind.css')) :
-                    '@tailwind components; @tailwind utilities;'
+                  const destination = get(templates.filter(v => path.dirname(file).replace(/\\/g, '/').includes(v.source))[0], 'destination.path')
+                  const cssString = fs.existsSync(get(config, 'build.tailwind.css')) ? fs.readFileSync(get(config, 'build.tailwind.css')) : '@tailwind components; @tailwind utilities;'
 
                   if (config.events && typeof config.events.beforeCreate === 'function') {
                     await config.events.beforeCreate(config)

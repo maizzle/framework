@@ -1,8 +1,8 @@
+const {get} = require('lodash')
 const {crush} = require('html-crush')
-const {isObject} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
-  if (isObject(config.minify) && config.minify.enabled) {
+  if (get(config, 'minify.enabled', false)) {
     html = crush(html, {removeLineBreaks: true, ...config.minify}).result
   }
 

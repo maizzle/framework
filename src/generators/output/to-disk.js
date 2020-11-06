@@ -1,8 +1,9 @@
 const path = require('path')
 const fs = require('fs-extra')
 const glob = require('glob-promise')
+const {get, isEmpty} = require('lodash')
+const {asyncForEach} = require('../../utils/helpers')
 const removePlaintextTags = require('../../transformers/plaintext')
-const {asyncForEach, getPropValue, isEmptyObject} = require('../../utils/helpers')
 
 const Config = require('../config')
 const Tailwind = require('../tailwind')
@@ -13,14 +14,14 @@ const render = require('./to-string')
 module.exports = async (env, spinner, config) => {
   process.env.NODE_ENV = env === 'local' ? 'local' : 'production'
 
-  if (isEmptyObject(config)) {
+  if (isEmpty(config)) {
     config = await Config.getMerged(env).catch(error => {
       spinner.fail('Build failed')
       throw error
     })
   }
 
-  const buildTemplates = getPropValue(config, 'build.templates')
+  const buildTemplates = get(config, 'build.templates')
   const templatesConfig = Array.isArray(buildTemplates) ? buildTemplates : [buildTemplates]
 
   const parsed = []
@@ -28,7 +29,7 @@ module.exports = async (env, spinner, config) => {
   const css = await Tailwind.compile('', '', {}, config)
 
   await asyncForEach(templatesConfig, async templateConfig => {
-    const outputDir = getPropValue(templateConfig, 'destination.path') || `build_${env}`
+    const outputDir = get(templateConfig, 'destination.path', `build_${env}`)
 
     await fs.remove(outputDir)
 
@@ -62,7 +63,7 @@ module.exports = async (env, spinner, config) => {
           })
             .then(async ({html, config}) => {
               const destination = config.permalink || file
-              const plaintextConfig = getPropValue(config, 'plaintext.enabled') || config.plaintext
+              const plaintextConfig = get(config, 'plaintext.enabled', config.plaintext)
               const isPlaintextEnabled = typeof plaintextConfig === 'boolean' && plaintextConfig
 
               if (isPlaintextEnabled) {
@@ -74,7 +75,7 @@ module.exports = async (env, spinner, config) => {
 
               await fs.outputFile(destination, html)
                 .then(async () => {
-                  const extension = getPropValue(templateConfig, 'destination.extension') || 'html'
+                  const extension = get(templateConfig, 'destination.extension', 'html')
 
                   if (extension !== 'html') {
                     const parts = path.parse(destination)
@@ -101,7 +102,7 @@ module.exports = async (env, spinner, config) => {
             })
         })
 
-        const assets = {source: '', destination: 'assets', ...getPropValue(templateConfig, 'assets')}
+        const assets = {source: '', destination: 'assets', ...get(templateConfig, 'assets')}
 
         if (Array.isArray(assets.source)) {
           await asyncForEach(assets.source, async source => {

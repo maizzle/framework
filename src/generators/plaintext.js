@@ -1,11 +1,11 @@
 const path = require('path')
+const {get} = require('lodash')
 const stripHTML = require('string-strip-html')
-const {getPropValue} = require('../utils/helpers')
 
 module.exports.generate = async (html, destination, config) => {
-  destination = getPropValue(config, 'permalink') || destination
+  destination = get(config, 'permalink', destination)
 
-  const options = getPropValue(config, 'plaintext') || {}
+  const options = get(config, 'plaintext', {})
 
   const plaintext = stripHTML(html, {
     dumpLinkHrefsNearby: {

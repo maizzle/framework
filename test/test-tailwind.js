@@ -1,6 +1,6 @@
 const test = require('ava')
 const fs = require('fs-extra')
-const Tailwind = require('../src/generators/tailwind')
+const Tailwind = require('../src/generators/tailwindcss')
 
 test('uses Tailwind defaults if no config specified', async t => {
   const config = {

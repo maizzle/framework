@@ -1,6 +1,6 @@
 const {get} = require('lodash')
 const posthtml = require('posthtml')
-const Tailwind = require('../generators/tailwind')
+const Tailwind = require('../generators/tailwindcss')
 const posthtmlContent = require('posthtml-content')
 
 module.exports = async (html, config) => {

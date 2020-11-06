@@ -6,7 +6,7 @@ const {asyncForEach} = require('../../utils/helpers')
 const removePlaintextTags = require('../../transformers/plaintext')
 
 const Config = require('../config')
-const Tailwind = require('../tailwind')
+const Tailwind = require('../tailwindcss')
 const Plaintext = require('../plaintext')
 
 const render = require('./to-string')

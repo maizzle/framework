@@ -1,7 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const postcss = require('postcss')
-const tailwind = require('tailwindcss')
+const tailwindcss = require('tailwindcss')
 const atImport = require('postcss-import')
 const postcssNested = require('postcss-nested')
 const {get, isObject, isEmpty} = require('lodash')
@@ -47,7 +47,7 @@ module.exports = {
 
     const mergeLonghandPlugin = maizzleConfig.env === 'local' ? () => {} : mergeLonghand()
 
-    const tailwindPlugin = isEmpty(tailwindConfigObject) ? tailwind() : tailwind({
+    const tailwindPlugin = isEmpty(tailwindConfigObject) ? tailwindcss() : tailwindcss({
       important: true,
       purge: false,
       ...tailwindConfigObject

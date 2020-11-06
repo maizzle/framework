@@ -1,10 +1,10 @@
+const {get} = require('lodash')
 const posthtml = require('posthtml')
 const removeAttributes = require('posthtml-remove-attributes')
-const {getPropValue, isObject} = require('../utils/helpers')
 
 module.exports = async (html, config) => {
-  const options = getPropValue(config, 'build.posthtml.options') || {}
-  const attributes = isObject(config.removeAttributes) ? config.removeAttributes : []
+  const attributes = get(config, 'removeAttributes', [])
+  const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
   attributes.push({name: 'style'})
 
@@ -13,7 +13,7 @@ module.exports = async (html, config) => {
     attr.value = attr.value || ''
   })
 
-  html = await posthtml([removeAttributes(attributes)]).process(html, options).then(result => result.html)
+  html = await posthtml([removeAttributes(attributes)]).process(html, posthtmlOptions).then(result => result.html)
 
   return html
 }

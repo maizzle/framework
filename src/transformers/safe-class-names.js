@@ -1,5 +1,5 @@
+const {get} = require('lodash')
 const posthtml = require('posthtml')
-const {getPropValue} = require('../utils/helpers')
 const safeClassNames = require('posthtml-safe-class-names')
 
 module.exports = async (html, config) => {
@@ -8,10 +8,10 @@ module.exports = async (html, config) => {
   }
 
   if (typeof config.env === 'string' && config.env !== 'local') {
-    const replacements = config.safeClassNames || {}
-    const options = getPropValue(config, 'build.posthtml.options') || {}
+    const replacements = get(config, 'safeClassNames', {})
+    const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
-    html = posthtml([safeClassNames({replacements})]).process(html, options).then(result => result.html)
+    html = posthtml([safeClassNames({replacements})]).process(html, posthtmlOptions).then(result => result.html)
   }
 
   return html

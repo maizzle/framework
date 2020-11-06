@@ -1,13 +1,12 @@
 const fm = require('front-matter')
-const deepmerge = require('deepmerge')
+const {get, merge} = require('lodash')
 const Tailwind = require('../tailwind')
 const posthtml = require('../posthtml')
 const Transformers = require('../../transformers')
-const {getPropValue} = require('../../utils/helpers')
 const posthtmlMso = require('../../transformers/posthtml-mso')
 
 module.exports = async (html, options) => {
-  process.env.NODE_ENV = getPropValue(options, 'maizzle.env') || 'local'
+  process.env.NODE_ENV = get(options, 'maizzle.env', 'local')
 
   if (typeof html !== 'string') {
     throw new TypeError(`first argument must be an HTML string, received ${html}`)
@@ -17,15 +16,15 @@ module.exports = async (html, options) => {
     throw new RangeError('received empty string')
   }
 
-  let config = getPropValue(options, 'maizzle') || {}
-  const tailwindConfig = getPropValue(options, 'tailwind.config') || {}
-  const cssString = getPropValue(options, 'tailwind.css') || '@tailwind components; @tailwind utilities;'
+  let config = get(options, 'maizzle', {})
+  const tailwindConfig = get(options, 'tailwind.config', {})
+  const cssString = get(options, 'tailwind.css', '@tailwind components; @tailwind utilities;')
 
   const frontMatter = fm(html)
   html = frontMatter.body
-  config = deepmerge(config, frontMatter.attributes)
+  config = merge(config, frontMatter.attributes)
 
-  if (typeof getPropValue(options, 'tailwind.compiled') === 'string') {
+  if (typeof get(options, 'tailwind.compiled') === 'string') {
     config.css = options.tailwind.compiled
   } else {
     config.css = await Tailwind.compile(cssString, html, tailwindConfig, config)

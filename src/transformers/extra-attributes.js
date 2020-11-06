@@ -1,5 +1,5 @@
 const posthtml = require('posthtml')
-const {isObject, getPropValue} = require('../utils/helpers')
+const {get, isObject} = require('lodash')
 const addAttributes = require('posthtml-extra-attributes')
 
 module.exports = async (html, config) => {
@@ -18,9 +18,9 @@ module.exports = async (html, config) => {
     attributes = {...attributes, ...config.extraAttributes}
   }
 
-  const options = getPropValue(config, 'build.posthtml.options') || {}
+  const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
-  html = posthtml([addAttributes({attributes})]).process(html, options).then(result => result.html)
+  html = posthtml([addAttributes({attributes})]).process(html, posthtmlOptions).then(result => result.html)
 
   return html
 }

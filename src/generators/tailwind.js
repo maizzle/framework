@@ -4,20 +4,21 @@ const postcss = require('postcss')
 const tailwind = require('tailwindcss')
 const atImport = require('postcss-import')
 const postcssNested = require('postcss-nested')
+const {get, isObject, isEmpty} = require('lodash')
+const {requireUncached} = require('../utils/helpers')
 const mergeLonghand = require('postcss-merge-longhand')
 const purgecss = require('@fullhuman/postcss-purgecss')
-const {getPropValue, isObject, isEmptyObject, requireUncached} = require('../utils/helpers')
 
 const defaultPurgeCSSExtractor = /[\w-/:%.]+(?<!:)/g
 
 module.exports = {
   compile: async (css = '', html = '', tailwindConfig = {}, maizzleConfig = {}) => {
-    tailwindConfig = (isObject(tailwindConfig) && !isEmptyObject(tailwindConfig)) ? tailwindConfig : getPropValue(maizzleConfig, 'build.tailwind.config') || 'tailwind.config.js'
-    const tailwindConfigObject = (isObject(tailwindConfig) && !isEmptyObject(tailwindConfig)) ? tailwindConfig : requireUncached(path.resolve(process.cwd(), tailwindConfig))
+    tailwindConfig = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : get(maizzleConfig, 'build.tailwind.config', 'tailwind.config.js')
+    const tailwindConfigObject = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : requireUncached(path.resolve(process.cwd(), tailwindConfig))
 
-    const purgeCSSOptions = getPropValue(maizzleConfig, 'purgeCSS') || {}
+    const purgeCSSOptions = get(maizzleConfig, 'purgeCSS', {})
 
-    const buildTemplates = getPropValue(maizzleConfig, 'build.templates') || []
+    const buildTemplates = get(maizzleConfig, 'build.templates', [])
     const templateSources = Array.isArray(buildTemplates) ? buildTemplates.map(({source}) => `${source}/**/*.*`) : [buildTemplates].map(({source}) => `${source}/**/*.*`)
     const tailwindSources = Array.isArray(tailwindConfigObject.purge) ? tailwindConfigObject.purge : (isObject(tailwindConfigObject.purge) ? tailwindConfigObject.purge.content || [] : [])
 
@@ -33,9 +34,9 @@ module.exports = {
       {raw: html}
     ]
 
-    const extractor = getPropValue(tailwindConfigObject, 'purge.options.extractor') || purgeCSSOptions.extractor || defaultPurgeCSSExtractor
-    const purgeSafeList = getPropValue(tailwindConfigObject, 'purge.options.safelist') || purgeCSSOptions.safelist || {}
-    const purgeBlockList = getPropValue(tailwindConfigObject, 'purge.options.blocklist') || purgeCSSOptions.blocklist || []
+    const extractor = get(tailwindConfigObject, 'purge.options.extractor') || purgeCSSOptions.extractor || defaultPurgeCSSExtractor
+    const purgeSafeList = get(tailwindConfigObject, 'purge.options.safelist') || purgeCSSOptions.safelist || {}
+    const purgeBlockList = get(tailwindConfigObject, 'purge.options.blocklist') || purgeCSSOptions.blocklist || []
 
     const purgeCssPlugin = maizzleConfig.env === 'local' ? () => {} : purgecss({
       content: purgeSources,
@@ -46,15 +47,15 @@ module.exports = {
 
     const mergeLonghandPlugin = maizzleConfig.env === 'local' ? () => {} : mergeLonghand()
 
-    const tailwindPlugin = isEmptyObject(tailwindConfigObject) ? tailwind() : tailwind({
+    const tailwindPlugin = isEmpty(tailwindConfigObject) ? tailwind() : tailwind({
       important: true,
       purge: false,
       ...tailwindConfigObject
     })
 
-    const postcssUserPlugins = getPropValue(maizzleConfig, 'build.postcss.plugins') || []
+    const postcssUserPlugins = get(maizzleConfig, 'build.postcss.plugins', [])
 
-    const userFilePath = getPropValue(maizzleConfig, 'build.tailwind.css')
+    const userFilePath = get(maizzleConfig, 'build.tailwind.css')
 
     css = await fs.pathExists(userFilePath).then(async exists => {
       if (exists) {

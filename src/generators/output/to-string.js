@@ -4,6 +4,7 @@ const Tailwind = require('../tailwind')
 const posthtml = require('../posthtml')
 const Transformers = require('../../transformers')
 const {getPropValue} = require('../../utils/helpers')
+const posthtmlMso = require('../../transformers/posthtml-mso')
 
 module.exports = async (html, options) => {
   process.env.NODE_ENV = getPropValue(options, 'maizzle.env') || 'local'
@@ -49,6 +50,8 @@ module.exports = async (html, options) => {
   if (options && typeof options.afterTransformers === 'function') {
     html = await options.afterTransformers(html, config)
   }
+
+  html = await posthtmlMso(html, config)
 
   return {
     html,

@@ -14,9 +14,13 @@ const maizzleConfig = (options = {}) => {
   return {
     tailwind: {
       config: {
-        target: 'ie11',
         corePlugins: {
-          animation: false
+          animation: false,
+          backgroundOpacity: false,
+          borderOpacity: false,
+          divideOpacity: false,
+          placeholderOpacity: false,
+          textOpacity: false
         }
       }
     },

@@ -22,9 +22,9 @@ module.exports = async (html, config) => {
 
   const expressionsOptions = getPropValue(config, 'build.posthtml.expressions') || {}
   const locals = {
-    page: config,
     ...getPropValue(expressionsOptions, 'locals') || {},
-    ...getPropValue(config, 'locals') || {}
+    ...getPropValue(config, 'locals') || {},
+    page: config
   }
   const expressionsPlugin = expressions({...expressionsOptions, locals})
 

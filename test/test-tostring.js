@@ -95,3 +95,29 @@ test('multiple locals', async t => {
 
   t.is(result, `1, 2, 3`)
 })
+
+test('prevents overwriting page object', async t => {
+  const result = await renderString(`{{ page.one }}, {{ two }}, {{ three }}`, {
+    maizzle: {
+      one: 1,
+      build: {
+        posthtml: {
+          expressions: {
+            locals: {
+              page: {
+                two: 2
+              }
+            }
+          }
+        }
+      },
+      locals: {
+        page: {
+          three: 3
+        }
+      }
+    }
+  })
+
+  t.is(result, `1, undefined, undefined`)
+})

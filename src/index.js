@@ -3,7 +3,6 @@ const path = require('path')
 const fs = require('fs-extra')
 const bs = require('browser-sync')
 const {get, merge} = require('lodash')
-const injector = require('bs-html-injector')
 const Output = require('./generators/output')
 const Plaintext = require('./generators/plaintext')
 
@@ -59,9 +58,7 @@ const self = module.exports = { // eslint-disable-line
 
             bs.create()
 
-            bs.use(injector)
-
-            bs.init(bsOptions, () => {})
+            bs.init(bsOptions)
 
             bs.watch(watchPaths)
               .on('change', async file => {
@@ -90,7 +87,7 @@ const self = module.exports = { // eslint-disable-line
                     .then(async ({html}) => {
                       await fs.outputFile(path.join(destination, file.replace(fileSource, '')), html)
                         .then(() => {
-                          injector()
+                          bs.reload()
                           spinner.succeed(`Done in ${new Date() - start} ms.`)
                         })
                     })

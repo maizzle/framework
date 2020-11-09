@@ -10,10 +10,8 @@ module.exports = async (html, config) => {
   if (get(options, 'enabled', false)) {
     juice.styleToAttribute = get(options, 'styleToAttribute', juice.styleToAttribute)
 
-    if (isObject(options.applySizeAttribute)) {
-      juice.widthElements = get(options, 'applySizeAttribute.width', juice.widthElements)
-      juice.heightElements = get(options, 'applySizeAttribute.height', juice.heightElements)
-    }
+    juice.widthElements = get(options, 'applyWidthAttributes', [])
+    juice.heightElements = get(options, 'applyHeightAttributes', [])
 
     if (!isEmpty(options.excludedProperties)) {
       juice.excludedProperties = get(options, 'excludedProperties', Object.values(juice.excludedProperties))

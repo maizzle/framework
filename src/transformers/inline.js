@@ -8,7 +8,7 @@ module.exports = async (html, config) => {
   const removeStyleTags = get(options, 'removeStyleTags', true)
 
   if (get(options, 'enabled', false)) {
-    juice.styleToAttribute = get(options, 'styleToAttribute', juice.styleToAttribute)
+    juice.styleToAttribute = get(options, 'styleToAttribute', {'vertical-align': 'valign'})
 
     juice.widthElements = get(options, 'applyWidthAttributes', [])
     juice.heightElements = get(options, 'applyHeightAttributes', [])

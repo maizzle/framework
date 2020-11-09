@@ -41,6 +41,8 @@ test('remove inline sizes', t => {
   return processFile(t, 'remove-inline-sizes', maizzleConfig({
     inlineCSS: {
       enabled: true,
+      applyWidthAttributes: ['TABLE'],
+      applyHeightAttributes: ['TD'],
       keepOnlyAttributeSizes: {
         width: ['TABLE'],
         height: ['TD']
@@ -53,6 +55,9 @@ test('remove inline background-color', t => {
   return processFile(t, 'remove-inline-bgcolor', maizzleConfig({
     inlineCSS: {
       enabled: true,
+      styleToAttribute: {
+        'background-color': 'bgcolor'
+      },
       preferBgColorAttribute: true
     }
   }))
@@ -62,6 +67,9 @@ test('remove inline background-color (with tags)', t => {
   return processFile(t, 'remove-inline-bgcolor-tags', maizzleConfig({
     inlineCSS: {
       enabled: true,
+      styleToAttribute: {
+        'background-color': 'bgcolor'
+      },
       preferBgColorAttribute: {
         enabled: true,
         tags: ['td']
@@ -78,10 +86,8 @@ test('inline CSS', t => {
       styleToAttribute: {
         'text-align': 'align'
       },
-      applySizeAttribute: {
-        width: ['TABLE'],
-        height: ['TD']
-      },
+      applyWidthAttributes: ['TABLE'],
+      applyHeightAttributes: ['TD'],
       mergeLonghand: {
         enabled: true,
         tags: ['td', 'div']

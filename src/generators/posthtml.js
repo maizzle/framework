@@ -1,6 +1,6 @@
-const {get} = require('lodash')
 const fm = require('front-matter')
 const posthtml = require('posthtml')
+const {get, merge} = require('lodash')
 const fetch = require('posthtml-fetch')
 const layouts = require('posthtml-extend')
 const modules = require('posthtml-modules')
@@ -20,13 +20,13 @@ module.exports = async (html, config) => {
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
   const posthtmlPlugins = get(config, 'build.posthtml.plugins', [])
 
-  const expressionsOptions = get(config, 'build.posthtml.expressions', {})
+  const expressionsOptions = merge({strictMode: false}, get(config, 'build.posthtml.expressions', {}))
+
   const locals = {
     ...get(expressionsOptions, 'locals', {}),
     ...get(config, 'locals', {}),
     page: config
   }
-  const expressionsPlugin = expressions({...expressionsOptions, locals})
 
   return posthtml([
     layouts({strict: false, ...layoutsOptions}),
@@ -42,7 +42,7 @@ module.exports = async (html, config) => {
       ...modulesOptions
     }),
     ...posthtmlPlugins,
-    expressionsPlugin
+    expressions({...expressionsOptions, locals})
   ])
     .process(html, {...posthtmlOptions})
     .then(result => fm(result.html).body)

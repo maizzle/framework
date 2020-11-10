@@ -205,3 +205,21 @@ test('url parameters', t => {
     }
   }))
 })
+
+test('attribute to style', t => {
+  return processFile(t, 'attribute-to-style', maizzleConfig({
+    inlineCSS: {
+      enabled: true,
+      attributeToStyle: true
+    }
+  }))
+})
+
+test('attribute to style (with tags)', t => {
+  return processFile(t, 'attribute-to-style-tags', maizzleConfig({
+    inlineCSS: {
+      enabled: true,
+      attributeToStyle: ['width']
+    }
+  }))
+})

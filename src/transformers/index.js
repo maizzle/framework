@@ -14,6 +14,7 @@ const removeAttributes = require('./remove-attributes')
 const removeInlineSizes = require('./remove-inline-sizes')
 const applyExtraAttributes = require('./extra-attributes')
 const removeInlineBgColor = require('./remove-inline-bgcolor')
+const attributeToStyle = require('./attribute-to-style')
 
 exports.process = async (html, config) => {
   html = await safeClassNames(html, config)
@@ -21,6 +22,7 @@ exports.process = async (html, config) => {
   html = await markdown(html, config)
   html = await preventWidows(html, config)
   html = await inline(html, config)
+  html = await attributeToStyle(html, config)
   html = await removeUnusedCSS(html, config)
   html = await removeInlineSizes(html, config)
   html = await removeInlineBgColor(html, config)

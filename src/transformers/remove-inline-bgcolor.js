@@ -2,9 +2,12 @@ const {get} = require('lodash')
 const posthtml = require('posthtml')
 const parseAttrs = require('posthtml-attrs-parser')
 
-module.exports = async (html, config) => {
+module.exports = async (html, config = {}, direct = false) => {
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
-  const prefers = get(config, 'inlineCSS.preferBgColorAttribute', false)
+  const prefers = direct ? {
+    enabled: true,
+    tags: (Array.isArray(config) ? [...config] : false)
+  } : get(config, 'inlineCSS.preferBgColorAttribute', false)
 
   if ((typeof prefers === 'boolean' && prefers)) {
     return posthtml([removeInlineBGColor()]).process(html, posthtmlOptions).then(result => result.html)

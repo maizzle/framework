@@ -2,11 +2,19 @@ const posthtml = require('posthtml')
 const parseAttrs = require('posthtml-attrs-parser')
 const {get, forEach, intersection, keys, isEmpty} = require('lodash')
 
-module.exports = async (html, config) => {
+module.exports = async (html, config = {}, direct = false) => {
+  if (direct) {
+    return posthtml([
+      attributesToStyle({
+        attributes: Array.isArray(config) ? config : []
+      })
+    ]).process(html).then(result => result.html)
+  }
+
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
   const attributes = get(config, 'inlineCSS.attributeToStyle', false)
 
-  if ((typeof attributes === 'boolean' && attributes)) {
+  if (typeof attributes === 'boolean' && attributes) {
     return posthtml([attributesToStyle()]).process(html, posthtmlOptions).then(result => result.html)
   }
 

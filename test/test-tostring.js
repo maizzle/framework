@@ -10,10 +10,10 @@ const expected = file => readFileSync(path.join(__dirname, 'expected', `${file}.
 const renderString = (string, options = {}) => Maizzle.render(string, options).then(({html}) => html)
 
 test('compiles HTML string if no options are passed', async t => {
-  let html = await renderString(fixture('basic'))
+  let html = await renderString('<div>test</div>')
   html = html.replace(/[^\S\r\n]+$/gm, '').trim()
 
-  t.is(html, expected('basic').trim())
+  t.is(html, '<div>test</div>')
 })
 
 test('inheritance', async t => {

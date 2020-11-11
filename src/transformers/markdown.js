@@ -2,8 +2,8 @@ const posthtml = require('posthtml')
 const {get, merge} = require('lodash')
 const markdown = require('posthtml-markdownit')
 
-module.exports = async (html, config) => {
-  const userMarkdownOptions = get(config, 'markdown', {})
+module.exports = async (html, config = {}, direct = false) => {
+  const userMarkdownOptions = direct ? config : get(config, 'markdown', {})
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
   const markdownOptions = merge({markdownit: {html: true}}, userMarkdownOptions)
 

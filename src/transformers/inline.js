@@ -3,9 +3,10 @@ const posthtml = require('posthtml')
 const {get, isObject, isEmpty} = require('lodash')
 const mergeLonghand = require('posthtml-postcss-merge-longhand')
 
-module.exports = async (html, config) => {
-  const options = get(config, 'inlineCSS', {})
+module.exports = async (html, config = {}, direct = false) => {
+  const options = direct ? {...config, enabled: true} : get(config, 'inlineCSS', {})
   const removeStyleTags = get(options, 'removeStyleTags', true)
+  const css = get(config, 'customCSS', false)
 
   if (get(options, 'enabled', false)) {
     juice.styleToAttribute = get(options, 'styleToAttribute', {'vertical-align': 'valign'})
@@ -23,7 +24,7 @@ module.exports = async (html, config) => {
       })
     }
 
-    html = juice(html, {removeStyleTags})
+    html = css ? juice.inlineContent(html, css, {removeStyleTags}) : juice(html, {removeStyleTags})
 
     const posthtmlOptions = get(config, 'build.posthtml.options', {})
     const mergeLonghandConfig = get(options, 'mergeLonghand', {enabled: false})

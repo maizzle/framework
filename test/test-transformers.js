@@ -2,224 +2,219 @@ const test = require('ava')
 const Maizzle = require('../src')
 const removePlaintextTags = require('../src/transformers/plaintext')
 
-const path = require('path')
-const {readFileSync} = require('fs')
-
-const fixture = file => readFileSync(path.join(__dirname, 'fixtures', `${file}.html`), 'utf8')
-const expected = file => readFileSync(path.join(__dirname, 'expected', `${file}.html`), 'utf8')
-
-const clean = html => html.replace(/[^\S\n]+$/gm, '').trim()
-
-const maizzleConfig = (options = {}) => {
-  return {
-    tailwind: {
-      config: {
-        corePlugins: {
-          animation: false,
-          backgroundOpacity: false,
-          borderOpacity: false,
-          divideOpacity: false,
-          placeholderOpacity: false,
-          textOpacity: false
-        }
-      }
-    },
-    maizzle: {
-      env: 'node',
-      ...options
-    }
+test('remove inline sizes', async t => {
+  const options = {
+    width: ['TD'],
+    height: ['TD']
   }
-}
 
-const processFile = (t, name, options = {}, log = false) => {
-  return Maizzle.render(fixture(name), {...options})
-    .then(({html}) => log ? console.log(html) : clean(html))
-    .then(html => t.is(html, expected(name).trim()))
-}
+  const html = await Maizzle.removeInlineSizes('<td style="width:100%;height:10px;">test</td>', options)
 
-test('remove inline sizes', t => {
-  return processFile(t, 'remove-inline-sizes', maizzleConfig({
-    inlineCSS: {
+  t.is(html, '<td style="">test</td>')
+})
+
+test('remove inline background-color', async t => {
+  const html = await Maizzle.removeInlineBgColor(`<td style="background-color: red" bgcolor="red">test</td>`)
+
+  t.is(html, '<td style="" bgcolor="red">test</td>')
+})
+
+test('remove inline background-color (with tags)', async t => {
+  const html = await Maizzle.removeInlineBgColor(`<table style="background-color: red"><tr><td style="background-color: red">test</td></tr></table>`, ['table'])
+
+  t.is(html, '<table style="" bgcolor="red"><tr><td style="background-color: red">test</td></tr></table>')
+})
+
+test('inline CSS', async t => {
+  const html = `<div class="foo bar px-2 py-2"><% code %></div>`
+  const css = `
+    .foo {color: red}
+    .bar {cursor: pointer}
+    .px-2 {
+      padding-left: 2px;
+      padding-right: 2px;
+    }
+    .py-2 {
+      padding-top: 2px;
+      padding-bottom: 2px;
+    }
+  `
+
+  const result = await Maizzle.inlineCSS(html, {
+    enabled: true,
+    customCSS: css,
+    removeStyleTags: false,
+    styleToAttribute: {
+      'text-align': 'align'
+    },
+    applyWidthAttributes: ['TABLE'],
+    applyHeightAttributes: ['TD'],
+    mergeLonghand: {
       enabled: true,
-      applyWidthAttributes: ['TABLE'],
-      applyHeightAttributes: ['TD'],
-      keepOnlyAttributeSizes: {
-        width: ['TABLE'],
-        height: ['TD']
+      tags: ['div']
+    },
+    excludedProperties: ['cursor'],
+    codeBlocks: {
+      ASP: {
+        start: '<%',
+        end: '%>'
       }
     }
-  }))
+  })
+
+  t.is(result, '<div class="foo bar px-2 py-2" style="color: red; padding: 2px;"><% code %></div>')
 })
 
-test('remove inline background-color', t => {
-  return processFile(t, 'remove-inline-bgcolor', maizzleConfig({
-    inlineCSS: {
-      enabled: true,
-      styleToAttribute: {
-        'background-color': 'bgcolor'
-      },
-      preferBgColorAttribute: true
-    }
-  }))
+test('remove unused CSS', async t => {
+  const html = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        .foo {color: red}
+        .bar-baz {color: blue}
+        .baz {color: white}
+      </style>
+    </head>
+    <body>
+      <div class="foo">test div with some text</div>
+    </body>
+  </html>
+  `
+
+  const result = await Maizzle.removeUnusedCSS(html, {whitelist: ['.bar*']})
+
+  t.is(result, `<!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        .foo {color: red}
+        .bar-baz {color: blue}
+      </style>
+    </head>
+    <body>
+      <div class="foo">test div with some text</div>
+    </body>
+  </html>`)
 })
 
-test('remove inline background-color (with tags)', t => {
-  return processFile(t, 'remove-inline-bgcolor-tags', maizzleConfig({
-    inlineCSS: {
-      enabled: true,
-      styleToAttribute: {
-        'background-color': 'bgcolor'
-      },
-      preferBgColorAttribute: {
-        enabled: true,
-        tags: ['td']
-      }
-    }
-  }))
+test('remove attributes', async t => {
+  const html = await Maizzle.removeAttributes(`<div style="" role="article"></div>`, [{name: 'role', value: 'article'}])
+
+  t.is(html, '<div></div>')
 })
 
-test('inline CSS', t => {
-  return processFile(t, 'inline', maizzleConfig({
-    inlineCSS: {
-      enabled: true,
-      removeStyleTags: false,
-      styleToAttribute: {
-        'text-align': 'align'
-      },
-      applyWidthAttributes: ['TABLE'],
-      applyHeightAttributes: ['TD'],
-      mergeLonghand: {
-        enabled: true,
-        tags: ['td', 'div']
-      },
-      excludedProperties: ['cursor'],
-      codeBlocks: {
-        ASP: {
-          start: '<%',
-          end: '%>'
-        }
-      }
-    }
-  }))
+test('extra attributes', async t => {
+  const html = await Maizzle.applyExtraAttributes('<div />', {div: {role: 'article'}})
+
+  t.is(html, '<div role="article"></div>')
 })
 
-test('remove unused CSS', t => {
-  return processFile(t, 'email-comb', maizzleConfig({
-    removeUnusedCSS: {
-      enabled: true,
-      removeHTMLComments: false,
-      removeCSSComments: false,
-      whitelist: ['.preserve*']
-    }
-  }))
+test('base image URL', async t => {
+  const html = await Maizzle.applyBaseImageUrl('<img src="example.jpg">', 'https://example.com/')
+
+  t.is(html, '<img src="https://example.com/example.jpg">')
 })
 
-test('remove attributes', t => {
-  return processFile(t, 'remove-attributes', maizzleConfig({
-    removeAttributes: [
-      {name: 'role', value: 'article'},
-      {name: 'contenteditable'}
-    ]
-  }))
+test('prettify', async t => {
+  // eslint-disable-next-line
+  const html = await Maizzle.prettify('<div><p>test</p></div>', {indent_inner_result: true})
+
+  t.is(html, '<div>\n  <p>test</p>\n</div>')
 })
 
-test('extra attributes', t => {
-  return processFile(t, 'extra-attributes', maizzleConfig({
-    extraAttributes: {
-      div: {
-        role: 'article',
-        class: 'text-center'
-      }
-    }
-  }))
-})
+test('minify', async t => {
+  const html = await Maizzle.minify('<div>\n\n<p>\n\ntest</p></div>', {lineLengthLimit: 10})
+  const expected = '<div><p>\ntest</p>\n</div>'
 
-test('base image URL', t => {
-  return processFile(t, 'base-image-url', maizzleConfig({
-    baseImageURL: 'https://example.com/'
-  }))
-})
-
-test('prettify', t => {
-  return processFile(t, 'prettify', maizzleConfig({
-    prettify: {
-      enabled: true,
-      indent_inner_html: true // eslint-disable-line
-    }
-  }))
-})
-
-test('minify', t => {
-  return processFile(t, 'minify', maizzleConfig({
-    minify: {
-      enabled: true,
-      breakToTheLeftOf: ['<table']
-    }
-  }))
+  t.is(html, expected)
 })
 
 test('removes plaintext tag', t => {
-  let html = removePlaintextTags(fixture('plaintext'), {})
+  let html = removePlaintextTags('<plaintext>Removed</plaintext><div>Preserved</div>')
   html = html.replace(/[^\S\r\n]+$/gm, '').trim()
 
-  t.is(html, expected('plaintext').trim())
+  t.is(html, '<div>Preserved</div>')
 })
 
-test('replace strings', t => {
-  return processFile(t, 'replace-strings', maizzleConfig({
-    replaceStrings: {
-      test: 'replace strings test',
-      '{head}': '<%=',
-      '{tail}': '%>'
-    }
-  }))
+test('replace strings', async t => {
+  const html = await Maizzle.replaceStrings('initial text', {initial: 'updated'})
+
+  t.is(html, 'updated text')
 })
 
-test('safe class names', t => {
-  return processFile(t, 'safe-class-names', maizzleConfig())
+test('safe class names', async t => {
+  const html = await Maizzle.safeClassNames('<div class="sm:text-left w-1.5">foo</div>', {'.': '_dot_'})
+
+  t.is(html, '<div class="sm-text-left w-1_dot_5">foo</div>')
 })
 
-test('safe class names (disabled)', t => {
-  return processFile(t, 'safe-class-names-disabled', maizzleConfig({
-    safeClassNames: false
-  }))
+test('safe class names (disabled)', async t => {
+  const html = await Maizzle.safeClassNames('<div class="sm:text-left">foo</div>', {safeClassNames: false})
+
+  t.is(html, '<div class="sm:text-left">foo</div>')
 })
 
-test('six digit hex', t => {
-  return processFile(t, 'six-hex', maizzleConfig())
+test('six digit hex', async t => {
+  const html = await Maizzle.ensureSixHEX('<td style="color: #ffc" bgcolor="#000"></td>')
+
+  t.is(html, '<td style="color: #ffffcc" bgcolor="#000000"></td>');
 })
 
-test('transform contents', t => {
-  return processFile(t, 'transform', maizzleConfig({
-    transform: {
-      upper: text => text.toUpperCase()
-    }
-  }))
+test('transform contents', async t => {
+  const html = await Maizzle.transformContents('<div uppercase>test</div>', {uppercase: string => string.toUpperCase()})
+
+  t.is(html, '<div>TEST</div>')
 })
 
-test('url parameters', t => {
-  return processFile(t, 'url-params', maizzleConfig({
-    urlParameters: {
-      source: 'email',
-      campaign: '@CampaignName@'
-    }
-  }))
+test('url parameters', async t => {
+  const html = await Maizzle.addURLParams('<a href="https://example.com">test</a>', {bar: 'baz', qix: 'qux'})
+
+  t.is(html, '<a href="https://example.com?bar=baz&qix=qux">test</a>')
 })
 
-test('attribute to style', t => {
-  return processFile(t, 'attribute-to-style', maizzleConfig({
-    inlineCSS: {
-      enabled: true,
-      attributeToStyle: true
-    }
-  }))
+test('attribute to style', async t => {
+  const html = `<table width="100%" height="600" align="left" bgcolor="#FFFFFF" background="https://example.com/image.jpg">
+    <tr>
+      <td align="center" valign="top"></td>
+    </tr>
+  </table>`
+
+  const expected = `<table width="100%" height="600" align="left" bgcolor="#FFFFFF" background="https://example.com/image.jpg" style="width: 100%; height: 600px; float: left; background-color: #FFFFFF; background-image: url('https://example.com/image.jpg')">
+    <tr style="">
+      <td align="center" valign="top" style="text-align: center; vertical-align: top"></td>
+    </tr>
+  </table>`
+
+  const expectedWithAttrs = `<table width="100%" height="600" align="left" bgcolor="#FFFFFF" background="https://example.com/image.jpg" style="width: 100%">
+    <tr style="">
+      <td align="center" valign="top" style=""></td>
+    </tr>
+  </table>`
+
+  const html2 = `<table align="center">
+    <tr>
+      <td></td>
+    </tr>
+  </table>`
+
+  const expected2 = `<table align="center" style="margin-left: auto; margin-right: auto">
+    <tr style="">
+      <td style=""></td>
+    </tr>
+  </table>`
+
+  const result = await Maizzle.attributeToStyle(html, ['width', 'height', 'bgcolor', 'background', 'align', 'valign'])
+  const result2 = await Maizzle.attributeToStyle(html2, ['align'])
+  const withAttrs = await Maizzle.attributeToStyle(html, ['width'])
+
+  t.is(result, expected)
+  t.is(result2, expected2)
+  t.is(withAttrs, expectedWithAttrs)
 })
 
-test('attribute to style (with tags)', t => {
-  return processFile(t, 'attribute-to-style-tags', maizzleConfig({
-    inlineCSS: {
-      enabled: true,
-      attributeToStyle: ['width']
-    }
-  }))
+test('prevent widows', async t => {
+  const html = await Maizzle.preventWidows('lorem ipsum dolor')
+
+  t.is(html, 'lorem ipsum&nbsp;dolor')
 })

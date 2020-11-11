@@ -2,8 +2,8 @@ const {get} = require('lodash')
 const posthtml = require('posthtml')
 const removeAttributes = require('posthtml-remove-attributes')
 
-module.exports = async (html, config) => {
-  const attributes = get(config, 'removeAttributes', [])
+module.exports = async (html, config = {}, direct = false) => {
+  const attributes = direct ? (Array.isArray(config) ? [...config] : []) : get(config, 'removeAttributes', [])
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
   attributes.push({name: 'style'})
@@ -13,7 +13,5 @@ module.exports = async (html, config) => {
     attr.value = attr.value || ''
   })
 
-  html = await posthtml([removeAttributes(attributes)]).process(html, posthtmlOptions).then(result => result.html)
-
-  return html
+  return posthtml([removeAttributes(attributes)]).process(html, posthtmlOptions).then(result => result.html)
 }

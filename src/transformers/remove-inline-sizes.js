@@ -2,12 +2,12 @@ const posthtml = require('posthtml')
 const {get, isEmpty} = require('lodash')
 const parseAttrs = require('posthtml-attrs-parser')
 
-module.exports = async (html, config) => {
-  const settings = get(config, 'inlineCSS.keepOnlyAttributeSizes', {})
+module.exports = async (html, config = {}, direct = false) => {
+  const settings = direct ? config : get(config, 'inlineCSS.keepOnlyAttributeSizes', {})
 
   if (!isEmpty(settings)) {
     const posthtmlOptions = get(config, 'build.posthtml.options', {})
-    html = await posthtml([removeInlineSizes(settings)]).process(html, posthtmlOptions).then(result => result.html)
+    return posthtml([removeInlineSizes(settings)]).process(html, posthtmlOptions).then(result => result.html)
   }
 
   return html

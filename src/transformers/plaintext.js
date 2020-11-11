@@ -1,7 +1,7 @@
 const {get} = require('lodash')
 const posthtml = require('posthtml')
 
-module.exports = (html, config) => {
+module.exports = (html, config = {}) => {
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
   return posthtml([plaintext()]).process(html, {...posthtmlOptions, sync: true}).html

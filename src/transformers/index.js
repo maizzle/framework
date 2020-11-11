@@ -11,10 +11,10 @@ const safeClassNames = require('./safe-class-names')
 const applyBaseImageUrl = require('./base-image-url')
 const removeUnusedCSS = require('./remove-unused-css')
 const removeAttributes = require('./remove-attributes')
+const attributeToStyle = require('./attribute-to-style')
 const removeInlineSizes = require('./remove-inline-sizes')
 const applyExtraAttributes = require('./extra-attributes')
 const removeInlineBgColor = require('./remove-inline-bgcolor')
-const attributeToStyle = require('./attribute-to-style')
 
 exports.process = async (html, config) => {
   html = await safeClassNames(html, config)
@@ -37,3 +37,21 @@ exports.process = async (html, config) => {
 
   return html
 }
+
+exports.inlineCSS = (html, config) => inline(html, config, true)
+exports.minify = (html, config) => minify(html, config, true)
+exports.markdown = (html, config) => markdown(html, config, true)
+exports.prettify = (html, config) => prettify(html, config, true)
+exports.ensureSixHEX = html => ensureSixHEX(html)
+exports.addURLParams = (html, config) => addURLParams(html, config, true)
+exports.transformContents = (html, config) => transformContents(html, config, true)
+exports.preventWidows = (html, config) => preventWidows(html, config, true)
+exports.replaceStrings = (html, config) => replaceStrings(html, config, true)
+exports.safeClassNames = (html, config) => safeClassNames(html, config, true)
+exports.applyBaseImageUrl = (html, config) => applyBaseImageUrl(html, config, true)
+exports.removeUnusedCSS = (html, config) => removeUnusedCSS(html, config, true)
+exports.removeAttributes = (html, config) => removeAttributes(html, config, true)
+exports.removeInlineSizes = (html, config) => removeInlineSizes(html, config, true)
+exports.applyExtraAttributes = (html, config) => applyExtraAttributes(html, config, true)
+exports.removeInlineBgColor = (html, config) => removeInlineBgColor(html, config, true)
+exports.attributeToStyle = (html, config) => attributeToStyle(html, config, true)

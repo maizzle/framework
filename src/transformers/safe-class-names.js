@@ -2,17 +2,17 @@ const {get} = require('lodash')
 const posthtml = require('posthtml')
 const safeClassNames = require('posthtml-safe-class-names')
 
-module.exports = async (html, config) => {
+module.exports = async (html, config = {}, direct = false) => {
   if (typeof config.safeClassNames === 'boolean' && !config.safeClassNames) {
     return html
   }
 
-  if (typeof config.env === 'string' && config.env !== 'local') {
-    const replacements = get(config, 'safeClassNames', {})
-    const posthtmlOptions = get(config, 'build.posthtml.options', {})
-
-    html = posthtml([safeClassNames({replacements})]).process(html, posthtmlOptions).then(result => result.html)
+  if (config.env === 'local') {
+    return html
   }
 
-  return html
+  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+  const replacements = direct ? config : get(config, 'safeClassNames', {})
+
+  return posthtml([safeClassNames({replacements})]).process(html, posthtmlOptions).then(result => result.html)
 }

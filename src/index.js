@@ -4,9 +4,11 @@ const fs = require('fs-extra')
 const bs = require('browser-sync')
 const {get, merge} = require('lodash')
 const Output = require('./generators/output')
+const transformers = require('./transformers')
 const Plaintext = require('./generators/plaintext')
 
 const self = module.exports = { // eslint-disable-line
+  ...transformers,
   build: async (env = 'local', config = {}) => {
     const start = new Date()
     const spinner = ora('Building emails...').start()

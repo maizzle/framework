@@ -2,7 +2,9 @@ const posthtml = require('posthtml')
 const {get, isObject} = require('lodash')
 const addAttributes = require('posthtml-extra-attributes')
 
-module.exports = async (html, config) => {
+module.exports = async (html, config = {}, direct = false) => {
+  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+
   let attributes = {
     table: {
       cellpadding: 0,
@@ -14,13 +16,7 @@ module.exports = async (html, config) => {
     }
   }
 
-  if (isObject(config.extraAttributes)) {
-    attributes = {...attributes, ...config.extraAttributes}
-  }
+  attributes = direct ? {...attributes, ...config} : (isObject(config.extraAttributes) ? {...attributes, ...config.extraAttributes} : {})
 
-  const posthtmlOptions = get(config, 'build.posthtml.options', {})
-
-  html = posthtml([addAttributes({attributes})]).process(html, posthtmlOptions).then(result => result.html)
-
-  return html
+  return posthtml([addAttributes({attributes})]).process(html, posthtmlOptions).then(result => result.html)
 }

@@ -16,7 +16,7 @@ module.exports = async (html, config = {}, direct = false) => {
     }
   }
 
-  attributes = direct ? {...attributes, ...config} : (isObject(config.extraAttributes) ? {...attributes, ...config.extraAttributes} : {})
+  attributes = direct ? {...attributes, ...config} : (isObject(config.extraAttributes) ? {...attributes, ...config.extraAttributes} : attributes)
 
   return posthtml([addAttributes({attributes})]).process(html, posthtmlOptions).then(result => result.html)
 }

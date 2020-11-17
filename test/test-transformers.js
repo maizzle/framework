@@ -26,7 +26,7 @@ test('remove inline background-color (with tags)', async t => {
 })
 
 test('inline CSS', async t => {
-  const html = `<div class="foo bar px-2 py-2"><% code %></div>`
+  const html = `<div class="foo bar px-2 py-2">test</div>`
   const css = `
     .foo {color: red}
     .bar {cursor: pointer}
@@ -55,14 +55,14 @@ test('inline CSS', async t => {
     },
     excludedProperties: ['cursor'],
     codeBlocks: {
-      ASP: {
+      RB: {
         start: '<%',
         end: '%>'
       }
     }
   })
 
-  t.is(result, '<div class="foo bar px-2 py-2" style="color: red; padding: 2px;"><% code %></div>')
+  t.is(result, '<div class="foo bar px-2 py-2" style="color: red; padding: 2px;">test</div>')
 })
 
 test('remove unused CSS', async t => {

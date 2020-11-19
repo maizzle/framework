@@ -33,25 +33,25 @@
   },
   "dependencies": {
     "@fullhuman/postcss-purgecss": "^3.0.0",
-    "browser-sync": "^2.26.12",
-    "color-shorthand-hex-to-six-digit": "^2.10.65",
-    "email-comb": "^3.9.22",
+    "browser-sync": "^2.26.13",
+    "color-shorthand-hex-to-six-digit": "^2.10.69",
+    "email-comb": "^3.10.7",
     "front-matter": "^4.0.0",
     "fs-extra": "^9.0.0",
     "glob-promise": "^3.4.0",
-    "html-crush": "^2.0.3",
+    "html-crush": "^2.0.10",
     "juice": "^7.0.0",
     "lodash": "^4.17.20",
-    "ora": "^5.0.0",
+    "ora": "^5.1.0",
     "postcss": "^8.1.2",
     "postcss-import": "^13.0.0",
     "postcss-merge-longhand": "^4.0.11",
     "postcss-nested": "^5.0.1",
-    "posthtml": "^0.13.4",
+    "posthtml": "^0.14.0",
     "posthtml-attrs-parser": "^0.1.1",
     "posthtml-content": "^0.0.3",
-    "posthtml-expressions": "^1.6.0",
-    "posthtml-extend": "^0.5.1",
+    "posthtml-expressions": "^1.6.2",
+    "posthtml-extend": "^0.5.2",
     "posthtml-extra-attributes": "^1.0.0",
     "posthtml-fetch": "^1.2.0",
     "posthtml-markdownit": "^1.2.2",
@@ -63,8 +63,8 @@
     "posthtml-url-parameters": "^1.0.4",
     "pretty": "^2.0.0",
     "prevent-widows": "^1.0.2",
-    "query-string": "^6.13.1",
-    "string-strip-html": "^6.0.4",
+    "query-string": "^6.13.7",
+    "string-strip-html": "^6.3.0",
     "tailwindcss": "^2.0.1"
   },
   "devDependencies": {
@@ -72,7 +72,7 @@
     "ava": "^3.13.0",
     "np": "*",
     "nyc": "^15.1.0",
-    "xo": "^0.34.1"
+    "xo": "^0.34.2"
   },
   "engines": {
     "node": ">=12.13.0"

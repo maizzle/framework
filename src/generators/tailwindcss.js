@@ -4,16 +4,15 @@ const postcss = require('postcss')
 const tailwindcss = require('tailwindcss')
 const atImport = require('postcss-import')
 const postcssNested = require('postcss-nested')
-const {get, isObject, isEmpty} = require('lodash')
 const {requireUncached} = require('../utils/helpers')
 const mergeLonghand = require('postcss-merge-longhand')
 const purgecss = require('@fullhuman/postcss-purgecss')
+const {get, isObject, isEmpty, merge} = require('lodash')
 
 module.exports = {
   compile: async (css = '', html = '', tailwindConfig = {}, maizzleConfig = {}) => {
     tailwindConfig = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : get(maizzleConfig, 'build.tailwind.config', 'tailwind.config.js')
     const tailwindConfigObject = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : requireUncached(path.resolve(process.cwd(), tailwindConfig))
-
     const purgeCSSOptions = get(maizzleConfig, 'purgeCSS', {})
 
     const buildTemplates = get(maizzleConfig, 'build.templates', [])
@@ -55,11 +54,24 @@ module.exports = {
 
     const mergeLonghandPlugin = maizzleConfig.env === 'local' ? () => {} : mergeLonghand()
 
-    const tailwindPlugin = isEmpty(tailwindConfigObject) ? tailwindcss() : tailwindcss({
+    const coreConfig = {
       important: true,
       purge: false,
-      ...tailwindConfigObject
-    })
+      corePlugins: {
+        animation: false,
+        backgroundOpacity: false,
+        borderOpacity: false,
+        divideOpacity: false,
+        placeholderOpacity: false,
+        ringColor: false,
+        ringWidth: false,
+        ringOpacity: false,
+        ringOffsetColor: false,
+        textOpacity: false
+      }
+    }
+
+    const tailwindPlugin = isEmpty(tailwindConfigObject) ? tailwindcss(coreConfig) : tailwindcss(merge(coreConfig, tailwindConfigObject))
 
     const postcssUserPlugins = get(maizzleConfig, 'build.postcss.plugins', [])
 

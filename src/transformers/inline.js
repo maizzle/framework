@@ -14,8 +14,10 @@ module.exports = async (html, config = {}, direct = false) => {
     juice.widthElements = get(options, 'applyWidthAttributes', [])
     juice.heightElements = get(options, 'applyHeightAttributes', [])
 
+    juice.excludedProperties = ['--tw-shadow']
+
     if (!isEmpty(options.excludedProperties)) {
-      juice.excludedProperties = get(options, 'excludedProperties', Object.values(juice.excludedProperties))
+      juice.excludedProperties.push(...get(options, 'excludedProperties', []))
     }
 
     if (isObject(options.codeBlocks) && !isEmpty(options.codeBlocks)) {

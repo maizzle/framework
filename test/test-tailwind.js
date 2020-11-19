@@ -27,10 +27,10 @@ test('uses CSS file provided in environment config', async t => {
     }
   }
 
-  const css = await Tailwind.compile('', '<div class="text-center foo">test</div>', {corePlugins: {animation: false}}, config)
+  const css = await Tailwind.compile('', '<div class="text-center foo">test</div>', {}, config)
 
   t.not(css, undefined)
-  t.is(css.trim(), '.text-center {\n  text-align: center !important;\n}\n\n.foo {\n  color: red;\n}')
+  t.is(css.trim(), '* {\n  --tw-shadow: 0 0 #0000;\n}\n\n.text-center {\n  text-align: center !important;\n}\n\n.foo {\n  color: red;\n}')
 })
 
 test('uses purgeCSS options provided in the config', async t => {
@@ -54,11 +54,11 @@ test('uses purgeCSS options provided in the config', async t => {
     }
   }
 
-  const css1 = await Tailwind.compile('', '', {corePlugins: {animation: false}}, arrayConfig)
-  const css2 = await Tailwind.compile('', '', {corePlugins: {animation: false}}, objectConfig)
+  const css1 = await Tailwind.compile('', '', {}, arrayConfig)
+  const css2 = await Tailwind.compile('', '', {}, objectConfig)
 
-  t.is(css1.trim(), '.z-0 {\n  z-index: 0 !important\n}\n\n.z-10 {\n  z-index: 10 !important\n}')
-  t.is(css2.trim(), '.z-0 {\n  z-index: 0 !important\n}\n\n.z-10 {\n  z-index: 10 !important\n}')
+  t.is(css1.trim(), '* {\n  --tw-shadow: 0 0 #0000\n}\n\n.z-0 {\n  z-index: 0 !important\n}\n\n.z-10 {\n  z-index: 10 !important\n}')
+  t.is(css2.trim(), '* {\n  --tw-shadow: 0 0 #0000\n}\n\n.z-0 {\n  z-index: 0 !important\n}\n\n.z-10 {\n  z-index: 10 !important\n}')
 })
 
 test('uses postcss plugins from the config when compiling from string', async t => {
@@ -73,8 +73,8 @@ test('uses postcss plugins from the config when compiling from string', async t 
     }
   }
 
-  const css = await Tailwind.compile('.test {transform: scale(0.5)}', '<div class="test">Test</a>', {corePlugins: {animation: false}}, maizzleConfig)
+  const css = await Tailwind.compile('.test {transform: scale(0.5)}', '<div class="test">Test</a>', {}, maizzleConfig)
 
   t.not(css, undefined)
-  t.is(css.trim(), '.test {\n  -webkit-transform: scale(0.5);\n      -ms-transform: scale(0.5);\n          transform: scale(0.5)\n}')
+  t.is(css.trim(), '.test {\n  -webkit-transform: scale(0.5);\n      -ms-transform: scale(0.5);\n          transform: scale(0.5)\n}\n\n* {\n  --tw-shadow: 0 0 #0000\n}')
 })

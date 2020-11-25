@@ -1,9 +1,9 @@
 const fm = require('front-matter')
 const {get, merge} = require('lodash')
-const Tailwind = require('../tailwindcss')
 const posthtml = require('../posthtml')
+const Tailwind = require('../tailwindcss')
 const Transformers = require('../../transformers')
-const posthtmlMso = require('../../transformers/posthtml-mso')
+const posthtmlMSO = require('../../transformers/posthtml-mso')
 
 module.exports = async (html, options) => {
   process.env.NODE_ENV = get(options, 'maizzle.env', 'local')
@@ -17,12 +17,15 @@ module.exports = async (html, options) => {
   }
 
   let config = get(options, 'maizzle', {})
+
   const tailwindConfig = get(options, 'tailwind.config', {})
   const cssString = get(options, 'tailwind.css', '@tailwind components; @tailwind utilities;')
 
-  const frontMatter = fm(html)
-  html = frontMatter.body
-  config = merge(config, frontMatter.attributes)
+  const frontmatter = await posthtml(fm(html).frontmatter, config)
+
+  html = `---\n${frontmatter}\n---\n\n${fm(html).body}`
+
+  config = merge(config, fm(html).attributes)
 
   if (typeof get(options, 'tailwind.compiled') === 'string') {
     config.css = options.tailwind.compiled
@@ -50,7 +53,7 @@ module.exports = async (html, options) => {
     html = await options.afterTransformers(html, config)
   }
 
-  html = await posthtmlMso(html, config)
+  html = await posthtmlMSO(html, config)
 
   return {
     html,

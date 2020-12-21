@@ -44,7 +44,7 @@
     "lodash": "^4.17.20",
     "ora": "^5.1.0",
     "postcss": "^8.1.2",
-    "postcss-import": "^13.0.0",
+    "postcss-import": "^14.0.0",
     "postcss-merge-longhand": "^4.0.11",
     "postcss-nested": "^5.0.1",
     "posthtml": "^0.15.0",

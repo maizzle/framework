@@ -121,3 +121,25 @@ test('prevents overwriting page object', async t => {
 
   t.is(result, `1, undefined, undefined`)
 })
+
+test.only('compiles markdown inside expressions', async t => {
+  let html = await renderString(
+    `<md>
+      # Heading 1
+      {{{ page.quote }}}
+      {{ page.formatted }}
+    </md>`,
+    {
+      maizzle: {
+        quote: '> Blockquote',
+        formatted: '**bold** _italic_ ~~strike~~'
+      }
+    }
+  )
+  html = html.replace(/[^\S\r\n]+$/gm, '').trim()
+
+  t.is(
+    html,
+    '<h1>Heading 1</h1>\n<blockquote>\n<p>Blockquote\n<strong>bold</strong> <em>italic</em> <s>strike</s></p>\n</blockquote>'
+  )
+})

@@ -122,7 +122,7 @@ test('prevents overwriting page object', async t => {
   t.is(result, `1, undefined, undefined`)
 })
 
-test.only('compiles markdown inside expressions', async t => {
+test('compiles markdown inside expressions', async t => {
   let html = await renderString(
     `<md>
       # Heading 1

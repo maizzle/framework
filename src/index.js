@@ -15,7 +15,7 @@ const self = module.exports = { // eslint-disable-line
 
     return Output.toDisk(env, spinner, config)
       .then(({files, parsed}) => {
-        spinner.succeed(`Built ${parsed.length} templates in ${new Date() - start} ms.`)
+        spinner.succeed(`Built ${parsed.length} templates in ${Date.now() - start} ms.`)
         return files
       })
       .catch(error => {
@@ -90,7 +90,7 @@ const self = module.exports = { // eslint-disable-line
                       await fs.outputFile(path.join(destination, file.replace(fileSource, '')), html)
                         .then(() => {
                           bs.reload()
-                          spinner.succeed(`Done in ${new Date() - start} ms.`)
+                          spinner.succeed(`Done in ${Date.now() - start} ms.`)
                         })
                     })
                 } else {

@@ -3,7 +3,7 @@ const posthtml = require('posthtml')
 const safeClassNames = require('posthtml-safe-class-names')
 
 module.exports = async (html, config = {}, direct = false) => {
-  if (typeof config.safeClassNames === 'boolean' && !config.safeClassNames) {
+  if (get(config, 'safeClassNames') === false) {
     return html
   }
 

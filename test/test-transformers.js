@@ -166,9 +166,14 @@ test('prettify', async t => {
 
 test('minify', async t => {
   const html = await Maizzle.minify('<div>\n\n<p>\n\ntest</p></div>', {lineLengthLimit: 10})
-  const expected = '<div><p>\ntest</p>\n</div>'
 
-  t.is(html, expected)
+  t.is(html, '<div><p>\ntest</p>\n</div>')
+})
+
+test('minify (disabled)', async t => {
+  const html = await Maizzle.minify('<div>\n\n<p>\n\ntest</p></div>', {minify: false})
+
+  t.is(html, '<div>\n\n<p>\n\ntest</p></div>')
 })
 
 test('removes plaintext tag', t => {

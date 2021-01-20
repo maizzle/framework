@@ -3,6 +3,10 @@ const {get, isObject} = require('lodash')
 const addAttributes = require('posthtml-extra-attributes')
 
 module.exports = async (html, config = {}, direct = false) => {
+  if (get(config, 'extraAttributes') === false) {
+    return html
+  }
+
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
   let attributes = {

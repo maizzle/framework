@@ -143,3 +143,13 @@ test('compiles markdown inside expressions', async t => {
     '<h1>Heading 1</h1>\n<blockquote>\n<p>Blockquote\n<strong>bold</strong> <em>italic</em> <s>strike</s></p>\n</blockquote>'
   )
 })
+
+test('extra attributes disabled', async t => {
+  const result = await renderString(`<img src="example.jpg">`, {
+    maizzle: {
+      extraAttributes: false
+    }
+  })
+
+  t.is(result, `<img src="example.jpg">`)
+})

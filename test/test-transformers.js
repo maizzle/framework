@@ -161,6 +161,12 @@ test('six digit hex', async t => {
   t.is(html, '<td style="color: #ffffcc" bgcolor="#000000"></td>');
 })
 
+test('six digit hex (disabled)', async t => {
+  const html = await Maizzle.ensureSixHEX('<td style="color: #ffc" bgcolor="#000"></td>', {sixHex: false})
+
+  t.is(html, '<td style="color: #ffc" bgcolor="#000"></td>');
+})
+
 test('transform contents', async t => {
   const html = await Maizzle.transformContents('<div uppercase>test</div>', {uppercase: string => string.toUpperCase()})
 

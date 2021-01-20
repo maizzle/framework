@@ -66,8 +66,7 @@ test('inline CSS', async t => {
 })
 
 test('remove unused CSS', async t => {
-  const html = `
-  <!DOCTYPE html>
+  const html = `<!DOCTYPE html>
   <html>
     <head>
       <style>
@@ -79,8 +78,7 @@ test('remove unused CSS', async t => {
     <body>
       <div class="foo">test div with some text</div>
     </body>
-  </html>
-  `
+  </html>`
 
   const result = await Maizzle.removeUnusedCSS(html, {whitelist: ['.bar*']})
 
@@ -90,6 +88,34 @@ test('remove unused CSS', async t => {
       <style>
         .foo {color: red}
         .bar-baz {color: blue}
+      </style>
+    </head>
+    <body>
+      <div class="foo">test div with some text</div>
+    </body>
+  </html>`)
+})
+
+test('remove unused CSS (disabled)', async t => {
+  const html = `<!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        .foo {color: red}
+      </style>
+    </head>
+    <body>
+      <div class="foo">test div with some text</div>
+    </body>
+  </html>`
+
+  const result = await Maizzle.removeUnusedCSS(html, {removeUnusedCSS: false})
+
+  t.is(result, `<!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        .foo {color: red}
       </style>
     </head>
     <body>

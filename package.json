@@ -35,16 +35,16 @@
     "@fullhuman/postcss-purgecss": "^3.0.0",
     "browser-sync": "^2.26.13",
     "color-shorthand-hex-to-six-digit": "^2.10.69",
-    "email-comb": "^3.10.7",
+    "email-comb": "^4.0.2",
     "front-matter": "^4.0.0",
     "fs-extra": "^9.0.0",
     "glob-promise": "^3.4.0",
-    "html-crush": "^2.0.10",
+    "html-crush": "^3.0.2",
     "juice": "^7.0.0",
     "lodash": "^4.17.20",
     "ora": "^5.1.0",
     "postcss": "^8.1.2",
-    "postcss-import": "^13.0.0",
+    "postcss-import": "^14.0.0",
     "postcss-merge-longhand": "^4.0.11",
     "postcss-nested": "^5.0.1",
     "posthtml": "^0.15.0",
@@ -64,7 +64,7 @@
     "pretty": "^2.0.0",
     "prevent-widows": "^1.0.2",
     "query-string": "^6.13.7",
-    "string-strip-html": "^6.3.0",
+    "string-strip-html": "^7.0.2",
     "tailwindcss": "^2.0.1"
   },
   "devDependencies": {
@@ -72,7 +72,7 @@
     "ava": "^3.13.0",
     "np": "*",
     "nyc": "^15.1.0",
-    "xo": "^0.35.0"
+    "xo": "^0.36.1"
   },
   "engines": {
     "node": ">=12.13.0"

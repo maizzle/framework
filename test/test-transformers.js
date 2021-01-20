@@ -110,6 +110,12 @@ test('extra attributes', async t => {
   t.is(html, '<div role="article"></div>')
 })
 
+test('extra attributes (disabled)', async t => {
+  const html = await Maizzle.applyExtraAttributes('<img src="example.jpg">', {extraAttributes: false})
+
+  t.is(html, '<img src="example.jpg">')
+})
+
 test('base image URL', async t => {
   const html = await Maizzle.applyBaseImageUrl('<img src="example.jpg">', 'https://example.com/')
 

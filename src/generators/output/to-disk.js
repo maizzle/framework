@@ -64,11 +64,11 @@ module.exports = async (env, spinner, config) => {
           })
             .then(async ({html, config}) => {
               const destination = config.permalink || file
-              const plaintextConfig = get(config, 'plaintext.enabled', config.plaintext)
-              const isPlaintextEnabled = typeof plaintextConfig === 'boolean' && plaintextConfig
+              const plaintextConfig = get(config, 'plaintext')
 
-              if (isPlaintextEnabled) {
-                await Plaintext.generate(html, destination, config)
+              if ((typeof plaintextConfig === 'boolean' && plaintextConfig) || !isEmpty(plaintextConfig)) {
+                await Plaintext
+                  .generate(html, destination, config)
                   .then(({plaintext, destination}) => fs.outputFile(destination, plaintext))
               }
 

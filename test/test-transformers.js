@@ -265,3 +265,9 @@ test('prevent widows', async t => {
 
   t.is(html, 'lorem ipsum&nbsp;dolor')
 })
+
+test('markdown (disabled)', async t => {
+  const html = await Maizzle.markdown('> a quote', {markdown: false})
+
+  t.is(html, '> a quote')
+})

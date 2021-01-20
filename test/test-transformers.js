@@ -65,6 +65,15 @@ test('inline CSS', async t => {
   t.is(result, '<div class="foo bar px-2 py-2" style="color: red; padding: 2px;">test</div>')
 })
 
+test('inline CSS (disabled)', async t => {
+  const html = `<div class="foo">test</div>`
+  const css = `.foo {color: red}`
+
+  const result = await Maizzle.inlineCSS(html, {inlineCSS: false, customCSS: css})
+
+  t.is(result, '<div class="foo">test</div>')
+})
+
 test('remove unused CSS', async t => {
   const html = `<!DOCTYPE html>
   <html>

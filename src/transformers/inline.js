@@ -4,6 +4,10 @@ const {get, isObject, isEmpty} = require('lodash')
 const mergeLonghand = require('posthtml-postcss-merge-longhand')
 
 module.exports = async (html, config = {}, direct = false) => {
+  if (get(config, 'inlineCSS') === false) {
+    return html
+  }
+
   const options = direct ? {...config, enabled: true} : get(config, 'inlineCSS', {})
   const removeStyleTags = get(options, 'removeStyleTags', true)
   const css = get(config, 'customCSS', false)

@@ -8,11 +8,11 @@ module.exports = async (html, config = {}, direct = false) => {
     return html
   }
 
-  const options = direct ? {...config, enabled: true} : get(config, 'inlineCSS', {})
+  const options = direct ? config : get(config, 'inlineCSS', {})
   const removeStyleTags = get(options, 'removeStyleTags', true)
   const css = get(config, 'customCSS', false)
 
-  if (get(options, 'enabled', false)) {
+  if (get(config, 'inlineCSS') === true || !isEmpty(options)) {
     juice.styleToAttribute = get(options, 'styleToAttribute', {'vertical-align': 'valign'})
 
     juice.widthElements = get(options, 'applyWidthAttributes', [])
@@ -33,11 +33,14 @@ module.exports = async (html, config = {}, direct = false) => {
     html = css ? juice.inlineContent(html, css, {removeStyleTags}) : juice(html, {removeStyleTags})
 
     const posthtmlOptions = get(config, 'build.posthtml.options', {})
-    const mergeLonghandConfig = get(options, 'mergeLonghand', {enabled: false})
-    const tags = get(mergeLonghandConfig, 'tags', [])
+    const mergeLonghandConfig = get(options, 'mergeLonghand', [])
 
-    if (mergeLonghandConfig.enabled || (typeof mergeLonghandConfig === 'boolean' && mergeLonghandConfig)) {
-      html = await posthtml([mergeLonghand({tags})]).process(html, posthtmlOptions).then(result => result.html)
+    if (typeof mergeLonghandConfig === 'boolean' && mergeLonghandConfig) {
+      html = await posthtml([mergeLonghand()]).process(html, posthtmlOptions).then(result => result.html)
+    }
+
+    if (isObject(mergeLonghandConfig) && !isEmpty(mergeLonghandConfig)) {
+      html = await posthtml([mergeLonghand({tags: mergeLonghandConfig})]).process(html, posthtmlOptions).then(result => result.html)
     }
 
     return html

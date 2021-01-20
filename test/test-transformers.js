@@ -49,10 +49,7 @@ test('inline CSS', async t => {
     },
     applyWidthAttributes: ['TABLE'],
     applyHeightAttributes: ['TD'],
-    mergeLonghand: {
-      enabled: true,
-      tags: ['div']
-    },
+    mergeLonghand: ['div'],
     excludedProperties: ['cursor'],
     codeBlocks: {
       RB: {

@@ -1,12 +1,13 @@
 const ora = require('ora')
 const path = require('path')
 const fs = require('fs-extra')
-const bs = require('browser-sync').create()
+const chokidar = require('chokidar')
 const {get, merge} = require('lodash')
+const bs = require('browser-sync').create()
 const Output = require('./generators/output')
 const transformers = require('./transformers')
 const Plaintext = require('./generators/plaintext')
-const chokidar = require('chokidar')
+const Tailwind = require('./generators/tailwindcss')
 
 const self = module.exports = { // eslint-disable-line
   ...transformers,
@@ -31,7 +32,7 @@ const self = module.exports = { // eslint-disable-line
       .then(async () => {
         require('./generators/config')
           .getMerged('local')
-          .then(localConfig => {
+          .then(async localConfig => {
             config = merge(config, localConfig)
 
             let templates = get(config, 'build.templates')
@@ -45,6 +46,10 @@ const self = module.exports = { // eslint-disable-line
               get(config, 'build.tailwind.config', 'tailwind.config.js'),
               [...new Set(get(config, 'build.browsersync.watch', []))]
             ]
+
+            // Compile Tailwind early
+            const cssString = fs.existsSync(get(config, 'build.tailwind.css')) ? fs.readFileSync(get(config, 'build.tailwind.css'), 'utf8') : '@tailwind components; @tailwind utilities;'
+            const css = await Tailwind.compile(cssString, '', {}, config)
 
             // Browsersync
             const baseDir = templates.map(t => t.destination.path)
@@ -76,7 +81,6 @@ const self = module.exports = { // eslint-disable-line
                 const spinner = ora('Building email...').start()
 
                 const destination = get(templates.filter(t => path.dirname(file).replace(/\\/g, '/').includes(t.source))[0], 'destination.path')
-                const cssString = fs.existsSync(get(config, 'build.tailwind.css')) ? fs.readFileSync(get(config, 'build.tailwind.css'), 'utf8') : '@tailwind components; @tailwind utilities;'
 
                 if (config.events && typeof config.events.beforeCreate === 'function') {
                   await config.events.beforeCreate(config)
@@ -85,7 +89,7 @@ const self = module.exports = { // eslint-disable-line
                 await self.render(await fs.readFile(file, 'utf8'), {
                   maizzle: config,
                   tailwind: {
-                    css: cssString
+                    compiled: css
                   },
                   ...config.events
                 })

@@ -25,7 +25,7 @@ module.exports = async (html, options) => {
 
   html = `---\n${frontmatter}\n---\n\n${fm(html).body}`
 
-  config = merge(config, fm(html).attributes)
+  config = merge({applyTransformers: true}, config, fm(html).attributes)
 
   if (typeof get(options, 'tailwind.compiled') === 'string') {
     config.css = options.tailwind.compiled
@@ -47,7 +47,9 @@ module.exports = async (html, options) => {
     html = await options.afterRender(html, config)
   }
 
-  html = await Transformers.process(html, config)
+  if (config.applyTransformers) {
+    html = await Transformers.process(html, config)
+  }
 
   if (options && typeof options.afterTransformers === 'function') {
     html = await options.afterTransformers(html, config)

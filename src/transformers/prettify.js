@@ -8,6 +8,10 @@ module.exports = async (html, config = {}, direct = false) => {
 
   config = direct ? config : get(config, 'prettify', {})
 
+  if (typeof config === 'boolean' && config) {
+    return pretty(html)
+  }
+
   if (!isEmpty(config)) {
     return pretty(html, config)
   }

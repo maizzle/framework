@@ -177,8 +177,10 @@ test('base image URL', async t => {
 test('prettify', async t => {
   // eslint-disable-next-line
   const html = await Maizzle.prettify('<div><p>test</p></div>', {indent_inner_result: true})
+  const html2 = await Maizzle.prettify('<div><p>test</p></div>', true)
 
   t.is(html, '<div>\n  <p>test</p>\n</div>')
+  t.is(html2, '<div>\n  <p>test</p>\n</div>')
 })
 
 test('prettify (disabled)', async t => {

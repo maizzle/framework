@@ -15,12 +15,24 @@ test('remove inline sizes', async t => {
 
 test('remove inline background-color', async t => {
   const html = await Maizzle.removeInlineBgColor(`<td style="background-color: red" bgcolor="red">test</td>`)
+  const html2 = await Maizzle.removeInlineBgColor(
+    `<td style="background-color: red" bgcolor="red">test</td>`,
+    {
+      inlineCSS: {
+        preferBgColorAttribute: true
+      }
+    }
+  )
 
   t.is(html, '<td style="" bgcolor="red">test</td>')
+  t.is(html2, '<td style="" bgcolor="red">test</td>')
 })
 
 test('remove inline background-color (with tags)', async t => {
-  const html = await Maizzle.removeInlineBgColor(`<table style="background-color: red"><tr><td style="background-color: red">test</td></tr></table>`, ['table'])
+  const html = await Maizzle.removeInlineBgColor(
+    `<table style="background-color: red"><tr><td style="background-color: red">test</td></tr></table>`,
+    ['table']
+  )
 
   t.is(html, '<table style="" bgcolor="red"><tr><td style="background-color: red">test</td></tr></table>')
 })

@@ -6,7 +6,7 @@ module.exports = async (html, config = {}, direct = false) => {
   const attributes = direct ? (Array.isArray(config) ? [...config] : []) : get(config, 'removeAttributes', [])
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
-  attributes.push({name: 'style'})
+  attributes.push({name: 'style'}, {name: 'class'})
 
   // Allow ommiting `value` key when removing empty attributes
   attributes.forEach(attr => {

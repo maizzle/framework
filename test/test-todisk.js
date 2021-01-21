@@ -163,6 +163,34 @@ test('outputs plaintext files', async t => {
   t.is(htmlContent, '<div>Show in HTML</div>\n\n')
 })
 
+test('outputs plaintext files (custom path)', async t => {
+  const files = await Maizzle.build('production', {
+    fail: 'silent',
+    build: {
+      templates: {
+        source: 'test/stubs/plaintext',
+        destination: {
+          path: t.context.folder
+        }
+      },
+      tailwind: {
+        config: {
+          purge: false
+        }
+      }
+    },
+    plaintext: {
+      destination: {
+        path: `${t.context.folder}/nested/plain.text`
+      }
+    }
+  })
+
+  const plaintext = files.filter(file => file.includes('.text'))
+
+  t.is(plaintext[0], `${t.context.folder}/nested/plain.text`)
+})
+
 test('renders plaintext string', async t => {
   const html = await fs.readFile('test/stubs/plaintext/plaintext.html', 'utf8')
   const {plaintext} = await Maizzle.plaintext(html)

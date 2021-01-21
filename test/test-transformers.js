@@ -280,12 +280,6 @@ test('attribute to style', async t => {
     </tr>
   </table>`
 
-  const expectedWithAttrs = `<table width="100%" height="600" align="left" bgcolor="#FFFFFF" background="https://example.com/image.jpg" style="width: 100%">
-    <tr style="">
-      <td align="center" valign="top" style=""></td>
-    </tr>
-  </table>`
-
   const html2 = `<table align="center">
     <tr>
       <td></td>
@@ -298,13 +292,13 @@ test('attribute to style', async t => {
     </tr>
   </table>`
 
-  const result = await Maizzle.attributeToStyle(html, ['width', 'height', 'bgcolor', 'background', 'align', 'valign'])
-  const result2 = await Maizzle.attributeToStyle(html2, ['align'])
-  const withAttrs = await Maizzle.attributeToStyle(html, ['width'])
+  const withArray = await Maizzle.attributeToStyle(html, ['width', 'height', 'bgcolor', 'background', 'align', 'valign'])
+  const withOptionBoolean = await Maizzle.attributeToStyle(html2, {inlineCSS: {attributeToStyle: true}})
+  const withOptionArray = await Maizzle.attributeToStyle(html2, {inlineCSS: {attributeToStyle: ['align']}})
 
-  t.is(result, expected)
-  t.is(result2, expected2)
-  t.is(withAttrs, expectedWithAttrs)
+  t.is(withArray, expected)
+  t.is(withOptionBoolean, expected2)
+  t.is(withOptionArray, expected2)
 })
 
 test('prevent widows', async t => {

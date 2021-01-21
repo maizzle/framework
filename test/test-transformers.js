@@ -53,7 +53,6 @@ test('inline CSS', async t => {
   `
 
   const result = await Maizzle.inlineCSS(html, {
-    enabled: true,
     customCSS: css,
     removeStyleTags: false,
     styleToAttribute: {
@@ -71,7 +70,13 @@ test('inline CSS', async t => {
     }
   })
 
+  const result2 = await Maizzle.inlineCSS(html, {
+    customCSS: css,
+    mergeLonghand: true
+  })
+
   t.is(result, '<div class="foo bar px-2 py-2" style="color: red; padding: 2px;">test</div>')
+  t.is(result2, '<div class="foo bar px-2 py-2" style="color: red; cursor: pointer; padding: 2px;">test</div>')
 })
 
 test('inline CSS (disabled)', async t => {

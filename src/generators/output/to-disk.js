@@ -26,7 +26,8 @@ module.exports = async (env, spinner, config) => {
 
   const parsed = []
   let files = []
-  const css = await Tailwind.compile('', '', {}, config)
+
+  const css = (typeof get(config, 'tailwind.compiled') === 'string') ? config.tailwind.compiled : await Tailwind.compile('', '', {}, config)
 
   await asyncForEach(templatesConfig, async templateConfig => {
     const outputDir = get(templateConfig, 'destination.path', `build_${env}`)
@@ -63,11 +64,11 @@ module.exports = async (env, spinner, config) => {
           })
             .then(async ({html, config}) => {
               const destination = config.permalink || file
-              const plaintextConfig = get(config, 'plaintext.enabled', config.plaintext)
-              const isPlaintextEnabled = typeof plaintextConfig === 'boolean' && plaintextConfig
+              const plaintextConfig = get(config, 'plaintext')
 
-              if (isPlaintextEnabled) {
-                await Plaintext.generate(html, destination, config)
+              if ((typeof plaintextConfig === 'boolean' && plaintextConfig) || !isEmpty(plaintextConfig)) {
+                await Plaintext
+                  .generate(html, destination, config)
                   .then(({plaintext, destination}) => fs.outputFile(destination, plaintext))
               }
 

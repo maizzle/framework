@@ -1,8 +1,10 @@
-const {get} = require('lodash')
+const {get, isEmpty} = require('lodash')
 const {crush} = require('html-crush')
 
 module.exports = async (html, config = {}, direct = false) => {
-  const shouldMinify = direct ? true : get(config, 'minify.enabled', false)
+  if (get(config, 'minify') === false) {
+    return html
+  }
 
   config = direct ? {
     lineLengthLimit: 500,
@@ -11,7 +13,7 @@ module.exports = async (html, config = {}, direct = false) => {
     ...config
   } : get(config, 'minify', {})
 
-  if (shouldMinify) {
+  if (!isEmpty(config)) {
     html = crush(html, {removeLineBreaks: true, ...config}).result
   }
 

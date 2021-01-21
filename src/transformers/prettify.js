@@ -1,11 +1,18 @@
-const {get} = require('lodash')
+const {get, isEmpty} = require('lodash')
 const pretty = require('pretty')
 
 module.exports = async (html, config = {}, direct = false) => {
-  const shouldPrettify = direct ? true : get(config, 'prettify.enabled', false)
+  if (get(config, 'prettify') === false) {
+    return html
+  }
+
   config = direct ? config : get(config, 'prettify', {})
 
-  if (shouldPrettify) {
+  if (typeof config === 'boolean' && config) {
+    return pretty(html)
+  }
+
+  if (!isEmpty(config)) {
     return pretty(html, config)
   }
 

@@ -15,12 +15,24 @@ test('remove inline sizes', async t => {
 
 test('remove inline background-color', async t => {
   const html = await Maizzle.removeInlineBgColor(`<td style="background-color: red" bgcolor="red">test</td>`)
+  const html2 = await Maizzle.removeInlineBgColor(
+    `<td style="background-color: red" bgcolor="red">test</td>`,
+    {
+      inlineCSS: {
+        preferBgColorAttribute: true
+      }
+    }
+  )
 
   t.is(html, '<td style="" bgcolor="red">test</td>')
+  t.is(html2, '<td style="" bgcolor="red">test</td>')
 })
 
 test('remove inline background-color (with tags)', async t => {
-  const html = await Maizzle.removeInlineBgColor(`<table style="background-color: red"><tr><td style="background-color: red">test</td></tr></table>`, ['table'])
+  const html = await Maizzle.removeInlineBgColor(
+    `<table style="background-color: red"><tr><td style="background-color: red">test</td></tr></table>`,
+    ['table']
+  )
 
   t.is(html, '<table style="" bgcolor="red"><tr><td style="background-color: red">test</td></tr></table>')
 })
@@ -41,7 +53,6 @@ test('inline CSS', async t => {
   `
 
   const result = await Maizzle.inlineCSS(html, {
-    enabled: true,
     customCSS: css,
     removeStyleTags: false,
     styleToAttribute: {
@@ -49,10 +60,7 @@ test('inline CSS', async t => {
     },
     applyWidthAttributes: ['TABLE'],
     applyHeightAttributes: ['TD'],
-    mergeLonghand: {
-      enabled: true,
-      tags: ['div']
-    },
+    mergeLonghand: ['div'],
     excludedProperties: ['cursor'],
     codeBlocks: {
       RB: {
@@ -62,12 +70,26 @@ test('inline CSS', async t => {
     }
   })
 
+  const result2 = await Maizzle.inlineCSS(html, {
+    customCSS: css,
+    mergeLonghand: true
+  })
+
   t.is(result, '<div class="foo bar px-2 py-2" style="color: red; padding: 2px;">test</div>')
+  t.is(result2, '<div class="foo bar px-2 py-2" style="color: red; cursor: pointer; padding: 2px;">test</div>')
+})
+
+test('inline CSS (disabled)', async t => {
+  const html = `<div class="foo">test</div>`
+  const css = `.foo {color: red}`
+
+  const result = await Maizzle.inlineCSS(html, {inlineCSS: false, customCSS: css})
+
+  t.is(result, '<div class="foo">test</div>')
 })
 
 test('remove unused CSS', async t => {
-  const html = `
-  <!DOCTYPE html>
+  const html = `<!DOCTYPE html>
   <html>
     <head>
       <style>
@@ -79,12 +101,9 @@ test('remove unused CSS', async t => {
     <body>
       <div class="foo">test div with some text</div>
     </body>
-  </html>
-  `
+  </html>`
 
-  const result = await Maizzle.removeUnusedCSS(html, {whitelist: ['.bar*']})
-
-  t.is(result, `<!DOCTYPE html>
+  const expected1 = `<!DOCTYPE html>
   <html>
     <head>
       <style>
@@ -95,7 +114,57 @@ test('remove unused CSS', async t => {
     <body>
       <div class="foo">test div with some text</div>
     </body>
-  </html>`)
+  </html>`
+
+  const expected2 = `<!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        .foo {color: red}
+      </style>
+    </head>
+    <body>
+      <div class="foo">test div with some text</div>
+    </body>
+  </html>`
+
+  const withOptions = await Maizzle.removeUnusedCSS(html, {whitelist: ['.bar*']})
+  const enabled = await Maizzle.removeUnusedCSS(html, true)
+
+  t.is(withOptions, expected1)
+  t.is(enabled, expected2)
+})
+
+test('remove unused CSS (disabled)', async t => {
+  const html = `<!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        .foo {color: red}
+      </style>
+    </head>
+    <body>
+      <div class="foo">test div with some text</div>
+    </body>
+  </html>`
+
+  const expected = `<!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        .foo {color: red}
+      </style>
+    </head>
+    <body>
+      <div class="foo">test div with some text</div>
+    </body>
+  </html>`
+
+  const disabled = await Maizzle.removeUnusedCSS(html, {removeUnusedCSS: false})
+  const unset = await Maizzle.removeUnusedCSS(html)
+
+  t.is(disabled, expected)
+  t.is(unset, expected)
 })
 
 test('remove attributes', async t => {
@@ -110,6 +179,12 @@ test('extra attributes', async t => {
   t.is(html, '<div role="article"></div>')
 })
 
+test('extra attributes (disabled)', async t => {
+  const html = await Maizzle.applyExtraAttributes('<img src="example.jpg">', {extraAttributes: false})
+
+  t.is(html, '<img src="example.jpg">')
+})
+
 test('base image URL', async t => {
   const html = await Maizzle.applyBaseImageUrl('<img src="example.jpg">', 'https://example.com/')
 
@@ -119,15 +194,28 @@ test('base image URL', async t => {
 test('prettify', async t => {
   // eslint-disable-next-line
   const html = await Maizzle.prettify('<div><p>test</p></div>', {indent_inner_result: true})
+  const html2 = await Maizzle.prettify('<div><p>test</p></div>', true)
 
   t.is(html, '<div>\n  <p>test</p>\n</div>')
+  t.is(html2, '<div>\n  <p>test</p>\n</div>')
+})
+
+test('prettify (disabled)', async t => {
+  const html = await Maizzle.prettify('<div><p>test</p></div>', {prettify: false})
+
+  t.is(html, '<div><p>test</p></div>')
 })
 
 test('minify', async t => {
   const html = await Maizzle.minify('<div>\n\n<p>\n\ntest</p></div>', {lineLengthLimit: 10})
-  const expected = '<div><p>\ntest</p>\n</div>'
 
-  t.is(html, expected)
+  t.is(html, '<div><p>\ntest</p>\n</div>')
+})
+
+test('minify (disabled)', async t => {
+  const html = await Maizzle.minify('<div>\n\n<p>\n\ntest</p></div>', {minify: false})
+
+  t.is(html, '<div>\n\n<p>\n\ntest</p></div>')
 })
 
 test('removes plaintext tag', t => {
@@ -161,6 +249,12 @@ test('six digit hex', async t => {
   t.is(html, '<td style="color: #ffffcc" bgcolor="#000000"></td>');
 })
 
+test('six digit hex (disabled)', async t => {
+  const html = await Maizzle.ensureSixHEX('<td style="color: #ffc" bgcolor="#000"></td>', {sixHex: false})
+
+  t.is(html, '<td style="color: #ffc" bgcolor="#000"></td>');
+})
+
 test('transform contents', async t => {
   const html = await Maizzle.transformContents('<div uppercase>test</div>', {uppercase: string => string.toUpperCase()})
 
@@ -186,12 +280,6 @@ test('attribute to style', async t => {
     </tr>
   </table>`
 
-  const expectedWithAttrs = `<table width="100%" height="600" align="left" bgcolor="#FFFFFF" background="https://example.com/image.jpg" style="width: 100%">
-    <tr style="">
-      <td align="center" valign="top" style=""></td>
-    </tr>
-  </table>`
-
   const html2 = `<table align="center">
     <tr>
       <td></td>
@@ -204,17 +292,23 @@ test('attribute to style', async t => {
     </tr>
   </table>`
 
-  const result = await Maizzle.attributeToStyle(html, ['width', 'height', 'bgcolor', 'background', 'align', 'valign'])
-  const result2 = await Maizzle.attributeToStyle(html2, ['align'])
-  const withAttrs = await Maizzle.attributeToStyle(html, ['width'])
+  const withArray = await Maizzle.attributeToStyle(html, ['width', 'height', 'bgcolor', 'background', 'align', 'valign'])
+  const withOptionBoolean = await Maizzle.attributeToStyle(html2, {inlineCSS: {attributeToStyle: true}})
+  const withOptionArray = await Maizzle.attributeToStyle(html2, {inlineCSS: {attributeToStyle: ['align']}})
 
-  t.is(result, expected)
-  t.is(result2, expected2)
-  t.is(withAttrs, expectedWithAttrs)
+  t.is(withArray, expected)
+  t.is(withOptionBoolean, expected2)
+  t.is(withOptionArray, expected2)
 })
 
 test('prevent widows', async t => {
   const html = await Maizzle.preventWidows('lorem ipsum dolor')
 
   t.is(html, 'lorem ipsum&nbsp;dolor')
+})
+
+test('markdown (disabled)', async t => {
+  const html = await Maizzle.markdown('> a quote', {markdown: false})
+
+  t.is(html, '> a quote')
 })

@@ -7,7 +7,6 @@ const bs = require('browser-sync').create()
 const Output = require('./generators/output')
 const transformers = require('./transformers')
 const Plaintext = require('./generators/plaintext')
-const Tailwind = require('./generators/tailwindcss')
 
 const self = module.exports = { // eslint-disable-line
   ...transformers,
@@ -18,9 +17,9 @@ const self = module.exports = { // eslint-disable-line
     const spinner = ora('Building emails...').start()
 
     return Output.toDisk(env, spinner, config)
-      .then(({files, parsed}) => {
+      .then(({files, parsed, css}) => {
         spinner.succeed(`Built ${parsed.length} templates in ${Date.now() - start} ms.`)
-        return files
+        return {files, css}
       })
       .catch(error => {
         throw error
@@ -29,7 +28,7 @@ const self = module.exports = { // eslint-disable-line
   serve: async config => {
     await self
       .build('local', config)
-      .then(async () => {
+      .then(async ({css}) => {
         require('./generators/config')
           .getMerged('local')
           .then(async localConfig => {
@@ -38,7 +37,6 @@ const self = module.exports = { // eslint-disable-line
             let templates = get(config, 'build.templates')
             templates = Array.isArray(templates) ? templates : [templates]
 
-            // File watchers
             const templatePaths = [...new Set(templates.map(config => `${get(config, 'source', 'src')}/**`))]
 
             const otherPaths = [
@@ -46,10 +44,6 @@ const self = module.exports = { // eslint-disable-line
               get(config, 'build.tailwind.config', 'tailwind.config.js'),
               [...new Set(get(config, 'build.browsersync.watch', []))]
             ]
-
-            // Compile Tailwind early
-            const cssString = fs.existsSync(get(config, 'build.tailwind.css')) ? fs.readFileSync(get(config, 'build.tailwind.css'), 'utf8') : '@tailwind components; @tailwind utilities;'
-            const css = await Tailwind.compile(cssString, '', {}, config)
 
             // Browsersync
             const baseDir = templates.map(t => t.destination.path)
@@ -69,6 +63,7 @@ const self = module.exports = { // eslint-disable-line
 
             bs.init(bsOptions, () => {})
 
+            // Need to start watching files after initializing Browsersync
             const templatesWatcher = chokidar.watch(templatePaths)
             const globalWatcher = chokidar.watch(otherPaths)
 

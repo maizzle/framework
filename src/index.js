@@ -1,7 +1,6 @@
 const ora = require('ora')
 const path = require('path')
 const fs = require('fs-extra')
-const chokidar = require('chokidar')
 const {get, merge} = require('lodash')
 const bs = require('browser-sync').create()
 const Output = require('./generators/output')
@@ -38,36 +37,14 @@ const self = module.exports = { // eslint-disable-line
             templates = Array.isArray(templates) ? templates : [templates]
 
             const templatePaths = [...new Set(templates.map(config => `${get(config, 'source', 'src')}/**`))]
-
-            const otherPaths = [
+            const globalPaths = [
               `src/!(${templatePaths.join('|').replace(/src\//g, '').replace(/\/\*/g, '')})/**`,
               get(config, 'build.tailwind.config', 'tailwind.config.js'),
               [...new Set(get(config, 'build.browsersync.watch', []))]
             ]
 
-            // Browsersync
-            const baseDir = templates.map(t => t.destination.path)
-
-            const bsOptions = {
-              notify: false,
-              open: false,
-              port: 3000,
-              server: {
-                baseDir,
-                directory: true
-              },
-              tunnel: false,
-              ui: {port: 3001},
-              ...get(config, 'build.browsersync', {})
-            }
-
-            bs.init(bsOptions, () => {})
-
-            // Need to start watching files after initializing Browsersync
-            const templatesWatcher = chokidar.watch(templatePaths)
-            const globalWatcher = chokidar.watch(otherPaths)
-
-            templatesWatcher
+            // Watch for Template file changes
+            bs.watch(templatePaths)
               .on('change', async file => {
                 file = file.replace(/\\/g, '/')
                 const fileSource = get(templates.filter(v => path.dirname(file).replace(/\\/g, '/').includes(v.source))[0], 'source')
@@ -97,10 +74,30 @@ const self = module.exports = { // eslint-disable-line
                   })
               })
 
-            globalWatcher
+            // Watch for changes in all other files
+            bs.watch(globalPaths)
               .on('change', async () => {
                 await self.build('local', config).then(() => bs.reload())
               })
+
+            // Browsersync options
+            const baseDir = templates.map(t => t.destination.path)
+
+            const bsOptions = {
+              notify: false,
+              open: false,
+              port: 3000,
+              server: {
+                baseDir,
+                directory: true
+              },
+              tunnel: false,
+              ui: {port: 3001},
+              ...get(config, 'build.browsersync', {})
+            }
+
+            // Initialize Browsersync
+            bs.init(bsOptions, () => {})
           })
       })
       .catch(error => {

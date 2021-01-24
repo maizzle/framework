@@ -39,7 +39,7 @@
     "front-matter": "^4.0.0",
     "fs-extra": "^9.0.0",
     "glob-promise": "^3.4.0",
-    "html-crush": "^3.0.2",
+    "html-crush": "^4.0.0",
     "juice": "^7.0.0",
     "lodash": "^4.17.20",
     "ora": "^5.1.0",

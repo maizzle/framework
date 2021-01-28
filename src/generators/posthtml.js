@@ -39,6 +39,7 @@ module.exports = async (html, config) => {
       plugins: [
         fetchPlugin
       ],
+      locals,
       ...modulesOptions
     }),
     ...posthtmlPlugins,

@@ -1,11 +1,11 @@
 const path = require('path')
 const {get} = require('lodash')
-const stripHTML = require('string-strip-html')
+const {stripHtml} = require('string-strip-html')
 
 module.exports.generate = async (html, destination, config) => {
   const options = get(config, 'plaintext', {})
   const extension = get(options, 'destination.extension', 'txt')
-  const plaintext = stripHTML(html, {
+  const plaintext = stripHtml(html, {
     dumpLinkHrefsNearby: {
       enabled: true
     },

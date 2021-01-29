@@ -22,11 +22,11 @@ module.exports = async (html, config) => {
 
   const expressionsOptions = merge({strictMode: false}, get(config, 'build.posthtml.expressions', {}))
 
-  const locals = {
-    ...get(expressionsOptions, 'locals', {}),
-    ...get(config, 'locals', {}),
-    page: config
-  }
+  const locals = merge(
+    get(expressionsOptions, 'locals', {}),
+    get(config, 'locals', {}),
+    {page: config}
+  )
 
   return posthtml([
     layouts({strict: false, ...layoutsOptions}),

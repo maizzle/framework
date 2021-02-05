@@ -61,6 +61,7 @@ module.exports = {
         animation: false,
         backgroundOpacity: false,
         borderOpacity: false,
+        boxShadow: false,
         divideOpacity: false,
         placeholderOpacity: false,
         ringColor: false,
@@ -68,7 +69,10 @@ module.exports = {
         ringOpacity: false,
         ringOffsetColor: false,
         textOpacity: false
-      }
+      },
+      plugins: [
+        require('tailwindcss-box-shadow')
+      ]
     }
 
     const tailwindPlugin = isEmpty(tailwindConfigObject) ? tailwindcss(coreConfig) : tailwindcss(merge(coreConfig, tailwindConfigObject))

@@ -38,7 +38,7 @@
     "email-comb": "^5.0.0",
     "front-matter": "^4.0.0",
     "fs-extra": "^9.0.0",
-    "glob-promise": "^3.4.0",
+    "glob-promise": "^4.1.0",
     "html-crush": "^4.0.0",
     "juice": "^7.0.0",
     "lodash": "^4.17.20",

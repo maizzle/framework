@@ -32,6 +32,7 @@ module.exports = async (html, config) => {
     layouts({strict: false, ...layoutsOptions}),
     fetchPlugin,
     modules({
+      parser: posthtmlOptions,
       from: modulesFrom,
       root: modulesRoot,
       tag: 'component',

@@ -65,7 +65,7 @@
     "prevent-widows": "^1.0.2",
     "query-string": "^6.13.7",
     "string-strip-html": "^8.2.0",
-    "tailwindcss": "^2.0.1",
+    "tailwindcss": "^2.0.3",
     "tailwindcss-box-shadow": "^1.0.0"
   },
   "devDependencies": {

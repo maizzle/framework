@@ -30,9 +30,6 @@ module.exports = async (env, spinner, config) => {
   const css = (typeof get(config, 'tailwind.compiled') === 'string') ? config.tailwind.compiled : await Tailwind.compile('', '', {}, config)
 
   await asyncForEach(templatesConfig, async templateConfig => {
-    // Store template config currently being processed
-    config.build.currentTemplates = templateConfig
-
     const outputDir = get(templateConfig, 'destination.path', `build_${env}`)
 
     await fs.remove(outputDir)
@@ -47,6 +44,9 @@ module.exports = async (env, spinner, config) => {
           spinner.warn(`Error: no files with the .${filetypes} extension found in ${templateConfig.source}`)
           return
         }
+
+        // Store template config currently being processed
+        config.build.currentTemplates = templateConfig
 
         if (config.events && typeof config.events.beforeCreate === 'function') {
           await config.events.beforeCreate(config)

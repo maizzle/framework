@@ -3,6 +3,7 @@ const path = require('path')
 const fs = require('fs-extra')
 const {get, merge} = require('lodash')
 const bs = require('browser-sync').create()
+const Config = require('./generators/config')
 const Output = require('./generators/output')
 const transformers = require('./transformers')
 const Plaintext = require('./generators/plaintext')
@@ -25,12 +26,12 @@ const self = module.exports = { // eslint-disable-line
         throw error
       })
   },
-  serve: async config => {
+  serve: async (env = 'local', config = {}) => {
     await self
-      .build('local', config)
+      .build(env, config)
       .then(async () => {
-        require('./generators/config')
-          .getMerged('local')
+        Config
+          .getMerged(env)
           .then(async localConfig => {
             config = merge(config, localConfig)
 
@@ -82,7 +83,7 @@ const self = module.exports = { // eslint-disable-line
             // Watch for changes in all other files
             bs.watch(globalPaths)
               .on('change', async () => {
-                await self.build('local', config).then(() => bs.reload())
+                await self.build(env).then(() => bs.reload())
               })
 
             // Browsersync options

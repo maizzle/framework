@@ -370,7 +370,7 @@ test('warns if a template cannot be rendered and `fail` option is `silent`', asy
 })
 
 test('spins up local development server', async t => {
-  await Maizzle.serve({
+  await Maizzle.serve('local', {
     build: {
       browsersync: {
         ui: false
@@ -388,7 +388,7 @@ test('spins up local development server', async t => {
 })
 
 test('local server does not compile unwanted file types', async t => {
-  await Maizzle.serve({
+  await Maizzle.serve('local', {
     build: {
       browsersync: {
         ui: false
@@ -413,6 +413,6 @@ test('local server does not compile unwanted file types', async t => {
 
 test('throws if it cannot spin up local development server', async t => {
   await t.throwsAsync(async () => {
-    await Maizzle.serve({})
+    await Maizzle.serve('local', {})
   }, {instanceOf: TypeError, message: `Cannot read property 'source' of undefined`})
 })

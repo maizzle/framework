@@ -12,7 +12,7 @@ const Plaintext = require('../plaintext')
 const render = require('./to-string')
 
 module.exports = async (env, spinner, config) => {
-  process.env.NODE_ENV = get(config, 'maizzle.env', 'local')
+  process.env.NODE_ENV = env || 'local'
 
   if (isEmpty(config)) {
     config = await Config.getMerged(env).catch(error => {

@@ -10,10 +10,12 @@ const {get, isObject, isEmpty, merge} = require('lodash')
 
 module.exports = {
   compile: async (css = '', html = '', tailwindConfig = {}, maizzleConfig = {}) => {
-    process.env.NODE_ENV = maizzleConfig.env || 'local'
-
     tailwindConfig = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : get(maizzleConfig, 'build.tailwind.config', 'tailwind.config.js')
     const tailwindConfigObject = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : requireUncached(path.resolve(process.cwd(), tailwindConfig))
+
+    if (get(tailwindConfigObject, 'mode') === 'jit') {
+      process.env.TAILWIND_MODE = 'watch'
+    }
 
     const coreConfig = {
       important: true,
@@ -48,7 +50,7 @@ module.exports = {
     css = await fs.pathExists(userFilePath).then(async exists => {
       if (exists) {
         const userFileCSS = await fs.readFile(path.resolve(userFilePath), 'utf8')
-        return css + userFileCSS
+        return userFileCSS
       }
 
       return css

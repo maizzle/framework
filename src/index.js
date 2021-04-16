@@ -72,27 +72,37 @@ const self = module.exports = { // eslint-disable-line
                   await config.events.beforeCreate(config)
                 }
 
-                await self.render(await fs.readFile(file, 'utf8'), {
+                let mode = 'aot'
+
+                try {
+                  const tailwindConfig = require(path.resolve(process.cwd(), get(config, 'build.currentTemplates.tailwind.config', 'tailwind.config.js')))
+                  mode = get(tailwindConfig, 'mode')
+                } catch {}
+
+                const renderOptions = {
                   maizzle: config,
-                  tailwind: {
-                    compiled: css
-                  },
                   ...config.events
-                })
-                  .then(async ({html}) => {
-                    await fs.outputFile(finalDestination, html)
-                      .then(() => {
-                        bs.reload()
-                        spinner.succeed(`Done in ${Date.now() - start} ms.`)
-                      })
+                }
+
+                // Use pre-compiled CSS only when not using JIT
+                if (mode !== 'jit') {
+                  renderOptions.tailwind = {
+                    compiled: css
+                  }
+                }
+
+                self
+                  .render(await fs.readFile(file, 'utf8'), renderOptions)
+                  .then(({html}) => fs.outputFile(finalDestination, html))
+                  .then(() => {
+                    bs.reload()
+                    spinner.succeed(`Done in ${Date.now() - start} ms.`)
                   })
               })
 
             // Watch for changes in all other files
             bs.watch(globalPaths)
-              .on('change', async () => {
-                await self.build(env).then(() => bs.reload())
-              })
+              .on('change', () => self.build(env).then(() => bs.reload()))
 
             // Browsersync options
             const baseDir = templates.map(t => t.destination.path)

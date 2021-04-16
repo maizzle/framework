@@ -87,7 +87,7 @@ module.exports = {
         return css + userFileCSS
       }
 
-      return `@tailwind components;\n ${css}\n @tailwind utilities;`
+      return css
     })
 
     return postcss([

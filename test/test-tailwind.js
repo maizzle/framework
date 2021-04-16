@@ -10,7 +10,7 @@ test('uses Tailwind defaults if no config specified', async t => {
     }
   }
 
-  const css = await Tailwind.compile('', '', {}, config)
+  const css = await Tailwind.compile('@tailwind utilities', '', {}, config)
   const expected = await fs.readFile('./test/expected/tailwind/default.css', 'utf8')
 
   t.not(css, undefined)
@@ -54,8 +54,8 @@ test('uses purgeCSS options provided in the config', async t => {
     }
   }
 
-  const css1 = await Tailwind.compile('', '', {}, arrayConfig)
-  const css2 = await Tailwind.compile('', '', {}, objectConfig)
+  const css1 = await Tailwind.compile('@tailwind utilities', '', {}, arrayConfig)
+  const css2 = await Tailwind.compile('@tailwind utilities', '', {}, objectConfig)
 
   t.is(css1.trim(), '.z-0 {\n  z-index: 0 !important\n}\n\n.z-10 {\n  z-index: 10 !important\n}')
   t.is(css2.trim(), '.z-0 {\n  z-index: 0 !important\n}\n\n.z-10 {\n  z-index: 10 !important\n}')

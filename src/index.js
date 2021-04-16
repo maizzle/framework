@@ -52,13 +52,21 @@ const self = module.exports = { // eslint-disable-line
             // Watch for Template file changes
             bs.watch(templatePaths)
               .on('change', async file => {
-                file = file.replace(/\\/g, '/')
-                const fileSource = get(templates.filter(v => path.dirname(file).replace(/\\/g, '/').includes(v.source))[0], 'source')
-
                 const start = new Date()
                 const spinner = ora('Building email...').start()
 
-                const destination = get(templates.filter(t => path.dirname(file).replace(/\\/g, '/').includes(t.source))[0], 'destination.path')
+                file = file.replace(/\\/g, '/')
+
+                const fileSource = get(config, 'build.currentTemplates.source')
+                const destination = get(config, 'build.currentTemplates.destination.path')
+                const extension = get(config, 'build.currentTemplates.destination.extension')
+
+                let finalDestination = path.join(destination, file.replace(fileSource, ''))
+
+                if (extension !== 'html') {
+                  const parts = path.parse(file)
+                  finalDestination = path.join(destination, `${parts.name}.${extension}`)
+                }
 
                 if (config.events && typeof config.events.beforeCreate === 'function') {
                   await config.events.beforeCreate(config)
@@ -72,7 +80,7 @@ const self = module.exports = { // eslint-disable-line
                   ...config.events
                 })
                   .then(async ({html}) => {
-                    await fs.outputFile(path.join(destination, file.replace(fileSource, '')), html)
+                    await fs.outputFile(finalDestination, html)
                       .then(() => {
                         bs.reload()
                         spinner.succeed(`Done in ${Date.now() - start} ms.`)

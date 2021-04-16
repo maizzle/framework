@@ -1,25 +1,16 @@
 const test = require('ava')
-const fs = require('fs-extra')
 const Tailwind = require('../src/generators/tailwindcss')
 
 test('uses Tailwind defaults if no config specified', async t => {
-  const config = {
-    env: 'node',
-    purgeCSS: {
-      content: [{raw: '<div class="xl:z-0"></div>'}]
-    }
-  }
-
-  const css = await Tailwind.compile('', '', {}, config)
-  const expected = await fs.readFile('./test/expected/tailwind/default.css', 'utf8')
+  const css = await Tailwind.compile('@tailwind utilities', '<p class="xl:z-0"></p>', {}, {env: 'production'})
 
   t.not(css, undefined)
-  t.is(css.trim(), expected.trim())
+  t.true(css.includes('.xl\\:z-0'))
 })
 
 test('uses CSS file provided in environment config', async t => {
   const config = {
-    env: 'node',
+    env: 'production',
     build: {
       tailwind: {
         css: './test/stubs/main.css'
@@ -30,15 +21,13 @@ test('uses CSS file provided in environment config', async t => {
   const css = await Tailwind.compile('', '<div class="text-center foo">test</div>', {}, config)
 
   t.not(css, undefined)
-  t.is(css.trim(), '.text-center {\n  text-align: center !important;\n}\n\n.foo {\n  color: red;\n}')
+  t.true(css.includes('.text-center'))
+  t.true(css.includes('.foo'))
 })
 
-test('uses purgeCSS options provided in the config', async t => {
-  const html = '<div class="z-0 text-center"></div>'
-
+test('uses purgeCSS options provided in the maizzle config', async t => {
   const arrayConfig = {
     purgeCSS: {
-      content: [{raw: html}],
       safelist: ['z-10'],
       blocklist: ['text-center']
     }
@@ -46,7 +35,6 @@ test('uses purgeCSS options provided in the config', async t => {
 
   const objectConfig = {
     purgeCSS: {
-      content: [{raw: html}],
       safelist: {
         standard: ['z-10']
       },
@@ -54,16 +42,21 @@ test('uses purgeCSS options provided in the config', async t => {
     }
   }
 
-  const css1 = await Tailwind.compile('', '', {}, arrayConfig)
-  const css2 = await Tailwind.compile('', '', {}, objectConfig)
+  const css1 = await Tailwind.compile('@tailwind utilities', '<div class="z-0 text-center"></div>', {}, arrayConfig)
+  const css2 = await Tailwind.compile('@tailwind utilities', '<div class="z-0 text-center"></div>', {}, objectConfig)
 
-  t.is(css1.trim(), '.z-0 {\n  z-index: 0 !important\n}\n\n.z-10 {\n  z-index: 10 !important\n}')
-  t.is(css2.trim(), '.z-0 {\n  z-index: 0 !important\n}\n\n.z-10 {\n  z-index: 10 !important\n}')
+  t.true(css1.includes('.z-0'))
+  t.true(css1.includes('.z-10'))
+  t.false(css1.includes('.text-center'))
+
+  t.true(css2.includes('.z-0'))
+  t.true(css2.includes('.z-10'))
+  t.false(css2.includes('.text-center'))
 })
 
-test('uses postcss plugins from the config when compiling from string', async t => {
+test('uses postcss plugins from the maizzle config when compiling from string', async t => {
   const maizzleConfig = {
-    env: 'node',
+    env: 'production',
     build: {
       postcss: {
         plugins: [

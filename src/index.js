@@ -59,7 +59,7 @@ const self = module.exports = { // eslint-disable-line
 
                 const fileSource = get(config, 'build.currentTemplates.source')
                 const destination = get(config, 'build.currentTemplates.destination.path')
-                const extension = get(config, 'build.currentTemplates.destination.extension')
+                const extension = get(config, 'build.currentTemplates.destination.extension', 'html')
 
                 let finalDestination = path.join(destination, file.replace(fileSource, ''))
 

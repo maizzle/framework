@@ -29,6 +29,17 @@ module.exports = async (html, config) => {
   )
 
   return posthtml([
+    layouts(
+      merge(
+        {
+          strict: false,
+          plugins: [
+            expressions({...expressionsOptions, locals})
+          ]
+        },
+        layoutsOptions
+      )
+    ),
     fetchPlugin,
     modules({
       parser: posthtmlOptions,
@@ -42,18 +53,7 @@ module.exports = async (html, config) => {
       locals,
       ...modulesOptions
     }),
-    ...posthtmlPlugins,
-    layouts(
-      merge(
-        {
-          strict: false,
-          plugins: [
-            expressions({...expressionsOptions, locals})
-          ]
-        },
-        layoutsOptions
-      )
-    )
+    ...posthtmlPlugins
   ])
     .process(html, {...posthtmlOptions})
     .then(result => fm(result.html).body)

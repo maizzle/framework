@@ -42,7 +42,7 @@
     "juice": "^7.0.0",
     "lodash": "^4.17.20",
     "ora": "^5.1.0",
-    "postcss": "^8.1.2",
+    "postcss": "^8.2.14",
     "postcss-import": "^14.0.0",
     "postcss-merge-longhand": "^5.0.1",
     "postcss-nested": "^5.0.1",

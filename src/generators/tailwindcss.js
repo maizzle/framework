@@ -13,10 +13,6 @@ module.exports = {
     tailwindConfig = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : get(maizzleConfig, 'build.tailwind.config', 'tailwind.config.js')
     const tailwindConfigObject = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : requireUncached(path.resolve(process.cwd(), tailwindConfig))
 
-    if (get(tailwindConfigObject, 'mode') === 'jit' && get(maizzleConfig, 'build.command') === 'serve') {
-      process.env.TAILWIND_MODE = 'watch'
-    }
-
     const coreConfig = {
       important: true,
       purge: {

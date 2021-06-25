@@ -103,6 +103,9 @@ const self = module.exports = { // eslint-disable-line
                 bs.reload()
                 spinner.succeed(`Done in ${Date.now() - start} ms.`)
               })
+              .catch(() => {
+                spinner.warn('Received empty HTML, please save your file again')
+              })
           })
 
         // Watch for changes in all other files

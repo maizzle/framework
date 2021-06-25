@@ -54,11 +54,14 @@ const self = module.exports = { // eslint-disable-line
         const cssString = fs.existsSync(get(config, 'build.tailwind.css')) ? fs.readFileSync(get(config, 'build.tailwind.css'), 'utf8') : '@tailwind components; @tailwind utilities;'
         const css = await Tailwind.compile(cssString, '', {}, config)
 
+        const spinner = ora()
+
         // Watch for Template file changes
         bs.watch(templatePaths)
           .on('change', async file => {
             const start = new Date()
-            const spinner = ora('Building email...').start()
+
+            spinner.start('Building email...')
 
             file = file.replace(/\\/g, '/')
 
@@ -125,6 +128,7 @@ const self = module.exports = { // eslint-disable-line
           },
           tunnel: false,
           ui: {port: 3001},
+          logFileChanges: false,
           ...get(config, 'build.browsersync', {})
         }
 

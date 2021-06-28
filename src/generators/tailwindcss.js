@@ -2,8 +2,8 @@ const path = require('path')
 const fs = require('fs-extra')
 const postcss = require('postcss')
 const tailwindcss = require('tailwindcss')
-const atImport = require('postcss-import')
-const postcssNested = require('postcss-nested')
+const postcssImport = require('postcss-import')
+const postcssNested = require('tailwindcss/nesting')
 const {requireUncached} = require('../utils/helpers')
 const mergeLonghand = require('postcss-merge-longhand')
 const {get, isObject, isEmpty, merge} = require('lodash')
@@ -53,7 +53,7 @@ module.exports = {
     })
 
     return postcss([
-      atImport({path: userFilePath ? path.dirname(userFilePath) : []}),
+      postcssImport({path: userFilePath ? path.dirname(userFilePath) : []}),
       postcssNested(),
       tailwindcss(merge(coreConfig, tailwindConfigObject)),
       maizzleConfig.env === 'local' ? () => {} : mergeLonghand(),

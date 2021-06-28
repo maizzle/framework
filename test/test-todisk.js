@@ -89,7 +89,7 @@ test('outputs files at the correct location if multiple template sources are use
   t.is(files.length, 4)
 })
 
-test('processes all files in the `filetypes` option', async t => {
+test('copies all files in the `filetypes` option to destination', async t => {
   const {files} = await Maizzle.build('production', {
     build: {
       fail: 'silent',
@@ -109,7 +109,7 @@ test('processes all files in the `filetypes` option', async t => {
   })
 
   t.true(fs.pathExistsSync(t.context.folder))
-  t.is(files.length, 3)
+  t.is(files.length, 4)
 })
 
 test('outputs files with the correct extension', async t => {

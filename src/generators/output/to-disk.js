@@ -69,6 +69,12 @@ module.exports = async (env, spinner, config) => {
               const destination = config.permalink || file
               const plaintextConfig = get(config, 'plaintext')
 
+              /**
+               * Generate plaintext
+               *
+               * We do this first so that we can remove the <plaintext>
+               * tags from the markup before outputting the file.
+               */
               if ((typeof plaintextConfig === 'boolean' && plaintextConfig) || !isEmpty(plaintextConfig)) {
                 await Plaintext
                   .generate(html, destination, config)
@@ -77,14 +83,15 @@ module.exports = async (env, spinner, config) => {
 
               html = removePlaintextTags(html, config)
 
+              /**
+               * Output file
+               */
+              const parts = path.parse(destination)
+              const extension = get(templateConfig, 'destination.extension', 'html')
+
               await fs.outputFile(destination, html)
                 .then(async () => {
-                  const extension = get(templateConfig, 'destination.extension', 'html')
-
-                  if (extension !== 'html') {
-                    const parts = path.parse(destination)
-                    await fs.move(destination, `${parts.dir}/${parts.name}.${extension}`)
-                  }
+                  await fs.rename(destination, `${parts.dir}/${parts.name}.${extension}`)
 
                   files.push(file)
                   parsed.push(file)

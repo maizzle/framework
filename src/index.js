@@ -50,7 +50,7 @@ const self = module.exports = { // eslint-disable-line
           [...new Set(get(config, 'build.browsersync.watch', []))]
         ]
 
-        // Compile Tailwind so that updates to tailwind.config.js are reflected
+        // Pre-compile Tailwind so that updates to tailwind.config.js are reflected
         const cssString = fs.existsSync(get(config, 'build.tailwind.css')) ? fs.readFileSync(get(config, 'build.tailwind.css'), 'utf8') : '@tailwind components; @tailwind utilities;'
         const css = await Tailwind.compile(cssString, '', {}, config)
 
@@ -65,21 +65,21 @@ const self = module.exports = { // eslint-disable-line
 
             file = file.replace(/\\/g, '/')
 
-            const fileSource = get(config, 'build.currentTemplates.source')
+            const parts = path.parse(file)
             const destination = get(config, 'build.currentTemplates.destination.path')
             const extension = get(config, 'build.currentTemplates.destination.extension', 'html')
-
-            let finalDestination = path.join(destination, file.replace(fileSource, ''))
-
-            if (extension !== 'html') {
-              const parts = path.parse(file)
-              finalDestination = path.join(destination, `${parts.name}.${extension}`)
-            }
+            const finalDestination = path.join(destination, `${parts.name}.${extension}`)
 
             if (config.events && typeof config.events.beforeCreate === 'function') {
               await config.events.beforeCreate(config)
             }
 
+            /**
+             * Tailwind compiler
+             *
+             * Use the JIT engine if user enabled it
+             * Fall back to the classic, Always-On-Time engine
+             */
             let mode = 'aot'
 
             try {
@@ -92,7 +92,7 @@ const self = module.exports = { // eslint-disable-line
               ...config.events
             }
 
-            // Use pre-compiled CSS only when not using JIT
+            // AOT: fall back to pre-compiled CSS
             if (mode !== 'jit') {
               renderOptions.tailwind = {
                 compiled: css

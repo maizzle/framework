@@ -46,7 +46,7 @@
     "postcss-import": "^14.0.0",
     "postcss-merge-longhand": "^5.0.1",
     "postcss-nested": "^5.0.1",
-    "posthtml": "^0.15.0",
+    "posthtml": "^0.16.4",
     "posthtml-attrs-parser": "^0.1.1",
     "posthtml-content": "^0.0.3",
     "posthtml-expressions": "^1.6.2",

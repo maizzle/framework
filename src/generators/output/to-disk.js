@@ -27,7 +27,9 @@ module.exports = async (env, spinner, config) => {
   const parsed = []
   let files = []
 
-  const css = (typeof get(config, 'tailwind.compiled') === 'string') ? config.tailwind.compiled : await Tailwind.compile('', '', {}, config)
+  const css = (typeof get(config, 'tailwind.compiled') === 'string')
+    ? config.tailwind.compiled
+    : await Tailwind.compile('@tailwind components; @tailwind utilities;', '', {}, config)
 
   await asyncForEach(templatesConfig, async templateConfig => {
     const outputDir = get(templateConfig, 'destination.path', `build_${env}`)

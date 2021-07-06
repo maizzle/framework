@@ -11,9 +11,10 @@ const {get, isObject, isEmpty, merge} = require('lodash')
 module.exports = {
   compile: async (css = '', html = '', tailwindConfig = {}, maizzleConfig = {}) => {
     tailwindConfig = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : get(maizzleConfig, 'build.tailwind.config', 'tailwind.config.js')
-    const tailwindConfigObject = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : requireUncached(path.resolve(process.cwd(), tailwindConfig))
+    const userConfig = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : requireUncached(path.resolve(process.cwd(), tailwindConfig))
 
-    const coreConfig = {
+    // Merge user's Tailwind config on top of a 'base' config
+    const config = merge({
       important: true,
       purge: {
         enabled: maizzleConfig.env !== 'local',
@@ -36,10 +37,11 @@ module.exports = {
         ringOffsetColor: false,
         textOpacity: false
       },
-      plugins: [
-        require('tailwindcss-box-shadow')
-      ]
-    }
+      plugins: []
+    }, userConfig)
+
+    // Merge user's Tailwind plugins with our default ones
+    config.plugins.push(require('tailwindcss-box-shadow'))
 
     const userFilePath = get(maizzleConfig, 'build.tailwind.css')
 
@@ -55,7 +57,7 @@ module.exports = {
     return postcss([
       postcssImport({path: userFilePath ? path.dirname(userFilePath) : []}),
       postcssNested(),
-      tailwindcss(merge(coreConfig, tailwindConfigObject)),
+      tailwindcss(config),
       maizzleConfig.env === 'local' ? () => {} : mergeLonghand(),
       ...get(maizzleConfig, 'build.postcss.plugins', [])
     ])

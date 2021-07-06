@@ -43,7 +43,7 @@ module.exports = {
     // Merge user's Tailwind plugins with our default ones
     config.plugins.push(require('tailwindcss-box-shadow'))
 
-    const userFilePath = get(maizzleConfig, 'build.tailwind.css')
+    const userFilePath = get(maizzleConfig, 'build.tailwind.css', path.join(process.cwd(), 'src/css/tailwind.css'))
 
     css = await fs.pathExists(userFilePath).then(async exists => {
       if (exists) {

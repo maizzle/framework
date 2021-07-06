@@ -37,11 +37,14 @@ module.exports = async (env, spinner, config) => {
     await fs
       .copy(templateConfig.source, outputDir)
       .then(async () => {
-        const filetypes = Array.isArray(templateConfig.filetypes) ? templateConfig.filetypes.join('|') : templateConfig.filetypes || 'html'
-        const templates = await glob(`${outputDir}/**/*.+(${filetypes})`)
+        const extensions = Array.isArray(templateConfig.filetypes)
+          ? templateConfig.filetypes.join('|')
+          : templateConfig.filetypes || get(templateConfig, 'filetypes', 'html')
+
+        const templates = await glob(`${outputDir}/**/*.+(${extensions})`)
 
         if (templates.length === 0) {
-          spinner.warn(`Error: no files with the .${filetypes} extension found in ${templateConfig.source}`)
+          spinner.warn(`Error: no files with the .${extensions} extension found in ${templateConfig.source}`)
           return
         }
 
@@ -88,11 +91,22 @@ module.exports = async (env, spinner, config) => {
                */
               const parts = path.parse(destination)
               const extension = get(templateConfig, 'destination.extension', 'html')
+              const finalDestination = `${parts.dir}/${parts.name}.${extension}`
 
-              await fs.outputFile(destination, html)
+              await fs.outputFile(finalDestination, html)
                 .then(async () => {
-                  await fs.rename(destination, `${parts.dir}/${parts.name}.${extension}`)
+                  /**
+                   * Remove original file if its path is different
+                   * from the final destination path.
+                   *
+                   * This ensures non-HTML files do not pollute
+                   * the build destination folder.
+                   */
+                  if (finalDestination !== file) {
+                    await fs.remove(file)
+                  }
 
+                  // Keep track of handled files
                   files.push(file)
                   parsed.push(file)
                 })

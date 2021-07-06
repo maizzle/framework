@@ -65,20 +65,21 @@ const self = module.exports = { // eslint-disable-line
 
             file = file.replace(/\\/g, '/')
 
-            const parts = path.parse(file)
-            const destination = get(config, 'build.currentTemplates.destination.path')
+            const destination = get(config, 'build.currentTemplates.destination.path', 'build_local')
             const extension = get(config, 'build.currentTemplates.destination.extension', 'html')
-            const finalDestination = path.join(destination, `${parts.name}.${extension}`)
+            const fileSource = get(config, 'build.currentTemplates.source')
+            const parts = path.parse(path.join(destination, file.replace(fileSource, '')))
+            const finalDestination = path.join(parts.dir, `${parts.name}.${extension}`)
 
             if (config.events && typeof config.events.beforeCreate === 'function') {
               await config.events.beforeCreate(config)
             }
 
             /**
-             * Tailwind compiler
+             * Tailwind CSS compiler
              *
-             * Use the JIT engine if user enabled it
-             * Fall back to the classic, Always-On-Time engine
+             * Use the Just-In-Time engine if the user enabled it
+             * Fall back to the classic Always-On-Time engine
              */
             let mode = 'aot'
 
@@ -101,7 +102,7 @@ const self = module.exports = { // eslint-disable-line
 
             self
               .render(await fs.readFile(file, 'utf8'), renderOptions)
-              .then(({html}) => fs.outputFile(finalDestination, html))
+              .then(({html, config}) => fs.outputFile(config.permalink || finalDestination, html))
               .then(() => {
                 bs.reload()
                 spinner.succeed(`Done in ${Date.now() - start} ms.`)

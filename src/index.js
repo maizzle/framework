@@ -6,6 +6,7 @@ const bs = require('browser-sync').create()
 const Config = require('./generators/config')
 const Output = require('./generators/output')
 const transformers = require('./transformers')
+const {clearConsole} = require('./utils/helpers')
 const Plaintext = require('./generators/plaintext')
 const Tailwind = require('./generators/tailwindcss')
 
@@ -19,7 +20,15 @@ const self = module.exports = { // eslint-disable-line
 
     return Output.toDisk(env, spinner, config)
       .then(({files, parsed}) => {
-        spinner.succeed(`Built ${parsed.length} templates in ${Date.now() - start} ms.`)
+        const elapsedSeconds = (Date.now() - start) / 1000
+
+        if (get(config, 'build.command') === 'serve') {
+          clearConsole()
+          spinner.succeed(`Re-built ${parsed.length} templates in ${elapsedSeconds}s`)
+        } else {
+          spinner.succeed(`Built ${parsed.length} templates in ${elapsedSeconds}s`)
+        }
+
         return {files}
       })
       .catch(error => {
@@ -59,6 +68,8 @@ const self = module.exports = { // eslint-disable-line
         // Watch for Template file changes
         bs.watch(templatePaths)
           .on('change', async file => {
+            clearConsole()
+
             const start = new Date()
 
             spinner.start('Building email...')
@@ -105,11 +116,9 @@ const self = module.exports = { // eslint-disable-line
               .then(({html, config}) => fs.outputFile(config.permalink || finalDestination, html))
               .then(() => {
                 bs.reload()
-                spinner.succeed(`Done in ${Date.now() - start} ms.`)
+                spinner.succeed(`Compiled in ${(Date.now() - start) / 1000}s [${file}]`)
               })
-              .catch(() => {
-                spinner.warn('Received empty HTML, please save your file again')
-              })
+              .catch(() => spinner.warn(`Received empty HTML, please save your file again [${file}]`))
           })
 
         // Watch for changes in all other files

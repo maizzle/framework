@@ -1,3 +1,5 @@
+const readline = require('readline')
+
 module.exports = {
   asyncForEach: async (array, callback) => {
     for (let index = 0; index < array.length; index++) {
@@ -11,5 +13,11 @@ module.exports = {
     } catch {
       throw new Error(`could not load ${module}`)
     }
+  },
+  clearConsole: () => {
+    const blank = '\n'.repeat(process.stdout.rows)
+    console.log(blank)
+    readline.cursorTo(process.stdout, 0, 0)
+    readline.clearScreenDown(process.stdout)
   }
 }

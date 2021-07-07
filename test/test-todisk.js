@@ -17,7 +17,7 @@ test.afterEach.always(async t => {
 test('throws if config cannot be computed', async t => {
   await t.throwsAsync(async () => {
     await Maizzle.build('production')
-  }, {instanceOf: Error, message: `could not load 'config.production.js'`})
+  }, {instanceOf: Error, message: `could not load config.production.js`})
 })
 
 test('skips if no templates found', async t => {

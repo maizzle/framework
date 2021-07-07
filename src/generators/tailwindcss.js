@@ -11,7 +11,24 @@ const {get, isObject, isEmpty, merge} = require('lodash')
 module.exports = {
   compile: async (css = '', html = '', tailwindConfig = {}, maizzleConfig = {}) => {
     tailwindConfig = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : get(maizzleConfig, 'build.tailwind.config', 'tailwind.config.js')
-    const userConfig = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : requireUncached(path.resolve(process.cwd(), tailwindConfig))
+
+    // Compute the Tailwind config to use
+    const userConfig = () => {
+      // If a custom config object was passed, use that
+      if (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) {
+        return tailwindConfig
+      }
+
+      /**
+       * Try loading a fresh tailwind.config.js, with fallback to an empty object.
+       * This will use the default Tailwind config (with rem units etc)
+       */
+      try {
+        return requireUncached(path.resolve(process.cwd(), tailwindConfig))
+      } catch {
+        return {}
+      }
+    }
 
     // Merge user's Tailwind config on top of a 'base' config
     const config = merge({
@@ -38,7 +55,7 @@ module.exports = {
         textOpacity: false
       },
       plugins: []
-    }, userConfig)
+    }, userConfig())
 
     // Merge user's Tailwind plugins with our default ones
     config.plugins.push(require('tailwindcss-box-shadow'))

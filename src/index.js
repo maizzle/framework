@@ -117,6 +117,16 @@ const self = module.exports = { // eslint-disable-line
           .on('change', () => self.build(env, config).then(() => bs.reload()))
           .on('unlink', () => self.build(env, config).then(() => bs.reload()))
 
+        // Watch for changes in config files
+        bs.watch('config*.js')
+          .on('change', async file => {
+            const parsedEnv = path.parse(file).name.split('.')[1] || 'local'
+
+            Config
+              .getMerged(parsedEnv)
+              .then(config => self.build(parsedEnv, config).then(() => bs.reload()))
+          })
+
         // Browsersync options
         const baseDir = templates.map(t => t.destination.path)
 

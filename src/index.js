@@ -45,7 +45,7 @@ const self = module.exports = { // eslint-disable-line
 
         const templatePaths = [...new Set(templates.map(config => `${get(config, 'source', 'src')}/**`))]
         const globalPaths = [
-          `src/!(${templatePaths.join('|').replace(/src\//g, '').replace(/\/\*/g, '')})/**`,
+          'src/**',
           get(config, 'build.tailwind.config', 'tailwind.config.js'),
           [...new Set(get(config, 'build.browsersync.watch', []))]
         ]
@@ -113,8 +113,9 @@ const self = module.exports = { // eslint-disable-line
           })
 
         // Watch for changes in all other files
-        bs.watch(globalPaths)
-          .on('change', () => self.build(env).then(() => bs.reload()))
+        bs.watch(globalPaths, {ignored: templatePaths})
+          .on('change', () => self.build(env, config).then(() => bs.reload()))
+          .on('unlink', () => self.build(env, config).then(() => bs.reload()))
 
         // Browsersync options
         const baseDir = templates.map(t => t.destination.path)

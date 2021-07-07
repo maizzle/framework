@@ -3,7 +3,7 @@ const {get} = require('lodash')
 const {stripHtml} = require('string-strip-html')
 
 module.exports.generate = async (html, destination, config) => {
-  const options = get(config, 'plaintext', {})
+  const options = get(config, 'build.currentTemplates.plaintext', get(config, 'plaintext', {}))
   const configDestinationPath = get(options, 'destination.path')
   const extension = get(options, 'destination.extension', 'txt')
   const plaintext = stripHtml(html, {

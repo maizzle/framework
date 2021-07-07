@@ -72,8 +72,6 @@ module.exports = async (env, spinner, config) => {
           })
             .then(async ({html, config}) => {
               const destination = config.permalink || file
-              const plaintextConfig = get(config, 'plaintext')
-              const plaintextDestination = get(plaintextConfig, 'destination', config.permalink || file)
 
               /**
                * Generate plaintext
@@ -81,6 +79,11 @@ module.exports = async (env, spinner, config) => {
                * We do this first so that we can remove the <plaintext>
                * tags from the markup before outputting the file.
                */
+
+              // Make this a breaking change in 4.0, get only from `templateConfig`
+              const plaintextConfig = get(templateConfig, 'plaintext', get(config, 'plaintext'))
+              const plaintextDestination = get(plaintextConfig, 'destination', config.permalink || file)
+
               if ((typeof plaintextConfig === 'boolean' && plaintextConfig) || !isEmpty(plaintextConfig)) {
                 await Plaintext
                   .generate(html, plaintextDestination, merge(config, {filepath: file}))

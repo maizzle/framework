@@ -1,7 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const glob = require('glob-promise')
-const {get, isEmpty} = require('lodash')
+const {get, isEmpty, merge} = require('lodash')
 const {asyncForEach} = require('../../utils/helpers')
 const removePlaintextTags = require('../../transformers/plaintext')
 
@@ -73,6 +73,7 @@ module.exports = async (env, spinner, config) => {
             .then(async ({html, config}) => {
               const destination = config.permalink || file
               const plaintextConfig = get(config, 'plaintext')
+              const plaintextDestination = get(plaintextConfig, 'destination', config.permalink || file)
 
               /**
                * Generate plaintext
@@ -82,7 +83,7 @@ module.exports = async (env, spinner, config) => {
                */
               if ((typeof plaintextConfig === 'boolean' && plaintextConfig) || !isEmpty(plaintextConfig)) {
                 await Plaintext
-                  .generate(html, destination, config)
+                  .generate(html, plaintextDestination, merge(config, {filepath: file}))
                   .then(({plaintext, destination}) => fs.outputFile(destination, plaintext))
               }
 

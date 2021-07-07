@@ -75,5 +75,10 @@
   },
   "engines": {
     "node": ">=12.13.0"
+  },
+  "ava": {
+    "files": [
+      "test/**/test*.js"
+    ]
   }
 }

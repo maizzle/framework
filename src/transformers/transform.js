@@ -1,9 +1,7 @@
-const path = require('path')
 const posthtml = require('posthtml')
 const posthtmlContent = require('posthtml-content')
 const Tailwind = require('../generators/tailwindcss')
-const {requireUncached} = require('../utils/helpers')
-const {get, isObject, isEmpty, merge, omit} = require('lodash')
+const {get, omit} = require('lodash')
 
 module.exports = async (html, config = {}, direct = false) => {
   const replacements = direct ? config : get(config, 'transform', {})
@@ -14,14 +12,11 @@ module.exports = async (html, config = {}, direct = false) => {
    */
   const maizzleConfig = omit(config, ['build.tailwind.css', 'css'])
   const tailwindConfig = get(config, 'build.tailwind.config', 'tailwind.config.js')
-  let tailwindObject = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : requireUncached(path.resolve(process.cwd(), tailwindConfig))
-  // Use JIT by default, for faster compilation
-  tailwindObject = merge(tailwindObject, {mode: 'jit'})
 
   replacements.postcss = css => Tailwind.compile(
     `@tailwind components; @tailwind utilities; ${css}`,
     html,
-    tailwindObject,
+    tailwindConfig,
     maizzleConfig
   )
 

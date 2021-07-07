@@ -9,7 +9,7 @@ module.exports = {
       delete require.cache[require.resolve(module)]
       return require(module)
     } catch {
-      return {}
+      throw new Error(`could not load ${module}`)
     }
   }
 }

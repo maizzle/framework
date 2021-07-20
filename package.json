@@ -51,7 +51,7 @@
     "posthtml-expressions": "^1.6.2",
     "posthtml-extend": "^0.6.0",
     "posthtml-extra-attributes": "^1.0.0",
-    "posthtml-fetch": "^1.2.0",
+    "posthtml-fetch": "^2.0.0",
     "posthtml-markdownit": "^1.2.2",
     "posthtml-modules": "^0.7.4",
     "posthtml-mso": "^1.0.2",

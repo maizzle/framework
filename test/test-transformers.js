@@ -2,6 +2,12 @@ const test = require('ava')
 const Maizzle = require('../src')
 const removePlaintextTags = require('../src/transformers/plaintext')
 
+const path = require('path')
+const {readFileSync} = require('fs')
+
+const fixture = file => readFileSync(path.join(__dirname, 'fixtures/transformers', `${file}.html`), 'utf8')
+const expected = file => readFileSync(path.join(__dirname, 'expected/transformers', `${file}.html`), 'utf8')
+
 test('remove inline sizes', async t => {
   const options = {
     width: ['TD'],
@@ -186,9 +192,9 @@ test('extra attributes (disabled)', async t => {
 })
 
 test('base image URL', async t => {
-  const html = await Maizzle.applyBaseImageUrl('<img src="example.jpg">', 'https://example.com/')
+  const html = await Maizzle.applyBaseImageUrl(fixture('base-image-url'), 'https://example.com/')
 
-  t.is(html, '<img src="https://example.com/example.jpg">')
+  t.is(html, expected('base-image-url'))
 })
 
 test('prettify', async t => {

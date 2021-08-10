@@ -69,5 +69,5 @@ test('uses postcss plugins from the maizzle config when compiling from string', 
   const css = await Tailwind.compile('.test {transform: scale(0.5)}', '<div class="test">Test</a>', {}, maizzleConfig)
 
   t.not(css, undefined)
-  t.is(css.trim(), '/* purgecss start ignore */\n\n.test {\n  -webkit-transform: scale(0.5);\n          transform: scale(0.5)\n}\n\n/* purgecss end ignore */')
+  t.is(css.trim(), '/* purgecss start ignore */\n\n.test {\n  -webkit-transform: scale(0.5);\n      -ms-transform: scale(0.5);\n          transform: scale(0.5)\n}\n\n/* purgecss end ignore */')
 })

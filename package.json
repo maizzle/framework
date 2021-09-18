@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "browser-sync": "^2.26.13",
-    "color-shorthand-hex-to-six-digit": "^3.0.2",
+    "color-shorthand-hex-to-six-digit": "^4.0.1",
     "email-comb": "^5.0.0",
     "front-matter": "^4.0.0",
     "fs-extra": "^10.0.0",

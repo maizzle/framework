@@ -414,5 +414,5 @@ test('local server does not compile unwanted file types', async t => {
 test('throws if it cannot spin up local development server', async t => {
   await t.throwsAsync(async () => {
     await Maizzle.serve('local', {})
-  }, {instanceOf: TypeError, message: `Cannot read property 'source' of undefined`})
+  }, {instanceOf: TypeError})
 })

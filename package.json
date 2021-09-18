@@ -62,7 +62,7 @@
     "pretty": "^2.0.0",
     "prevent-widows": "^1.0.2",
     "query-string": "^7.0.0",
-    "string-strip-html": "^8.2.0",
+    "string-strip-html": "^9.0.1",
     "tailwindcss": "^2.2.2",
     "tailwindcss-box-shadow": "^1.0.0"
   },

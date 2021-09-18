@@ -21,7 +21,11 @@ module.exports = async (html, options) => {
   const tailwindConfig = get(options, 'tailwind.config', {})
   const cssString = get(options, 'tailwind.css', '@tailwind components; @tailwind utilities;')
 
-  const frontmatter = await posthtml(fm(html).frontmatter, config)
+  let {frontmatter} = fm(html)
+
+  if (frontmatter) {
+    frontmatter = await posthtml(frontmatter, config)
+  }
 
   html = `---\n${frontmatter}\n---\n\n${fm(html).body}`
 

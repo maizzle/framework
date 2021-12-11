@@ -32,6 +32,7 @@
     "release": "np"
   },
   "dependencies": {
+    "autoprefixer": "^10.4.0",
     "browser-sync": "^2.26.13",
     "color-shorthand-hex-to-six-digit": "^3.0.2",
     "email-comb": "^5.0.0",
@@ -42,7 +43,7 @@
     "juice": "^8.0.0",
     "lodash": "^4.17.20",
     "ora": "^5.1.0",
-    "postcss": "^8.2.14",
+    "postcss": "^8.4.4",
     "postcss-import": "^14.0.0",
     "postcss-merge-longhand": "^5.0.1",
     "posthtml": "^0.16.4",
@@ -63,11 +64,10 @@
     "prevent-widows": "^1.0.2",
     "query-string": "^7.0.0",
     "string-strip-html": "^8.2.0",
-    "tailwindcss": "^2.2.2",
+    "tailwindcss": "^3.0.0",
     "tailwindcss-box-shadow": "^1.0.0"
   },
   "devDependencies": {
-    "autoprefixer": "^10.0.2",
     "ava": "^3.13.0",
     "np": "*",
     "nyc": "^15.1.0",

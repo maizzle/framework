@@ -25,36 +25,20 @@ test('uses CSS file provided in environment config', async t => {
   t.true(css.includes('.foo'))
 })
 
-test('uses purgeCSS options provided in the maizzle config', async t => {
-  const arrayConfig = {
-    purgeCSS: {
-      safelist: ['z-10'],
-      blocklist: ['text-center']
-    }
-  }
+test('uses options from the user\'s tailwind config', async t => {
+  const css = await Tailwind.compile('@tailwind utilities', '<div class="z-0"></div>', {safelist: ['z-10']}, {})
 
-  const objectConfig = {
-    purgeCSS: {
-      safelist: {
-        standard: ['z-10']
-      },
-      blocklist: ['text-center']
-    }
-  }
-
-  const css1 = await Tailwind.compile('@tailwind utilities', '<div class="z-0 text-center"></div>', {}, arrayConfig)
-  const css2 = await Tailwind.compile('@tailwind utilities', '<div class="z-0 text-center"></div>', {}, objectConfig)
-
-  t.true(css1.includes('.z-0'))
-  t.true(css1.includes('.z-10'))
-  t.false(css1.includes('.text-center'))
-
-  t.true(css2.includes('.z-0'))
-  t.true(css2.includes('.z-10'))
-  t.false(css2.includes('.text-center'))
+  t.true(css.includes('.z-0'))
+  t.true(css.includes('.z-10'))
 })
 
-test('uses postcss plugins from the maizzle config when compiling from string', async t => {
+test('works with user\'s custom content sources', async t => {
+  const css = await Tailwind.compile('@tailwind utilities', '<div class="z-0"></div>', {content: ['src/**/*.js']}, {})
+
+  t.true(css.includes('.z-0'))
+})
+
+test('uses custom postcss plugins from the maizzle config', async t => {
   const maizzleConfig = {
     env: 'production',
     build: {
@@ -69,5 +53,5 @@ test('uses postcss plugins from the maizzle config when compiling from string', 
   const css = await Tailwind.compile('.test {transform: scale(0.5)}', '<div class="test">Test</a>', {}, maizzleConfig)
 
   t.not(css, undefined)
-  t.is(css.trim(), '/* purgecss start ignore */\n\n.test {\n  -webkit-transform: scale(0.5);\n      -ms-transform: scale(0.5);\n          transform: scale(0.5)\n}\n\n/* purgecss end ignore */')
+  t.is(css.trim(), '.test {-webkit-transform: scale(0.5);-ms-transform: scale(0.5);transform: scale(0.5)}')
 })

@@ -33,15 +33,14 @@ module.exports = {
     // Merge user's Tailwind config on top of a 'base' config
     const config = merge({
       important: true,
-      purge: {
-        enabled: maizzleConfig.env !== 'local',
-        content: [
+      content: {
+        files: [
           'src/**/*.*',
           {raw: html}
-        ],
-        options: get(maizzleConfig, 'purgeCSS', {})
+        ]
       },
       corePlugins: {
+        preflight: false,
         animation: false,
         backgroundOpacity: false,
         borderOpacity: false,
@@ -56,6 +55,17 @@ module.exports = {
       },
       plugins: []
     }, userConfig())
+
+    // Add back the `{raw: html}` option if user provided own config
+    if (Array.isArray(config.content)) {
+      config.content = {
+        files: [
+          ...config.content,
+          'src/**/*.*',
+          {raw: html}
+        ]
+      }
+    }
 
     // Merge user's Tailwind plugins with our default ones
     config.plugins.push(require('tailwindcss-box-shadow'))

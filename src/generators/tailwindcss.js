@@ -67,6 +67,17 @@ module.exports = {
       }
     }
 
+    // Include all `build.templates.source` paths when scanning for selectors to preserve
+    const buildTemplates = get(maizzleConfig, 'build.templates')
+    const templateObjects = Array.isArray(buildTemplates) ? buildTemplates : [buildTemplates]
+    const templateSources = templateObjects.map(template => {
+      const source = get(template, 'source')
+
+      return `${source}/**/*.*`
+    })
+
+    config.content.files.push(...templateSources)
+
     // Merge user's Tailwind plugins with our default ones
     config.plugins.push(require('tailwindcss-box-shadow'))
 

@@ -68,7 +68,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.0.2",
-    "ava": "^3.13.0",
+    "ava": "^4.0.1",
     "np": "*",
     "nyc": "^15.1.0",
     "xo": "0.39.1"

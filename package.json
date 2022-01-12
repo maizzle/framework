@@ -68,7 +68,7 @@
     "tailwindcss-box-shadow": "^1.0.0"
   },
   "devDependencies": {
-    "ava": "^3.13.0",
+    "ava": "^4.0.1",
     "np": "*",
     "nyc": "^15.1.0",
     "xo": "0.39.1"

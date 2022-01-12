@@ -27,7 +27,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "xo && nyc ava -s",
+    "test": "xo && c8 ava -s",
     "style": "xo",
     "release": "np"
   },
@@ -69,8 +69,8 @@
   },
   "devDependencies": {
     "ava": "^4.0.1",
+    "c8": "^7.11.0",
     "np": "*",
-    "nyc": "^15.1.0",
     "xo": "0.39.1"
   },
   "engines": {

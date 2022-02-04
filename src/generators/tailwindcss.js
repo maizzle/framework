@@ -30,22 +30,12 @@ module.exports = {
       }
     }
 
-    // Include all `build.templates.source` paths when scanning for selectors to preserve
-    const buildTemplates = get(maizzleConfig, 'build.templates')
-    const templateObjects = Array.isArray(buildTemplates) ? buildTemplates : [buildTemplates]
-    const templateSources = templateObjects.map(template => {
-      const source = get(template, 'source')
-
-      return `./${source}/**/*.*`
-    })
-
     // Merge user's Tailwind config on top of a 'base' config
     const config = merge({
       important: true,
       content: {
         files: [
           './src/**/*.*',
-          ...templateSources,
           {raw: html, extension: 'html'}
         ]
       },
@@ -65,6 +55,31 @@ module.exports = {
       },
       plugins: []
     }, userConfig())
+
+    // Add back the `{raw: html}` option if user provided own config
+    if (Array.isArray(config.content)) {
+      config.content = {
+        files: [
+          ...config.content,
+          './src/**/*.*',
+          {raw: html, extension: 'html'}
+        ]
+      }
+    }
+
+    // Include all `build.templates.source` paths when scanning for selectors to preserve
+    const buildTemplates = get(maizzleConfig, 'build.templates')
+
+    if (buildTemplates) {
+      const templateObjects = Array.isArray(buildTemplates) ? buildTemplates : [buildTemplates]
+      const templateSources = templateObjects.map(template => {
+        const source = get(template, 'source')
+
+        return `${source}/**/*.*`
+      })
+
+      config.content.files.push(...templateSources)
+    }
 
     // Merge user's Tailwind plugins with our default ones
     config.plugins.push(require('tailwindcss-box-shadow'))

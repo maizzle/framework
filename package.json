@@ -27,7 +27,8 @@
     "access": "public"
   },
   "scripts": {
-    "test": "xo && c8 ava -s",
+    "test": "c8 ava -s",
+    "pretest": "xo",
     "style": "xo",
     "release": "np"
   },

@@ -43,7 +43,7 @@ test('skips if no templates found', async t => {
 })
 
 test('outputs files at the correct location', async t => {
-  const {files} = await Maizzle.build('production', {
+  const {files: string} = await Maizzle.build('production', {
     build: {
       fail: 'silent',
       templates: {
@@ -51,17 +51,25 @@ test('outputs files at the correct location', async t => {
         destination: {
           path: t.context.folder
         }
-      },
-      tailwind: {
-        config: {
-          purge: false
+      }
+    }
+  })
+
+  const {files: array} = await Maizzle.build('production', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: ['test/stubs/templates'],
+        destination: {
+          path: t.context.folder
         }
       }
     }
   })
 
   t.true(fs.pathExistsSync(t.context.folder))
-  t.is(files.length, 3)
+  t.is(string.length, 3)
+  t.is(array.length, 3)
 })
 
 test('outputs files at the correct location if multiple template sources are used', async t => {
@@ -417,12 +425,29 @@ test('throws if it cannot spin up local development server', async t => {
   }, {instanceOf: TypeError})
 })
 
-test('works with templates.source defined as function', async t => {
+test('works with templates.source defined as function (string paths)', async t => {
   const {files} = await Maizzle.build('production', {
     build: {
       fail: 'silent',
       templates: {
         source: () => 'test/stubs/templates',
+        destination: {
+          path: t.context.folder
+        }
+      }
+    }
+  })
+
+  t.true(fs.pathExistsSync(t.context.folder))
+  t.is(files.length, 3)
+})
+
+test('works with templates.source defined as function (array paths)', async t => {
+  const {files} = await Maizzle.build('production', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: () => ['test/stubs/templates', 'test/stubs/templates'],
         destination: {
           path: t.context.folder
         }

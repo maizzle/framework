@@ -35,8 +35,8 @@ module.exports = {
       important: true,
       content: {
         files: [
-          'src/**/*.*',
-          {raw: html}
+          './src/**/*.*',
+          {raw: html, extension: 'html'}
         ]
       },
       corePlugins: {
@@ -61,39 +61,38 @@ module.exports = {
       config.content = {
         files: [
           ...config.content,
-          'src/**/*.*',
-          {raw: html}
+          './src/**/*.*',
+          {raw: html, extension: 'html'}
         ]
       }
     }
 
     // Include all `build.templates.source` paths when scanning for selectors to preserve
     const buildTemplates = get(maizzleConfig, 'build.templates')
-    const templateObjects = Array.isArray(buildTemplates) ? buildTemplates : [buildTemplates]
-    const templateSources = templateObjects.map(template => {
-      const source = get(template, 'source')
 
-      return `${source}/**/*.*`
-    })
+    if (buildTemplates) {
+      const templateObjects = Array.isArray(buildTemplates) ? buildTemplates : [buildTemplates]
+      const templateSources = templateObjects.map(template => {
+        const source = get(template, 'source')
 
-    config.content.files.push(...templateSources)
+        return `${source}/**/*.*`
+      })
+
+      config.content.files.push(...templateSources)
+    }
 
     // Merge user's Tailwind plugins with our default ones
     config.plugins.push(require('tailwindcss-box-shadow'))
 
     const userFilePath = get(maizzleConfig, 'build.tailwind.css', path.join(process.cwd(), 'src/css/tailwind.css'))
+    const userFileExists = await fs.pathExists(userFilePath)
 
-    css = await fs.pathExists(userFilePath).then(async exists => {
-      if (exists) {
-        const userFileCSS = await fs.readFile(path.resolve(userFilePath), 'utf8')
-        return userFileCSS
-      }
-
-      return css
-    })
+    if (userFileExists) {
+      css = await fs.readFile(path.resolve(userFilePath), 'utf8')
+    }
 
     return postcss([
-      postcssImport({path: userFilePath ? path.dirname(userFilePath) : []}),
+      postcssImport({path: path.dirname(userFilePath)}),
       postcssNested(),
       tailwindcss(config),
       maizzleConfig.env === 'local' ? () => {} : mergeLonghand(),

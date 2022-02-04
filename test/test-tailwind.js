@@ -2,7 +2,12 @@ const test = require('ava')
 const Tailwind = require('../src/generators/tailwindcss')
 
 test('uses Tailwind defaults if no config specified', async t => {
-  const css = await Tailwind.compile('@tailwind utilities', '<p class="xl:z-0"></p>', {}, {env: 'production'})
+  const css = await Tailwind.compile(
+    '@tailwind utilities;',
+    '<p class="xl:z-0"></p>',
+    {},
+    {env: 'production'}
+  )
 
   t.not(css, undefined)
   t.true(css.includes('.xl\\:z-0'))
@@ -27,7 +32,7 @@ test('uses CSS file provided in environment config', async t => {
 
 test('works with custom `content` sources', async t => {
   const css = await Tailwind.compile(
-    '@tailwind utilities',
+    '@tailwind utilities;',
     '<div class="hidden"></div>',
     {
       content: ['./test/stubs/tailwind/*.*']
@@ -39,7 +44,7 @@ test('works with custom `content` sources', async t => {
 
 test('works with custom `files` sources', async t => {
   const css = await Tailwind.compile(
-    '@tailwind utilities',
+    '@tailwind utilities;',
     '<div></div>',
     {
       content: {
@@ -53,7 +58,7 @@ test('works with custom `files` sources', async t => {
 
 test('uses maizzle template paths when purging', async t => {
   const css = await Tailwind.compile(
-    '@tailwind utilities',
+    '@tailwind utilities;',
     '<div></div>',
     {},
     {

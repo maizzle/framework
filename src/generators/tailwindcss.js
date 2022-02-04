@@ -85,18 +85,14 @@ module.exports = {
     config.plugins.push(require('tailwindcss-box-shadow'))
 
     const userFilePath = get(maizzleConfig, 'build.tailwind.css', path.join(process.cwd(), 'src/css/tailwind.css'))
+    const userFileExists = await fs.pathExists(userFilePath)
 
-    css = await fs.pathExists(userFilePath).then(async exists => {
-      if (exists) {
-        const userFileCSS = await fs.readFile(path.resolve(userFilePath), 'utf8')
-        return userFileCSS
-      }
-
-      return css
-    })
+    if (userFileExists) {
+      css = await fs.readFile(path.resolve(userFilePath), 'utf8')
+    }
 
     return postcss([
-      postcssImport({path: userFilePath ? path.dirname(userFilePath) : []}),
+      postcssImport({path: path.dirname(userFilePath)}),
       postcssNested(),
       tailwindcss(config),
       maizzleConfig.env === 'local' ? () => {} : mergeLonghand(),

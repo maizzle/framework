@@ -25,17 +25,30 @@ test('uses CSS file provided in environment config', async t => {
   t.true(css.includes('.foo'))
 })
 
-test('uses options from the user\'s tailwind config', async t => {
-  const css = await Tailwind.compile('@tailwind utilities', '<div class="z-0"></div>', {safelist: ['z-10']}, {})
+test('works with custom `content` sources', async t => {
+  const css = await Tailwind.compile(
+    '@tailwind utilities',
+    '<div class="hidden"></div>',
+    {
+      content: ['test/stubs/tailwind/*.*']
+    }
+  )
 
-  t.true(css.includes('.z-0'))
-  t.true(css.includes('.z-10'))
+  t.true(css.includes('.hidden'))
 })
 
-test('works with user\'s custom content sources', async t => {
-  const css = await Tailwind.compile('@tailwind utilities', '<div class="z-0"></div>', {content: ['src/**/*.js']}, {})
+test('works with custom `files` sources', async t => {
+  const css = await Tailwind.compile(
+    '@tailwind utilities',
+    '<div></div>',
+    {
+      content: {
+        files: ['test/stubs/tailwind/*.*']
+      }
+    }
+  )
 
-  t.true(css.includes('.z-0'))
+  t.true(css.includes('.hidden'))
 })
 
 test('uses custom postcss plugins from the maizzle config', async t => {

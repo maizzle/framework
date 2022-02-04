@@ -2,13 +2,21 @@ const ora = require('ora')
 const path = require('path')
 const fs = require('fs-extra')
 const {get, merge} = require('lodash')
-const bs = require('browser-sync').create()
 const Config = require('./generators/config')
 const Output = require('./generators/output')
 const transformers = require('./transformers')
 const {clearConsole} = require('./utils/helpers')
 const Plaintext = require('./generators/plaintext')
 const Tailwind = require('./generators/tailwindcss')
+
+const getBrowserSync = () => {
+  if (!global.cachedBrowserSync) {
+    const bs = require('browser-sync')
+    global.cachedBrowserSync = bs.create()
+  }
+
+  return global.cachedBrowserSync
+}
 
 const self = module.exports = { // eslint-disable-line
   ...transformers,
@@ -66,7 +74,7 @@ const self = module.exports = { // eslint-disable-line
         const spinner = ora()
 
         // Watch for Template file changes
-        bs.watch(templatePaths)
+        getBrowserSync().watch(templatePaths)
           .on('change', async file => {
             clearConsole()
 
@@ -115,25 +123,25 @@ const self = module.exports = { // eslint-disable-line
               .render(await fs.readFile(file, 'utf8'), renderOptions)
               .then(({html, config}) => fs.outputFile(config.permalink || finalDestination, html))
               .then(() => {
-                bs.reload()
+                getBrowserSync().reload()
                 spinner.succeed(`Compiled in ${(Date.now() - start) / 1000}s [${file}]`)
               })
               .catch(() => spinner.warn(`Received empty HTML, please save your file again [${file}]`))
           })
 
         // Watch for changes in all other files
-        bs.watch(globalPaths, {ignored: templatePaths})
-          .on('change', () => self.build(env, config).then(() => bs.reload()))
-          .on('unlink', () => self.build(env, config).then(() => bs.reload()))
+        getBrowserSync().watch(globalPaths, {ignored: templatePaths})
+          .on('change', () => self.build(env, config).then(() => getBrowserSync().reload()))
+          .on('unlink', () => self.build(env, config).then(() => getBrowserSync().reload()))
 
         // Watch for changes in config files
-        bs.watch('config*.js')
+        getBrowserSync().watch('config*.js')
           .on('change', async file => {
             const parsedEnv = path.parse(file).name.split('.')[1] || 'local'
 
             Config
               .getMerged(parsedEnv)
-              .then(config => self.build(parsedEnv, config).then(() => bs.reload()))
+              .then(config => self.build(parsedEnv, config).then(() => getBrowserSync().reload()))
           })
 
         // Browsersync options
@@ -154,10 +162,11 @@ const self = module.exports = { // eslint-disable-line
         }
 
         // Initialize Browsersync
-        bs.init(bsOptions, () => {})
+        getBrowserSync().init(bsOptions, () => {})
       })
       .catch(error => {
         throw error
       })
   }
 }
+

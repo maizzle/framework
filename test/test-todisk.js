@@ -16,12 +16,12 @@ test.afterEach.always(async t => {
 
 test('throws if config cannot be computed', async t => {
   await t.throwsAsync(async () => {
-    await Maizzle.build('production')
-  }, {instanceOf: Error, message: `could not load config.production.js`})
+    await Maizzle.build('missing')
+  }, {instanceOf: Error, message: `could not load config.missing.js`})
 })
 
 test('skips if no templates found', async t => {
-  const {files} = await Maizzle.build('production', {
+  const {files} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -43,7 +43,7 @@ test('skips if no templates found', async t => {
 })
 
 test('outputs files at the correct location', async t => {
-  const {files: string} = await Maizzle.build('production', {
+  const {files: string} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -55,7 +55,7 @@ test('outputs files at the correct location', async t => {
     }
   })
 
-  const {files: array} = await Maizzle.build('production', {
+  const {files: array} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -98,7 +98,7 @@ test('outputs files at the correct location if multiple template sources are use
 })
 
 test('copies all files in the `filetypes` option to destination', async t => {
-  const {files} = await Maizzle.build('production', {
+  const {files} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -121,7 +121,7 @@ test('copies all files in the `filetypes` option to destination', async t => {
 })
 
 test('outputs files with the correct extension', async t => {
-  await Maizzle.build('production', {
+  await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -143,7 +143,7 @@ test('outputs files with the correct extension', async t => {
 })
 
 test('outputs plaintext files', async t => {
-  const {files} = await Maizzle.build('production', {
+  const {files} = await Maizzle.build('maizzle-ci', {
     fail: 'silent',
     build: {
       templates: {
@@ -172,7 +172,7 @@ test('outputs plaintext files', async t => {
 })
 
 test('outputs plaintext files (custom path)', async t => {
-  const {files} = await Maizzle.build('production', {
+  const {files} = await Maizzle.build('maizzle-ci', {
     fail: 'silent',
     build: {
       templates: {
@@ -207,7 +207,7 @@ test('renders plaintext string', async t => {
 })
 
 test('copies assets to destination', async t => {
-  await Maizzle.build('production', {
+  await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -233,7 +233,7 @@ test('copies assets to destination', async t => {
 })
 
 test('runs the `beforeCreate` event', async t => {
-  await Maizzle.build('production', {
+  await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -261,7 +261,7 @@ test('runs the `beforeCreate` event', async t => {
 })
 
 test('runs the `afterBuild` event', async t => {
-  const {files} = await Maizzle.build('production', {
+  const {files} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -289,7 +289,7 @@ test('runs the `afterBuild` event', async t => {
 })
 
 test('supports multiple asset paths', async t => {
-  await Maizzle.build('production', {
+  await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -316,7 +316,7 @@ test('supports multiple asset paths', async t => {
 })
 
 test('warns if a template cannot be rendered and `fail` option is undefined', async t => {
-  const {files} = await Maizzle.build('production', {
+  const {files} = await Maizzle.build('maizzle-ci', {
     build: {
       templates: {
         source: 'test/stubs/breaking',
@@ -336,7 +336,7 @@ test('warns if a template cannot be rendered and `fail` option is undefined', as
 })
 
 test('warns if a template cannot be rendered and `fail` option is `verbose`', async t => {
-  const {files} = await Maizzle.build('production', {
+  const {files} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'verbose',
       templates: {
@@ -357,7 +357,7 @@ test('warns if a template cannot be rendered and `fail` option is `verbose`', as
 })
 
 test('warns if a template cannot be rendered and `fail` option is `silent`', async t => {
-  const {files} = await Maizzle.build('production', {
+  const {files} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -426,7 +426,7 @@ test('throws if it cannot spin up local development server', async t => {
 })
 
 test('works with templates.source defined as function (string paths)', async t => {
-  const {files} = await Maizzle.build('production', {
+  const {files} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -443,7 +443,7 @@ test('works with templates.source defined as function (string paths)', async t =
 })
 
 test('works with templates.source defined as function (array paths)', async t => {
-  const {files} = await Maizzle.build('production', {
+  const {files} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {

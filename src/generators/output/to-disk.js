@@ -81,7 +81,7 @@ module.exports = async (env, spinner, config) => {
                */
 
               // Make this a breaking change in 4.0, get only from `templateConfig`
-              const plaintextConfig = get(templateConfig, 'plaintext', get(config, 'plaintext'))
+              const plaintextConfig = get(templateConfig, 'plaintext')
               const plaintextDestination = get(plaintextConfig, 'destination', config.permalink || file)
 
               if ((typeof plaintextConfig === 'boolean' && plaintextConfig) || !isEmpty(plaintextConfig)) {

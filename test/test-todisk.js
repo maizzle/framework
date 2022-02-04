@@ -142,15 +142,15 @@ test('outputs plaintext files', async t => {
         source: 'test/stubs/plaintext',
         destination: {
           path: t.context.folder
-        }
+        },
+        plaintext: true
       },
       tailwind: {
         config: {
           purge: false
         }
       }
-    },
-    plaintext: true
+    }
   })
 
   const plaintext = files.filter(file => file.includes('.txt'))
@@ -171,17 +171,17 @@ test('outputs plaintext files (custom path)', async t => {
         source: 'test/stubs/plaintext',
         destination: {
           path: t.context.folder
+        },
+        plaintext: {
+          destination: {
+            path: `${t.context.folder}/nested/plain.text`
+          }
         }
       },
       tailwind: {
         config: {
           purge: false
         }
-      }
-    },
-    plaintext: {
-      destination: {
-        path: `${t.context.folder}/nested/plain.text`
       }
     }
   })

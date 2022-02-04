@@ -416,3 +416,20 @@ test('throws if it cannot spin up local development server', async t => {
     await Maizzle.serve('local', {})
   }, {instanceOf: TypeError})
 })
+
+test('works with templates.source defined as function', async t => {
+  const {files} = await Maizzle.build('production', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: () => 'test/stubs/templates',
+        destination: {
+          path: t.context.folder
+        }
+      }
+    }
+  })
+
+  t.true(fs.pathExistsSync(t.context.folder))
+  t.is(files.length, 3)
+})

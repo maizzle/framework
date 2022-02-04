@@ -31,13 +31,16 @@ module.exports = async (env, spinner, config) => {
     ? config.tailwind.compiled
     : await Tailwind.compile('@tailwind components; @tailwind utilities;', '', {}, config)
 
+  // Parse each template config object
   await asyncForEach(templatesConfig, async templateConfig => {
     const outputDir = get(templateConfig, 'destination.path', `build_${env}`)
 
     await fs.remove(outputDir)
 
+    const source = typeof templateConfig.source === 'function' ? templateConfig.source() : templateConfig.source
+
     await fs
-      .copy(templateConfig.source, outputDir)
+      .copy(source, outputDir)
       .then(async () => {
         const extensions = Array.isArray(templateConfig.filetypes)
           ? templateConfig.filetypes.join('|')

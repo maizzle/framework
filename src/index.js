@@ -31,7 +31,10 @@ const self = module.exports = { // eslint-disable-line
         const elapsedSeconds = (Date.now() - start) / 1000
 
         if (get(config, 'build.command') === 'serve') {
-          clearConsole()
+          if (get(config, 'build.console.clear')) {
+            clearConsole()
+          }
+
           spinner.succeed(`Re-built ${parsed.length} templates in ${elapsedSeconds}s`)
         } else {
           spinner.succeed(`Built ${parsed.length} templates in ${elapsedSeconds}s`)
@@ -76,7 +79,9 @@ const self = module.exports = { // eslint-disable-line
         // Watch for Template file changes
         getBrowserSync().watch(templatePaths)
           .on('change', async file => {
-            clearConsole()
+            if (get(config, 'build.console.clear')) {
+              clearConsole()
+            }
 
             const start = new Date()
 
@@ -169,4 +174,3 @@ const self = module.exports = { // eslint-disable-line
       })
   }
 }
-

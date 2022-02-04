@@ -3,7 +3,7 @@ const {get, merge} = require('lodash')
 const posthtml = require('../posthtml')
 const Tailwind = require('../tailwindcss')
 const Transformers = require('../../transformers')
-const posthtmlMSO = require('../../transformers/posthtml-mso')
+const posthtmlMSO = require('../../transformers/posthtmlMso')
 
 module.exports = async (html, options) => {
   process.env.NODE_ENV = get(options, 'maizzle.env', 'local')

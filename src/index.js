@@ -7,7 +7,6 @@ const Output = require('./generators/output')
 const transformers = require('./transformers')
 const {clearConsole} = require('./utils/helpers')
 const Plaintext = require('./generators/plaintext')
-const Tailwind = require('./generators/tailwindcss')
 
 const getBrowserSync = () => {
   if (!global.cachedBrowserSync) {
@@ -70,10 +69,6 @@ const self = module.exports = { // eslint-disable-line
           [...new Set(get(config, 'build.browsersync.watch', []))]
         ]
 
-        // Pre-compile Tailwind so that updates to tailwind.config.js are reflected
-        const cssString = fs.existsSync(get(config, 'build.tailwind.css')) ? fs.readFileSync(get(config, 'build.tailwind.css'), 'utf8') : '@tailwind components; @tailwind utilities;'
-        const css = await Tailwind.compile(cssString, '', {}, config)
-
         const spinner = ora()
 
         // Watch for Template file changes
@@ -99,29 +94,9 @@ const self = module.exports = { // eslint-disable-line
               await config.events.beforeCreate(config)
             }
 
-            /**
-             * Tailwind CSS compiler
-             *
-             * Use the Just-In-Time engine if the user enabled it
-             * Fall back to the classic Always-On-Time engine
-             */
-            let mode = 'aot'
-
-            try {
-              const tailwindConfig = require(path.resolve(process.cwd(), get(config, 'build.currentTemplates.tailwind.config', 'tailwind.config.js')))
-              mode = get(tailwindConfig, 'mode')
-            } catch {}
-
             const renderOptions = {
               maizzle: config,
               ...config.events
-            }
-
-            // AOT: fall back to pre-compiled CSS
-            if (mode !== 'jit') {
-              renderOptions.tailwind = {
-                compiled: css
-              }
             }
 
             self

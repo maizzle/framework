@@ -3,11 +3,17 @@ const posthtml = require('posthtml')
 const safeClassNames = require('posthtml-safe-class-names')
 
 module.exports = async (html, config = {}, direct = false) => {
-  if (get(config, 'safeClassNames') === false) {
+  const option = get(config, 'safeClassNames')
+
+  if (option === false) {
     return html
   }
 
-  if (config.env === 'local') {
+  /*
+   * Setting it to `true` in the config will run `safeClassNames`
+   * no matter the environment.
+   */
+  if (config.env === 'local' && !option) {
     return html
   }
 

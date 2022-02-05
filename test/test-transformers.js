@@ -261,10 +261,22 @@ test('six digit hex (disabled)', async t => {
   t.is(html, '<td style="color: #ffc" bgcolor="#000"></td>');
 })
 
-test('transform contents', async t => {
+test('transform contents (javascript)', async t => {
   const html = await Maizzle.transformContents('<div uppercase>test</div>', {uppercase: string => string.toUpperCase()})
 
   t.is(html, '<div>TEST</div>')
+})
+
+test('transform contents (postcss)', async t => {
+  const html = await Maizzle.transformContents(
+    `<style postcss>
+      div {
+        @apply hidden container;
+      }
+    </style>`
+  )
+
+  t.is(html, expected('transform-postcss').trim())
 })
 
 test('url parameters', async t => {

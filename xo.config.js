@@ -9,6 +9,7 @@ module.exports = {
     'operator-linebreak': 0,
     'max-nested-callbacks': 0,
     'unicorn/filename-case': 0,
+    'unicorn/no-hex-escape': 0,
     'unicorn/prefer-ternary': 0,
     'unicorn/string-content': 0,
     'unicorn/no-array-for-each': 0,

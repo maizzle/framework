@@ -1,7 +1,85 @@
-<div style="background-image: url('foo/bar.jpg')">
-  <img src="logo.png" srcset="assets/logo.png 1x, assets/logo@2x.png 2x">
-</div>
+<html>
+  <head>
+    <style>
+      .test {
+        background-image: url('image.jpg');
+        background: url('image.jpg');
+        background-image: url('https://preserve.me/image.jpg');
+        background: url('https://preserve.me/image.jpg');
+      }
 
-<div style="background: url(foo/bar.jpg)">
-  <img background="example.jpg" srcset="example.jpg 1x, example@2x.jpg 2x">
-</div>
+      .test-2 {
+        background-image: url("image.jpg");
+        background: url("image.jpg");
+        background-image: url("https://preserve.me/image.jpg");
+        background: url("https://preserve.me/image.jpg");
+      }
+
+      .test-3 {
+        background-image: url(image.jpg);
+        background: url(image.jpg);
+        background-image: url(https://preserve.me/image.jpg);
+        background: url(https://preserve.me/image.jpg);
+      }
+    </style>
+  </head>
+
+  <body>
+    <img src="test.jpg">
+    <img src="https://example.com/test.jpg">
+
+    <img src="image1.jpg" srcset="image1-HD.jpg 2x,image1-phone.jpg 100w">
+
+    <img src="https://example.com/image2.jpg" srcset="https://example.com/image2-HD.jpg 2x, https://example.com/image2-phone.jpg 100w">
+
+    <picture>
+      <source media="(max-width: 799px)" srcset="elva-480w-close-portrait.jpg">
+      <source media="(min-width: 800px)" srcset="elva-800w.jpg">
+      <img src="elva-800w.jpg" alt="...">
+    </picture>
+
+    <video width="250" poster="flower.jpg">
+      <source src="media/flower.webm" type="video/webm">
+      <source src="https://example.tv/media/flower.mp4" type="video/mp4">
+      <track default kind="captions" srclang="en" src="media/tracks/friday.vtt">
+    </video>
+
+    <audio src="media/sample.mp3">
+      Fallback content
+    </audio>
+
+    <embed type="video/webm" src="media/flower.mp4" width="250" height="200">
+
+    <iframe width="300" height="200" src="embed.html"></iframe>
+
+    <input type="image" src="image.jpg" alt="">
+
+    <script src="javascript.js"></script>
+
+    <div>
+      <!--[if mso]>
+      <v:image xmlns:v="urn:schemas-microsoft-com:vml" src="image.jpg" style="600px;height:400px;" />
+      <v:rect fill="false" stroke="false" style="position:absolute;600px;height:400px;">
+      <v:textbox inset="0,0,0,0"><div><![endif]-->
+        <div>test</div>
+      <!--[if mso]></div></v:textbox></v:rect><![endif]-->
+    </div>
+
+    <table>
+      <tr>
+        <td background="image.png" bgcolor="#7bceeb" width="120" height="92" valign="top">
+          <!--[if gte mso 9]>
+          <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:120px;height:92px;">
+            <v:fill type="tile" src="image.png" color="#7bceeb" />
+            <v:textbox inset="0,0,0,0">
+          <![endif]-->
+          <div>test</div>
+          <!--[if gte mso 9]>
+            </v:textbox>
+          </v:rect>
+          <![endif]-->
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -191,8 +191,19 @@ test('extra attributes (disabled)', async t => {
   t.is(html, '<img src="example.jpg">')
 })
 
-test('base image URL', async t => {
+test('base URL (string)', async t => {
   const html = await Maizzle.applyBaseImageUrl(fixture('base-image-url'), 'https://example.com/')
+
+  t.is(html, expected('base-image-url'))
+})
+
+test('base URL (object)', async t => {
+  const html = await Maizzle.applyBaseImageUrl(fixture('base-image-url'), {
+    url: 'https://example.com/',
+    allTags: true,
+    styleTag: true,
+    inlineCss: true
+  })
 
   t.is(html, expected('base-image-url'))
 })

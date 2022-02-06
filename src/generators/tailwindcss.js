@@ -9,7 +9,7 @@ const mergeLonghand = require('postcss-merge-longhand')
 const {get, isObject, isEmpty, merge} = require('lodash')
 
 module.exports = {
-  compile: async (css = '', html = '', tailwindConfig = {}, maizzleConfig = {}) => {
+  compile: async (css = '', html = '', tailwindConfig = {}, maizzleConfig = {}, spinner = null) => {
     tailwindConfig = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : get(maizzleConfig, 'build.tailwind.config', 'tailwind.config.js')
 
     // Compute the Tailwind config to use
@@ -82,7 +82,10 @@ module.exports = {
     }
 
     // Merge user's Tailwind plugins with our default ones
-    config.plugins.push(require('tailwindcss-box-shadow'))
+    config.plugins = [
+      ...config.plugins,
+      require('tailwindcss-box-shadow')
+    ]
 
     const userFilePath = get(maizzleConfig, 'build.tailwind.css', path.join(process.cwd(), 'src/css/tailwind.css'))
     const userFileExists = await fs.pathExists(userFilePath)
@@ -100,5 +103,13 @@ module.exports = {
     ])
       .process(css, {from: undefined})
       .then(result => result.css)
+      .catch(error => {
+        console.error(error)
+        if (spinner) {
+          spinner.stop()
+        }
+
+        throw new Error(`Tailwind CSS compilation failed`)
+      })
   }
 }

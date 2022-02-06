@@ -13,12 +13,10 @@ module.exports = async (html, config = {}, direct = false) => {
   const maizzleConfig = omit(config, ['build.tailwind.css', 'css'])
   const tailwindConfig = get(config, 'build.tailwind.config', 'tailwind.config.js')
 
-  replacements.postcss = css => Tailwind.compile(
-    `@tailwind components; @tailwind utilities; ${css}`,
-    html,
-    tailwindConfig,
-    maizzleConfig
-  )
+  const compileCss = css => Tailwind.compile(css, html, tailwindConfig, maizzleConfig)
+
+  replacements.tailwindcss = css => compileCss(`@tailwind components; @tailwind utilities; ${css}`)
+  replacements.postcss = css => compileCss(`@tailwind components; @tailwind utilities; ${css}`)
 
   return posthtml([posthtmlContent(replacements)]).process(html, posthtmlOptions).then(result => result.html)
 }

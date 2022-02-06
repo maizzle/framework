@@ -17,6 +17,14 @@ test('compiles HTML string if no options are passed', async t => {
   t.is(html, source)
 })
 
+test('uses environment config file(s) if available', async t => {
+  const source = fixture('useConfig')
+
+  const html = await renderString(source, {maizzle: {env: 'maizzle-ci'}})
+
+  t.is(html, expected('useConfig'))
+})
+
 test('inheritance', async t => {
   let html = await renderString(fixture('inheritance'))
   html = html.replace(/[^\S\r\n]+$/gm, '').trim()

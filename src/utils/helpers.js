@@ -1,5 +1,3 @@
-const readline = require('readline')
-
 module.exports = {
   asyncForEach: async (array, callback) => {
     for (let index = 0; index < array.length; index++) {
@@ -14,10 +12,6 @@ module.exports = {
       throw new Error(`could not load ${module}`)
     }
   },
-  clearConsole: () => {
-    const blank = '\n'.repeat(process.stdout.rows)
-    console.log(blank)
-    readline.cursorTo(process.stdout, 0, 0)
-    readline.clearScreenDown(process.stdout)
-  }
+  // https://github.com/lukeed/console-clear
+  clearConsole: () => process.stdout.write('\x1B[H\x1B[2J')
 }

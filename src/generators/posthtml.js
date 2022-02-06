@@ -43,6 +43,7 @@ module.exports = async (html, config) => {
     ),
     modules({
       parser: posthtmlOptions,
+      attributeAsLocals: true,
       from: modulesFrom,
       root: modulesRoot,
       tag: 'component',

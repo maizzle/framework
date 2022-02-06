@@ -1,8 +1,21 @@
 const test = require('ava')
+const ora = require('ora')
 const Tailwind = require('../src/generators/tailwindcss')
 
+test('throws on compile error', async t => {
+  await t.throwsAsync(async () => {
+    const spinner = ora('Compiling Tailwind CSS...').start()
+    await Tailwind.compile('.test {@apply inexistent;}', '<div class="test">Test</a>', {}, {}, spinner)
+  }, {instanceOf: Error, message: 'Tailwind CSS compilation failed'})
+})
+
 test('uses Tailwind defaults if no config specified', async t => {
-  const css = await Tailwind.compile('@tailwind utilities', '<p class="xl:z-0"></p>', {}, {env: 'production'})
+  const css = await Tailwind.compile(
+    '@tailwind utilities;',
+    '<p class="xl:z-0"></p>',
+    {},
+    {env: 'production'}
+  )
 
   t.not(css, undefined)
   t.true(css.includes('.xl\\:z-0'))
@@ -25,36 +38,50 @@ test('uses CSS file provided in environment config', async t => {
   t.true(css.includes('.foo'))
 })
 
-test('uses purgeCSS options provided in the maizzle config', async t => {
-  const arrayConfig = {
-    purgeCSS: {
-      safelist: ['z-10'],
-      blocklist: ['text-center']
+test('works with custom `content` sources', async t => {
+  const css = await Tailwind.compile(
+    '@tailwind utilities;',
+    '<div class="hidden"></div>',
+    {
+      content: ['./test/stubs/tailwind/*.*']
     }
-  }
+  )
 
-  const objectConfig = {
-    purgeCSS: {
-      safelist: {
-        standard: ['z-10']
-      },
-      blocklist: ['text-center']
-    }
-  }
-
-  const css1 = await Tailwind.compile('@tailwind utilities', '<div class="z-0 text-center"></div>', {}, arrayConfig)
-  const css2 = await Tailwind.compile('@tailwind utilities', '<div class="z-0 text-center"></div>', {}, objectConfig)
-
-  t.true(css1.includes('.z-0'))
-  t.true(css1.includes('.z-10'))
-  t.false(css1.includes('.text-center'))
-
-  t.true(css2.includes('.z-0'))
-  t.true(css2.includes('.z-10'))
-  t.false(css2.includes('.text-center'))
+  t.true(css.includes('.hidden'))
 })
 
-test('uses postcss plugins from the maizzle config when compiling from string', async t => {
+test('works with custom `files` sources', async t => {
+  const css = await Tailwind.compile(
+    '@tailwind utilities;',
+    '<div></div>',
+    {
+      content: {
+        files: ['./test/stubs/tailwind/*.*']
+      }
+    }
+  )
+
+  t.true(css.includes('.hidden'))
+})
+
+test('uses maizzle template paths when purging', async t => {
+  const css = await Tailwind.compile(
+    '@tailwind utilities;',
+    '<div></div>',
+    {},
+    {
+      build: {
+        templates: {
+          source: './test/stubs/tailwind'
+        }
+      }
+    }
+  )
+
+  t.true(css.includes('.hidden'))
+})
+
+test('uses custom postcss plugins from the maizzle config', async t => {
   const maizzleConfig = {
     env: 'production',
     build: {
@@ -69,5 +96,5 @@ test('uses postcss plugins from the maizzle config when compiling from string', 
   const css = await Tailwind.compile('.test {transform: scale(0.5)}', '<div class="test">Test</a>', {}, maizzleConfig)
 
   t.not(css, undefined)
-  t.is(css.trim(), '/* purgecss start ignore */\n\n.test {\n  -webkit-transform: scale(0.5);\n      -ms-transform: scale(0.5);\n          transform: scale(0.5)\n}\n\n/* purgecss end ignore */')
+  t.is(css.trim(), '.test {-webkit-transform: scale(0.5);transform: scale(0.5)}')
 })

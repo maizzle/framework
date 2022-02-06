@@ -191,8 +191,19 @@ test('extra attributes (disabled)', async t => {
   t.is(html, '<img src="example.jpg">')
 })
 
-test('base image URL', async t => {
+test('base URL (string)', async t => {
   const html = await Maizzle.applyBaseImageUrl(fixture('base-image-url'), 'https://example.com/')
+
+  t.is(html, expected('base-image-url'))
+})
+
+test('base URL (object)', async t => {
+  const html = await Maizzle.applyBaseImageUrl(fixture('base-image-url'), {
+    url: 'https://example.com/',
+    allTags: true,
+    styleTag: true,
+    inlineCss: true
+  })
 
   t.is(html, expected('base-image-url'))
 })
@@ -261,10 +272,22 @@ test('six digit hex (disabled)', async t => {
   t.is(html, '<td style="color: #ffc" bgcolor="#000"></td>');
 })
 
-test('transform contents', async t => {
+test('transform contents (javascript)', async t => {
   const html = await Maizzle.transformContents('<div uppercase>test</div>', {uppercase: string => string.toUpperCase()})
 
   t.is(html, '<div>TEST</div>')
+})
+
+test('transform contents (postcss)', async t => {
+  const html = await Maizzle.transformContents(
+    `<style postcss>
+      div {
+        @apply hidden container;
+      }
+    </style>`
+  )
+
+  t.is(html, expected('transform-postcss').trim())
 })
 
 test('url parameters', async t => {

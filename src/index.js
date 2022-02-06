@@ -2,13 +2,20 @@ const ora = require('ora')
 const path = require('path')
 const fs = require('fs-extra')
 const {get, merge} = require('lodash')
-const bs = require('browser-sync').create()
 const Config = require('./generators/config')
 const Output = require('./generators/output')
 const transformers = require('./transformers')
 const {clearConsole} = require('./utils/helpers')
 const Plaintext = require('./generators/plaintext')
-const Tailwind = require('./generators/tailwindcss')
+
+const getBrowserSync = () => {
+  if (!global.cachedBrowserSync) {
+    const bs = require('browser-sync')
+    global.cachedBrowserSync = bs.create()
+  }
+
+  return global.cachedBrowserSync
+}
 
 const self = module.exports = { // eslint-disable-line
   ...transformers,
@@ -23,7 +30,10 @@ const self = module.exports = { // eslint-disable-line
         const elapsedSeconds = (Date.now() - start) / 1000
 
         if (get(config, 'build.command') === 'serve') {
-          clearConsole()
+          if (get(config, 'build.console.clear')) {
+            clearConsole()
+          }
+
           spinner.succeed(`Re-built ${parsed.length} templates in ${elapsedSeconds}s`)
         } else {
           spinner.succeed(`Built ${parsed.length} templates in ${elapsedSeconds}s`)
@@ -59,16 +69,14 @@ const self = module.exports = { // eslint-disable-line
           [...new Set(get(config, 'build.browsersync.watch', []))]
         ]
 
-        // Pre-compile Tailwind so that updates to tailwind.config.js are reflected
-        const cssString = fs.existsSync(get(config, 'build.tailwind.css')) ? fs.readFileSync(get(config, 'build.tailwind.css'), 'utf8') : '@tailwind components; @tailwind utilities;'
-        const css = await Tailwind.compile(cssString, '', {}, config)
-
         const spinner = ora()
 
         // Watch for Template file changes
-        bs.watch(templatePaths)
+        getBrowserSync().watch(templatePaths)
           .on('change', async file => {
-            clearConsole()
+            if (get(config, 'build.console.clear')) {
+              clearConsole()
+            }
 
             const start = new Date()
 
@@ -86,54 +94,34 @@ const self = module.exports = { // eslint-disable-line
               await config.events.beforeCreate(config)
             }
 
-            /**
-             * Tailwind CSS compiler
-             *
-             * Use the Just-In-Time engine if the user enabled it
-             * Fall back to the classic Always-On-Time engine
-             */
-            let mode = 'aot'
-
-            try {
-              const tailwindConfig = require(path.resolve(process.cwd(), get(config, 'build.currentTemplates.tailwind.config', 'tailwind.config.js')))
-              mode = get(tailwindConfig, 'mode')
-            } catch {}
-
             const renderOptions = {
               maizzle: config,
               ...config.events
-            }
-
-            // AOT: fall back to pre-compiled CSS
-            if (mode !== 'jit') {
-              renderOptions.tailwind = {
-                compiled: css
-              }
             }
 
             self
               .render(await fs.readFile(file, 'utf8'), renderOptions)
               .then(({html, config}) => fs.outputFile(config.permalink || finalDestination, html))
               .then(() => {
-                bs.reload()
+                getBrowserSync().reload()
                 spinner.succeed(`Compiled in ${(Date.now() - start) / 1000}s [${file}]`)
               })
               .catch(() => spinner.warn(`Received empty HTML, please save your file again [${file}]`))
           })
 
         // Watch for changes in all other files
-        bs.watch(globalPaths, {ignored: templatePaths})
-          .on('change', () => self.build(env, config).then(() => bs.reload()))
-          .on('unlink', () => self.build(env, config).then(() => bs.reload()))
+        getBrowserSync().watch(globalPaths, {ignored: templatePaths})
+          .on('change', () => self.build(env, config).then(() => getBrowserSync().reload()))
+          .on('unlink', () => self.build(env, config).then(() => getBrowserSync().reload()))
 
         // Watch for changes in config files
-        bs.watch('config*.js')
+        getBrowserSync().watch('config*.js')
           .on('change', async file => {
             const parsedEnv = path.parse(file).name.split('.')[1] || 'local'
 
             Config
               .getMerged(parsedEnv)
-              .then(config => self.build(parsedEnv, config).then(() => bs.reload()))
+              .then(config => self.build(parsedEnv, config).then(() => getBrowserSync().reload()))
           })
 
         // Browsersync options
@@ -154,7 +142,7 @@ const self = module.exports = { // eslint-disable-line
         }
 
         // Initialize Browsersync
-        bs.init(bsOptions, () => {})
+        getBrowserSync().init(bsOptions, () => {})
       })
       .catch(error => {
         throw error

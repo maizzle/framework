@@ -3,7 +3,8 @@ const {get, merge} = require('lodash')
 const posthtml = require('../posthtml')
 const Tailwind = require('../tailwindcss')
 const Transformers = require('../../transformers')
-const posthtmlMSO = require('../../transformers/posthtml-mso')
+const posthtmlMSO = require('../../transformers/posthtmlMso')
+const Config = require('../config')
 
 module.exports = async (html, options) => {
   process.env.NODE_ENV = get(options, 'maizzle.env', 'local')
@@ -16,7 +17,9 @@ module.exports = async (html, options) => {
     throw new RangeError('received empty string')
   }
 
-  let config = get(options, 'maizzle', {})
+  const fileConfig = await Config.getMerged(process.env.NODE_ENV)
+
+  let config = merge(fileConfig, get(options, 'maizzle', {}))
 
   const tailwindConfig = get(options, 'tailwind.config', {})
   const cssString = get(options, 'tailwind.css', '@tailwind components; @tailwind utilities;')

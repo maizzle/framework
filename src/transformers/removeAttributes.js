@@ -8,7 +8,7 @@ module.exports = async (html, config = {}, direct = false) => {
 
   attributes.push({name: 'style'}, {name: 'class'})
 
-  // Allow ommiting `value` key when removing empty attributes
+  // Allow omitting `value` key when removing empty attributes
   attributes.forEach(attr => {
     attr.value = attr.value || ''
   })

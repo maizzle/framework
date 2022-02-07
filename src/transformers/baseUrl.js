@@ -8,11 +8,11 @@ const rewriteVMLs = (html, url) => {
   const vImageMatch = html.match(/(<v:image.+)(src=['"]([^'"]+)['"])/)
   const vFillMatch = html.match(/(<v:fill.+)(src=['"]([^'"]+)['"])/)
 
-  if (!isUrl(vImageMatch[3])) {
+  if (vImageMatch && !isUrl(vImageMatch[3])) {
     html = html.replace(vImageMatch[0], `${vImageMatch[1]}src="${url}${vImageMatch[3]}"`)
   }
 
-  if (!isUrl(vFillMatch[3])) {
+  if (vFillMatch && !isUrl(vFillMatch[3])) {
     html = html.replace(vFillMatch[0], `${vFillMatch[1]}src="${url}${vFillMatch[3]}"`)
   }
 

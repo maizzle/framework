@@ -38,22 +38,7 @@ module.exports = {
           './src/**/*.*',
           {raw: html, extension: 'html'}
         ]
-      },
-      corePlugins: {
-        preflight: false,
-        animation: false,
-        backgroundOpacity: false,
-        borderOpacity: false,
-        boxShadow: false,
-        divideOpacity: false,
-        placeholderOpacity: false,
-        ringColor: false,
-        ringWidth: false,
-        ringOpacity: false,
-        ringOffsetColor: false,
-        textOpacity: false
-      },
-      plugins: []
+      }
     }, userConfig())
 
     // Add back the `{raw: html}` option if user provided own config
@@ -80,12 +65,6 @@ module.exports = {
 
       config.content.files.push(...templateSources)
     }
-
-    // Merge user's Tailwind plugins with our default ones
-    config.plugins = [
-      ...config.plugins,
-      require('tailwindcss-box-shadow')
-    ]
 
     const userFilePath = get(maizzleConfig, 'build.tailwind.css', path.join(process.cwd(), 'src/css/tailwind.css'))
     const userFileExists = await fs.pathExists(userFilePath)

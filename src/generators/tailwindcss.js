@@ -70,7 +70,7 @@ module.exports = {
     const userFileExists = await fs.pathExists(userFilePath)
 
     if (userFileExists) {
-      css = await fs.readFile(path.resolve(userFilePath), 'utf8')
+      css = await fs.readFile(path.resolve(userFilePath), 'utf8') + css
     }
 
     return postcss([

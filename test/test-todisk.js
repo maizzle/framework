@@ -446,8 +446,11 @@ test('works with templates.source defined as function (array paths)', async t =>
   const {files} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
+      customSources: ['test/stubs/templates', 'test/stubs/templates'],
       templates: {
-        source: () => ['test/stubs/templates', 'test/stubs/templates'],
+        source: config => {
+          return config.build.customSources
+        },
         destination: {
           path: t.context.folder
         }

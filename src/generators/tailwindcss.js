@@ -60,6 +60,19 @@ module.exports = {
       const templateSources = templateObjects.map(template => {
         const source = get(template, 'source')
 
+        if (typeof source === 'function') {
+          const sources = source(maizzleConfig)
+
+          if (Array.isArray(sources)) {
+            sources.map(s => config.content.files.push(s))
+          } else if (typeof sources === 'string') {
+            config.content.files.push(sources)
+          }
+
+          // Must return a valid `content` entry
+          return {raw: '', extension: 'html'}
+        }
+
         return `${source}/**/*.*`
       })
 

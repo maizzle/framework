@@ -46,19 +46,24 @@ module.exports = async (env, spinner, config) => {
      *
      *  */
     const templateSource = []
+    const templateTypeErrorMessage = 'Invalid template source: expected string or array of strings, got '
 
     if (typeof templateConfig.source === 'function') {
       const sources = templateConfig.source()
       if (Array.isArray(sources)) {
         templateSource.push(...sources)
-      } else {
+      } else if (typeof sources === 'string') {
         templateSource.push(sources)
+      } else {
+        throw new TypeError(templateTypeErrorMessage + typeof sources)
       }
     } else {
       if (Array.isArray(templateConfig.source)) {
         templateSource.push(...templateConfig.source)
-      } else {
+      } else if (typeof templateConfig.source === 'string') {
         templateSource.push(templateConfig.source)
+      } else {
+        throw new TypeError(templateTypeErrorMessage + typeof templateConfig.source)
       }
     }
 

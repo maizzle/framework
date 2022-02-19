@@ -458,3 +458,35 @@ test('works with templates.source defined as function (array paths)', async t =>
   t.true(fs.pathExistsSync(t.context.folder))
   t.is(files.length, 3)
 })
+
+test('throws if templates path is invalid', async t => {
+  await t.throwsAsync(async () => {
+    await Maizzle.build('maizzle-ci', {
+      build: {
+        fail: 'silent',
+        templates: {
+          source: false,
+          destination: {
+            path: t.context.folder
+          }
+        }
+      }
+    })
+  }, {instanceOf: TypeError})
+})
+
+test('throws if templates path is invalid (function)', async t => {
+  await t.throwsAsync(async () => {
+    await Maizzle.build('maizzle-ci', {
+      build: {
+        fail: 'silent',
+        templates: {
+          source: () => {},
+          destination: {
+            path: t.context.folder
+          }
+        }
+      }
+    })
+  }, {instanceOf: TypeError})
+})

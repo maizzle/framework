@@ -282,7 +282,7 @@ test('transform contents (postcss)', async t => {
   const html = await Maizzle.transformContents(
     `<style postcss>
       div {
-        @apply hidden container;
+        @apply hidden;
       }
     </style>`
   )

@@ -130,3 +130,9 @@ test('prevents overwriting page object', async t => {
 
   t.is(result, `1, undefined, undefined`)
 })
+
+test('preserves css in marked style tags', async t => {
+  const html = await renderString(fixture('preserve-css'))
+
+  t.is(html, expected('preserve-css'))
+})

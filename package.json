@@ -48,7 +48,7 @@
     "postcss": "^8.4.4",
     "postcss-import": "^14.0.0",
     "postcss-merge-longhand": "^5.0.1",
-    "posthtml": "^0.16.4",
+    "posthtml": "^0.16.6",
     "posthtml-attrs-parser": "^0.1.1",
     "posthtml-base-url": "^1.0.1",
     "posthtml-content": "^0.0.3",

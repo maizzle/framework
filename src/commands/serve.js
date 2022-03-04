@@ -9,7 +9,7 @@ const renderToString = require('../functions/render')
 const {get, merge, isObject} = require('lodash')
 const {clearConsole} = require('../utils/helpers')
 
-const getBrowserSync = () => {
+const browsersync = () => {
   if (!global.cachedBrowserSync) {
     const bs = require('browser-sync')
     global.cachedBrowserSync = bs.create()
@@ -29,87 +29,95 @@ const serve = async (env = 'local', config = {}) => {
     }
   )
 
-  await buildToFile(env, config)
-    .then(async () => {
-      let templates = get(config, 'build.templates')
-      templates = Array.isArray(templates) ? templates : [templates]
+  const spinner = ora()
 
-      const templatePaths = [...new Set(templates.map(config => `${get(config, 'source', 'src')}/**`))]
-      const globalPaths = [
-        'src/**',
-        get(config, 'build.tailwind.config', 'tailwind.config.js'),
-        [...new Set(get(config, 'build.browsersync.watch', []))]
-      ]
+  try {
+    await buildToFile(env, config)
 
-      const spinner = ora()
+    let templates = get(config, 'build.templates')
+    templates = Array.isArray(templates) ? templates : [templates]
 
-      // Watch for Template file changes
-      getBrowserSync().watch(templatePaths)
-        .on('change', async file => {
-          if (get(config, 'build.console.clear')) {
-            clearConsole()
-          }
+    const templatePaths = [...new Set(templates.map(config => `${get(config, 'source', 'src')}/**`))]
+    const globalPaths = [
+      'src/**',
+      get(config, 'build.tailwind.config', 'tailwind.config.js'),
+      [...new Set(get(config, 'build.browsersync.watch', []))]
+    ]
 
-          const start = new Date()
+    // Watch for Template file changes
+    browsersync()
+      .watch(templatePaths)
+      .on('change', async file => {
+        if (get(config, 'build.console.clear')) {
+          clearConsole()
+        }
 
-          spinner.start('Building email...')
+        const start = new Date()
 
-          file = file.replace(/\\/g, '/')
+        spinner.start('Building email...')
 
-          if (config.events && typeof config.events.beforeCreate === 'function') {
-            await config.events.beforeCreate(config)
-          }
+        file = file.replace(/\\/g, '/')
 
-          const renderOptions = {
-            maizzle: config,
-            ...config.events
-          }
+        if (config.events && typeof config.events.beforeCreate === 'function') {
+          await config.events.beforeCreate(config)
+        }
 
-          renderToString(await fs.readFile(file, 'utf8'), renderOptions)
-            .then(async ({html, config}) => {
-              let dest = ''
-              let ext = ''
+        const renderOptions = {
+          maizzle: config,
+          ...config.events
+        }
 
-              if (Array.isArray(config.build.templates)) {
-                // Might need to ensure both paths end the same (with/without slash)
-                const match = config.build.templates.find(template => template.source === path.parse(file).dir)
-                dest = get(match, 'destination.path', 'build_local')
-                ext = get(match, 'destination.ext', 'html')
-              } else if (isObject(config.build.templates)) {
-                dest = get(config, 'build.templates.destination.path', 'build_local')
-                ext = get(config, 'build.templates.destination.ext', 'html')
-              }
+        renderToString(
+          await fs.readFile(file, 'utf8'),
+          renderOptions
+        )
+          .then(async ({html, config}) => {
+            let dest = ''
+            let ext = ''
 
-              const finalDestination = path.join(dest, `${path.parse(file).name}.${ext}`)
+            if (Array.isArray(config.build.templates)) {
+              const match = config.build.templates.find(template => template.source === path.parse(file).dir)
+              dest = get(match, 'destination.path', 'build_local')
+              ext = get(match, 'destination.ext', 'html')
+            } else if (isObject(config.build.templates)) {
+              dest = get(config, 'build.templates.destination.path', 'build_local')
+              ext = get(config, 'build.templates.destination.ext', 'html')
+            }
 
-              await fs.outputFile(config.permalink || finalDestination, html)
-            })
-            .then(() => {
-              getBrowserSync().reload()
-              spinner.succeed(`Compiled in ${(Date.now() - start) / 1000}s [${file}]`)
-            })
-            .catch(() => spinner.warn(`Received empty HTML, please save your file again [${file}]`))
-        })
+            const finalDestination = path.join(dest, `${path.parse(file).name}.${ext}`)
 
-      // Watch for changes in all other files
-      getBrowserSync().watch(globalPaths, {ignored: templatePaths})
-        .on('change', () => buildToFile(env, config).then(() => getBrowserSync().reload()))
-        .on('unlink', () => buildToFile(env, config).then(() => getBrowserSync().reload()))
+            await fs.outputFile(config.permalink || finalDestination, html)
+          })
+          .then(() => {
+            browsersync().reload()
+            spinner.succeed(`Compiled in ${(Date.now() - start) / 1000}s [${file}]`)
+          })
+          .catch(() => spinner.warn(`Received empty HTML, please save your file again [${file}]`))
+      })
 
-      // Watch for changes in config files
-      getBrowserSync().watch('config*.js')
-        .on('change', async file => {
-          const parsedEnv = path.parse(file).name.split('.')[1] || 'local'
+    // Watch for changes in all other files
+    browsersync()
+      .watch(globalPaths, {ignored: templatePaths})
+      .on('change', () => buildToFile(env, config).then(() => browsersync().reload()))
+      .on('unlink', () => buildToFile(env, config).then(() => browsersync().reload()))
 
-          Config
-            .getMerged(parsedEnv)
-            .then(config => buildToFile(parsedEnv, config).then(() => getBrowserSync().reload()))
-        })
+    // Watch for changes in config files
+    browsersync()
+      .watch('config*.js')
+      .on('change', async file => {
+        const parsedEnv = path.parse(file).name.split('.')[1] || 'local'
 
-      // Browsersync options
-      const baseDir = templates.map(t => t.destination.path)
+        Config
+          .getMerged(parsedEnv)
+          .then(config => buildToFile(parsedEnv, config).then(() => browsersync().reload()))
+      })
 
-      const bsOptions = {
+    // Browsersync options
+    const baseDir = templates.map(t => t.destination.path)
+
+    // Initialize Browsersync
+    browsersync()
+      .init({
         notify: false,
         open: false,
         port: 3000,
@@ -121,14 +129,11 @@ const serve = async (env = 'local', config = {}) => {
         ui: {port: 3001},
         logFileChanges: false,
         ...get(config, 'build.browsersync', {})
-      }
-
-      // Initialize Browsersync
-      getBrowserSync().init(bsOptions, () => {})
-    })
-    .catch(error => {
-      throw error
-    })
+      }, () => {})
+  } catch (error) {
+    spinner.fail(error)
+    throw error
+  }
 }
 
 module.exports = serve

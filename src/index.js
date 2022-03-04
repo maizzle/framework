@@ -84,9 +84,9 @@ const self = module.exports = { // eslint-disable-line
 
             file = file.replace(/\\/g, '/')
 
-            const destination = get(config, 'build.currentTemplates.destination.path', 'build_local')
-            const extension = get(config, 'build.currentTemplates.destination.extension', 'html')
-            const fileSource = get(config, 'build.currentTemplates.source')
+            const destination = get(config, 'build.current.destination.path', 'build_local')
+            const extension = get(config, 'build.current.destination.extension', 'html')
+            const fileSource = get(config, 'build.current.source')
             const parts = path.parse(path.join(destination, file.replace(fileSource, '')))
             const finalDestination = path.join(parts.dir, `${parts.name}.${extension}`)
 

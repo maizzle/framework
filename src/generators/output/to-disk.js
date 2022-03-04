@@ -90,8 +90,8 @@ module.exports = async (env, spinner, config) => {
             return
           }
 
-          // Store template config currently being processed
-          config.build.currentTemplates = templateConfig
+          // Store build.template config currently being processed
+          config.build.current = templateConfig
 
           if (config.events && typeof config.events.beforeCreate === 'function') {
             await config.events.beforeCreate(config)

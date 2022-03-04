@@ -69,8 +69,15 @@ module.exports = async (env, spinner, config) => {
 
     // Parse each template source
     await asyncForEach(templateSource, async source => {
+      /**
+       * Copy single-file sources correctly
+       * If `src` is a file, `dest` cannot be a directory
+       * https://github.com/jprichardson/node-fs-extra/issues/323
+       */
+      const out = fs.lstatSync(source).isFile() ? `${outputDir}/${path.basename(source)}` : outputDir
+
       await fs
-        .copy(source, outputDir)
+        .copy(source, out)
         .then(async () => {
           const extensions = Array.isArray(templateConfig.filetypes)
             ? templateConfig.filetypes.join('|')

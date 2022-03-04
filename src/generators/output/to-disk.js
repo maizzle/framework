@@ -50,6 +50,7 @@ module.exports = async (env, spinner, config) => {
 
     if (typeof templateConfig.source === 'function') {
       const sources = templateConfig.source(config)
+
       if (Array.isArray(sources)) {
         templateSource.push(...sources)
       } else if (typeof sources === 'string') {
@@ -97,80 +98,79 @@ module.exports = async (env, spinner, config) => {
           await asyncForEach(templates, async file => {
             const html = await fs.readFile(file, 'utf8')
 
-            await render(html, {
-              maizzle: {
-                ...config,
-                env
-              },
-              tailwind: {
-                compiled: css
-              },
-              ...config.events
-            })
-              .then(async ({html, config}) => {
-                const destination = config.permalink || file
-
-                /**
-                 * Generate plaintext
-                 *
-                 * We do this first so that we can remove the <plaintext>
-                 * tags from the markup before outputting the file.
-                 */
-
-                const plaintextConfig = get(templateConfig, 'plaintext')
-                const plaintextPath = get(plaintextConfig, 'destination.path', config.permalink || file)
-
-                if (Boolean(plaintextConfig) || !isEmpty(plaintextConfig)) {
-                  await Plaintext
-                    .generate(
-                      html,
-                      plaintextPath,
-                      merge(plaintextConfig, {filepath: file})
-                    )
-                    .then(({plaintext, destination}) => fs.outputFile(destination, plaintext))
-                }
-
-                html = removePlaintextTags(html, config)
-
-                /**
-                 * Output file
-                 */
-                const parts = path.parse(destination)
-                const extension = get(templateConfig, 'destination.extension', 'html')
-                const finalDestination = `${parts.dir}/${parts.name}.${extension}`
-
-                await fs.outputFile(finalDestination, html)
-                  .then(async () => {
-                    /**
-                     * Remove original file if its path is different
-                     * from the final destination path.
-                     *
-                     * This ensures non-HTML files do not pollute
-                     * the build destination folder.
-                     */
-                    if (finalDestination !== file) {
-                      await fs.remove(file)
-                    }
-
-                    // Keep track of handled files
-                    files.push(file)
-                    parsed.push(file)
-                  })
+            try {
+              const compiled = await render(html, {
+                maizzle: {
+                  ...config,
+                  env
+                },
+                tailwind: {
+                  compiled: css
+                },
+                ...config.events
               })
-              .catch(error => {
-                switch (config.build.fail) {
-                  case 'silent':
-                    spinner.warn(`Failed to compile template: ${path.basename(file)}`)
-                    break
-                  case 'verbose':
-                    spinner.warn(`Failed to compile template: ${path.basename(file)}`)
-                    console.error(error)
-                    break
-                  default:
-                    spinner.fail(`Failed to compile template: ${path.basename(file)}`)
-                    throw error
-                }
-              })
+
+              const destination = config.permalink || file
+
+              /**
+               * Generate plaintext
+               *
+               * We do this first so that we can remove the <plaintext>
+               * tags from the markup before outputting the file.
+               */
+
+              const plaintextConfig = get(templateConfig, 'plaintext')
+              const plaintextPath = get(plaintextConfig, 'destination.path', config.permalink || file)
+
+              if (Boolean(plaintextConfig) || !isEmpty(plaintextConfig)) {
+                await Plaintext
+                  .generate(
+                    compiled.html,
+                    plaintextPath,
+                    merge(plaintextConfig, {filepath: file})
+                  )
+                  .then(({plaintext, destination}) => fs.outputFile(destination, plaintext))
+              }
+
+              compiled.html = removePlaintextTags(compiled.html, config)
+
+              /**
+               * Output file
+               */
+              const parts = path.parse(destination)
+              const extension = get(templateConfig, 'destination.extension', 'html')
+              const finalDestination = `${parts.dir}/${parts.name}.${extension}`
+
+              await fs.outputFile(finalDestination, compiled.html)
+
+              /**
+               * Remove original file if its path is different
+               * from the final destination path.
+               *
+               * This ensures non-HTML files do not pollute
+               * the build destination folder.
+               */
+              if (finalDestination !== file) {
+                await fs.remove(file)
+              }
+
+              // Keep track of handled files
+              files.push(file)
+              parsed.push(file)
+            } catch (error) {
+              switch (config.build.fail) {
+                case 'silent':
+                  spinner.warn(`Failed to compile template: ${path.basename(file)}`)
+                  break
+                case 'verbose':
+                  spinner.warn(`Failed to compile template: ${path.basename(file)}`)
+                  console.error(error)
+                  break
+                default:
+                  spinner.fail(`Failed to compile template: ${path.basename(file)}`)
+                  throw error
+              }
+            }
           })
 
           const assets = {source: '', destination: 'assets', ...get(templateConfig, 'assets')}

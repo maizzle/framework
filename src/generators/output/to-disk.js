@@ -98,6 +98,12 @@ module.exports = async (env, spinner, config) => {
           }
 
           await asyncForEach(templates, async file => {
+            // Add file source and destination paths to current config
+            config.build.current.file = {
+              source: path.extname(source) ? source : `${source}/${path.basename(file)}`,
+              destination: file
+            }
+
             const html = await fs.readFile(file, 'utf8')
 
             await render(html, {

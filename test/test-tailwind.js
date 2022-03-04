@@ -64,7 +64,7 @@ test('works with custom `files` sources', async t => {
   t.true(css.includes('.hidden'))
 })
 
-test('uses maizzle template paths when purging', async t => {
+test('uses maizzle template path as content source', async t => {
   const css = await Tailwind.compile(
     '@tailwind utilities;',
     '<div></div>',
@@ -73,6 +73,23 @@ test('uses maizzle template paths when purging', async t => {
       build: {
         templates: {
           source: './test/stubs/tailwind'
+        }
+      }
+    }
+  )
+
+  t.true(css.includes('.hidden'))
+})
+
+test('uses maizzle template path as content source (single file)', async t => {
+  const css = await Tailwind.compile(
+    '@tailwind utilities;',
+    '<div></div>',
+    {},
+    {
+      build: {
+        templates: {
+          source: './test/stubs/tailwind/preserve.html'
         }
       }
     }

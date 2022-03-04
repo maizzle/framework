@@ -73,6 +73,13 @@ module.exports = {
           return {raw: '', extension: 'html'}
         }
 
+        // Support single-file sources i.e. src/templates/index.html
+        if (typeof source === 'string' && Boolean(path.extname(source))) {
+          config.content.files.push(source)
+
+          return {raw: '', extension: 'html'}
+        }
+
         return `${source}/**/*.*`
       })
 

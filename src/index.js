@@ -1,10 +1,10 @@
 const ora = require('ora')
 const path = require('path')
 const fs = require('fs-extra')
-const {get, merge} = require('lodash')
 const Config = require('./generators/config')
 const Output = require('./generators/output')
 const transformers = require('./transformers')
+const {get, merge, isObject} = require('lodash')
 const {clearConsole} = require('./utils/helpers')
 const Plaintext = require('./generators/plaintext')
 
@@ -84,12 +84,6 @@ const self = module.exports = { // eslint-disable-line
 
             file = file.replace(/\\/g, '/')
 
-            const destination = get(config, 'build.current.destination.path', 'build_local')
-            const extension = get(config, 'build.current.destination.extension', 'html')
-            const fileSource = get(config, 'build.current.source')
-            const parts = path.parse(path.join(destination, file.replace(fileSource, '')))
-            const finalDestination = path.join(parts.dir, `${parts.name}.${extension}`)
-
             if (config.events && typeof config.events.beforeCreate === 'function') {
               await config.events.beforeCreate(config)
             }
@@ -101,7 +95,24 @@ const self = module.exports = { // eslint-disable-line
 
             self
               .render(await fs.readFile(file, 'utf8'), renderOptions)
-              .then(({html, config}) => fs.outputFile(config.permalink || finalDestination, html))
+              .then(async ({html, config}) => {
+                let dest = ''
+                let ext = ''
+
+                if (Array.isArray(config.build.templates)) {
+                  // Might need to ensure both paths end the same (with/without slash)
+                  const match = config.build.templates.find(template => template.source === path.parse(file).dir)
+                  dest = get(match, 'destination.path', 'build_local')
+                  ext = get(match, 'destination.ext', 'html')
+                } else if (isObject(config.build.templates)) {
+                  dest = get(config, 'build.templates.destination.path', 'build_local')
+                  ext = get(config, 'build.templates.destination.ext', 'html')
+                }
+
+                const finalDestination = path.join(dest, `${path.parse(file).name}.${ext}`)
+
+                await fs.outputFile(config.permalink || finalDestination, html)
+              })
               .then(() => {
                 getBrowserSync().reload()
                 spinner.succeed(`Compiled in ${(Date.now() - start) / 1000}s [${file}]`)

@@ -139,6 +139,8 @@ test('outputs files with the correct extension', async t => {
     }
   })
 
+  console.log(fs.readdirSync(t.context.folder))
+
   t.true(fs.readdirSync(t.context.folder).includes('1.blade.php'))
 })
 

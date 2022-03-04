@@ -90,20 +90,11 @@ module.exports = async (env, spinner, config) => {
             return
           }
 
-          // Store build.template config currently being processed
-          config.build.current = templateConfig
-
           if (config.events && typeof config.events.beforeCreate === 'function') {
             await config.events.beforeCreate(config)
           }
 
           await asyncForEach(templates, async file => {
-            // Add file source and destination paths to current config
-            config.build.current.file = {
-              source: path.extname(source) ? source : `${source}/${path.basename(file)}`,
-              destination: file
-            }
-
             const html = await fs.readFile(file, 'utf8')
 
             await render(html, {
@@ -127,11 +118,15 @@ module.exports = async (env, spinner, config) => {
                  */
 
                 const plaintextConfig = get(templateConfig, 'plaintext')
-                const plaintextDestination = get(plaintextConfig, 'destination', config.permalink || file)
+                const plaintextPath = get(plaintextConfig, 'destination.path', config.permalink || file)
 
-                if ((typeof plaintextConfig === 'boolean' && plaintextConfig) || !isEmpty(plaintextConfig)) {
+                if (Boolean(plaintextConfig) || !isEmpty(plaintextConfig)) {
                   await Plaintext
-                    .generate(html, plaintextDestination, merge(config, {filepath: file}))
+                    .generate(
+                      html,
+                      plaintextPath,
+                      merge(plaintextConfig, {filepath: file})
+                    )
                     .then(({plaintext, destination}) => fs.outputFile(destination, plaintext))
                 }
 

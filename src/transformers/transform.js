@@ -15,8 +15,8 @@ module.exports = async (html, config = {}, direct = false) => {
 
   const compileCss = css => Tailwind.compile(css, html, tailwindConfig, maizzleConfig)
 
-  replacements.tailwindcss = css => compileCss(`@tailwind components; @tailwind utilities; ${css}`)
-  replacements.postcss = css => compileCss(`@tailwind components; @tailwind utilities; ${css}`)
+  replacements.tailwindcss = css => compileCss(css)
+  replacements.postcss = css => compileCss(css)
 
   return posthtml([posthtmlContent(replacements)]).process(html, posthtmlOptions).then(result => result.html)
 }

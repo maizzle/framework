@@ -91,6 +91,8 @@ module.exports = {
 
     if (userFileExists) {
       css += await fs.readFile(path.resolve(userFilePath), 'utf8')
+    } else {
+      css = '@tailwind components; @tailwind utilities;' + css
     }
 
     return postcss([

@@ -29,7 +29,7 @@ module.exports = async (env, spinner, config) => {
 
   const css = (typeof get(config, 'tailwind.compiled') === 'string')
     ? config.tailwind.compiled
-    : await Tailwind.compile('@tailwind components; @tailwind utilities;', '', {}, config, spinner)
+    : await Tailwind.compile('', '', {}, config, spinner)
 
   // Parse each template config object
   await asyncForEach(templatesConfig, async templateConfig => {

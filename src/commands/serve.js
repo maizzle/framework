@@ -72,19 +72,23 @@ const serve = async (env = 'local', config = {}) => {
           renderOptions
         )
           .then(async ({html, config}) => {
+            let source = ''
             let dest = ''
             let ext = ''
 
             if (Array.isArray(config.build.templates)) {
               const match = config.build.templates.find(template => template.source === path.parse(file).dir)
+              source = get(match, 'source')
               dest = get(match, 'destination.path', 'build_local')
               ext = get(match, 'destination.ext', 'html')
             } else if (isObject(config.build.templates)) {
+              source = get(config, 'build.templates.source')
               dest = get(config, 'build.templates.destination.path', 'build_local')
               ext = get(config, 'build.templates.destination.ext', 'html')
             }
 
-            const finalDestination = path.join(dest, `${path.parse(file).name}.${ext}`)
+            const fileDir = path.parse(file).dir.replace(source, '')
+            const finalDestination = path.join(dest, fileDir, `${path.parse(file).name}.${ext}`)
 
             await fs.outputFile(config.permalink || finalDestination, html)
           })

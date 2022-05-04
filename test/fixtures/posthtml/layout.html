@@ -1,0 +1,11 @@
+---
+greeting: Hello
+---
+
+<extends src="test/stubs/layouts/basic.html">
+  <block name="template">
+    Environment: {{ page.env }}
+
+    Front matter variable: {{ page.greeting }}
+  </block>
+</extends>

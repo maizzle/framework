@@ -9,9 +9,6 @@ const expressions = require('posthtml-expressions')
 module.exports = async (html, config) => {
   const layoutsOptions = get(config, 'build.layouts', {})
 
-  const fetchOptions = get(config, 'build.posthtml.fetch', {})
-  const fetchPlugin = fetch({...fetchOptions})
-
   const modulesOptions = get(config, 'build.components', {})
   // Fake `from` option so we can reference modules relatively
   const modulesRoot = modulesOptions.root || './'
@@ -28,15 +25,23 @@ module.exports = async (html, config) => {
     {page: config}
   )
 
+  const fetchPlugin = fetch(
+    merge(
+      {
+        expressions: merge({...expressionsOptions, locals})
+      },
+      get(config, 'build.posthtml.fetch', {})
+    )
+  )
+
   return posthtml([
     fetchPlugin,
+    expressions({...expressionsOptions, locals}),
     layouts(
       merge(
         {
           strict: false,
-          plugins: [
-            expressions({...expressionsOptions, locals})
-          ]
+          expressions: merge({...expressionsOptions, locals})
         },
         layoutsOptions
       )

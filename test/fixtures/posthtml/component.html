@@ -1,0 +1,19 @@
+<component
+  src="test/stubs/components/component.html"
+  text="Example"
+  locals='{
+    "foo": "bar"
+  }'
+>
+  Variable from page: [[ page.env ]]
+
+  <component
+    src="test/stubs/components/component.html"
+    text="Nested component"
+    locals='{
+      "foo": "bar (nested)"
+    }'
+  >
+    Variable from page (nested): [[ page.env ]]
+  </component>
+</component>

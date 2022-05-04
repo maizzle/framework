@@ -25,17 +25,10 @@ test('uses environment config file(s) if available', async t => {
   t.is(html, expected('useConfig'))
 })
 
-test('inheritance', async t => {
-  let html = await renderString(fixture('inheritance'))
-  html = html.replace(/[^\S\r\n]+$/gm, '').trim()
-
-  t.is(html, expected('inheritance').trim())
-})
-
 test('throws if first argument is not an HTML string', async t => {
   await t.throwsAsync(async () => {
-    await renderString(false)
-  }, {instanceOf: TypeError, message: 'first argument must be an HTML string, received false'})
+    await renderString()
+  }, {instanceOf: TypeError, message: 'first argument must be an HTML string, received undefined'})
 })
 
 test('throws if first argument is an empty string', async t => {
@@ -83,7 +76,7 @@ test('runs the `afterTransformers` event', async t => {
   t.is(result, `<div>bar</div>`)
 })
 
-test('multiple locals', async t => {
+test('locals work when defined in all supported places', async t => {
   const result = await renderString(`{{ page.one }}, {{ two }}, {{ three }}`, {
     maizzle: {
       one: 1,

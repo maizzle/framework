@@ -123,3 +123,24 @@ test('prevents overwriting page object', async t => {
 
   t.is(result, `1, undefined, undefined`)
 })
+
+test('preserves css in marked style tags', async t => {
+  const html = await renderString(fixture('preserve-css'), {
+    // So that we don't compile twice
+    tailwind: {
+      compiled: ''
+    }
+  })
+
+  t.is(html, expected('preserve-css'))
+})
+
+test('@import css files in style tags', async t => {
+  const html = await renderString(fixture('atimport-in-style'), {
+    tailwind: {
+      compiled: ''
+    }
+  })
+
+  t.is(html, expected('atimport-in-style'))
+})

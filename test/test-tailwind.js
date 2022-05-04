@@ -89,7 +89,7 @@ test('uses maizzle template path as content source (single file)', async t => {
     {
       build: {
         templates: {
-          source: './test/stubs/tailwind/preserve.html'
+          source: './test/stubs/tailwind/content-source.html'
         }
       }
     }

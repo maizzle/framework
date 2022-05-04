@@ -92,7 +92,7 @@ module.exports = {
     if (userFileExists) {
       css = await fs.readFile(path.resolve(userFilePath), 'utf8') + css
     } else {
-      css = '@import "tailwindcss/components"; @import "tailwindcss/utilities";' + css
+      css = `@import "tailwindcss/components"; @import "tailwindcss/utilities"; ${css}`
     }
 
     return postcss([

@@ -1,5 +1,5 @@
-const {get, isEmpty} = require('lodash')
 const posthtml = require('posthtml')
+const {get, isEmpty} = require('lodash')
 const parseAttrs = require('posthtml-attrs-parser')
 
 module.exports = async (html, config = {}, direct = false) => {

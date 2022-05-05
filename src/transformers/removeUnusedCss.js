@@ -1,5 +1,5 @@
-const {get, isEmpty} = require('lodash')
 const {comb} = require('email-comb')
+const {get, isEmpty} = require('lodash')
 
 module.exports = async (html, config = {}, direct = false) => {
   if (get(config, 'removeUnusedCSS') === false) {

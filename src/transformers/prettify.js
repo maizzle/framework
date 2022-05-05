@@ -1,5 +1,5 @@
-const {get, isEmpty} = require('lodash')
 const pretty = require('pretty')
+const {get, isEmpty} = require('lodash')
 
 module.exports = async (html, config = {}, direct = false) => {
   if (get(config, 'prettify') === false) {

@@ -9,7 +9,7 @@ module.exports = async (html, config = {}, direct = false) => {
   }
 
   const options = direct ? config : get(config, 'inlineCSS', {})
-  const removeStyleTags = get(options, 'removeStyleTags', true)
+  const removeStyleTags = get(options, 'removeStyleTags', false)
   const css = get(config, 'customCSS', false)
 
   if (get(config, 'inlineCSS') === true || !isEmpty(options)) {

@@ -351,3 +351,110 @@ test('markdown (disabled)', async t => {
 
   t.is(html, '> a quote')
 })
+
+test('remove inlined selectors', async t => {
+  const html = `<!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        img {
+          border: 0;
+          vertical-align: middle
+        }
+
+        .hover-text-blue:hover {
+          color: #00a8ff;
+        }
+
+        .m-0 {margin: 0}
+
+        .mb-4 {margin-bottom: 16px}
+
+        .mt-0 {margin-top: 0}
+
+        .remove {color: red}
+
+        [data-ogsc] .hidden {display: none}
+
+        #keepId {float:none}
+
+        @media (max-width: 600px) {
+          .ignore {color: blue}
+        }
+      </style>
+      <style>
+        .keep {margin: 0}
+      </style>
+    </head>
+    <body>
+      <div id="keepId" class="remove keep ignore" style="color: red; display: inline">
+        <h1 class="m-0 mb-4 mt-0 hover-text-blue" style="margin: 0 0 16px;">Title</h1>
+        <img src="https://example.com/image.jpg" style="border: 0; vertical-align: middle">
+        <div id="keepId" class="remove keep ignore" style="color: red; display: inline">text</div>
+      </div>
+    </body>
+  </html>`
+
+  const expected = `<!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        .hover-text-blue:hover {
+          color: #00a8ff;
+        }
+
+        [data-ogsc] .hidden {display: none}
+
+        #keepId {float:none}
+
+        @media (max-width: 600px) {
+          .ignore {color: blue}
+        }
+      </style>
+      <style>
+        .keep {margin: 0}
+      </style>
+    </head>
+    <body>
+      <div id="keepId" class="keep ignore" style="color: red; display: inline">
+        <h1 class="hover-text-blue" style="margin: 0 0 16px">Title</h1>
+        <img src="https://example.com/image.jpg" style="border: 0; vertical-align: middle">
+        <div id="keepId" class="keep ignore" style="color: red; display: inline">text</div>
+      </div>
+    </body>
+  </html>`
+
+  const result = await Maizzle.removeInlinedClasses(html)
+
+  t.is(result, expected)
+})
+
+test('remove inlined selectors (disabled)', async t => {
+  const html = `<!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        .remove {color: red}
+      </style>
+    </head>
+    <body>
+      <div class="remove" style="color: red"></div>
+    </body>
+  </html>`
+
+  const expected = `<!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        .remove {color: red}
+      </style>
+    </head>
+    <body>
+      <div class="remove" style="color: red"></div>
+    </body>
+  </html>`
+
+  const result = await Maizzle.removeInlinedClasses(html, {removeInlinedClasses: false})
+
+  t.is(result, expected)
+})

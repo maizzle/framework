@@ -6,7 +6,7 @@ const path = require('path')
 const {readFileSync} = require('fs')
 
 const fixture = file => readFileSync(path.join(__dirname, 'fixtures/transformers', `${file}.html`), 'utf8')
-const expected = file => readFileSync(path.join(__dirname, 'expected/transformers', `${file}.html`), 'utf8')
+const expect = file => readFileSync(path.join(__dirname, 'expected/transformers', `${file}.html`), 'utf8')
 
 test('remove inline sizes', async t => {
   const options = {
@@ -194,7 +194,7 @@ test('extra attributes (disabled)', async t => {
 test('base URL (string)', async t => {
   const html = await Maizzle.applyBaseImageUrl(fixture('base-image-url'), 'https://example.com/')
 
-  t.is(html, expected('base-image-url'))
+  t.is(html, expect('base-image-url'))
 })
 
 test('base URL (object)', async t => {
@@ -205,7 +205,7 @@ test('base URL (object)', async t => {
     inlineCss: true
   })
 
-  t.is(html, expected('base-image-url'))
+  t.is(html, expect('base-image-url'))
 })
 
 test('prettify', async t => {
@@ -288,16 +288,35 @@ test('transform contents (javascript)', async t => {
   t.is(html, '<div>TEST</div>')
 })
 
-test('transform contents (postcss)', async t => {
+test('transform contents (tailwindcss)', async t => {
   const html = await Maizzle.transformContents(
-    `<style postcss>
+    `<style tailwindcss>
       div {
         @apply hidden;
       }
     </style>`
   )
 
-  t.is(html, expected('transform-postcss').trim())
+  const expected = `<style>.inline { display: inline !important
+} .table { display: table !important
+} .contents { display: contents !important
+} .transform { transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y)) !important
+} div { display: none
+}</style>`
+
+  t.is(html, expected)
+})
+
+test('transform contents (postcss)', async t => {
+  const html = await Maizzle.transformContents(
+    `<style postcss>@import 'test/stubs/post.css';</style>`
+  )
+
+  const expected = `<style>div {
+  margin: 1px 2px 3px 4px;
+}</style>`
+
+  t.is(html, expected)
 })
 
 test('url parameters', async t => {

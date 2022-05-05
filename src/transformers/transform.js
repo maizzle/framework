@@ -1,5 +1,6 @@
 const posthtml = require('posthtml')
 const {get, omit, has} = require('lodash')
+const PostCSS = require('../generators/postcss')
 const posthtmlContent = require('posthtml-content')
 const Tailwind = require('../generators/tailwindcss')
 const safeClassNames = require('posthtml-safe-class-names')
@@ -14,10 +15,8 @@ module.exports = async (html, config = {}, direct = false) => {
   const maizzleConfig = omit(config, ['build.tailwind.css', 'css'])
   const tailwindConfig = get(config, 'build.tailwind.config', 'tailwind.config.js')
 
-  const compileCss = css => Tailwind.compile(css, html, tailwindConfig, maizzleConfig)
-
-  replacements.postcss = css => compileCss(css)
-  replacements.tailwindcss = css => compileCss(css)
+  replacements.postcss = css => PostCSS.process(css, maizzleConfig)
+  replacements.tailwindcss = css => Tailwind.compile(css, html, tailwindConfig, maizzleConfig)
 
   return posthtml([
     styleDataEmbed(),

@@ -136,11 +136,7 @@ test('preserves css in marked style tags (tailwindcss)', async t => {
 })
 
 test('@import css files in marked style tags', async t => {
-  const html = await renderString(fixture('transformers/atimport-in-style'), {
-    tailwind: {
-      compiled: ''
-    }
-  })
+  const html = await renderString(fixture('transformers/atimport-in-style'))
 
   t.is(html, expected('transformers/atimport-in-style'))
 })

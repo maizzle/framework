@@ -121,19 +121,22 @@ const serve = async (env = 'local', config = {}) => {
 
     // Initialize Browsersync
     browsersync()
-      .init({
-        notify: false,
-        open: false,
-        port: 3000,
-        server: {
-          baseDir,
-          directory: true
-        },
-        tunnel: false,
-        ui: {port: 3001},
-        logFileChanges: false,
-        ...get(config, 'build.browsersync', {})
-      }, () => {})
+      .init(
+        merge(
+          {
+            notify: false,
+            open: false,
+            port: 3000,
+            server: {
+              baseDir,
+              directory: true
+            },
+            tunnel: false,
+            ui: {port: 3001},
+            logFileChanges: false
+          },
+          get(config, 'build.browsersync', {})
+        ), () => {})
   } catch (error) {
     spinner.fail(error)
     throw error

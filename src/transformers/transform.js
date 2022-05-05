@@ -2,6 +2,7 @@ const posthtml = require('posthtml')
 const {get, omit, has} = require('lodash')
 const posthtmlContent = require('posthtml-content')
 const Tailwind = require('../generators/tailwindcss')
+const safeClassNames = require('posthtml-safe-class-names')
 
 module.exports = async (html, config = {}, direct = false) => {
   const replacements = direct ? config : get(config, 'transform', {})
@@ -20,7 +21,8 @@ module.exports = async (html, config = {}, direct = false) => {
 
   return posthtml([
     styleDataEmbed(),
-    posthtmlContent(replacements)
+    posthtmlContent(replacements),
+    safeClassNames()
   ])
     .process(html, posthtmlOptions)
     .then(result => result.html)

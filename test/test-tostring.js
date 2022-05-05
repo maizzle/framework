@@ -123,3 +123,20 @@ test('prevents overwriting page object', async t => {
 
   t.is(result, `1, undefined, undefined`)
 })
+
+test('preserves css in marked style tags (tailwindcss)', async t => {
+  const html = await renderString(fixture('transformers/preserve-transform-css'), {
+    // So that we don't compile twice
+    tailwind: {
+      compiled: ''
+    }
+  })
+
+  t.is(html, expected('transformers/preserve-transform-css'))
+})
+
+test('@import css files in marked style tags', async t => {
+  const html = await renderString(fixture('transformers/atimport-in-style'))
+
+  t.is(html, expected('transformers/atimport-in-style'))
+})

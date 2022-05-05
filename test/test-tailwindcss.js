@@ -9,7 +9,7 @@ test('throws on compile error', async t => {
   }, {instanceOf: Error, message: 'Tailwind CSS compilation failed'})
 })
 
-test('uses Tailwind defaults if no config specified', async t => {
+test('uses defaults if no config specified', async t => {
   const css = await Tailwind.compile(
     '@tailwind utilities;',
     '<p class="xl:z-0"></p>',
@@ -21,7 +21,7 @@ test('uses Tailwind defaults if no config specified', async t => {
   t.true(css.includes('.xl\\:z-0'))
 })
 
-test('uses CSS file provided in environment config', async t => {
+test('uses css file provided in environment config', async t => {
   const config = {
     env: 'production',
     build: {
@@ -89,7 +89,7 @@ test('uses maizzle template path as content source (single file)', async t => {
     {
       build: {
         templates: {
-          source: './test/stubs/tailwind/preserve.html'
+          source: './test/stubs/tailwind/content-source.html'
         }
       }
     }

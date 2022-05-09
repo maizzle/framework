@@ -10,7 +10,12 @@ module.exports = async (html, config = {}, direct = false) => {
 
   const safelist = [
     '*body*', // Gmail
+    '.gmail*', // Gmail
+    '.apple*', // Apple Mail
+    '.ios*', // Mail on iOS
+    '.ox-*', // Open-Xchange
     '.outlook*', // Outlook.com
+    '.ogs*', // Outlook.com
     '.bloop_container', // Airmail
     '.Singleton', // Apple Mail 10
     '.unused', // Notes 8

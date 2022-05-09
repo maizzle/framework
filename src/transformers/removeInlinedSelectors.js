@@ -37,7 +37,6 @@ const plugin = () => tree => {
           // If the class is in the style attribute (inlined), remove it
           if (has(styleAttr, prop)) {
             // Remove the class attribute
-            // console.log(styleAttr, prop, classAttr)
             remove(classAttr, s => selector.includes(s))
 
             // Remove the rule in the <style> tag

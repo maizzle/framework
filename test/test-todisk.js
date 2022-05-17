@@ -67,9 +67,9 @@ test('outputs files at the correct location', async t => {
     }
   })
 
-  t.true(fs.pathExistsSync(t.context.folder))
-  t.is(string.length, 3)
-  t.is(array.length, 3)
+  t.true(await fs.pathExists(t.context.folder))
+  t.is(string.length, 2)
+  t.is(array.length, 2)
 })
 
 test('outputs files at the correct location if multiple template sources are used', async t => {
@@ -93,8 +93,8 @@ test('outputs files at the correct location if multiple template sources are use
     }
   })
 
-  t.true(fs.pathExistsSync(t.context.folder))
-  t.is(files.length, 4)
+  t.true(await fs.pathExists(t.context.folder))
+  t.is(files.length, 3)
 })
 
 test('copies all files in the `filetypes` option to destination', async t => {
@@ -103,7 +103,7 @@ test('copies all files in the `filetypes` option to destination', async t => {
       fail: 'silent',
       templates: {
         source: 'test/stubs/templates',
-        filetypes: ['html', 'mzl'],
+        filetypes: ['html', 'test'],
         destination: {
           path: t.context.folder
         }
@@ -116,8 +116,8 @@ test('copies all files in the `filetypes` option to destination', async t => {
     }
   })
 
-  t.true(fs.pathExistsSync(t.context.folder))
-  t.is(files.length, 4)
+  t.true(await fs.pathExists(t.context.folder))
+  t.is(files.length, 3)
 })
 
 test('outputs files with the correct extension', async t => {
@@ -139,9 +139,9 @@ test('outputs files with the correct extension', async t => {
     }
   })
 
-  console.log(fs.readdirSync(t.context.folder))
+  const filelist = await fs.readdir(t.context.folder)
 
-  t.true(fs.readdirSync(t.context.folder).includes('1.blade.php'))
+  t.true(filelist.includes('1.blade.php'))
 })
 
 test('outputs plaintext files', async t => {
@@ -170,7 +170,7 @@ test('outputs plaintext files', async t => {
 
   t.is(plaintext[0], `${t.context.folder}/plaintext.txt`)
   t.is(plaintextContent, 'Show in HTML\nShow in plaintext')
-  t.is(htmlContent, '<div>Show in HTML</div>\n\n')
+  t.is(htmlContent, '<div>Show in HTML</div>\n')
 })
 
 test('outputs plaintext files (custom path)', async t => {
@@ -230,8 +230,10 @@ test('copies assets to destination', async t => {
     }
   })
 
-  t.is(fs.pathExistsSync(`${t.context.folder}/images`), true)
-  t.is(fs.readdirSync(`${t.context.folder}/images`).length, 1)
+  const filelist = await fs.readdir(`${t.context.folder}/images`)
+
+  t.is(await fs.pathExists(`${t.context.folder}/images`), true)
+  t.is(filelist.length, 1)
 })
 
 test('runs the `beforeCreate` event', async t => {
@@ -257,9 +259,10 @@ test('runs the `beforeCreate` event', async t => {
     }
   })
 
-  const html = fs.readFileSync(`${t.context.folder}/${fs.readdirSync(t.context.folder)[0]}`, 'utf8').trim()
+  const filename = await fs.readdir(t.context.folder)
+  const html = await fs.readFile(`${t.context.folder}/${filename[0]}`, 'utf8')
 
-  t.is(html, 'Foo is bar')
+  t.is(html.trim(), 'Foo is bar')
 })
 
 test('runs the `afterBuild` event', async t => {
@@ -312,9 +315,9 @@ test('supports multiple asset paths', async t => {
     }
   })
 
-  t.true(fs.existsSync(`${t.context.folder}/extras/foo.bar`))
-  t.true(fs.existsSync(`${t.context.folder}/extras/plaintext.html`))
-  t.false(fs.existsSync(`${t.context.folder}/extras/invalid`))
+  t.true(await fs.pathExists(`${t.context.folder}/extras/foo.bar`))
+  t.true(await fs.pathExists(`${t.context.folder}/extras/plaintext.html`))
+  t.false(await fs.pathExists(`${t.context.folder}/extras/invalid`))
 })
 
 test('warns if a template cannot be rendered and `fail` option is undefined', async t => {
@@ -394,31 +397,38 @@ test('spins up local development server', async t => {
     }
   })
 
-  t.true(fs.existsSync(t.context.folder))
+  t.true(await fs.pathExists(t.context.folder))
 })
 
 test('local server does not compile unwanted file types', async t => {
   await Maizzle.serve('local', {
     build: {
+      console: {
+        clear: true
+      },
       browsersync: {
         ui: false
       },
       templates: {
         source: 'test/stubs/templates',
         destination: {
-          path: t.context.folder
+          path: `${t.context.folder}`
         }
+      }
+    },
+    events: {
+      beforeCreate(config) {
+        config.foo = 'bar'
       }
     }
   })
 
-  fs.outputFileSync(`test/stubs/templates/1.html`, '<a href="https://example.com">Test</a>\n')
-  fs.outputFileSync(`test/stubs/templates/3.mzl`, '<a href="https://example.com">Test</a>\n')
+  t.true(await fs.pathExists(`${t.context.folder}`))
+  t.true(await fs.pathExists(`${t.context.folder}/2.test`))
 
-  t.is(fs.readFileSync(`${t.context.folder}/1.html`, 'utf8'), '<a href="https://example.com">Test</a>\n')
-  t.is(fs.readFileSync(`${t.context.folder}/3.mzl`, 'utf8'), '<a href="https://example.com">Test</a>\n')
-
-  fs.removeSync(t.context.folder)
+  // Tests watching changes to files
+  await fs.outputFile('test/stubs/templates/1.html', 'html')
+  t.is(await fs.readFile('test/stubs/templates/1.html', 'utf8'), 'html')
 })
 
 test('throws if it cannot spin up local development server', async t => {
@@ -440,8 +450,8 @@ test('works with templates.source defined as function (string paths)', async t =
     }
   })
 
-  t.true(fs.pathExistsSync(t.context.folder))
-  t.is(files.length, 3)
+  t.true(await fs.pathExists(t.context.folder))
+  t.is(files.length, 2)
 })
 
 test('works with templates.source defined as function (array paths)', async t => {
@@ -460,8 +470,8 @@ test('works with templates.source defined as function (array paths)', async t =>
     }
   })
 
-  t.true(fs.pathExistsSync(t.context.folder))
-  t.is(files.length, 3)
+  t.true(await fs.pathExists(t.context.folder))
+  t.is(files.length, 2)
 })
 
 test('throws if templates path is invalid', async t => {

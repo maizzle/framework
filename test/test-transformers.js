@@ -3,10 +3,14 @@ const Maizzle = require('../src')
 const removePlaintextTags = require('../src/transformers/plaintext')
 
 const path = require('path')
-const {readFileSync} = require('fs')
+const fs = require('fs')
 
-const fixture = file => readFileSync(path.join(__dirname, 'fixtures/transformers', `${file}.html`), 'utf8')
-const expect = file => readFileSync(path.join(__dirname, 'expected/transformers', `${file}.html`), 'utf8')
+const readFile = (dir, filename) => fs.promises
+  .readFile(path.join(__dirname, dir, `${filename}.html`), 'utf8')
+  .then(html => html.trim())
+
+const fixture = file => readFile('fixtures/transformers', file)
+const expected = file => readFile('expected/transformers', file)
 
 test('remove inline sizes', async t => {
   const options = {
@@ -192,20 +196,22 @@ test('extra attributes (disabled)', async t => {
 })
 
 test('base URL (string)', async t => {
-  const html = await Maizzle.applyBaseImageUrl(fixture('base-image-url'), 'https://example.com/')
+  const source = await fixture('base-image-url')
+  const html = await Maizzle.applyBaseImageUrl(source, 'https://example.com/')
 
-  t.is(html, expect('base-image-url'))
+  t.is(html, await expected('base-image-url'))
 })
 
 test('base URL (object)', async t => {
-  const html = await Maizzle.applyBaseImageUrl(fixture('base-image-url'), {
+  const source = await fixture('base-image-url')
+  const html = await Maizzle.applyBaseImageUrl(source, {
     url: 'https://example.com/',
     allTags: true,
     styleTag: true,
     inlineCss: true
   })
 
-  t.is(html, expect('base-image-url'))
+  t.is(html, await expected('base-image-url'))
 })
 
 test('prettify', async t => {

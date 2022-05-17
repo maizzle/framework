@@ -2,15 +2,19 @@ const test = require('ava')
 const Maizzle = require('../src')
 
 const path = require('path')
-const {readFileSync} = require('fs')
+const fs = require('fs')
 
-const fixture = file => readFileSync(path.join(__dirname, 'fixtures', `${file}.html`), 'utf8')
-const expected = file => readFileSync(path.join(__dirname, 'expected', `${file}.html`), 'utf8')
+const readFile = (dir, filename) => fs.promises
+  .readFile(path.join(__dirname, dir, `${filename}.html`), 'utf8')
+  .then(html => html.trim())
+
+const fixture = file => readFile('fixtures', file)
+const expected = file => readFile('expected', file)
 
 const renderString = (string, options = {}) => Maizzle.render(string, options).then(({html}) => html)
 
 test('compiles HTML string if no options are passed', async t => {
-  const source = fixture('basic')
+  const source = await fixture('basic')
 
   const html = await renderString(source)
 
@@ -18,11 +22,11 @@ test('compiles HTML string if no options are passed', async t => {
 })
 
 test('uses environment config file(s) if available', async t => {
-  const source = fixture('useConfig')
+  const source = await fixture('useConfig')
 
   const html = await renderString(source, {maizzle: {env: 'maizzle-ci'}})
 
-  t.is(html, expected('useConfig'))
+  t.is(html, await expected('useConfig'))
 })
 
 test('throws if first argument is not an HTML string', async t => {
@@ -125,18 +129,20 @@ test('prevents overwriting page object', async t => {
 })
 
 test('preserves css in marked style tags (tailwindcss)', async t => {
-  const html = await renderString(fixture('transformers/preserve-transform-css'), {
+  const source = await fixture('transformers/preserve-transform-css')
+  const html = await renderString(source, {
     // So that we don't compile twice
     tailwind: {
       compiled: ''
     }
   })
 
-  t.is(html, expected('transformers/preserve-transform-css'))
+  t.is(html, await expected('transformers/preserve-transform-css'))
 })
 
 test('@import css files in marked style tags', async t => {
-  const html = await renderString(fixture('transformers/atimport-in-style'))
+  const source = await fixture('transformers/atimport-in-style')
+  const html = await renderString(source)
 
-  t.is(html, expected('transformers/atimport-in-style'))
+  t.is(html, await expected('transformers/atimport-in-style'))
 })

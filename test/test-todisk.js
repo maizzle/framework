@@ -427,8 +427,12 @@ test('local server does not compile unwanted file types', async t => {
   t.true(await fs.pathExists(`${t.context.folder}/2.test`))
 
   // Tests watching changes to files
-  await fs.outputFile('test/stubs/templates/1.html', 'html')
-  t.is(await fs.readFile('test/stubs/templates/1.html', 'utf8'), 'html')
+  await fs.outputFile('test/stubs/templates/1.html', 'html\n')
+  t.is(await fs.readFile('test/stubs/templates/1.html', 'utf8'), 'html\n')
+
+  // Don't trigger rebuilds on files not in filetypes
+  await fs.outputFile('test/stubs/templates/2.test', 'test\n')
+  t.is(await fs.readFile('test/stubs/templates/2.test', 'utf8'), 'test\n')
 })
 
 test('throws if it cannot spin up local development server', async t => {

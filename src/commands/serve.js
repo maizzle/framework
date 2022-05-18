@@ -52,6 +52,16 @@ const serve = async (env = 'local', config = {}) => {
           await config.events.beforeCreate(config)
         }
 
+        // Don't render if file type is not configured
+        // eslint-disable-next-line
+        const filetypes = templates.reduce((acc, template) => {
+          return [...acc, ...get(template, 'filetypes', ['html'])]
+        }, [])
+
+        if (!filetypes.includes(path.extname(file).slice(1))) {
+          return
+        }
+
         if (get(config, 'build.console.clear')) {
           clearConsole()
         }

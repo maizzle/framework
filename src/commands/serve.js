@@ -41,7 +41,7 @@ const serve = async (env = 'local', config = {}) => {
     const globalPaths = [
       'src/**',
       get(config, 'build.tailwind.config', 'tailwind.config.js'),
-      [...new Set(get(config, 'build.browsersync.watch', []))]
+      ...new Set(get(config, 'build.browsersync.watch', []))
     ]
 
     // Watch for Template file changes

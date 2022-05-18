@@ -48,6 +48,10 @@ const serve = async (env = 'local', config = {}) => {
     browsersync()
       .watch(templatePaths)
       .on('change', async file => {
+        if (config.events && typeof config.events.beforeCreate === 'function') {
+          await config.events.beforeCreate(config)
+        }
+
         if (get(config, 'build.console.clear')) {
           clearConsole()
         }
@@ -57,10 +61,6 @@ const serve = async (env = 'local', config = {}) => {
         spinner.start('Building email...')
 
         file = file.replace(/\\/g, '/')
-
-        if (config.events && typeof config.events.beforeCreate === 'function') {
-          await config.events.beforeCreate(config)
-        }
 
         const renderOptions = {
           maizzle: config,

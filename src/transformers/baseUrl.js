@@ -3,17 +3,41 @@ const isUrl = require('is-url-superb')
 const baseUrl = require('posthtml-base-url')
 const {get, isObject, isEmpty} = require('lodash')
 
-// VML backgrounds need regex because they're inside HTML comments :(
+/**
+ * VML backgrounds must be handled with regex because
+ * they're inside HTML comments.
+ */
 const rewriteVMLs = (html, url) => {
-  const vImageMatch = html.match(/(<v:image.+)(src=['"]([^'"]+)['"])/)
-  const vFillMatch = html.match(/(<v:fill.+)(src=['"]([^'"]+)['"])/)
+  // Handle <v:image>
+  const vImageMatches = html.match(/<v:image[^>]+src="?([^"\s]+)"/g)
 
-  if (vImageMatch && !isUrl(vImageMatch[3])) {
-    html = html.replace(vImageMatch[0], `${vImageMatch[1]}src="${url}${vImageMatch[3]}"`)
+  if (vImageMatches) {
+    vImageMatches.forEach(match => {
+      const vImage = match.match(/<v:image[^>]+src="?([^"\s]+)"/)
+      const vImageSrc = vImage[1]
+
+      if (!isUrl(vImageSrc)) {
+        const vImageSrcUrl = url + vImageSrc
+        const vImageReplace = vImage[0].replace(vImageSrc, vImageSrcUrl)
+        html = html.replace(vImage[0], vImageReplace)
+      }
+    })
   }
 
-  if (vFillMatch && !isUrl(vFillMatch[3])) {
-    html = html.replace(vFillMatch[0], `${vFillMatch[1]}src="${url}${vFillMatch[3]}"`)
+  // Handle <v:fill>
+  const vFillMatches = html.match(/<v:fill[^>]+src="?([^"\s]+)"/g)
+
+  if (vFillMatches) {
+    vFillMatches.forEach(match => {
+      const vFill = match.match(/<v:fill[^>]+src="?([^"\s]+)"/)
+      const vFillSrc = vFill[1]
+
+      if (!isUrl(vFillSrc)) {
+        const vFillSrcUrl = url + vFillSrc
+        const vFillReplace = vFill[0].replace(vFillSrc, vFillSrcUrl)
+        html = html.replace(vFill[0], vFillReplace)
+      }
+    })
   }
 
   return html
@@ -23,7 +47,7 @@ module.exports = async (html, config = {}, direct = false) => {
   const url = direct ? config : get(config, 'baseURL')
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
-  // `baseUrl` as a string
+  // Handle `baseUrl` as a string
   if (typeof url === 'string' && url.length > 0) {
     html = rewriteVMLs(html, url)
 
@@ -34,7 +58,7 @@ module.exports = async (html, config = {}, direct = false) => {
       .then(result => result.html)
   }
 
-  // `baseUrl: {}`
+  // Handle `baseUrl` as an object
   if (isObject(url) && !isEmpty(url)) {
     html = rewriteVMLs(html, url.url)
 

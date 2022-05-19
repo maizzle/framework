@@ -56,12 +56,20 @@
 
     <div>
       <!--[if mso]>
-      <v:image xmlns:v="urn:schemas-microsoft-com:vml" src="https://example.com/image.jpg" style="600px;height:400px;" />
-      <v:rect fill="false" stroke="false" style="position:absolute;600px;height:400px;">
+      <v:image xmlns:v="urn:schemas-microsoft-com:vml" src="https://example.com/image.jpg" style="width:600px;height:400px;" />
+      <v:rect fill="false" stroke="false" style="position:absolute;width:600px;height:400px;">
       <v:textbox inset="0,0,0,0"><div><![endif]-->
         <div>test</div>
       <!--[if mso]></div></v:textbox></v:rect><![endif]-->
     </div>
+
+    <!--[if mso]>
+      <v:image src="https://example.com/image-2.jpg" xmlns:v="urn:schemas-microsoft-com:vml" style="width:600px;height:400px;" />
+    <![endif]-->
+
+    <!--[if mso]>
+      <v:image xmlns:v="urn:schemas-microsoft-com:vml" src="https://example.com/image-3.jpg" style="width:600px;height:400px;" />
+    <![endif]-->
 
     <table>
       <tr>
@@ -79,5 +87,13 @@
         </td>
       </tr>
     </table>
+
+    <!--[if mso]>
+      <v:fill type="tile" src="https://example.com/image.png" color="#7bceeb" />
+    <![endif]-->
+
+    <!--[if mso]>
+      <v:fill type="tile" src="https://example.com/image.png" color="#7bceeb" />
+    <![endif]-->
   </body>
 </html>

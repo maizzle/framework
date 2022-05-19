@@ -6,7 +6,7 @@ const Tailwind = require('../generators/tailwindcss')
 const safeClassNames = require('posthtml-safe-class-names')
 
 module.exports = async (html, config = {}, direct = false) => {
-  const replacements = direct ? config : get(config, 'transform', {})
+  const replacements = direct ? config : get(config, 'filters', {})
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
   /**

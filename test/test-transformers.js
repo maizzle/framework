@@ -289,16 +289,16 @@ test('six digit hex (disabled)', async t => {
 })
 
 test('transform contents (javascript)', async t => {
-  const html = await Maizzle.transformContents('<div uppercase>test</div>', {uppercase: string => string.toUpperCase()})
+  const html = await Maizzle.withFilters('<div uppercase>test</div>', {uppercase: string => string.toUpperCase()})
 
-  const html2 = await Maizzle.transformContents('<div text="ing">test</div>', {text: (content, attribute) => content + attribute})
+  const html2 = await Maizzle.withFilters('<div text="ing">test</div>', {text: (content, attribute) => content + attribute})
 
   t.is(html, '<div>TEST</div>')
   t.is(html2, '<div>testing</div>')
 })
 
 test('transform contents (tailwindcss)', async t => {
-  const html = await Maizzle.transformContents(
+  const html = await Maizzle.withFilters(
     `<style tailwindcss>
       div {
         @apply hidden;
@@ -309,7 +309,6 @@ test('transform contents (tailwindcss)', async t => {
   const expected = `<style>.inline { display: inline !important
 } .table { display: table !important
 } .contents { display: contents !important
-} .transform { transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y)) !important
 } div { display: none
 }
     </style>`
@@ -318,7 +317,7 @@ test('transform contents (tailwindcss)', async t => {
 })
 
 test('transform contents (postcss)', async t => {
-  const html = await Maizzle.transformContents(
+  const html = await Maizzle.withFilters(
     `<style postcss>@import 'test/stubs/post.css';</style>`
   )
 

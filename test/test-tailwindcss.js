@@ -113,5 +113,5 @@ test('uses custom postcss plugins from the maizzle config', async t => {
   const css = await Tailwind.compile('.test {transform: scale(0.5)}', '<div class="test">Test</a>', {}, maizzleConfig)
 
   t.not(css, undefined)
-  t.is(css.trim(), '.inline {display: inline !important} .table {display: table !important} .contents {display: contents !important} .transform {-webkit-transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y)) !important;transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y)) !important} .test {-webkit-transform: scale(0.5);transform: scale(0.5)}')
+  t.is(css.trim(), '.inline {display: inline !important} .table {display: table !important} .contents {display: contents !important} .test {-webkit-transform: scale(0.5);transform: scale(0.5)}')
 })

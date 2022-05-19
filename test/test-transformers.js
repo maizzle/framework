@@ -291,7 +291,10 @@ test('six digit hex (disabled)', async t => {
 test('transform contents (javascript)', async t => {
   const html = await Maizzle.transformContents('<div uppercase>test</div>', {uppercase: string => string.toUpperCase()})
 
+  const html2 = await Maizzle.transformContents('<div text="ing">test</div>', {text: (content, attribute) => content + attribute})
+
   t.is(html, '<div>TEST</div>')
+  t.is(html2, '<div>testing</div>')
 })
 
 test('transform contents (tailwindcss)', async t => {
@@ -308,7 +311,8 @@ test('transform contents (tailwindcss)', async t => {
 } .contents { display: contents !important
 } .transform { transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y)) !important
 } div { display: none
-}</style>`
+}
+    </style>`
 
   t.is(html, expected)
 })

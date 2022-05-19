@@ -1,12 +1,16 @@
 const posthtml = require('posthtml')
-const {get, omit, has} = require('lodash')
-const PostCSS = require('../generators/postcss')
+const {get, omit, has, merge} = require('lodash')
+const defaultFilters = require('./defaultFilters')
+const PostCSS = require('../../generators/postcss')
 const posthtmlContent = require('posthtml-content')
-const Tailwind = require('../generators/tailwindcss')
+const Tailwind = require('../../generators/tailwindcss')
 const safeClassNames = require('posthtml-safe-class-names')
 
 module.exports = async (html, config = {}, direct = false) => {
-  const replacements = direct ? config : get(config, 'filters', {})
+  const filters = direct ?
+    merge(defaultFilters, config) :
+    merge(defaultFilters, get(config, 'filters', {}))
+
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
   /**
@@ -15,12 +19,12 @@ module.exports = async (html, config = {}, direct = false) => {
   const maizzleConfig = omit(config, ['build.tailwind.css', 'css'])
   const tailwindConfig = get(config, 'build.tailwind.config', 'tailwind.config.js')
 
-  replacements.postcss = css => PostCSS.process(css, maizzleConfig)
-  replacements.tailwindcss = css => Tailwind.compile(css, html, tailwindConfig, maizzleConfig)
+  filters.postcss = css => PostCSS.process(css, maizzleConfig)
+  filters.tailwindcss = css => Tailwind.compile(css, html, tailwindConfig, maizzleConfig)
 
   return posthtml([
     styleDataEmbed(),
-    posthtmlContent(replacements),
+    posthtmlContent(filters),
     safeClassNames()
   ])
     .process(html, posthtmlOptions)

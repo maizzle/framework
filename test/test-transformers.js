@@ -113,7 +113,7 @@ test('remove unused CSS', async t => {
     </body>
   </html>`
 
-  const expected1 = `<!DOCTYPE html>
+  const result1 = `<!DOCTYPE html>
   <html>
     <head>
       <style>
@@ -126,7 +126,7 @@ test('remove unused CSS', async t => {
     </body>
   </html>`
 
-  const expected2 = `<!DOCTYPE html>
+  const result2 = `<!DOCTYPE html>
   <html>
     <head>
       <style>
@@ -141,8 +141,8 @@ test('remove unused CSS', async t => {
   const withOptions = await Maizzle.removeUnusedCSS(html, {whitelist: ['.bar*']})
   const enabled = await Maizzle.removeUnusedCSS(html, true)
 
-  t.is(withOptions, expected1)
-  t.is(enabled, expected2)
+  t.is(withOptions, result1)
+  t.is(enabled, result2)
 })
 
 test('remove unused CSS (disabled)', async t => {
@@ -158,7 +158,7 @@ test('remove unused CSS (disabled)', async t => {
     </body>
   </html>`
 
-  const expected = `<!DOCTYPE html>
+  const result = `<!DOCTYPE html>
   <html>
     <head>
       <style>
@@ -173,8 +173,8 @@ test('remove unused CSS (disabled)', async t => {
   const disabled = await Maizzle.removeUnusedCSS(html, {removeUnusedCSS: false})
   const unset = await Maizzle.removeUnusedCSS(html)
 
-  t.is(disabled, expected)
-  t.is(unset, expected)
+  t.is(disabled, result)
+  t.is(unset, result)
 })
 
 test('remove attributes', async t => {
@@ -288,16 +288,14 @@ test('six digit hex (disabled)', async t => {
   t.is(html, '<td style="color: #ffc" bgcolor="#000"></td>')
 })
 
-test('transform contents (javascript)', async t => {
-  const html = await Maizzle.withFilters('<div uppercase>test</div>', {uppercase: string => string.toUpperCase()})
+test('filters (default)', async t => {
+  const source = await fixture('filters')
+  const html = await Maizzle.withFilters(source)
 
-  const html2 = await Maizzle.withFilters('<div text="ing">test</div>', {text: (content, attribute) => content + attribute})
-
-  t.is(html, '<div>TEST</div>')
-  t.is(html2, '<div>testing</div>')
+  t.is(html, await expected('filters'))
 })
 
-test('transform contents (tailwindcss)', async t => {
+test('filters (tailwindcss)', async t => {
   const html = await Maizzle.withFilters(
     `<style tailwindcss>
       div {
@@ -309,6 +307,10 @@ test('transform contents (tailwindcss)', async t => {
   const expected = `<style>.inline { display: inline !important
 } .table { display: table !important
 } .contents { display: contents !important
+} .truncate { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important
+} .uppercase { text-transform: uppercase !important
+} .lowercase { text-transform: lowercase !important
+} .capitalize { text-transform: capitalize !important
 } div { display: none
 }
     </style>`
@@ -316,7 +318,7 @@ test('transform contents (tailwindcss)', async t => {
   t.is(html, expected)
 })
 
-test('transform contents (postcss)', async t => {
+test('filters (postcss)', async t => {
   const html = await Maizzle.withFilters(
     `<style postcss>@import 'test/stubs/post.css';</style>`
   )

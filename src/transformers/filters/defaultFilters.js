@@ -31,11 +31,17 @@ const multiply = (content, attribute) => Number.parseFloat(content) * Number.par
 const newlineToBr = content => content.replace(/\n/g, '<br>')
 const plus = (content, attribute) => Number.parseFloat(content) + Number.parseFloat(attribute)
 const prepend = (content, attribute) => attribute + content
-const remove = (content, attribute) => content.replaceAll(attribute, '')
+
+const remove = (content, attribute) => {
+  const regex = new RegExp(attribute, 'g')
+  return content.replace(regex, '')
+}
+
 const removeFirst = (content, attribute) => content.replace(attribute, '')
 const replace = (content, attribute) => {
   const [search, replace] = attribute.split('|')
-  return content.replaceAll(search, replace)
+  const regex = new RegExp(search, 'g')
+  return content.replace(regex, replace)
 }
 
 const replaceFirst = (content, attribute) => {

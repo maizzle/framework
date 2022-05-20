@@ -1,13 +1,8 @@
 /* eslint-disable camelcase */
-
 const pretty = require('pretty')
-const {get, merge, isEmpty} = require('lodash')
+const {get, merge, isEmpty, isObject} = require('lodash')
 
 module.exports = async (html, config = {}, direct = false) => {
-  if (get(config, 'prettify') === false) {
-    return html
-  }
-
   const defaultConfig = {
     space_around_combinator: true, // Preserve space around CSS selector combinators
     newline_between_rules: false, // Remove empty lines between CSS rules
@@ -15,15 +10,18 @@ module.exports = async (html, config = {}, direct = false) => {
     extra_liners: [] // Don't add extra new line before any tag
   }
 
-  config = direct ? config : merge(defaultConfig, get(config, 'prettify', {}))
+  config = direct ? config : get(config, 'prettify')
+
+  // Don't prettify if not explicitly enabled in config
+  if (!config || (isObject(config) && isEmpty(config))) {
+    return html
+  }
 
   if (typeof config === 'boolean' && config) {
     return pretty(html, defaultConfig)
   }
 
-  if (!isEmpty(config)) {
-    return pretty(html, config)
-  }
+  config = merge(defaultConfig, config)
 
-  return html
+  return pretty(html, config)
 }

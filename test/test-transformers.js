@@ -215,18 +215,23 @@ test('base URL (object)', async t => {
 })
 
 test('prettify', async t => {
+  // `prettify: true`
+  const html2 = await Maizzle.prettify('<div><p>test</p></div>', true)
+
+  // With custom object config
   // eslint-disable-next-line
   const html = await Maizzle.prettify('<div><p>test</p></div>', {indent_inner_result: true})
-  const html2 = await Maizzle.prettify('<div><p>test</p></div>', true)
+
+  // No config
+  const html3 = await Maizzle.prettify('<div><p>test</p></div>')
+
+  // Empty object config
+  const html4 = await Maizzle.prettify('<div><p>test</p></div>', {})
 
   t.is(html, '<div>\n  <p>test</p>\n</div>')
   t.is(html2, '<div>\n  <p>test</p>\n</div>')
-})
-
-test('prettify (disabled)', async t => {
-  const html = await Maizzle.prettify('<div><p>test</p></div>', {prettify: false})
-
-  t.is(html, '<div><p>test</p></div>')
+  t.is(html3, '<div><p>test</p></div>')
+  t.is(html4, '<div><p>test</p></div>')
 })
 
 test('minify', async t => {

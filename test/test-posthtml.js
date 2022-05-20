@@ -2,30 +2,36 @@ const test = require('ava')
 const Maizzle = require('../src')
 
 const path = require('path')
-const {readFileSync} = require('fs')
+const fs = require('fs')
 
-const fixture = file => readFileSync(path.join(__dirname, 'fixtures', `${file}.html`), 'utf8')
-const expected = file => readFileSync(path.join(__dirname, 'expected', `${file}.html`), 'utf8')
+const readFile = (dir, filename) => fs.promises
+  .readFile(path.join(__dirname, dir, `${filename}.html`), 'utf8')
+  .then(html => html.trim())
+
+const fixture = file => readFile('fixtures', file)
+const expected = file => readFile('expected', file)
 
 const renderString = (string, options = {}) => Maizzle.render(string, options).then(({html}) => html)
 
 test('layouts', async t => {
-  const source = fixture('posthtml/layout')
+  const source = await fixture('posthtml/layout')
 
   const html = await renderString(source, {maizzle: {env: 'maizzle-ci'}})
 
-  t.is(html.trim(), expected('posthtml/layout').trim())
+  t.is(html.trim(), await expected('posthtml/layout'))
 })
 
 test('inheritance when extending a template', async t => {
-  let html = await renderString(fixture('posthtml/extend-template'))
+  const source = await fixture('posthtml/extend-template')
+  let html = await renderString(source)
+
   html = html.replace(/[^\S\r\n]+$/gm, '').trim()
 
-  t.is(html, expected('posthtml/extend-template').trim())
+  t.is(html, await expected('posthtml/extend-template'))
 })
 
 test('components', async t => {
-  const source = fixture('posthtml/component')
+  const source = await fixture('posthtml/component')
   const options = {
     maizzle: {
       env: 'maizzle-ci',
@@ -41,11 +47,11 @@ test('components', async t => {
 
   const html = await renderString(source, options)
 
-  t.is(html.trim(), expected('posthtml/component').trim())
+  t.is(html.trim(), await expected('posthtml/component'))
 })
 
 test('fetch component', async t => {
-  const source = fixture('posthtml/fetch')
+  const source = await fixture('posthtml/fetch')
   const options = {
     maizzle: {
       env: 'maizzle-ci',
@@ -62,5 +68,5 @@ test('fetch component', async t => {
   let html = await renderString(source, options)
   html = html.replace(/[^\S\r\n]+$/gm, '')
 
-  t.is(html.trim(), expected('posthtml/fetch').trim())
+  t.is(html.trim(), await expected('posthtml/fetch'))
 })

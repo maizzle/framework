@@ -170,7 +170,7 @@ test('outputs plaintext files', async t => {
 
   t.is(plaintext[0], `${t.context.folder}/plaintext.txt`)
   t.is(plaintextContent, 'Show in HTML\nShow in plaintext')
-  t.is(htmlContent, '<div>Show in HTML</div>\n')
+  t.is(htmlContent, '<div>Show in HTML</div>\n\n')
 })
 
 test('outputs plaintext files (custom path)', async t => {

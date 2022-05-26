@@ -48,18 +48,10 @@ test('remove inline background-color (with tags)', async t => {
 })
 
 test('inline CSS', async t => {
-  const html = `<div class="foo bar px-2 py-2">test</div>`
+  const html = `<div class="foo bar">test</div>`
   const css = `
     .foo {color: red}
     .bar {cursor: pointer}
-    .px-2 {
-      padding-left: 2px;
-      padding-right: 2px;
-    }
-    .py-2 {
-      padding-top: 2px;
-      padding-bottom: 2px;
-    }
   `
 
   const result = await Maizzle.inlineCSS(html, {
@@ -80,13 +72,7 @@ test('inline CSS', async t => {
     }
   })
 
-  const result2 = await Maizzle.inlineCSS(html, {
-    customCSS: css,
-    mergeLonghand: true
-  })
-
-  t.is(result, '<div class="foo bar px-2 py-2" style="color: red; padding: 2px;">test</div>')
-  t.is(result2, '<div class="foo bar px-2 py-2" style="color: red; cursor: pointer; padding: 2px;">test</div>')
+  t.is(result, '<div class="foo bar" style="color: red;">test</div>')
 })
 
 test('inline CSS (disabled)', async t => {
@@ -492,4 +478,33 @@ test('remove inlined selectors (disabled)', async t => {
   const result = await Maizzle.removeInlinedClasses(html, {removeInlinedClasses: false})
 
   t.is(result, expected)
+})
+
+test('shorthand inline css', async t => {
+  const html = `
+    <div style="padding-left: 2px; padding-right: 2px; padding-top: 2px; padding-bottom: 2px;">padding</div>
+    <div style="margin-left: 2px; margin-right: 2px; margin-top: 2px; margin-bottom: 2px;">margin</div>
+    <div style="border-width: 1px; border-style: solid; border-color: #000;">border</div>
+    <p style="border-width: 1px; border-style: solid; border-color: #000;">border</p>
+  `
+
+  const expect = `
+    <div style="padding: 2px;">padding</div>
+    <div style="margin: 2px;">margin</div>
+    <div style="border: 1px solid #000;">border</div>
+    <p style="border-width: 1px; border-style: solid; border-color: #000;">border</p>
+  `
+
+  const expect2 = `
+    <div style="padding: 2px;">padding</div>
+    <div style="margin: 2px;">margin</div>
+    <div style="border: 1px solid #000;">border</div>
+    <p style="border: 1px solid #000;">border</p>
+  `
+
+  const result = await Maizzle.shorthandInlineCSS(html, {shorthandInlineCSS: ['div']})
+  const result2 = await Maizzle.shorthandInlineCSS(html, {shorthandInlineCSS: true})
+
+  t.is(result, expect)
+  t.is(result2, expect2)
 })

@@ -492,18 +492,18 @@ test('shorthand inline css', async t => {
     <div style="padding: 2px;">padding</div>
     <div style="margin: 2px;">margin</div>
     <div style="border: 1px solid #000;">border</div>
-    <p style="border-width: 1px; border-style: solid; border-color: #000;">border</p>
+    <p style="border: 1px solid #000;">border</p>
   `
 
   const expect2 = `
     <div style="padding: 2px;">padding</div>
     <div style="margin: 2px;">margin</div>
     <div style="border: 1px solid #000;">border</div>
-    <p style="border: 1px solid #000;">border</p>
+    <p style="border-width: 1px; border-style: solid; border-color: #000;">border</p>
   `
 
-  const result = await Maizzle.shorthandInlineCSS(html, {shorthandInlineCSS: ['div']})
-  const result2 = await Maizzle.shorthandInlineCSS(html, {shorthandInlineCSS: true})
+  const result = await Maizzle.shorthandInlineCSS(html)
+  const result2 = await Maizzle.shorthandInlineCSS(html, {tags: ['div']})
 
   t.is(result, expect)
   t.is(result2, expect2)

@@ -58,6 +58,6 @@ exports.attributeToStyle = (html, config) => attributeToStyle(html, config, true
 exports.removeInlineSizes = (html, config) => removeInlineSizes(html, config, true)
 exports.applyBaseImageUrl = (html, config) => applyBaseImageUrl(html, config, true)
 exports.removeInlinedClasses = (html, config) => removeInlinedClasses(html, config)
-exports.shorthandInlineCSS = (html, config) => shorthandInlineCSS(html, config)
+exports.shorthandInlineCSS = (html, config) => shorthandInlineCSS(html, config, true)
 exports.removeInlineBgColor = (html, config) => removeInlineBgColor(html, config, true)
 exports.applyExtraAttributes = (html, config) => applyExtraAttributes(html, config, true)

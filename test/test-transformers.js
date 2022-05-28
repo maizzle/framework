@@ -183,14 +183,14 @@ test('extra attributes (disabled)', async t => {
 
 test('base URL (string)', async t => {
   const source = await fixture('base-url')
-  const html = await Maizzle.applyBaseImageUrl(source, 'https://example.com/')
+  const html = await Maizzle.applyBaseUrl(source, 'https://example.com/')
 
   t.is(html, await expected('base-url'))
 })
 
 test('base URL (object)', async t => {
   const source = await fixture('base-url')
-  const html = await Maizzle.applyBaseImageUrl(source, {
+  const html = await Maizzle.applyBaseUrl(source, {
     url: 'https://example.com/',
     allTags: true,
     styleTag: true,

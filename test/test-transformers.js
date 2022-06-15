@@ -298,6 +298,7 @@ test('filters (tailwindcss)', async t => {
   const expected = `<style>.inline { display: inline !important
 } .table { display: table !important
 } .contents { display: contents !important
+} .hidden { display: none !important
 } .truncate { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important
 } .uppercase { text-transform: uppercase !important
 } .lowercase { text-transform: lowercase !important

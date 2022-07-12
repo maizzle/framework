@@ -86,6 +86,10 @@ const serve = async (env = 'local', config = {}) => {
             let dest = ''
             let ext = ''
 
+            if (config.events && typeof config.events.afterRender === 'function') {
+              html = config.events.afterRender(html, config)
+            }
+            
             if (Array.isArray(config.build.templates)) {
               const match = config.build.templates.find(template => template.source === path.parse(file).dir)
               source = get(match, 'source')

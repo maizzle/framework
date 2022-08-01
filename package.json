@@ -43,7 +43,7 @@
     "email-comb": "^5.2.0",
     "front-matter": "^4.0.0",
     "fs-extra": "^10.0.0",
-    "glob-promise": "^4.1.0",
+    "glob-promise": "^5.0.0",
     "html-crush": "^4.0.0",
     "is-url-superb": "^5.0.0",
     "juice": "^8.0.0",

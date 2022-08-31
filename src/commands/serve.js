@@ -38,11 +38,15 @@ const serve = async (env = 'local', config = {}) => {
     templates = Array.isArray(templates) ? templates : [templates]
 
     const templatePaths = [...new Set(templates.map(config => `${get(config, 'source', 'src')}/**`))]
+    const tailwindConfig = get(config, 'build.tailwind.config', 'tailwind.config.js')
     const globalPaths = [
       'src/**',
-      get(config, 'build.tailwind.config', 'tailwind.config.js'),
       ...new Set(get(config, 'build.browsersync.watch', []))
     ]
+    const isTailwindConfigPath = !isObject(tailwindConfig)
+    if(isTailwindConfigPath) {
+      globalPaths.push(tailwindConfig);
+    }
 
     // Watch for Template file changes
     browsersync()

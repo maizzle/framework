@@ -50,7 +50,7 @@
     "lodash": "^4.17.20",
     "ora": "^5.1.0",
     "postcss": "^8.4.4",
-    "postcss-import": "^14.0.0",
+    "postcss-import": "^15.0.0",
     "postcss-merge-longhand": "^5.0.1",
     "posthtml": "^0.16.6",
     "posthtml-attrs-parser": "^0.1.1",

@@ -43,8 +43,7 @@ const serve = async (env = 'local', config = {}) => {
       'src/**',
       ...new Set(get(config, 'build.browsersync.watch', []))
     ]
-    const isTailwindConfigPath = !isObject(tailwindConfig)
-    if (isTailwindConfigPath) {
+    if (typeof tailwindConfig === "string") {
       globalPaths.push(tailwindConfig);
     }
 

@@ -96,7 +96,9 @@ module.exports = async (env, spinner, config) => {
           }
 
           await asyncForEach(templates, async file => {
-            config.build.current = path.parse(file)
+            config.build.current = {
+              path: path.parse(file)
+            }
 
             const html = await fs.readFile(file, 'utf8')
 

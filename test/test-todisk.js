@@ -510,7 +510,7 @@ test('throws if templates path is invalid (function)', async t => {
   }, {instanceOf: TypeError})
 })
 
-test('sets config.build.current', async t => {
+test('sets config.build.current.path', async t => {
   await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
@@ -531,10 +531,12 @@ test('sets config.build.current', async t => {
   })
 
   t.deepEqual(t.context.current, {
-    root: '',
-    dir: t.context.folder,
-    base: '1.html',
-    ext: '.html',
-    name: '1'
+    path: {
+      root: '',
+      dir: t.context.folder,
+      base: '1.html',
+      ext: '.html',
+      name: '1'
+    }
   })
 })

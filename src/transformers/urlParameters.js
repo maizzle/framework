@@ -7,10 +7,12 @@ module.exports = async (html, config = {}, direct = false) => {
 
   if (!isEmpty(urlParameters)) {
     const {_options, ...parameters} = urlParameters
-    const {tags, qs} = _options || {tags: ['a'], qs: {encode: false}}
+    const tags = _options.tags ?? ['a']
+    const strict = _options.strict ?? true
+    const qs = _options.qs ?? {encode: false}
     const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
-    return posthtml([urlParams({parameters, tags, qs})]).process(html, posthtmlOptions).then(result => result.html)
+    return posthtml([urlParams({parameters, tags, qs, strict})]).process(html, posthtmlOptions).then(result => result.html)
   }
 
   return html

@@ -323,9 +323,21 @@ test('filters (postcss)', async t => {
 })
 
 test('url parameters', async t => {
-  const html = await Maizzle.addURLParams('<a href="https://example.com">test</a>', {bar: 'baz', qix: 'qux'})
+  const html = await Maizzle.addURLParams(
+    `<a href="example.com">test</a>
+      <link href="https://foo.bar">`,
+    {
+      _options: {
+        tags: ['a[href*="example"]'],
+        strict: false
+      },
+      bar: 'baz',
+      qix: 'qux'
+    }
+  )
 
-  t.is(html, '<a href="https://example.com?bar=baz&qix=qux">test</a>')
+  t.is(html, `<a href="example.com?bar=baz&qix=qux">test</a>
+      <link href="https://foo.bar">`)
 })
 
 test('attribute to style', async t => {

@@ -386,7 +386,7 @@ test('markdown (disabled)', async t => {
   t.is(html, '> a quote')
 })
 
-test.only('remove inlined selectors', async t => {
+test('remove inlined selectors', async t => {
   const html = `<!DOCTYPE html>
   <html>
     <head>

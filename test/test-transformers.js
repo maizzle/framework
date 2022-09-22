@@ -395,7 +395,6 @@ test('remove inlined selectors', async t => {
           border: 0;
           vertical-align: middle
         }
-
         .hover-text-blue:hover {
           color: #00a8ff;
         }
@@ -412,6 +411,15 @@ test('remove inlined selectors', async t => {
 
         #keepId {float:none}
 
+        .foo-class {
+          /* COMMENT */
+          color: red;
+        }
+
+        .ignore {
+          display: inline-block;
+        }
+
         @media (max-width: 600px) {
           .ignore {color: blue}
         }
@@ -421,7 +429,7 @@ test('remove inlined selectors', async t => {
       </style>
     </head>
     <body>
-      <div id="keepId" class="remove keep ignore" style="color: red; display: inline">
+      <div id="keepId" class="remove keep ignore foo-class" style="color: red; display: inline">
         <h1 class="m-0 mb-4 mt-0 hover-text-blue" style="margin: 0 0 16px;">Title</h1>
         <img src="https://example.com/image.jpg" style="border: 0; vertical-align: middle">
         <div id="keepId" class="remove keep ignore" style="color: red; display: inline">text</div>
@@ -441,6 +449,11 @@ test('remove inlined selectors', async t => {
 
         #keepId {float:none}
 
+        .foo-class {
+          /* COMMENT */
+          color: red;
+        }
+
         @media (max-width: 600px) {
           .ignore {color: blue}
         }
@@ -450,10 +463,10 @@ test('remove inlined selectors', async t => {
       </style>
     </head>
     <body>
-      <div id="keepId" class="keep ignore" style="color: red; display: inline">
+      <div id="keepId" class="keep foo-class" style="color: red; display: inline">
         <h1 class="hover-text-blue" style="margin: 0 0 16px">Title</h1>
         <img src="https://example.com/image.jpg" style="border: 0; vertical-align: middle">
-        <div id="keepId" class="keep ignore" style="color: red; display: inline">text</div>
+        <div id="keepId" class="keep" style="color: red; display: inline">text</div>
       </div>
     </body>
   </html>`

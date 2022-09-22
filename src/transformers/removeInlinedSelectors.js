@@ -28,36 +28,38 @@ const plugin = () => tree => {
         const {selector} = rule
         const prop = get(rule.nodes[0], 'prop')
 
-        // If we find the selector in the HTML...
-        tree.match(matchHelper(selector), n => {
-          const parsedAttrs = parseAttrs(n.attrs)
-          const classAttr = get(parsedAttrs, 'class', [])
-          const styleAttr = get(parsedAttrs, 'style', {})
+        try {
+          // If we find the selector in the HTML...
+          tree.match(matchHelper(selector), n => {
+            const parsedAttrs = parseAttrs(n.attrs)
+            const classAttr = get(parsedAttrs, 'class', [])
+            const styleAttr = get(parsedAttrs, 'style', {})
 
-          // If the class is in the style attribute (inlined), remove it
-          if (has(styleAttr, prop)) {
-            // Remove the class attribute
-            remove(classAttr, s => selector.includes(s))
-
-            // Remove the rule in the <style> tag
-            rule.remove()
-          }
-
-          /**
-           * Remove from <style> selectors that were used to create shorthand declarations
-           * like `margin: 0 0 0 16px` (transformed with mergeLonghand when inlining).
-           */
-          Object.keys(styleAttr).forEach(key => {
-            if (prop && prop.includes(key)) {
-              rule.remove()
+            // If the class is in the style attribute (inlined), remove it
+            if (has(styleAttr, prop)) {
+              // Remove the class attribute
               remove(classAttr, s => selector.includes(s))
+
+              // Remove the rule in the <style> tag
+              rule.remove()
             }
+
+            /**
+             * Remove from <style> selectors that were used to create shorthand declarations
+             * like `margin: 0 0 0 16px` (transformed with mergeLonghand when inlining).
+             */
+            Object.keys(styleAttr).forEach(key => {
+              if (prop && prop.includes(key)) {
+                rule.remove()
+                remove(classAttr, s => selector.includes(s))
+              }
+            })
+
+            n.attrs = parsedAttrs.compose()
+
+            return n
           })
-
-          n.attrs = parsedAttrs.compose()
-
-          return n
-        })
+        } catch {}
       })
 
       node.content = root.toString()

@@ -48,7 +48,7 @@ const plugin = () => tree => {
            * like `margin: 0 0 0 16px` (transformed with mergeLonghand when inlining).
            */
           Object.keys(styleAttr).forEach(key => {
-            if (prop.includes(key)) {
+            if (prop && prop.includes(key)) {
               rule.remove()
               remove(classAttr, s => selector.includes(s))
             }

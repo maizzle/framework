@@ -94,7 +94,7 @@ test('outputs files at the correct location if multiple template sources are use
   })
 
   t.true(await fs.pathExists(t.context.folder))
-  t.is(files.length, 3)
+  t.is(files.length, 5)
 })
 
 test('copies all files in the `filetypes` option to destination', async t => {
@@ -154,24 +154,49 @@ test('outputs plaintext files', async t => {
           path: t.context.folder
         },
         plaintext: true
-      },
-      tailwind: {
-        config: {
-          purge: false
+      }
+    },
+    extraAttributes: false
+  })
+
+  t.true(files.includes(`${t.context.folder}/plaintext.txt`))
+
+  t.is(
+    await fs.readFile(`${t.context.folder}/plaintext.txt`, 'utf8'),
+    'Show in HTML\nShow in plaintext'
+  )
+
+  t.is(
+    await fs.readFile(`${t.context.folder}/plaintext.html`, 'utf8'),
+    '<div>Show in HTML</div>\n\n\n  <table><tr><td>Remove from plaintext</td></tr></table>\n\n'
+  )
+})
+
+test('outputs plaintext files (front matter)', async t => {
+  const {files} = await Maizzle.build('maizzle-ci', {
+    fail: 'silent',
+    build: {
+      templates: {
+        source: 'test/stubs/plaintext',
+        destination: {
+          path: t.context.folder
         }
       }
     },
     extraAttributes: false
   })
 
-  const plaintext = files.filter(file => file.includes('.txt'))
-  const html = files.filter(file => file.includes('.html'))
-  const plaintextContent = await fs.readFile(plaintext[0], 'utf8')
-  const htmlContent = await fs.readFile(html[0], 'utf8')
+  t.true(files.includes(`${t.context.folder}/front-matter.txt`))
 
-  t.is(plaintext[0], `${t.context.folder}/plaintext.txt`)
-  t.is(plaintextContent, 'Show in HTML\nShow in plaintext')
-  t.is(htmlContent, '<div>Show in HTML</div>\n\n\n  <table><tr><td>Remove from plaintext</td></tr></table>\n\n')
+  t.is(
+    await fs.readFile(`${t.context.folder}/front-matter.txt`, 'utf8'),
+    'Show in HTML\nShow in plaintext'
+  )
+
+  t.is(
+    await fs.readFile(`${t.context.folder}/front-matter.html`, 'utf8'),
+    '<div>Show in HTML</div>\n\n\n  <table><tr><td>Remove from plaintext</td></tr></table>\n\n'
+  )
 })
 
 test('outputs plaintext files (custom path)', async t => {
@@ -188,18 +213,11 @@ test('outputs plaintext files (custom path)', async t => {
             path: `${t.context.folder}/nested/plain.text`
           }
         }
-      },
-      tailwind: {
-        config: {
-          purge: false
-        }
       }
     }
   })
 
-  const plaintext = files.filter(file => file.includes('.text'))
-
-  t.is(plaintext[0], `${t.context.folder}/nested/plain.text`)
+  t.true(files.includes(`${t.context.folder}/nested/plain.text`))
 })
 
 test('renders plaintext string', async t => {

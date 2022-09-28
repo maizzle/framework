@@ -122,7 +122,8 @@ module.exports = async (env, spinner, config) => {
                * tags from the markup before outputting the file.
                */
 
-              const plaintextConfig = get(templateConfig, 'plaintext')
+              // Check if plaintext: true globally, fallback to template's front matter
+              const plaintextConfig = get(templateConfig, 'plaintext', get(compiled.config, 'plaintext', false))
               const plaintextPath = get(plaintextConfig, 'destination.path', config.permalink || file)
 
               if (Boolean(plaintextConfig) || !isEmpty(plaintextConfig)) {

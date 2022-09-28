@@ -1,6 +1,5 @@
 const test = require('ava')
 const Maizzle = require('../src')
-const removePlaintextTags = require('../src/transformers/plaintext')
 
 const path = require('path')
 const fs = require('fs')
@@ -230,13 +229,6 @@ test('minify (disabled)', async t => {
   const html = await Maizzle.minify('<div>\n\n<p>\n\ntest</p></div>', {minify: false})
 
   t.is(html, '<div>\n\n<p>\n\ntest</p></div>')
-})
-
-test('removes plaintext tag', t => {
-  let html = removePlaintextTags('<plaintext>Removed</plaintext><div>Preserved</div>')
-  html = html.replace(/[^\S\r\n]+$/gm, '').trim()
-
-  t.is(html, '<div>Preserved</div>')
 })
 
 test('replace strings', async t => {

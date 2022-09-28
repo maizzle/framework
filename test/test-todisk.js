@@ -160,7 +160,8 @@ test('outputs plaintext files', async t => {
           purge: false
         }
       }
-    }
+    },
+    extraAttributes: false
   })
 
   const plaintext = files.filter(file => file.includes('.txt'))
@@ -170,7 +171,7 @@ test('outputs plaintext files', async t => {
 
   t.is(plaintext[0], `${t.context.folder}/plaintext.txt`)
   t.is(plaintextContent, 'Show in HTML\nShow in plaintext')
-  t.is(htmlContent, '<div>Show in HTML</div>\n\n')
+  t.is(htmlContent, '<div>Show in HTML</div>\n\n\n  <table><tr><td>Remove from plaintext</td></tr></table>\n\n')
 })
 
 test('outputs plaintext files (custom path)', async t => {

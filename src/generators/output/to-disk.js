@@ -3,7 +3,6 @@ const fs = require('fs-extra')
 const glob = require('glob-promise')
 const {get, isEmpty, merge} = require('lodash')
 const {asyncForEach} = require('../../utils/helpers')
-const removePlaintextTags = require('../../transformers/plaintext')
 
 const Config = require('../config')
 const Tailwind = require('../tailwindcss')
@@ -133,10 +132,11 @@ module.exports = async (env, spinner, config) => {
                     plaintextPath,
                     merge(plaintextConfig, {filepath: file})
                   )
-                  .then(({plaintext, destination}) => fs.outputFile(destination, plaintext))
+                  .then(async ({html, plaintext, destination}) => {
+                    compiled.html = html
+                    await fs.outputFile(destination, plaintext)
+                  })
               }
-
-              compiled.html = removePlaintextTags(compiled.html, config)
 
               /**
                * Output file

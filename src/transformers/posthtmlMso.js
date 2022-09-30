@@ -6,5 +6,5 @@ module.exports = async (html, config) => {
   const outlookOptions = get(config, 'build.posthtml.outlook', {})
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
 
-  return posthtml([outlook({...outlookOptions})]).process(html, {...posthtmlOptions}).then(result => result.html)
+  return posthtml([outlook({...outlookOptions})]).process(html, posthtmlOptions).then(result => result.html)
 }

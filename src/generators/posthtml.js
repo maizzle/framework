@@ -47,6 +47,7 @@ module.exports = async (html, config) => {
       )
     ),
     modules({
+      expressions: expressionsOptions,
       parser: posthtmlOptions,
       attributeAsLocals: true,
       from: modulesFrom,

@@ -19,7 +19,7 @@ module.exports = async (html, config = {}, direct = false) => {
       attributesToStyle({
         attributes: Array.isArray(config) ? config : []
       })
-    ]).process(html).then(result => result.html)
+    ]).process(html, posthtmlOptions).then(result => result.html)
   }
 
   return html
@@ -32,54 +32,54 @@ const attributesToStyle = (options = {}) => tree => {
     const nodeAttributes = parseAttrs(node.attrs)
     const matches = intersection(keys(nodeAttributes), options.attributes)
     const nodeStyle = get(node.attrs, 'style')
-    const csstoInline = []
+    const cssToInline = []
 
     forEach(matches, attribute => {
       let value = get(node.attrs, attribute)
 
       switch (attribute) {
         case 'bgcolor':
-          csstoInline.push(`background-color: ${value}`)
+          cssToInline.push(`background-color: ${value}`)
           break
 
         case 'background':
-          csstoInline.push(`background-image: url('${value}')`)
+          cssToInline.push(`background-image: url('${value}')`)
           break
 
         case 'width':
           value = Number.parseInt(value, 10) + (value.match(/px|%/) || 'px')
-          csstoInline.push(`width: ${value}`)
+          cssToInline.push(`width: ${value}`)
           break
 
         case 'height':
           value = Number.parseInt(value, 10) + (value.match(/px|%/) || 'px')
-          csstoInline.push(`height: ${value}`)
+          cssToInline.push(`height: ${value}`)
           break
 
         case 'align':
           if (node.tag !== 'table') {
-            return csstoInline.push(`text-align: ${value}`)
+            return cssToInline.push(`text-align: ${value}`)
           }
 
           if (['left', 'right'].includes(value)) {
-            csstoInline.push(`float: ${value}`)
+            cssToInline.push(`float: ${value}`)
           }
 
           if (value === 'center') {
-            csstoInline.push('margin-left: auto', 'margin-right: auto')
+            cssToInline.push('margin-left: auto', 'margin-right: auto')
           }
 
           break
 
         case 'valign':
-          csstoInline.push(`vertical-align: ${value}`)
+          cssToInline.push(`vertical-align: ${value}`)
           break
 
         // No default
       }
     })
 
-    nodeAttributes.style = nodeStyle ? `${nodeStyle} ${csstoInline.join('; ')}` : `${csstoInline.join('; ')}`
+    nodeAttributes.style = nodeStyle ? `${nodeStyle} ${cssToInline.join('; ')}` : `${cssToInline.join('; ')}`
 
     node.attrs = nodeAttributes.compose()
 

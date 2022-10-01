@@ -6,7 +6,7 @@ const postcssNested = require('tailwindcss/nesting')
 const mergeLonghand = require('postcss-merge-longhand')
 
 module.exports = {
-  process: async (css = '', maizzleConfig = {}, spinner = null) => {
+  process: async (css = '', maizzleConfig = {}) => {
     const userFilePath = get(maizzleConfig, 'build.tailwind.css', path.join(process.cwd(), 'src/css/tailwind.css'))
 
     return postcss([
@@ -18,12 +18,7 @@ module.exports = {
       .process(css, {from: undefined})
       .then(result => result.css)
       .catch(error => {
-        console.error(error)
-        if (spinner) {
-          spinner.stop()
-        }
-
-        throw new Error(`PostCSS processing failed`)
+        throw new SyntaxError(error)
       })
   }
 }

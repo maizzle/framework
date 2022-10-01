@@ -9,7 +9,7 @@ const mergeLonghand = require('postcss-merge-longhand')
 const {get, isObject, isEmpty, merge} = require('lodash')
 
 module.exports = {
-  compile: async (css = '', html = '', tailwindConfig = {}, maizzleConfig = {}, spinner = null) => {
+  compile: async (css = '', html = '', tailwindConfig = {}, maizzleConfig = {}) => {
     tailwindConfig = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : get(maizzleConfig, 'build.tailwind.config', 'tailwind.config.js')
 
     // Compute the Tailwind config to use
@@ -105,12 +105,7 @@ module.exports = {
       .process(css, {from: undefined})
       .then(result => result.css)
       .catch(error => {
-        console.error(error)
-        if (spinner) {
-          spinner.stop()
-        }
-
-        throw new Error(`Tailwind CSS compilation failed`)
+        throw new SyntaxError(error)
       })
   }
 }

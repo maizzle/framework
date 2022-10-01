@@ -1,12 +1,10 @@
 const test = require('ava')
-const ora = require('ora')
 const Tailwind = require('../src/generators/tailwindcss')
 
 test('throws on compile error', async t => {
   await t.throwsAsync(async () => {
-    const spinner = ora('Compiling Tailwind CSS...').start()
-    await Tailwind.compile('.test {@apply inexistent;}', '<div class="test">Test</a>', {}, {}, spinner)
-  }, {instanceOf: Error, message: 'Tailwind CSS compilation failed'})
+    await Tailwind.compile('.test {@apply inexistent;}', '<div class="test">Test</a>', {}, {})
+  }, {instanceOf: SyntaxError})
 })
 
 test('uses defaults if no config specified', async t => {

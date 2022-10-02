@@ -154,9 +154,6 @@ test('@import css files in marked style tags', async t => {
   const html = await renderString(source)
 
   t.is(html, `<style>div {
-  margin-top: 1px;
-  margin-right: 2px;
-  margin-bottom: 3px;
-  margin-left: 4px;
+  margin: 1px 2px 3px 4px;
 }</style>`)
 })

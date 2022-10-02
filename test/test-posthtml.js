@@ -14,27 +14,66 @@ const expected = file => readFile('expected', file)
 const renderString = (string, options = {}) => Maizzle.render(string, options).then(({html}) => html)
 
 test('layouts', async t => {
-  const source = await fixture('posthtml/layout')
+  const source = `---
+greeting: Hello
+---
 
-  const html = await renderString(source, {maizzle: {env: 'maizzle-ci'}})
+<extends src="test/stubs/layouts/basic.html">
+  <block name="template">
+    Front matter variable: {{ page.greeting }}
+  </block>
+</extends>`
 
-  t.is(html.trim(), await expected('posthtml/layout'))
+  const html = await renderString(source, {
+    maizzle: {
+      greeting: 'Hello'
+    }
+  })
+
+  t.is(html.trim(), `Front matter variable: Hello`)
 })
 
 test('inheritance when extending a template', async t => {
-  const source = await fixture('posthtml/extend-template')
+  const source = `---
+template: second
+---
+
+<extends src="test/stubs/template.html">
+  <block name="button">Child in second.html</block>
+</extends>`
+
   let html = await renderString(source)
 
   html = html.replace(/[^\S\r\n]+$/gm, '').trim()
 
-  t.is(html, await expected('posthtml/extend-template'))
+  t.is(html, `Parent
+    Child in second.html`)
 })
 
 test('components', async t => {
-  const source = await fixture('posthtml/component')
+  const source = `<component
+  src="test/stubs/components/component.html"
+  text="Example"
+  locals='{
+    "foo": "bar"
+  }'
+>
+Variable from page: [[ page.env ]]
+
+  <component
+    src="test/stubs/components/component.html"
+    text="Nested component"
+    locals='{
+      "foo": "bar (nested)"
+    }'
+  >
+Variable from page (nested): [[ page.env ]]
+  </component>
+</component>`
+
   const options = {
     maizzle: {
-      env: 'maizzle-ci',
+      env: 'prod',
       build: {
         components: {
           expressions: {
@@ -47,7 +86,19 @@ test('components', async t => {
 
   const html = await renderString(source, options)
 
-  t.is(html.trim(), await expected('posthtml/component'))
+  t.is(html.trim(), `Variable from attribute: Example
+
+Variable from locals attribute: bar
+
+
+Variable from page: prod
+
+  Variable from attribute: Nested component
+
+Variable from locals attribute: bar (nested)
+
+
+Variable from page (nested): prod`)
 })
 
 test('fetch component', async t => {

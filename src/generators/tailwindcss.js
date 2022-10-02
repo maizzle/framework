@@ -89,19 +89,23 @@ module.exports = {
     const userFilePath = get(maizzleConfig, 'build.tailwind.css', path.join(process.cwd(), 'src/css/tailwind.css'))
     const userFileExists = await fs.pathExists(userFilePath)
 
-    if (userFileExists) {
-      css = await fs.readFile(path.resolve(userFilePath), 'utf8') + css
-    } else {
-      css = `@import "tailwindcss/components"; @import "tailwindcss/utilities"; ${css}`
-    }
-
-    return postcss([
-      postcssImport({path: path.dirname(userFilePath)}),
+    const toProcess = [
       postcssNested(),
       tailwindcss(config),
       maizzleConfig.env === 'local' ? () => {} : mergeLonghand(),
       ...get(maizzleConfig, 'build.postcss.plugins', [])
-    ])
+    ]
+
+    if (userFileExists) {
+      css = await fs.readFile(path.resolve(userFilePath), 'utf8') + css
+      toProcess.unshift(
+        postcssImport({path: path.dirname(userFilePath)})
+      )
+    } else {
+      css = `@tailwind components; @tailwind utilities; ${css}`
+    }
+
+    return postcss([...toProcess])
       .process(css, {from: undefined})
       .then(result => result.css)
       .catch(error => {

@@ -287,31 +287,22 @@ test('filters (tailwindcss)', async t => {
     </style>`
   )
 
-  const expected = `<style>.inline { display: inline !important
-} .table { display: table !important
-} .contents { display: contents !important
-} .hidden { display: none !important
-} .truncate { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important
-} .uppercase { text-transform: uppercase !important
-} .lowercase { text-transform: lowercase !important
-} .capitalize { text-transform: capitalize !important
-} div { display: none
-}
-    </style>`
-
-  t.is(html, expected)
+  t.true(html.replace(/\s/g, '').includes(`div{display:none}`))
 })
 
 test('filters (postcss)', async t => {
   const html = await Maizzle.withFilters(
-    `<style postcss>@import 'test/stubs/post.css';</style>`
+    `<style postcss>
+      div {
+        margin-top: 1px;
+        margin-right: 2px;
+        margin-bottom: 3px;
+        margin-left: 4px;
+      }
+    </style>`
   )
 
-  const expected = `<style>div {
-  margin: 1px 2px 3px 4px;
-}</style>`
-
-  t.is(html, expected)
+  t.is(html.replace(/\n {2,}/g, ''), '<style>div {margin: 1px 2px 3px 4px;}</style>')
 })
 
 test('url parameters', async t => {

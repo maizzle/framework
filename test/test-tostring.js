@@ -129,7 +129,28 @@ test('prevents overwriting page object', async t => {
 })
 
 test('preserves css in marked style tags (tailwindcss)', async t => {
-  const source = await fixture('transformers/preserve-transform-css')
+  const source = `<html>
+    <head>
+      <style tailwindcss preserve>
+        div {
+          @apply uppercase;
+        }
+        [data-ogsc] .inexistent {
+          color: #ef4444;
+        }
+        div > u + .body .gmail-android-block {
+          display: block !important;
+        }
+        u + #body a {
+          color: inherit;
+        }
+      </style>
+    </head>
+    <body>
+      <div>test</div>
+    </body>
+  </html>`
+
   const html = await renderString(source, {
     // So that we don't compile twice
     tailwind: {
@@ -137,12 +158,19 @@ test('preserves css in marked style tags (tailwindcss)', async t => {
     }
   })
 
-  t.is(html, await expected('transformers/preserve-transform-css'))
+  t.true(html.includes('[data-ogsc] .inexistent'))
+  t.true(html.includes('div > u + .body .gmail-android-block'))
+  t.true(html.includes('u + #body a'))
 })
 
 test('@import css files in marked style tags', async t => {
-  const source = await fixture('transformers/atimport-in-style')
+  const source = `<style postcss>@import "test/stubs/post.css";</style>`
   const html = await renderString(source)
 
-  t.is(html, await expected('transformers/atimport-in-style'))
+  t.is(html, `<style>div {
+  margin-top: 1px;
+  margin-right: 2px;
+  margin-bottom: 3px;
+  margin-left: 4px;
+}</style>`)
 })

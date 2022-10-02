@@ -401,24 +401,6 @@ test('warns if a template cannot be rendered and `fail` option is `silent`', asy
   t.false(files.includes('empty.html'))
 })
 
-test('spins up local development server', async t => {
-  await Maizzle.serve('local', {
-    build: {
-      browsersync: {
-        ui: false
-      },
-      templates: {
-        source: 'test/stubs/templates',
-        destination: {
-          path: t.context.folder
-        }
-      }
-    }
-  })
-
-  t.true(await fs.pathExists(t.context.folder))
-})
-
 test('local server does not compile unwanted file types', async t => {
   await Maizzle.serve('local', {
     build: {

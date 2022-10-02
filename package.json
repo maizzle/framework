@@ -30,7 +30,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "c8 ava -s",
+    "test": "c8 ava",
     "pretest": "xo",
     "style": "xo",
     "release": "np"

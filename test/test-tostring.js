@@ -1,32 +1,18 @@
 const test = require('ava')
 const Maizzle = require('../src')
 
-const path = require('path')
-const fs = require('fs')
-
-const readFile = (dir, filename) => fs.promises
-  .readFile(path.join(__dirname, dir, `${filename}.html`), 'utf8')
-  .then(html => html.trim())
-
-const fixture = file => readFile('fixtures', file)
-const expected = file => readFile('expected', file)
-
 const renderString = (string, options = {}) => Maizzle.render(string, options).then(({html}) => html)
 
-test('compiles HTML string if no options are passed', async t => {
-  const source = await fixture('basic')
-
-  const html = await renderString(source)
-
-  t.is(html, source)
-})
-
 test('uses environment config file(s) if available', async t => {
-  const source = await fixture('useConfig')
+  const source = `<div>{{ page.mail }}</div>`
 
-  const html = await renderString(source, {maizzle: {env: 'maizzle-ci'}})
+  const html = await renderString(source, {
+    maizzle: {
+      mail: 'puzzle'
+    }
+  })
 
-  t.is(html, await expected('useConfig'))
+  t.is(html, '<div>puzzle</div>')
 })
 
 test('throws if first argument is not an HTML string', async t => {

@@ -103,6 +103,7 @@ module.exports = async (env, spinner, config) => {
 
             try {
               const compiled = await render(html, {
+                useFileConfig: true,
                 maizzle: {
                   ...config,
                   env

@@ -17,7 +17,9 @@ module.exports = async (html, options) => {
     throw new RangeError('received empty string')
   }
 
-  const fileConfig = await Config.getMerged(process.env.NODE_ENV)
+  const fileConfig = get(options, 'useFileConfig')
+    ? await Config.getMerged(process.env.NODE_ENV)
+    : {}
 
   let config = merge(fileConfig, get(options, 'maizzle', {}))
 

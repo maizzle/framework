@@ -22,11 +22,16 @@ module.exports = async (html, config = {}, direct = false) => {
   filters.postcss = css => PostCSS.process(css, maizzleConfig)
   filters.tailwindcss = css => Tailwind.compile(css, html, tailwindConfig, maizzleConfig)
 
-  return posthtml([
+  const posthtmlPlugins = [
     styleDataEmbed(),
-    posthtmlContent(filters),
-    safeClassNames()
-  ])
+    posthtmlContent(filters)
+  ]
+
+  if (get(config, 'safeClassNames') !== false) {
+    posthtmlPlugins.push(safeClassNames())
+  }
+
+  return posthtml(posthtmlPlugins)
     .process(html, posthtmlOptions)
     .then(result => result.html)
 }

@@ -35,7 +35,8 @@ module.exports = {
       important: true,
       content: {
         files: [
-          './src/**/*.*',
+          './src/components/**.html',
+          './src/layouts/**.html',
           {raw: html, extension: 'html'}
         ]
       }
@@ -46,7 +47,6 @@ module.exports = {
       config.content = {
         files: [
           ...config.content,
-          './src/**/*.*',
           {raw: html, extension: 'html'}
         ]
       }

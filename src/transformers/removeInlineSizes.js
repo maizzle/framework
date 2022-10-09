@@ -1,6 +1,7 @@
 const posthtml = require('posthtml')
 const {get, isEmpty} = require('lodash')
 const parseAttrs = require('posthtml-attrs-parser')
+const {toStyleString} = require('../utils/helpers')
 
 module.exports = async (html, config = {}, direct = false) => {
   const settings = direct ? config : get(config, 'inlineCSS.keepOnlyAttributeSizes', {})
@@ -26,13 +27,13 @@ const removeInlineSizes = (mappings = {}) => tree => {
       }
 
       tags.forEach(() => {
-        if (attrs.style) {
+        if (get(node, 'attrs.style')) {
           delete attrs.style[attribute]
+
+          node.attrs.style = toStyleString(attrs.style)
         }
       })
     })
-
-    node.attrs = attrs.compose()
 
     return node
   }

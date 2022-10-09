@@ -1,6 +1,5 @@
 const {get} = require('lodash')
 const posthtml = require('posthtml')
-const parseAttrs = require('posthtml-attrs-parser')
 const {conv} = require('color-shorthand-hex-to-six-digit')
 
 module.exports = async (html, config = {}) => {
@@ -13,18 +12,16 @@ module.exports = async (html, config = {}) => {
 }
 
 const sixHex = () => tree => {
+  const targets = new Set(['bgcolor', 'color'])
+
   const process = node => {
-    const attrs = parseAttrs(node.attrs)
-
-    const targets = ['bgcolor', 'color']
-
-    targets.forEach(attribute => {
-      if (attrs[attribute]) {
-        attrs[attribute] = conv(attrs[attribute])
-      }
-    })
-
-    node.attrs = attrs.compose()
+    if (node.attrs) {
+      Object.entries(node.attrs).forEach(([name, value]) => {
+        if (targets.has(name) && node.attrs[name]) {
+          node.attrs[name] = conv(value)
+        }
+      })
+    }
 
     return node
   }

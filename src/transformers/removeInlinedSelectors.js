@@ -10,10 +10,10 @@ module.exports = async (html, config = {}) => {
   }
 
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
-  return posthtml([plugin()]).process(html, posthtmlOptions).then(result => result.html)
+  return posthtml([plugin(posthtmlOptions)]).process(html, posthtmlOptions).then(result => result.html)
 }
 
-const plugin = () => tree => {
+const plugin = posthtmlOptions => tree => {
   const process = node => {
     // For each style tag...
     if (node.tag === 'style') {
@@ -56,6 +56,13 @@ const plugin = () => tree => {
             })
 
             n.attrs = parsedAttrs.compose()
+
+            // Fix issue with .compose() automatically quoting attributes with no values
+            Object.entries(n.attrs).forEach(([name, value]) => {
+              if (value === '' && get(posthtmlOptions, 'recognizeNoValueAttribute') === true) {
+                n.attrs[name] = true
+              }
+            })
 
             return n
           })

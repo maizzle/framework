@@ -427,7 +427,7 @@ test('remove inlined selectors', async t => {
       </style>
     </head>
     <body>
-      <div id="keepId" class="remove keep ignore foo-class" style="color: red; display: inline">
+      <div no-value id="keepId" class="remove keep ignore foo-class" style="color: red; display: inline">
         <h1 class="m-0 mb-4 mt-0 hover-text-blue" style="margin: 0 0 16px;">Title</h1>
         <img src="https://example.com/image.jpg" style="border: 0; vertical-align: middle">
         <div id="keepId" class="remove keep ignore" style="color: red; display: inline">text</div>
@@ -435,7 +435,7 @@ test('remove inlined selectors', async t => {
     </body>
   </html>`
 
-  const expected = `<!DOCTYPE html>
+  const expectedWithOptions = `<!DOCTYPE html>
   <html>
     <head>
       <style>
@@ -461,7 +461,7 @@ test('remove inlined selectors', async t => {
       </style>
     </head>
     <body>
-      <div id="keepId" class="keep foo-class" style="color: red; display: inline">
+      <div no-value id="keepId" class="keep foo-class" style="color: red; display: inline">
         <h1 class="hover-text-blue" style="margin: 0 0 16px">Title</h1>
         <img src="https://example.com/image.jpg" style="border: 0; vertical-align: middle">
         <div id="keepId" class="keep" style="color: red; display: inline">text</div>
@@ -469,9 +469,22 @@ test('remove inlined selectors', async t => {
     </body>
   </html>`
 
-  const result = await Maizzle.removeInlinedClasses(html)
+  const withPostHTMLOptions = await Maizzle.removeInlinedClasses(html, {
+    build: {
+      posthtml: {
+        options: {
+          recognizeNoValueAttribute: true
+        }
+      }
+    }
+  })
 
-  t.is(result, expected)
+  const basic = await Maizzle.removeInlinedClasses(html)
+
+  const expectedBasic = expectedWithOptions.replace('no-value', 'no-value=""')
+
+  t.is(withPostHTMLOptions, expectedWithOptions)
+  t.is(basic, expectedBasic)
 })
 
 test('remove inlined selectors (disabled)', async t => {

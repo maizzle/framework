@@ -405,7 +405,13 @@ test('prevent widows (with options)', async t => {
     <p>Should not remove widows here</p>
   `, {
     attrName: 'no-widows',
-    minWordCount: 3
+    minWordCount: 3,
+    ignore: [
+      {
+        heads: 'foo',
+        tails: 'bar'
+      }
+    ]
   })
 
   t.is(html, `

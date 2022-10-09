@@ -390,21 +390,36 @@ test('prevent widows', async t => {
 
 test('prevent widows (with options)', async t => {
   const html = await Maizzle.preventWidows(`
-    <div prevent-widows>
-      <!--[if mso]>
+    <div no-widows>
+      <p>Text following an MSO comment</p>
+      <!--[if mso 15]>
         <p>A paragraph inside an Outlook MSO comment</p>
+        <p>unescaped {{{ foo }}}</p>
       <![endif]-->
-      <div>Text following an MSO comment</div>
+      <p>expression {{ foo }}</p>
+      <!--[if !mso]><!-->
+        <div>All Outlooks will ignore this</div>
+      <!--<![endif]-->
+      <p>unescaped {{{ foo }}}</p>
     </div>
     <p>Should not remove widows here</p>
-  `, {attrName: 'prevent-widows'})
+  `, {
+    attrName: 'no-widows',
+    minWordCount: 3
+  })
 
   t.is(html, `
     <div>
-      <!--[if mso]>
+      <p>Text following an MSO&nbsp;comment</p>
+      <!--[if mso 15]>
         <p>A paragraph inside an Outlook MSO&nbsp;comment</p>
+        <p>unescaped {{{ foo }}}</p>
       <![endif]-->
-      <div>Text following an MSO&nbsp;comment</div>
+      <p>expression {{ foo }}</p>
+      <!--[if !mso]><!-->
+        <div>All Outlooks will ignore this</div>
+      <!--<![endif]-->
+      <p>unescaped {{{ foo }}}</p>
     </div>
     <p>Should not remove widows here</p>
   `)

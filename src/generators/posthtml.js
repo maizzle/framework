@@ -14,7 +14,7 @@ module.exports = async (html, config) => {
   const modulesRoot = modulesOptions.root || './'
   const modulesFrom = modulesOptions.from || `${modulesRoot}/fake`
 
-  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+  const posthtmlOptions = merge({recognizeNoValueAttribute: true}, get(config, 'build.posthtml.options', {}))
   const posthtmlPlugins = get(config, 'build.posthtml.plugins', [])
 
   const expressionsOptions = merge({strictMode: false}, get(config, 'build.posthtml.expressions', {}))

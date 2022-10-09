@@ -13,7 +13,7 @@ module.exports = async (html, config = {}) => {
 }
 
 const removeWidowsPlugin = options => tree => {
-  const {attrName = 'prevent-widows', ...removeWidowsOptions} = options
+  const {attrName = 'prevent-widows', ...removeWidowsOptions} = get(options, 'widowWords', options)
 
   removeWidowsOptions.minWordCount = removeWidowsOptions.minWordCount || 3
 
@@ -66,7 +66,7 @@ const removeWidowsPlugin = options => tree => {
   }
 
   const process = node => {
-    if (node.attrs && node.attrs[attrName]) {
+    if (node.attrs && Object.keys(node.attrs).includes(attrName)) {
       const widowsRemovedString = removeWidows(tree.render(node.content), removeWidowsOptions).res
 
       node.content = tree.render(tree.parser(widowsRemovedString))

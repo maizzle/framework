@@ -373,9 +373,62 @@ test('attribute to style', async t => {
 })
 
 test('prevent widows', async t => {
-  const html = await Maizzle.preventWidows('lorem ipsum dolor')
+  const html = await Maizzle.preventWidows(`
+    <!--[if mso]>
+      <p>A paragraph inside an Outlook MSO comment</p>
+    <![endif]-->
+    <div>Text following an MSO comment</div>
+  `)
 
-  t.is(html, 'lorem ipsum&nbsp;dolor')
+  t.is(html, `
+    <!--[if mso]>
+      <p>A paragraph inside an Outlook MSO&nbsp;comment</p>
+    <![endif]-->
+    <div>Text following an MSO&nbsp;comment</div>
+  `)
+})
+
+test('prevent widows (with options)', async t => {
+  const html = await Maizzle.preventWidows(`
+    <div no-widows>
+      <p>Text following an MSO comment</p>
+      <!--[if mso 15]>
+        <p>A paragraph inside an Outlook MSO comment</p>
+        <p>unescaped {{{ foo }}}</p>
+      <![endif]-->
+      <p>expression {{ foo }}</p>
+      <!--[if !mso]><!-->
+        <div>All Outlooks will ignore this</div>
+      <!--<![endif]-->
+      <p>unescaped {{{ foo }}}</p>
+    </div>
+    <p>Should not remove widows here</p>
+  `, {
+    attrName: 'no-widows',
+    minWordCount: 3,
+    ignore: [
+      {
+        heads: 'foo',
+        tails: 'bar'
+      }
+    ]
+  })
+
+  t.is(html, `
+    <div>
+      <p>Text following an MSO&nbsp;comment</p>
+      <!--[if mso 15]>
+        <p>A paragraph inside an Outlook MSO&nbsp;comment</p>
+        <p>unescaped {{{ foo }}}</p>
+      <![endif]-->
+      <p>expression {{ foo }}</p>
+      <!--[if !mso]><!-->
+        <div>All Outlooks will ignore this</div>
+      <!--<![endif]-->
+      <p>unescaped {{{ foo }}}</p>
+    </div>
+    <p>Should not remove widows here</p>
+  `)
 })
 
 test('markdown (disabled)', async t => {

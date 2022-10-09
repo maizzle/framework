@@ -1,5 +1,5 @@
 const posthtml = require('posthtml')
-const {get, merge, isEmpty} = require('lodash')
+const {get, isEmpty} = require('lodash')
 const {removeWidows} = require('string-remove-widows')
 
 module.exports = async (html, config = {}) => {

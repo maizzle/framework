@@ -373,9 +373,39 @@ test('attribute to style', async t => {
 })
 
 test('prevent widows', async t => {
-  const html = await Maizzle.preventWidows('lorem ipsum dolor')
+  const basic = await Maizzle.preventWidows(`
+    <!--[if mso]>
+      <p>A paragraph inside an Outlook MSO comment</p>
+    <![endif]-->
+    <div>Text following an MSO comment</div>
+  `)
 
-  t.is(html, 'lorem ipsum&nbsp;dolor')
+  t.is(basic, `
+    <!--[if mso]>
+      <p>A paragraph inside an Outlook MSO&nbsp;comment</p>
+    <![endif]-->
+    <div>Text following an MSO&nbsp;comment</div>
+  `)
+
+  const withOptions = await Maizzle.preventWidows(`
+    <div prevent-widows>
+      <!--[if mso]>
+        <p>A paragraph inside an Outlook MSO comment</p>
+      <![endif]-->
+      <div>Text following an MSO comment</div>
+    </div>
+    <p>Should not remove widows here</p>
+  `, {attrName: 'prevent-widows'}, false)
+
+  t.is(withOptions, `
+    <div>
+      <!--[if mso]>
+        <p>A paragraph inside an Outlook MSO&nbsp;comment</p>
+      <![endif]-->
+      <div>Text following an MSO&nbsp;comment</div>
+    </div>
+    <p>Should not remove widows here</p>
+  `)
 })
 
 test('markdown (disabled)', async t => {

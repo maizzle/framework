@@ -1,6 +1,7 @@
 const posthtml = require('posthtml')
 const {get, isEmpty} = require('lodash')
 const parseAttrs = require('posthtml-attrs-parser')
+const {toStyleString} = require('../utils/helpers')
 
 module.exports = async (html, config = {}, direct = false) => {
   const posthtmlOptions = get(config, 'build.posthtml.options', {})
@@ -40,9 +41,11 @@ const removeInlineBGColor = (options = {}) => tree => {
     })
 
     if (attrs.style && attrs.style['background-color']) {
-      attrs.bgcolor = attrs.style['background-color']
+      node.attrs.bgcolor = attrs.style['background-color']
+
       delete attrs.style['background-color']
-      node.attrs = attrs.compose()
+
+      node.attrs.style = toStyleString(attrs.style)
     }
 
     return node

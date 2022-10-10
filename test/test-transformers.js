@@ -534,10 +534,8 @@ test('remove inlined selectors', async t => {
 
   const basic = await Maizzle.removeInlinedClasses(html)
 
-  const expectedBasic = expectedWithOptions.replace('no-value', 'no-value=""')
-
   t.is(withPostHTMLOptions, expectedWithOptions)
-  t.is(basic, expectedBasic)
+  t.is(basic, expectedWithOptions)
 })
 
 test('remove inlined selectors (disabled)', async t => {

@@ -5,13 +5,14 @@ const PostCSS = require('../../generators/postcss')
 const posthtmlContent = require('posthtml-content')
 const Tailwind = require('../../generators/tailwindcss')
 const safeClassNames = require('posthtml-safe-class-names')
+const defaultConfig = require('../../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {
   const filters = direct ?
     merge(defaultFilters, config) :
     merge(defaultFilters, get(config, 'filters', {}))
 
-  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
 
   /**
    * Compile CSS in <style {post|tailwind}css> tags

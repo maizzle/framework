@@ -1,12 +1,13 @@
 const posthtml = require('posthtml')
-const {get, isEmpty} = require('lodash')
+const {get, merge, isEmpty} = require('lodash')
 const urlParams = require('posthtml-url-parameters')
+const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {
   const urlParameters = direct ? config : get(config, 'urlParameters', {})
 
   if (!isEmpty(urlParameters)) {
-    const posthtmlOptions = get(config, 'build.posthtml.options', {})
+    const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
     const {_options, ...parameters} = urlParameters
     const tags = get(_options, 'tags', ['a'])
     const strict = get(_options, 'strict', true)

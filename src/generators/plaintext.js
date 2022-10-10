@@ -1,11 +1,12 @@
 const path = require('path')
-const {get} = require('lodash')
 const posthtml = require('posthtml')
+const {get, merge} = require('lodash')
 const {stripHtml} = require('string-strip-html')
+const defaultConfig = require('./posthtml/defaultConfig')
 
 const self = {
   handleCustomTags: (html, config = {}) => {
-    const posthtmlOptions = get(config, 'build.posthtml.options', {})
+    const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
 
     const posthtmlPlugin = () => tree => {
       const process = node => {

@@ -1,13 +1,14 @@
 const posthtml = require('posthtml')
-const {get, isEmpty} = require('lodash')
+const {get, merge, isEmpty} = require('lodash')
 const {removeWidows} = require('string-remove-widows')
+const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}) => {
   if (isEmpty(config)) {
     return removeWidows(html).res
   }
 
-  const posthtmlOptions = get(config, 'build.posthtml.options', {recognizeNoValueAttribute: true})
+  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
 
   return posthtml([removeWidowsPlugin(config)]).process(html, posthtmlOptions).then(result => result.html)
 }

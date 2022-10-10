@@ -1,6 +1,7 @@
 const posthtml = require('posthtml')
 const {get, merge} = require('lodash')
 const markdown = require('posthtml-markdownit')
+const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {
   if (get(config, 'markdown') === false) {
@@ -8,7 +9,7 @@ module.exports = async (html, config = {}, direct = false) => {
   }
 
   const userMarkdownOptions = direct ? config : get(config, 'markdown', {})
-  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
   const markdownOptions = merge({markdownit: {html: true}}, userMarkdownOptions)
 
   return posthtml([

@@ -1,7 +1,33 @@
 const posthtml = require('posthtml')
 const isUrl = require('is-url-superb')
 const baseUrl = require('posthtml-base-url')
-const {get, isObject, isEmpty} = require('lodash')
+const {get, merge, isObject, isEmpty} = require('lodash')
+const defaultConfig = require('../generators/posthtml/defaultConfig')
+
+module.exports = async (html, config = {}, direct = false) => {
+  const url = direct ? config : get(config, 'baseURL')
+  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
+
+  // Handle `baseUrl` as a string
+  if (typeof url === 'string' && url.length > 0) {
+    html = rewriteVMLs(html, url)
+
+    return posthtml([
+      baseUrl({url, allTags: true, styleTag: true, inlineCss: true})
+    ])
+      .process(html, posthtmlOptions)
+      .then(result => result.html)
+  }
+
+  // Handle `baseUrl` as an object
+  if (isObject(url) && !isEmpty(url)) {
+    html = rewriteVMLs(html, url.url)
+
+    return posthtml([baseUrl(url)]).process(html, posthtmlOptions).then(result => result.html)
+  }
+
+  return html
+}
 
 /**
  * VML backgrounds must be handled with regex because
@@ -38,31 +64,6 @@ const rewriteVMLs = (html, url) => {
         html = html.replace(vFill[0], vFillReplace)
       }
     })
-  }
-
-  return html
-}
-
-module.exports = async (html, config = {}, direct = false) => {
-  const url = direct ? config : get(config, 'baseURL')
-  const posthtmlOptions = get(config, 'build.posthtml.options', {})
-
-  // Handle `baseUrl` as a string
-  if (typeof url === 'string' && url.length > 0) {
-    html = rewriteVMLs(html, url)
-
-    return posthtml([
-      baseUrl({url, allTags: true, styleTag: true, inlineCss: true})
-    ])
-      .process(html, posthtmlOptions)
-      .then(result => result.html)
-  }
-
-  // Handle `baseUrl` as an object
-  if (isObject(url) && !isEmpty(url)) {
-    html = rewriteVMLs(html, url.url)
-
-    return posthtml([baseUrl(url)]).process(html, posthtmlOptions).then(result => result.html)
   }
 
   return html

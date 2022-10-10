@@ -1,4 +1,4 @@
-const {isEmpty, get} = require('lodash')
+const {get, isEmpty} = require('lodash')
 
 module.exports = async (html, config = {}, direct = false) => {
   const replacements = direct ? config : get(config, 'replaceStrings', {})

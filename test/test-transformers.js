@@ -163,9 +163,16 @@ test('remove unused CSS (disabled)', async t => {
 })
 
 test('remove attributes', async t => {
-  const html = await Maizzle.removeAttributes(`<div style="" role="article"></div>`, [{name: 'role', value: 'article'}])
+  const html = await Maizzle.removeAttributes(
+    `<div style="" remove keep role="article" delete-me="with-regex"></div>`,
+    [
+      {name: 'role', value: 'article'},
+      'remove',
+      {name: 'delete-me', value: /^with/}
+    ]
+  )
 
-  t.is(html, '<div></div>')
+  t.is(html, '<div keep></div>')
 })
 
 test('extra attributes', async t => {

@@ -1,13 +1,15 @@
-const {get} = require('lodash')
 const posthtml = require('posthtml')
+const {get, merge} = require('lodash')
 const {conv} = require('color-shorthand-hex-to-six-digit')
+const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}) => {
   if (get(config, 'sixHex') === false) {
     return html
   }
 
-  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
+
   return posthtml([sixHex()]).process(html, posthtmlOptions).then(result => result.html)
 }
 

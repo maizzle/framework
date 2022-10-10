@@ -1,10 +1,11 @@
 const posthtml = require('posthtml')
-const {get, isEmpty} = require('lodash')
+const {get, merge, isEmpty} = require('lodash')
 const parseAttrs = require('posthtml-attrs-parser')
 const {toStyleString} = require('../utils/helpers')
+const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {
-  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
 
   if (isEmpty(config)) {
     return posthtml([removeInlineBGColor()]).process(html, posthtmlOptions).then(result => result.html)

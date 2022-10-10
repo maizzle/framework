@@ -4,6 +4,7 @@ const {get, merge} = require('lodash')
 const fetch = require('posthtml-fetch')
 const layouts = require('posthtml-extend')
 const modules = require('posthtml-modules')
+const defaultConfig = require('./defaultConfig')
 const expressions = require('posthtml-expressions')
 
 module.exports = async (html, config) => {
@@ -14,7 +15,7 @@ module.exports = async (html, config) => {
   const modulesRoot = modulesOptions.root || './'
   const modulesFrom = modulesOptions.from || `${modulesRoot}/fake`
 
-  const posthtmlOptions = merge({recognizeNoValueAttribute: true}, get(config, 'build.posthtml.options', {}))
+  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
   const posthtmlPlugins = get(config, 'build.posthtml.plugins', [])
 
   const expressionsOptions = merge({strictMode: false}, get(config, 'build.posthtml.expressions', {}))

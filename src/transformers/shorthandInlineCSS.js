@@ -1,11 +1,12 @@
 const posthtml = require('posthtml')
-const {get, isObject, isEmpty} = require('lodash')
+const {get, merge, isObject, isEmpty} = require('lodash')
 const mergeLonghand = require('posthtml-postcss-merge-longhand')
+const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config, direct = false) => {
   config = direct ? (isObject(config) ? config : true) : get(config, 'shorthandInlineCSS', [])
 
-  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
 
   if (typeof config === 'boolean' && config) {
     html = await posthtml([mergeLonghand()]).process(html, posthtmlOptions).then(result => result.html)

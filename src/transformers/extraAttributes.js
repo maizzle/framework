@@ -1,13 +1,14 @@
 const posthtml = require('posthtml')
-const {get, isObject} = require('lodash')
+const {get, merge, isObject} = require('lodash')
 const addAttributes = require('posthtml-extra-attributes')
+const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {
   if (get(config, 'extraAttributes') === false) {
     return html
   }
 
-  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
 
   let attributes = {
     table: {

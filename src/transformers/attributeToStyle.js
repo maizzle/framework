@@ -1,9 +1,10 @@
 const posthtml = require('posthtml')
 const parseAttrs = require('posthtml-attrs-parser')
-const {get, forEach, intersection, keys, isEmpty} = require('lodash')
+const defaultConfig = require('../generators/posthtml/defaultConfig')
+const {get, merge, forEach, intersection, keys, isEmpty} = require('lodash')
 
 module.exports = async (html, config = {}, direct = false) => {
-  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
   const attributes = get(config, 'inlineCSS.attributeToStyle', false)
 
   if (typeof attributes === 'boolean' && attributes) {

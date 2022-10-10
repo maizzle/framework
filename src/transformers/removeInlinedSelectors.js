@@ -1,15 +1,17 @@
-const {get, has, remove} = require('lodash')
 const postcss = require('postcss')
 const posthtml = require('posthtml')
+const {get, merge, has, remove} = require('lodash')
 const parseAttrs = require('posthtml-attrs-parser')
 const matchHelper = require('posthtml-match-helper')
+const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}) => {
   if (get(config, 'removeInlinedClasses') === false) {
     return html
   }
 
-  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
+
   return posthtml([plugin(posthtmlOptions)]).process(html, posthtmlOptions).then(result => result.html)
 }
 

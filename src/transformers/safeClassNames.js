@@ -1,6 +1,7 @@
-const {get} = require('lodash')
 const posthtml = require('posthtml')
+const {get, merge} = require('lodash')
 const safeClassNames = require('posthtml-safe-class-names')
+const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {
   const option = get(config, 'safeClassNames')
@@ -17,7 +18,7 @@ module.exports = async (html, config = {}, direct = false) => {
     return html
   }
 
-  const posthtmlOptions = get(config, 'build.posthtml.options', {})
+  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
   const replacements = direct ? config : get(config, 'safeClassNames', {})
 
   return posthtml([safeClassNames({replacements})]).process(html, posthtmlOptions).then(result => result.html)

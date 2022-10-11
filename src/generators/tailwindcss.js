@@ -38,8 +38,12 @@ module.exports = {
       important: true,
       content: {
         files: [
-          typeof layoutsRoot === 'string' ? path.normalize(`${layoutsRoot}/**/*.html`) : './src/layouts/**/*.html',
-          typeof componentsRoot === 'string' ? path.normalize(`${componentsRoot}/**/*.html`) : './src/components/**/*.html',
+          typeof layoutsRoot === 'string' && layoutsRoot ?
+            `${layoutsRoot}/**/*.html`.replace(/\/\//g, '/') :
+            './src/layouts/**/*.html',
+          typeof componentsRoot === 'string' && componentsRoot ?
+            `${componentsRoot}/**/*.html`.replace(/\/\//g, '/') :
+            './src/components/**/*.html',
           {raw: html, extension: 'html'}
         ]
       }

@@ -35,8 +35,8 @@ module.exports = {
       important: true,
       content: {
         files: [
-          './src/components/**.html',
-          './src/layouts/**.html',
+          `${get(maizzleConfig, 'build.components.root', './src/components')}/**/*.html`,
+          `${get(maizzleConfig, 'build.layouts.root', './src/layouts')}/**/*.html`,
           {raw: html, extension: 'html'}
         ]
       }

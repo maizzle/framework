@@ -31,12 +31,19 @@ module.exports = {
     }
 
     // Merge user's Tailwind config on top of a 'base' config
+    const layoutsRoot = get(maizzleConfig, 'build.layouts.root')
+    const componentsRoot = get(maizzleConfig, 'build.components.root')
+
     const config = merge({
       important: true,
       content: {
         files: [
-          './src/components/**.html',
-          './src/layouts/**.html',
+          typeof layoutsRoot === 'string' && layoutsRoot ?
+            `${layoutsRoot}/**/*.html`.replace(/\/\//g, '/') :
+            './src/layouts/**/*.html',
+          typeof componentsRoot === 'string' && componentsRoot ?
+            `${componentsRoot}/**/*.html`.replace(/\/\//g, '/') :
+            './src/components/**/*.html',
           {raw: html, extension: 'html'}
         ]
       }

@@ -495,11 +495,10 @@ test('remove inlined selectors', async t => {
     </body>
   </html>`
 
-  const expectedWithOptions = `<!DOCTYPE html>
+  const expectedHTML = `<!DOCTYPE html>
   <html>
     <head>
-      <style>
-        .hover-text-blue:hover {
+      <style>.hover-text-blue:hover {
           color: #00a8ff;
         }
 
@@ -514,11 +513,8 @@ test('remove inlined selectors', async t => {
 
         @media (max-width: 600px) {
           .ignore {color: blue}
-        }
-      </style>
-      <style>
-        .keep {margin: 0}
-      </style>
+        }</style>
+      <style>.keep {margin: 0}</style>
     </head>
     <body>
       <div no-value id="keepId" class="keep foo-class" style="color: red; display: inline">
@@ -528,6 +524,30 @@ test('remove inlined selectors', async t => {
       </div>
     </body>
   </html>`
+
+  const html2 = `<!DOCTYPE html>
+  <html>
+    <head><style>
+        img {
+          border: 0;
+          vertical-align: middle
+        }
+      </style></head>
+    <body>
+      <img src="https://example.com/image.jpg" style="border: 0; vertical-align: middle">
+    </body>
+  </html>`
+
+  const expectedNoEmptyStyleTags = `<!DOCTYPE html>
+  <html>
+    <head></head>
+    <body>
+      <img src="https://example.com/image.jpg" style="border: 0; vertical-align: middle">
+    </body>
+  </html>`
+
+  const basic = await Maizzle.removeInlinedClasses(html)
+  const noEmptyStyle = await Maizzle.removeInlinedClasses(html2)
 
   const withPostHTMLOptions = await Maizzle.removeInlinedClasses(html, {
     build: {
@@ -539,10 +559,9 @@ test('remove inlined selectors', async t => {
     }
   })
 
-  const basic = await Maizzle.removeInlinedClasses(html)
-
-  t.is(withPostHTMLOptions, expectedWithOptions)
-  t.is(basic, expectedWithOptions)
+  t.is(basic, expectedHTML)
+  t.is(withPostHTMLOptions, expectedHTML)
+  t.is(noEmptyStyle, expectedNoEmptyStyleTags)
 })
 
 test('remove inlined selectors (disabled)', async t => {

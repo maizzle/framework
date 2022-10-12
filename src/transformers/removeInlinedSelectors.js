@@ -71,7 +71,12 @@ const plugin = posthtmlOptions => tree => {
         } catch {}
       })
 
-      node.content = root.toString()
+      node.content = root.toString().trim()
+
+      // Remove <style> tag if it ends up empty after processing
+      if (node.content.length === 0) {
+        node.tag = false
+      }
     }
 
     return node

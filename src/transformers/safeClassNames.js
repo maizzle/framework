@@ -19,7 +19,10 @@ module.exports = async (html, config = {}, direct = false) => {
   }
 
   const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
-  const replacements = direct ? config : get(config, 'safeClassNames', {})
+  const replacements = direct ? config : get(config, 'safeClassNames', {
+    '{': '{',
+    '}': '}'
+  })
 
   return posthtml([safeClassNames({replacements})]).process(html, posthtmlOptions).then(result => result.html)
 }

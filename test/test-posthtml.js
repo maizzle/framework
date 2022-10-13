@@ -1,17 +1,7 @@
 const test = require('ava')
-const Maizzle = require('../src')
+const {render} = require('../src')
 
-const path = require('path')
-const fs = require('fs')
-
-const readFile = (dir, filename) => fs.promises
-  .readFile(path.join(__dirname, dir, `${filename}.html`), 'utf8')
-  .then(html => html.trim())
-
-const fixture = file => readFile('fixtures', file)
-const expected = file => readFile('expected', file)
-
-const renderString = (string, options = {}) => Maizzle.render(string, options).then(({html}) => html)
+const renderString = (string, options = {}) => render(string, options).then(({html}) => html)
 
 test('layouts', async t => {
   const source = `---
@@ -58,7 +48,7 @@ test('components', async t => {
     "foo": "bar"
   }'
 >
-Variable from page: [[ page.env ]]
+<p class="hidden">Variable from page: [[ page.env ]]</p>
 
   <component
     src="test/stubs/components/component.html"
@@ -67,7 +57,7 @@ Variable from page: [[ page.env ]]
       "foo": "bar (nested)"
     }'
   >
-Variable from page (nested): [[ page.env ]]
+<p>Variable from page (nested): [[ page.env ]]</p>
   </component>
 </component>`
 
@@ -86,23 +76,23 @@ Variable from page (nested): [[ page.env ]]
 
   const html = await renderString(source, options)
 
-  t.is(html.trim(), `Variable from attribute: Example
-
-Variable from locals attribute: bar
-
-
-Variable from page: prod
-
-  Variable from attribute: Nested component
-
-Variable from locals attribute: bar (nested)
-
-
-Variable from page (nested): prod`)
+  t.is(html.trim(), `<p>Variable from attribute: Example</p>
+<p>Variable from locals attribute: bar</p><p class="hidden">Variable from page: prod</p>
+  <p>Variable from attribute: Nested component</p>
+<p>Variable from locals attribute: bar (nested)</p><p>Variable from page (nested): prod</p>`)
 })
 
 test('fetch component', async t => {
-  const source = await fixture('posthtml/fetch')
+  const source = `<extends src="test/stubs/layouts/basic.html">
+  <block name="template">
+    <fetch url="test/stubs/data.json">
+      <each loop="user in response">
+[[ user.name + (loop.last ? '' : ', ') ]]
+      </each>
+    </fetch>
+  </block>
+</extends>`
+
   const options = {
     maizzle: {
       env: 'maizzle-ci',
@@ -116,8 +106,7 @@ test('fetch component', async t => {
     }
   }
 
-  let html = await renderString(source, options)
-  html = html.replace(/[^\S\r\n]+$/gm, '')
+  const html = await renderString(source, options)
 
-  t.is(html.trim(), await expected('posthtml/fetch'))
+  t.is(html.trim(), 'Leanne Graham, Ervin Howell, Clementine Bauch')
 })

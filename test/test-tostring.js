@@ -4,7 +4,7 @@ const Maizzle = require('../src')
 const renderString = (string, options = {}) => Maizzle.render(string, options).then(({html}) => html)
 
 test('uses environment config file(s) if available', async t => {
-  const source = `<div>{{ page.mail }}</div>`
+  const source = `<div class="inline">{{ page.mail }}</div>`
 
   const html = await renderString(source, {
     maizzle: {
@@ -12,7 +12,7 @@ test('uses environment config file(s) if available', async t => {
     }
   })
 
-  t.is(html, '<div>puzzle</div>')
+  t.is(html, '<div class="inline">puzzle</div>')
 })
 
 test('throws if first argument is not an HTML string', async t => {
@@ -28,7 +28,7 @@ test('throws if first argument is an empty string', async t => {
 })
 
 test('runs the `beforeRender` event', async t => {
-  const html = await renderString(`<div>{{ page.foo }}</div>`, {
+  const html = await renderString(`<div class="inline">{{ page.foo }}</div>`, {
     beforeRender(html, config) {
       config.foo = 'bar'
 
@@ -36,11 +36,11 @@ test('runs the `beforeRender` event', async t => {
     }
   })
 
-  t.is(html, `<div>bar</div>`)
+  t.is(html, `<div class="inline">bar</div>`)
 })
 
 test('runs the `afterRender` event', async t => {
-  const result = await renderString(`<div>foo</div>`, {
+  const result = await renderString(`<div class="inline">foo</div>`, {
     afterRender(html, config) {
       config.replaceStrings = {
         foo: 'baz'
@@ -50,11 +50,11 @@ test('runs the `afterRender` event', async t => {
     }
   })
 
-  t.is(result, `<div>baz</div>`)
+  t.is(result, `<div class="inline">baz</div>`)
 })
 
 test('runs the `afterTransformers` event', async t => {
-  const result = await renderString(`<div>foo</div>`, {
+  const result = await renderString(`<div class="inline">foo</div>`, {
     maizzle: {
       title: 'bar'
     },
@@ -63,11 +63,11 @@ test('runs the `afterTransformers` event', async t => {
     }
   })
 
-  t.is(result, `<div>bar</div>`)
+  t.is(result, `<div class="inline">bar</div>`)
 })
 
 test('locals work when defined in all supported places', async t => {
-  const result = await renderString(`{{ page.one }}, {{ two }}, {{ three }}`, {
+  const result = await renderString(`{{ page.one }}, {{ two }}, {{ three }}, {{ inline }}`, {
     maizzle: {
       one: 1,
       build: {
@@ -85,11 +85,11 @@ test('locals work when defined in all supported places', async t => {
     }
   })
 
-  t.is(result, `1, 2, 3`)
+  t.is(result, `1, 2, 3, undefined`)
 })
 
 test('prevents overwriting page object', async t => {
-  const result = await renderString(`{{ page.one }}, {{ two }}, {{ three }}`, {
+  const result = await renderString(`{{ page.one }}, {{ two }}, {{ three }}, {{ inline }}`, {
     maizzle: {
       one: 1,
       build: {
@@ -111,7 +111,7 @@ test('prevents overwriting page object', async t => {
     }
   })
 
-  t.is(result, `1, undefined, undefined`)
+  t.is(result, `1, undefined, undefined, undefined`)
 })
 
 test('preserves css in marked style tags (tailwindcss)', async t => {
@@ -123,6 +123,9 @@ test('preserves css in marked style tags (tailwindcss)', async t => {
         }
         [data-ogsc] .inexistent {
           color: #ef4444;
+        }
+        [data-ogsc] .ogsc:hidden {
+          display: none;
         }
         div > u + .body .gmail-android-block {
           display: block !important;
@@ -144,16 +147,18 @@ test('preserves css in marked style tags (tailwindcss)', async t => {
     }
   })
 
-  t.true(html.includes('[data-ogsc] .inexistent'))
+  t.true(html.includes('[data-ogsc] .ogsc:hidden'))
+  t.false(html.includes('[data-ogsc] .inexistent'))
+
   t.true(html.includes('div > u + .body .gmail-android-block'))
   t.true(html.includes('u + #body a'))
 })
 
 test('@import css files in marked style tags', async t => {
-  const source = `<style postcss>@import "test/stubs/post.css";</style>`
+  const source = `<style class="inline" postcss>@import "test/stubs/post.css";</style>`
   const html = await renderString(source)
 
-  t.is(html, `<style>div {
+  t.is(html, `<style class="inline">div {
   margin: 1px 2px 3px 4px;
 }</style>`)
 })

@@ -3,7 +3,7 @@ const Tailwind = require('../src/generators/tailwindcss')
 
 test('throws on compile error', async t => {
   await t.throwsAsync(async () => {
-    await Tailwind.compile('.test {@apply inexistent;}', '<div class="test">Test</a>', {}, {})
+    await Tailwind.compile('div {@apply inexistent;}', '<div class="inline">Test</a>', {}, {})
   }, {instanceOf: SyntaxError})
 })
 
@@ -51,7 +51,7 @@ test('works with custom `content` sources', async t => {
 test('works with custom `files` sources', async t => {
   const css = await Tailwind.compile(
     '@tailwind utilities;',
-    '<div></div>',
+    '<div class="inline"></div>',
     {
       content: {
         files: ['./test/stubs/tailwind/*.*']
@@ -65,7 +65,7 @@ test('works with custom `files` sources', async t => {
 test('uses maizzle template path as content source', async t => {
   const css = await Tailwind.compile(
     '@tailwind utilities;',
-    '<div></div>',
+    '<div class="inline"></div>',
     {},
     {
       build: {
@@ -82,7 +82,7 @@ test('uses maizzle template path as content source', async t => {
 test('uses maizzle template path as content source (single file)', async t => {
   const css = await Tailwind.compile(
     '@tailwind utilities;',
-    '<div></div>',
+    '<div class="inline"></div>',
     {},
     {
       build: {
@@ -108,8 +108,8 @@ test('uses custom postcss plugins from the maizzle config', async t => {
     }
   }
 
-  const css = await Tailwind.compile('.test {transform: scale(0.5)}', '<div class="test">Test</a>', {}, maizzleConfig)
+  const css = await Tailwind.compile('.test {transform: scale(0.5)}', '<div class="test inline">Test</a>', {}, maizzleConfig)
 
   t.not(css, undefined)
-  t.is(css.trim(), '.test {-webkit-transform: scale(0.5);transform: scale(0.5)}')
+  t.is(css.trim(), '.inline {display: inline !important} .test {-webkit-transform: scale(0.5);transform: scale(0.5)}')
 })

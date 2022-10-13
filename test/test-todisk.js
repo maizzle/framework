@@ -30,11 +30,6 @@ test('skips if no templates found', async t => {
         destination: {
           path: t.context.folder
         }
-      },
-      tailwind: {
-        config: {
-          purge: false
-        }
       }
     }
   })
@@ -68,8 +63,8 @@ test('outputs files at the correct location', async t => {
   })
 
   t.true(await fs.pathExists(t.context.folder))
-  t.is(string.length, 2)
-  t.is(array.length, 2)
+  t.is(string.length, 3)
+  t.is(array.length, 3)
 })
 
 test('outputs files at the correct location if multiple template sources are used', async t => {
@@ -94,7 +89,7 @@ test('outputs files at the correct location if multiple template sources are use
   })
 
   t.true(await fs.pathExists(t.context.folder))
-  t.is(files.length, 5)
+  t.is(files.length, 6)
 })
 
 test('copies all files in the `filetypes` option to destination', async t => {
@@ -106,11 +101,6 @@ test('copies all files in the `filetypes` option to destination', async t => {
         filetypes: ['html', 'test'],
         destination: {
           path: t.context.folder
-        }
-      },
-      tailwind: {
-        config: {
-          purge: false
         }
       }
     }
@@ -129,11 +119,6 @@ test('outputs files with the correct extension', async t => {
         destination: {
           path: t.context.folder,
           extension: 'blade.php'
-        }
-      },
-      tailwind: {
-        config: {
-          purge: false
         }
       }
     }
@@ -240,11 +225,6 @@ test('copies assets to destination', async t => {
           source: 'test/stubs/assets',
           destination: 'images'
         }
-      },
-      tailwind: {
-        config: {
-          purge: false
-        }
       }
     }
   })
@@ -264,11 +244,6 @@ test('runs the `beforeCreate` event', async t => {
         destination: {
           path: t.context.folder
         }
-      },
-      tailwind: {
-        config: {
-          purge: false
-        }
       }
     },
     events: {
@@ -281,7 +256,7 @@ test('runs the `beforeCreate` event', async t => {
   const filename = await fs.readdir(t.context.folder)
   const html = await fs.readFile(`${t.context.folder}/${filename[0]}`, 'utf8')
 
-  t.is(html.trim(), 'Foo is bar')
+  t.is(html.trim(), '<div class="inline">Foo is bar</div>')
 })
 
 test('runs the `afterBuild` event', async t => {
@@ -292,11 +267,6 @@ test('runs the `afterBuild` event', async t => {
         source: 'test/stubs/templates',
         destination: {
           path: t.context.folder
-        }
-      },
-      tailwind: {
-        config: {
-          purge: false
         }
       }
     },
@@ -325,11 +295,6 @@ test('supports multiple asset paths', async t => {
           source: ['test/stubs/assets', 'test/stubs/plaintext', 'test/stubs/invalid'],
           destination: 'extras'
         }
-      },
-      tailwind: {
-        config: {
-          purge: false
-        }
       }
     }
   })
@@ -347,11 +312,6 @@ test('warns if a template cannot be rendered and `fail` option is undefined', as
         destination: {
           path: t.context.folder
         }
-      },
-      tailwind: {
-        config: {
-          purge: false
-        }
       }
     }
   })
@@ -368,11 +328,6 @@ test('warns if a template cannot be rendered and `fail` option is `verbose`', as
         destination: {
           path: t.context.folder
         }
-      },
-      tailwind: {
-        config: {
-          purge: false
-        }
       }
     }
   })
@@ -388,11 +343,6 @@ test('warns if a template cannot be rendered and `fail` option is `silent`', asy
         source: 'test/stubs/breaking',
         destination: {
           path: t.context.folder
-        }
-      },
-      tailwind: {
-        config: {
-          purge: false
         }
       }
     }
@@ -428,12 +378,12 @@ test('local server does not compile unwanted file types', async t => {
   t.true(await fs.pathExists(`${t.context.folder}/2.test`))
 
   // Tests watching changes to files
-  await fs.outputFile('test/stubs/templates/1.html', 'html\n')
-  t.is(await fs.readFile('test/stubs/templates/1.html', 'utf8'), 'html\n')
+  await fs.outputFile('test/stubs/templates/2.html', '<div class="inline">html modified</div>')
+  t.is(await fs.readFile('test/stubs/templates/2.html', 'utf8'), '<div class="inline">html modified</div>')
 
-  // Don't trigger rebuilds on files not in filetypes
-  await fs.outputFile('test/stubs/templates/2.test', 'test\n')
-  t.is(await fs.readFile('test/stubs/templates/2.test', 'utf8'), 'test\n')
+  // Don't trigger rebuilds on files not in `filetypes`
+  await fs.outputFile('test/stubs/templates/2.test', 'test')
+  t.is(await fs.readFile('test/stubs/templates/2.test', 'utf8'), 'test')
 })
 
 test('throws if it cannot spin up local development server', async t => {
@@ -456,7 +406,7 @@ test('works with templates.source defined as function (string paths)', async t =
   })
 
   t.true(await fs.pathExists(t.context.folder))
-  t.is(files.length, 2)
+  t.is(files.length, 3)
 })
 
 test('works with templates.source defined as function (array paths)', async t => {
@@ -476,7 +426,7 @@ test('works with templates.source defined as function (array paths)', async t =>
   })
 
   t.true(await fs.pathExists(t.context.folder))
-  t.is(files.length, 2)
+  t.is(files.length, 3)
 })
 
 test('throws if templates path is invalid', async t => {
@@ -535,9 +485,9 @@ test('sets config.build.current.path', async t => {
     path: {
       root: '',
       dir: t.context.folder,
-      base: '1.html',
+      base: '2.html',
       ext: '.html',
-      name: '1'
+      name: '2'
     }
   })
 })

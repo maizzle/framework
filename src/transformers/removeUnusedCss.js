@@ -1,12 +1,10 @@
 const {comb} = require('email-comb')
-const {get, isEmpty} = require('lodash')
+const {get, merge} = require('lodash')
 
-module.exports = async (html, config = {}, direct = false) => {
+module.exports = async (html, config = {}) => {
   if (get(config, 'removeUnusedCSS') === false) {
     return html
   }
-
-  const options = direct ? config : get(config, 'removeUnusedCSS', {})
 
   const safelist = [
     '*body*', // Gmail
@@ -26,15 +24,17 @@ module.exports = async (html, config = {}, direct = false) => {
     '.lang*' // Fenced code blocks
   ]
 
-  if (typeof options === 'boolean' && options) {
-    return comb(html, {whitelist: safelist}).result
+  const defaultOptions = {
+    backend: [
+      {heads: '{{', tails: '}}'},
+      {heads: '{%', tails: '%}'}
+    ],
+    whitelist: [...get(config, 'whitelist', []), ...safelist]
   }
 
-  if (!isEmpty(options)) {
-    options.whitelist = [...get(options, 'whitelist', []), ...safelist]
+  const options = typeof config === 'boolean' && config ?
+    defaultOptions :
+    merge(defaultOptions, get(config, 'removeUnusedCSS', config))
 
-    return comb(html, options).result
-  }
-
-  return html
+  return comb(html, options).result
 }

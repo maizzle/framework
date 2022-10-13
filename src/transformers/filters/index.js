@@ -29,7 +29,12 @@ module.exports = async (html, config = {}, direct = false) => {
   ]
 
   if (get(config, 'safeClassNames') !== false) {
-    posthtmlPlugins.push(safeClassNames())
+    posthtmlPlugins.push(safeClassNames({
+      replacements: {
+        '{': '{',
+        '}': '}'
+      }
+    }))
   }
 
   return posthtml(posthtmlPlugins)

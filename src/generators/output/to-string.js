@@ -1,9 +1,8 @@
 const fm = require('front-matter')
 const {get, merge} = require('lodash')
 const posthtml = require('../posthtml')
-const Tailwind = require('../tailwindcss')
 const Transformers = require('../../transformers')
-const posthtmlMSO = require('../../transformers/posthtmlMso')
+const Tailwind = require('../tailwindcss')
 const Config = require('../config')
 
 module.exports = async (html, options) => {
@@ -59,8 +58,6 @@ module.exports = async (html, options) => {
   if (options && typeof options.afterTransformers === 'function') {
     html = await options.afterTransformers(html, config)
   }
-
-  html = await posthtmlMSO(html, config)
 
   return {
     html,

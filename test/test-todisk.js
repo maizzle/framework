@@ -153,7 +153,7 @@ test('outputs plaintext files', async t => {
 
   t.is(
     await fs.readFile(`${t.context.folder}/plaintext.html`, 'utf8'),
-    '<div>Show in HTML</div>\n\n\n  <table><tr><td>Remove from plaintext</td></tr></table>\n\n'
+    '<div>Show in HTML</div>\n\n\n  <p>Do not show <a href="url">this</a> in plaintext.</p>\n\n'
   )
 })
 

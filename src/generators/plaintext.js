@@ -5,6 +5,37 @@ const {stripHtml} = require('string-strip-html')
 const defaultConfig = require('./posthtml/defaultConfig')
 
 const self = {
+  removeCustomTags: (tag, html, config = {}) => {
+    const posthtmlOptions = get(config, 'build.posthtml.options', {})
+
+    const posthtmlPlugin = () => tree => {
+      const process = node => {
+        if (!node.tag) {
+          return node
+        }
+
+        if (node.tag === tag) {
+          return {
+            tag: false,
+            content: ['']
+          }
+        }
+
+        if (Array.isArray(tag) && tag.includes(node.tag)) {
+          return {
+            tag: false,
+            content: ['']
+          }
+        }
+
+        return node
+      }
+
+      return tree.walk(process)
+    }
+
+    return posthtml([posthtmlPlugin()]).process(html, {...posthtmlOptions, sync: true}).html
+  },
   handleCustomTags: (html, config = {}) => {
     const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
 
@@ -32,16 +63,18 @@ const self = {
 
     return posthtml([posthtmlPlugin()]).process(html, {...posthtmlOptions, sync: true}).html
   },
-  generate: async (html, destination, config) => {
+  generate: async (html, destination, config = {}) => {
     const configDestinationPath = get(config, 'destination.path')
     const extension = get(config, 'destination.extension', 'txt')
 
-    const plaintext = stripHtml(html, {
+    const strippedHTML = self.removeCustomTags('not-plaintext', html, config)
+
+    const plaintext = stripHtml(strippedHTML, {
       dumpLinkHrefsNearby: {
         enabled: true
       },
-      stripTogetherWithTheirContents: ['script', 'style', 'xml', 'not-plaintext'],
-      ...get(config, 'options', {})
+      stripTogetherWithTheirContents: ['script', 'style', 'xml'],
+      ...config
     }).result
 
     html = self.handleCustomTags(html, config)

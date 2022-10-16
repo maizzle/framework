@@ -1,8 +1,12 @@
 const {comb} = require('email-comb')
 const {get, merge} = require('lodash')
 
-module.exports = async (html, config = {}) => {
+module.exports = async (html, config = {}, direct = false) => {
   if (get(config, 'removeUnusedCSS') === false) {
+    return html
+  }
+
+  if (!direct && !get(config, 'removeUnusedCSS')) {
     return html
   }
 
@@ -13,7 +17,7 @@ module.exports = async (html, config = {}) => {
     '.ios*', // Mail on iOS
     '.ox-*', // Open-Xchange
     '.outlook*', // Outlook.com
-    '.ogs*', // Outlook.com
+    '[data-ogs*', // Outlook.com
     '.bloop_container', // Airmail
     '.Singleton', // Apple Mail 10
     '.unused', // Notes 8

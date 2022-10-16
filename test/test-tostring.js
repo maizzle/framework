@@ -124,9 +124,6 @@ test('preserves css in marked style tags (tailwindcss)', async t => {
         [data-ogsc] .inexistent {
           color: #ef4444;
         }
-        [data-ogsc] .ogsc:hidden {
-          display: none;
-        }
         div > u + .body .gmail-android-block {
           display: block !important;
         }
@@ -141,16 +138,18 @@ test('preserves css in marked style tags (tailwindcss)', async t => {
   </html>`
 
   const html = await renderString(source, {
+    maizzle: {
+      removeUnusedCSS: true
+    },
     // So that we don't compile twice
     tailwind: {
       compiled: ''
     }
   })
 
-  t.true(html.includes('[data-ogsc] .ogsc:hidden'))
-  t.false(html.includes('[data-ogsc] .inexistent'))
-
+  t.true(html.replace(/[\n\s\r]+/g, '').includes('div{text-transform:uppercase'))
   t.true(html.includes('div > u + .body .gmail-android-block'))
+  t.true(html.includes('[data-ogsc] .inexistent'))
   t.true(html.includes('u + #body a'))
 })
 

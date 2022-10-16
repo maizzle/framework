@@ -98,7 +98,19 @@ test('remove unused CSS', async t => {
     </body>
   </html>`
 
-  const result1 = `<!DOCTYPE html>
+  const enabledResult = `<!DOCTYPE html>
+  <html>
+    <head>
+      <style>
+        .foo {color: red}
+      </style>
+    </head>
+    <body>
+      <div class="foo {{ test }}">test div with some text</div>
+    </body>
+  </html>`
+
+  const withOptionsResult = `<!DOCTYPE html>
   <html>
     <head>
       <style>
@@ -111,25 +123,13 @@ test('remove unused CSS', async t => {
     </body>
   </html>`
 
-  const result2 = `<!DOCTYPE html>
-  <html>
-    <head>
-      <style>
-        .foo {color: red}
-      </style>
-    </head>
-    <body>
-      <div class="foo {{ test }}">test div with some text</div>
-    </body>
-  </html>`
-
-  const enabled = await Maizzle.removeUnusedCSS(html, true)
+  const enabled = await Maizzle.removeUnusedCSS(html)
   const disabled = await Maizzle.removeUnusedCSS(html, {removeUnusedCSS: false})
   const withOptions = await Maizzle.removeUnusedCSS(html, {whitelist: ['.bar*']})
 
-  t.is(enabled, result2)
+  t.is(enabled, enabledResult)
   t.is(disabled, html)
-  t.is(withOptions, result1)
+  t.is(withOptions, withOptionsResult)
 })
 
 test('remove unused CSS (disabled)', async t => {

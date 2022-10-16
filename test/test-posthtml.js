@@ -77,18 +77,25 @@ test('components', async t => {
   const html = await renderString(source, options)
 
   t.is(html.trim(), `<p>Variable from attribute: Example</p>
-<p>Variable from locals attribute: bar</p><p class="hidden">Variable from page: prod</p>
+
+<p>Variable from locals attribute: bar</p>
+
+
+<p class="hidden">Variable from page: prod</p>
+
   <p>Variable from attribute: Nested component</p>
-<p>Variable from locals attribute: bar (nested)</p><p>Variable from page (nested): prod</p>`)
+
+<p>Variable from locals attribute: bar (nested)</p>
+
+
+<p>Variable from page (nested): prod</p>`)
 })
 
 test('fetch component', async t => {
   const source = `<extends src="test/stubs/layouts/basic.html">
   <block name="template">
     <fetch url="test/stubs/data.json">
-      <each loop="user in response">
-[[ user.name + (loop.last ? '' : ', ') ]]
-      </each>
+      <each loop="user in response">[[ user.name + (loop.last ? '' : ', ') ]]</each>
     </fetch>
   </block>
 </extends>`

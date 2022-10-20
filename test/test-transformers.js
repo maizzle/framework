@@ -13,13 +13,24 @@ const expected = file => readFile('expected/transformers', file)
 
 test('remove inline sizes', async t => {
   const options = {
-    width: ['TD'],
-    height: ['TD']
+    width: ['table'],
+    height: ['td']
   }
 
-  const html = await Maizzle.removeInlineSizes('<td style="width:100%;height:10px;">test</td>', options)
+  const html = await Maizzle.removeInlineSizes(`
+    <table style="width: 10px; height: auto;">
+      <tr>
+        <td style="width: 100%; height: 10px;">test</td>
+      </tr>
+    </table>`,
+  options)
 
-  t.is(html, '<td style="">test</td>')
+  t.is(html, `
+    <table style="height: auto">
+      <tr>
+        <td style="width: 100%">test</td>
+      </tr>
+    </table>`)
 })
 
 test('remove inline background-color', async t => {

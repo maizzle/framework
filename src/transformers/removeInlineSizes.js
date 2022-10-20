@@ -19,12 +19,11 @@ module.exports = async (html, config = {}, direct = false) => {
 const removeInlineSizes = (mappings = {}) => tree => {
   const process = node => {
     const attrs = parseAttrs(node.attrs)
-    const tag = node.tag ? node.tag.toUpperCase() : ''
 
     Object.entries(mappings).forEach(([attribute, tags]) => {
-      tags = Object.values(tags)
+      tags = Object.values(tags).map(tag => tag.toLowerCase())
 
-      if (!tags.includes(tag)) {
+      if (!tags.includes(node.tag)) {
         return node
       }
 

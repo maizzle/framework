@@ -13,13 +13,24 @@ const expected = file => readFile('expected/transformers', file)
 
 test('remove inline sizes', async t => {
   const options = {
-    width: ['TD'],
-    height: ['TD']
+    width: ['table'],
+    height: ['td']
   }
 
-  const html = await Maizzle.removeInlineSizes('<td style="width:100%;height:10px;">test</td>', options)
+  const html = await Maizzle.removeInlineSizes(`
+    <table style="width: 10px; height: auto;">
+      <tr>
+        <td style="width: 100%; height: 10px;">test</td>
+      </tr>
+    </table>`,
+  options)
 
-  t.is(html, '<td style="">test</td>')
+  t.is(html, `
+    <table style="height: auto">
+      <tr>
+        <td style="width: 100%">test</td>
+      </tr>
+    </table>`)
 })
 
 test('remove inline background-color', async t => {
@@ -47,20 +58,58 @@ test('remove inline background-color (with tags)', async t => {
 })
 
 test('inline CSS', async t => {
-  const html = `<div class="foo bar">test</div>`
+  const html = `
+    <table class="w-1 h-1 text-center">
+      <tr>
+        <td class="foo bar h-1">test</td>
+      </tr>
+    </table>`
   const css = `
+    .w-1 {width: 4px}
+    .h-1 {height: 4px}
     .foo {color: red}
     .bar {cursor: pointer}
+    .text-center {text-align: center}
   `
 
-  const result = await Maizzle.inlineCSS(html, {
+  const html2 = `
+  <html>
+    <head>
+      <style>${css}</style>
+    </head>
+    <body>
+      <table class="w-1 h-1 text-center">
+        <tr>
+          <td class="foo bar h-1">test</td>
+        </tr>
+      </table>
+    </body>
+  </html>`
+
+  const result1 = await Maizzle.inlineCSS(html, {
     customCSS: css,
     removeStyleTags: false,
     styleToAttribute: {
       'text-align': 'align'
     },
-    applyWidthAttributes: ['TABLE'],
-    applyHeightAttributes: ['TD'],
+    applyWidthAttributes: ['table'],
+    applyHeightAttributes: ['td'],
+    mergeLonghand: ['div'],
+    excludedProperties: ['cursor'],
+    codeBlocks: {
+      RB: {
+        start: '<%',
+        end: '%>'
+      }
+    }
+  })
+  const result2 = await Maizzle.inlineCSS(html2, {
+    removeStyleTags: false,
+    styleToAttribute: {
+      'text-align': 'align'
+    },
+    applyWidthAttributes: ['table'],
+    applyHeightAttributes: ['td'],
     mergeLonghand: ['div'],
     excludedProperties: ['cursor'],
     codeBlocks: {
@@ -71,7 +120,32 @@ test('inline CSS', async t => {
     }
   })
 
-  t.is(result, '<div class="foo bar" style="color: red;">test</div>')
+  t.is(result1, `
+    <table class="w-1 h-1 text-center" style="width: 4px; height: 4px; text-align: center;" width="4" align="center">
+      <tr>
+        <td class="foo bar h-1" style="height: 4px; color: red;" height="4">test</td>
+      </tr>
+    </table>`)
+
+  t.is(result2, `
+  <html>
+    <head>
+      <style>
+    .w-1 {width: 4px}
+    .h-1 {height: 4px}
+    .foo {color: red}
+    .bar {cursor: pointer}
+    .text-center {text-align: center}
+  </style>
+    </head>
+    <body>
+      <table class="w-1 h-1 text-center" style="width: 4px; height: 4px; text-align: center;" width="4" align="center">
+        <tr>
+          <td class="foo bar h-1" style="height: 4px; color: red;" height="4">test</td>
+        </tr>
+      </table>
+    </body>
+  </html>`)
 })
 
 test('inline CSS (disabled)', async t => {

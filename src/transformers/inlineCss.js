@@ -15,8 +15,8 @@ module.exports = async (html, config = {}, direct = false) => {
   if (get(config, 'inlineCSS') === true || !isEmpty(options)) {
     juice.styleToAttribute = get(options, 'styleToAttribute', {'vertical-align': 'valign'})
 
-    juice.widthElements = get(options, 'applyWidthAttributes', [])
-    juice.heightElements = get(options, 'applyHeightAttributes', [])
+    juice.widthElements = get(options, 'applyWidthAttributes', []).map(i => i.toUpperCase())
+    juice.heightElements = get(options, 'applyHeightAttributes', []).map(i => i.toUpperCase())
 
     juice.excludedProperties = ['--tw-shadow']
 

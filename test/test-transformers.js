@@ -58,8 +58,15 @@ test('remove inline background-color (with tags)', async t => {
 })
 
 test('inline CSS', async t => {
-  const html = `<div class="foo bar">test</div>`
+  const html = `
+    <table class="w-1 h-1">
+      <tr>
+        <td class="foo bar h-1">test</td>
+      </tr>
+    </table>`
   const css = `
+    .w-1 {width: 4px}
+    .h-1 {height: 4px}
     .foo {color: red}
     .bar {cursor: pointer}
   `
@@ -70,8 +77,8 @@ test('inline CSS', async t => {
     styleToAttribute: {
       'text-align': 'align'
     },
-    applyWidthAttributes: ['TABLE'],
-    applyHeightAttributes: ['TD'],
+    applyWidthAttributes: ['table'],
+    applyHeightAttributes: ['td'],
     mergeLonghand: ['div'],
     excludedProperties: ['cursor'],
     codeBlocks: {
@@ -82,7 +89,12 @@ test('inline CSS', async t => {
     }
   })
 
-  t.is(result, '<div class="foo bar" style="color: red;">test</div>')
+  t.is(result, `
+    <table class="w-1 h-1" style="width: 4px; height: 4px;" width="4">
+      <tr>
+        <td class="foo bar h-1" style="height: 4px; color: red;" height="4">test</td>
+      </tr>
+    </table>`)
 })
 
 test('inline CSS (disabled)', async t => {

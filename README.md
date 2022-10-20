@@ -1,10 +1,10 @@
 <div align="center">
   <p>
-    <a href="https://maizzle.com/#gh-light-mode-only" target="_blank">
-      <img src="./.github/media/logo-light.svg" alt="Maizzle" width="300">
-    </a>
-    <a href="https://maizzle.com/#gh-dark-mode-only" target="_blank">
-      <img src="./.github/media/logo-dark.svg" alt="Maizzle" width="300">
+    <a href="https://maizzle.com" target="_blank">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/maizzle/framework/HEAD/.github/media/logo-dark.svg">
+        <img alt="Maizzle" src="https://raw.githubusercontent.com/maizzle/framework/HEAD/.github/media/logo-light.svg" width="300" height="225" style="max-width: 100%;">
+      </picture>
     </a>
   </p>
   <p>Quickly build HTML emails with utility-first CSS</p>

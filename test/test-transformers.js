@@ -59,7 +59,7 @@ test('remove inline background-color (with tags)', async t => {
 
 test('inline CSS', async t => {
   const html = `
-    <table class="w-1 h-1">
+    <table class="w-1 h-1 text-center">
       <tr>
         <td class="foo bar h-1">test</td>
       </tr>
@@ -69,9 +69,24 @@ test('inline CSS', async t => {
     .h-1 {height: 4px}
     .foo {color: red}
     .bar {cursor: pointer}
+    .text-center {text-align: center}
   `
 
-  const result = await Maizzle.inlineCSS(html, {
+  const html2 = `
+  <html>
+    <head>
+      <style>${css}</style>
+    </head>
+    <body>
+      <table class="w-1 h-1 text-center">
+        <tr>
+          <td class="foo bar h-1">test</td>
+        </tr>
+      </table>
+    </body>
+  </html>`
+
+  const result1 = await Maizzle.inlineCSS(html, {
     customCSS: css,
     removeStyleTags: false,
     styleToAttribute: {
@@ -88,13 +103,49 @@ test('inline CSS', async t => {
       }
     }
   })
+  const result2 = await Maizzle.inlineCSS(html2, {
+    removeStyleTags: false,
+    styleToAttribute: {
+      'text-align': 'align'
+    },
+    applyWidthAttributes: ['table'],
+    applyHeightAttributes: ['td'],
+    mergeLonghand: ['div'],
+    excludedProperties: ['cursor'],
+    codeBlocks: {
+      RB: {
+        start: '<%',
+        end: '%>'
+      }
+    }
+  })
 
-  t.is(result, `
-    <table class="w-1 h-1" style="width: 4px; height: 4px;" width="4">
+  t.is(result1, `
+    <table class="w-1 h-1 text-center" style="width: 4px; height: 4px; text-align: center;" width="4" align="center">
       <tr>
         <td class="foo bar h-1" style="height: 4px; color: red;" height="4">test</td>
       </tr>
     </table>`)
+
+  t.is(result2, `
+  <html>
+    <head>
+      <style>
+    .w-1 {width: 4px}
+    .h-1 {height: 4px}
+    .foo {color: red}
+    .bar {cursor: pointer}
+    .text-center {text-align: center}
+  </style>
+    </head>
+    <body>
+      <table class="w-1 h-1 text-center" style="width: 4px; height: 4px; text-align: center;" width="4" align="center">
+        <tr>
+          <td class="foo bar h-1" style="height: 4px; color: red;" height="4">test</td>
+        </tr>
+      </table>
+    </body>
+  </html>`)
 })
 
 test('inline CSS (disabled)', async t => {

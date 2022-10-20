@@ -7,6 +7,8 @@ module.exports = async (html, config = {}, direct = false) => {
   }
 
   const options = direct ? config : get(config, 'inlineCSS', {})
+  // Default `removeStyleTags` to false so we can preserve
+  // CSS selectors that are not present in the HTML
   const removeStyleTags = get(options, 'removeStyleTags', false)
   const css = get(config, 'customCSS', false)
 
@@ -28,7 +30,9 @@ module.exports = async (html, config = {}, direct = false) => {
       })
     }
 
-    html = css ? juice.inlineContent(html, css, {removeStyleTags}) : juice(html, {removeStyleTags})
+    html = css ?
+      juice.inlineContent(html, css, {removeStyleTags, ...options}) :
+      juice(html, {removeStyleTags, ...options})
 
     return html
   }

@@ -113,7 +113,7 @@ module.exports = {
     }
 
     return postcss([...toProcess])
-      .process(css, {from: undefined})
+      .process(css, {from: userFileExists ? userFilePath : undefined})
       .then(result => result.css)
       .catch(error => {
         throw new SyntaxError(error)

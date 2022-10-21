@@ -361,6 +361,12 @@ test('filters (default)', async t => {
   t.is(html, await expected('filters'))
 })
 
+test('filters (disabled)', async t => {
+  const html = await Maizzle.withFilters('<p uppercase>test</p>', {filters: false})
+
+  t.is(html, '<p uppercase>test</p>')
+})
+
 test('filters (tailwindcss)', async t => {
   const html = await Maizzle.withFilters(
     `<style tailwindcss>

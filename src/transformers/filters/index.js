@@ -8,6 +8,10 @@ const safeClassNames = require('posthtml-safe-class-names')
 const defaultConfig = require('../../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {
+  if (get(config, 'filters') === false) {
+    return html
+  }
+
   const filters = direct ?
     merge(defaultFilters, config) :
     merge(defaultFilters, get(config, 'filters', {}))

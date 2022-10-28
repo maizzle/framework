@@ -41,7 +41,7 @@
   ],
   "dependencies": {
     "@maizzle/cli": "^1.5.1",
-    "autoprefixer": "^10.4.0",
+    "autoprefixer": "^10.4.13",
     "browser-sync": "^2.26.13",
     "color-shorthand-hex-to-six-digit": "^3.0.2",
     "email-comb": "^5.2.0",

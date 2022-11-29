@@ -40,7 +40,7 @@ template: second
     Child in second.html`)
 })
 
-test('components', async t => {
+test('components (old)', async t => {
   const source = `<component
   src="test/stubs/components/component.html"
   text="Example"
@@ -50,22 +50,22 @@ test('components', async t => {
 >
 <p class="hidden">Variable from page: [[ page.env ]]</p>
 
-  <component
-    src="test/stubs/components/component.html"
-    text="Nested component"
-    locals='{
-      "foo": "bar (nested)"
-    }'
-  >
+<component
+  src="test/stubs/components/component.html"
+  text="Nested component"
+  locals='{
+    "foo": "bar (nested)"
+  }'
+>
 <p>Variable from page (nested): [[ page.env ]]</p>
   </component>
 </component>`
 
   const options = {
     maizzle: {
-      env: 'prod',
+      env: 'maizzle-ci',
       build: {
-        components: {
+        posthtml: {
           expressions: {
             delimiters: ['[[', ']]']
           }
@@ -76,19 +76,12 @@ test('components', async t => {
 
   const html = await renderString(source, options)
 
-  t.is(html.trim(), `<p>Variable from attribute: Example</p>
-
+  t.is(html.replace(/\n+/g, '\n').trim(), `<p>Variable from attribute: Example</p>
 <p>Variable from locals attribute: bar</p>
-
-
-<p class="hidden">Variable from page: prod</p>
-
-  <p>Variable from attribute: Nested component</p>
-
+<p class="hidden">Variable from page: maizzle-ci</p>
+<p>Variable from attribute: Nested component</p>
 <p>Variable from locals attribute: bar (nested)</p>
-
-
-<p>Variable from page (nested): prod</p>`)
+<p>Variable from page (nested): maizzle-ci</p>`)
 })
 
 test('fetch component', async t => {

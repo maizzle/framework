@@ -3,22 +3,16 @@ const posthtml = require('posthtml')
 const {get, merge} = require('lodash')
 const fetch = require('posthtml-fetch')
 const layouts = require('posthtml-extend')
-const modules = require('posthtml-modules')
+const components = require('posthtml-component')
 const defaultConfig = require('./defaultConfig')
-const expressions = require('posthtml-expressions')
 
 module.exports = async (html, config) => {
   const layoutsOptions = get(config, 'build.layouts', {})
-
-  const modulesOptions = get(config, 'build.components', {})
-  // Fake `from` option so we can reference modules relatively
-  const modulesRoot = modulesOptions.root || './'
-  const modulesFrom = modulesOptions.from || `${modulesRoot}/fake`
+  const componentsOptions = get(config, 'build.components', {})
+  const expressionsOptions = merge({strictMode: false}, get(config, 'build.posthtml.expressions', {}))
 
   const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
   const posthtmlPlugins = get(config, 'build.posthtml.plugins', [])
-
-  const expressionsOptions = merge({strictMode: false}, get(config, 'build.posthtml.expressions', {}))
 
   const locals = merge(
     get(expressionsOptions, 'locals', {}),
@@ -37,7 +31,6 @@ module.exports = async (html, config) => {
 
   return posthtml([
     fetchPlugin,
-    expressions({...expressionsOptions, locals}),
     layouts(
       merge(
         {
@@ -47,19 +40,14 @@ module.exports = async (html, config) => {
         layoutsOptions
       )
     ),
-    modules({
-      expressions: expressionsOptions,
-      parser: posthtmlOptions,
-      attributeAsLocals: true,
-      from: modulesFrom,
-      root: modulesRoot,
+    components({
+      root: componentsOptions.root || './',
+      folders: ['src/components', 'src/layouts', 'src/templates'],
       tag: 'component',
       attribute: 'src',
-      plugins: [
-        fetchPlugin
-      ],
-      locals,
-      ...modulesOptions
+      yield: 'content',
+      propsAttribute: 'locals',
+      expressions: {...expressionsOptions, locals}
     }),
     ...posthtmlPlugins
   ])

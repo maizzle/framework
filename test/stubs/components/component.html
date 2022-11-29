@@ -1,3 +1,10 @@
+<script props>
+  module.export = {
+    text: props.text || 'default text',
+    foo: props.foo || 'default foo'
+  }
+</script>
+
 <p>Variable from attribute: [[ text ]]</p>
 
 <p>Variable from locals attribute: [[ foo ]]</p>

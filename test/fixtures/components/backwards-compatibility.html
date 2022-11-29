@@ -5,15 +5,15 @@
     "foo": "bar"
   }'
 >
-<p>Variable from page: [[ page.env ]]</p>
+<p class="hidden">Variable from page: [[ page.env ]]</p>
 
-  <component
-    src="test/stubs/components/component.html"
-    text="Nested component"
-    locals='{
-      "foo": "bar (nested)"
-    }'
-  >
+<component
+  src="test/stubs/components/component.html"
+  text="Nested component"
+  locals='{
+    "foo": "bar (nested)"
+  }'
+>
 <p>Variable from page (nested): [[ page.env ]]</p>
   </component>
 </component>

@@ -1,0 +1,124 @@
+---
+title: "The Website Weekly Newsletter"
+roles:
+  author:
+    name: "John"
+  editor:
+    name: "Jane"
+---
+
+@{{ test }}
+
+{{ page.title }}
+
+{{ page.foo }}
+
+<raw>
+  {% capture email_title %}Hey {{customer.first_name}} {{ customer.last_name}}, {% endcapture %}
+</raw>
+
+<x-layout>
+  <fill:template>
+    <h1>H1 in fill:template</h1>
+
+    <!-- Expressions -->
+    Compiled: {{ page.env }}
+    Ignored: @{{ page.env }}
+    <x-bare>
+      Inside component: {{ page.env }}
+      Inside component (ignored): @{{ page.env }}
+
+      <x-bare>
+        Inside nested component: {{ page.env }}
+        Inside nested component (ignored): @{{ page.env }}
+      </x-bare>
+    </x-bare>
+
+    <!-- Component slots -->
+    <x-bare>
+      <slot:header>Slot header</slot:header>
+    </x-bare>
+
+    <!-- Markdown -->
+    <md>
+      ### Heading
+
+      ```js
+      console.log('Hello world!')
+      ```
+    </md>
+
+    <x-bare>
+      <md>
+        ### Markdown in component
+      </md>
+    </x-bare>
+
+    <!-- Passing props to component -->
+    <x-text text="{{ page.env }}">Environment: </x-text>
+    <x-text text="@{{ page.env }}">Environment (ignore expression): </x-text>
+
+    <!-- Nesting components, with props -->
+    <x-bare aware:text="ish">
+      Parent
+      <x-text>Child</x-text>
+    </x-bare>
+
+    <!-- <fetch> tag -->
+    <x-bare>
+      <fetch url="test/stubs/data.json">
+        <ul>
+          <each loop="user in response">
+            <li>
+              <x-bare>{{ user.name + (loop.last ? ' (last item)' : '') }}</x-bare>
+            </li>
+          </each>
+        </ul>
+      </fetch>
+    </x-bare>
+
+    <!-- <outlook> tag -->
+    <x-bare>
+      <outlook>in outlook</outlook>
+    </x-bare>
+
+    <!-- Conditionals -->
+    <x-bare>
+      <if condition="page.env === 'maizzle-ci'">
+        <p>Using Maizzle programmatically</p>
+      </if>
+    </x-bare>
+
+    <!-- Loops -->
+    <x-bare>
+      <each loop="i in [1, 2]">
+        @{{ i }} is <i>{{ i }}{{ loop.last ? ' (last)' : '' }}</i>
+      </each>
+    </x-bare>
+
+    <!-- Switch -->
+    <switch expression="page.foo">
+      <case n="'bar'">
+        page.foo is {{ page.foo }}
+      </case>
+      <default>
+        default - page.foo is {{ page.foo }}
+      </default>
+    </switch>
+
+    <!-- Scope -->
+    <x-bare>
+      <scope with="page.roles">
+        Author: {{ author.name }}
+        Editor: {{ editor.name }}
+      </scope>
+    </x-bare>
+
+    <!-- Raw -->
+    <x-bare>
+      <raw>
+        Expression should be ignored: {{ foo }}
+      </raw>
+    </x-bare>
+  </fill:template>
+</x-layout>

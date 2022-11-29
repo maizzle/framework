@@ -1,5 +1,15 @@
 const test = require('ava')
-const {render} = require('../src')
+const {render, prettify} = require('../src')
+
+const path = require('path')
+const fs = require('fs')
+
+const readFile = (dir, filename) => fs.promises
+  .readFile(path.join(__dirname, dir, `${filename}.html`), 'utf8')
+  .then(html => html.trim())
+
+const fixture = file => readFile('fixtures', file)
+const expected = file => readFile('expected', file)
 
 const renderString = (string, options = {}) => render(string, options).then(({html}) => html)
 
@@ -40,26 +50,35 @@ template: second
     Child in second.html`)
 })
 
-test('components (old)', async t => {
-  const source = `<component
-  src="test/stubs/components/component.html"
-  text="Example"
-  locals='{
-    "foo": "bar"
-  }'
->
-<p class="hidden">Variable from page: [[ page.env ]]</p>
+test('components', async t => {
+  const source = await fixture('components/kitchen-sink')
 
-<component
-  src="test/stubs/components/component.html"
-  text="Nested component"
-  locals='{
-    "foo": "bar (nested)"
-  }'
->
-<p>Variable from page (nested): [[ page.env ]]</p>
-  </component>
-</component>`
+  const options = {
+    maizzle: {
+      env: 'maizzle-ci',
+      build: {
+        components: {
+          folders: ['test/stubs/layouts', 'test/stubs/components']
+        }
+      }
+    },
+    beforeRender(html, config) {
+      config.foo = 'bar'
+
+      return html
+    }
+  }
+
+  const html = await renderString(source, options)
+
+  t.is(
+    await prettify(html, {ocd: true}),
+    await expected('components/kitchen-sink')
+  )
+})
+
+test('components (backwards compatibility)', async t => {
+  const source = await fixture('components/backwards-compatibility')
 
   const options = {
     maizzle: {
@@ -76,12 +95,7 @@ test('components (old)', async t => {
 
   const html = await renderString(source, options)
 
-  t.is(html.replace(/\n+/g, '\n').trim(), `<p>Variable from attribute: Example</p>
-<p>Variable from locals attribute: bar</p>
-<p class="hidden">Variable from page: maizzle-ci</p>
-<p>Variable from attribute: Nested component</p>
-<p>Variable from locals attribute: bar (nested)</p>
-<p>Variable from page (nested): maizzle-ci</p>`)
+  t.is(html.replace(/\n+/g, '\n').trim(), await expected('components/backwards-compatibility'))
 })
 
 test('fetch component', async t => {

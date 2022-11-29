@@ -40,15 +40,20 @@ module.exports = async (html, config) => {
         layoutsOptions
       )
     ),
-    components({
-      root: componentsOptions.root || './',
-      folders: ['src/components', 'src/layouts', 'src/templates'],
-      tag: 'component',
-      attribute: 'src',
-      yield: 'content',
-      propsAttribute: 'locals',
-      expressions: {...expressionsOptions, locals}
-    }),
+    components(
+      merge(
+        {
+          root: componentsOptions.root || './',
+          folders: ['src/components', 'src/layouts', 'src/templates'],
+          tag: 'component',
+          attribute: 'src',
+          yield: 'content',
+          propsAttribute: 'locals',
+          expressions: {...expressionsOptions, locals}
+        },
+        componentsOptions
+      )
+    ),
     ...posthtmlPlugins
   ])
     .process(html, {...posthtmlOptions})

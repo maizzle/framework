@@ -83,7 +83,15 @@ module.exports = async (env, spinner, config) => {
             ? templateConfig.filetypes.join('|')
             : templateConfig.filetypes || get(templateConfig, 'filetypes', 'html')
 
-          const templates = await glob(`${outputDir}/**/*.+(${extensions})`)
+          const allSourceFiles = await glob(`${outputDir}/**/*.+(${extensions})`)
+
+          const excluded = Array.isArray(templateConfig.exclude) ?
+            templateConfig.exclude :
+            [get(templateConfig, 'exclude', '')]
+
+          const templates = allSourceFiles.filter(template => {
+            return !excluded.includes(template.replace(`${outputDir}/`, ''))
+          })
 
           if (templates.length === 0) {
             spinner.warn(`Error: no files with the .${extensions} extension found in ${templateConfig.source}`)

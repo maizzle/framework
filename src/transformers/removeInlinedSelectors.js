@@ -20,15 +20,25 @@ const plugin = posthtmlOptions => tree => {
     // For each style tag...
     if (node.tag === 'style') {
       const {root} = postcss().process(node.content)
+      const preservedClasses = []
+
+      // Preserve selectors in at rules
+      root.walkAtRules(rule => {
+        if (['media', 'supports'].includes(rule.name)) {
+          rule.walkRules(rule => {
+            preservedClasses.push(rule.selector)
+          })
+        }
+      })
 
       root.walkRules(rule => {
-        // Skip media queries and such...
-        if (rule.parent.type === 'atrule') {
-          return
-        }
-
         const {selector} = rule
         const prop = get(rule.nodes[0], 'prop')
+
+        // Preserve pseudo selectors
+        if (selector.includes(':')) {
+          preservedClasses.push(selector)
+        }
 
         try {
           // If we find the selector in the HTML...
@@ -39,23 +49,16 @@ const plugin = posthtmlOptions => tree => {
 
             // If the class is in the style attribute (inlined), remove it
             if (has(styleAttr, prop)) {
-              // Remove the class attribute
-              remove(classAttr, s => selector.includes(s))
+              // Remove the class as long as it's not a preserved class
+              if (!preservedClasses.some(item => item.endsWith(selector) || item.startsWith(selector))) {
+                remove(classAttr, classToRemove => selector.includes(classToRemove))
+              }
 
               // Remove the rule in the <style> tag
-              rule.remove()
-            }
-
-            /**
-             * Remove from <style> selectors that were used to create shorthand declarations
-             * like `margin: 0 0 0 16px` (transformed with mergeLonghand when inlining).
-             */
-            Object.keys(styleAttr).forEach(key => {
-              if (prop && prop.includes(key)) {
+              if (rule.parent.type !== 'atrule') {
                 rule.remove()
-                remove(classAttr, s => selector.includes(s))
               }
-            })
+            }
 
             n.attrs = parsedAttrs.compose()
 

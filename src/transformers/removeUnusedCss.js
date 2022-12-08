@@ -1,12 +1,10 @@
 const {comb} = require('email-comb')
 const {get, merge} = require('lodash')
+const removeInlinedClasses = require('./removeInlinedSelectors')
 
-module.exports = async (html, config = {}, direct = false) => {
+module.exports = async (html, config = {}) => {
+  // If it's explicitly disabled, return the HTML
   if (get(config, 'removeUnusedCSS') === false) {
-    return html
-  }
-
-  if (!direct && !get(config, 'removeUnusedCSS')) {
     return html
   }
 
@@ -36,9 +34,9 @@ module.exports = async (html, config = {}, direct = false) => {
     whitelist: [...get(config, 'whitelist', []), ...safelist]
   }
 
-  const options = typeof config === 'boolean' && config ?
-    defaultOptions :
-    merge(defaultOptions, get(config, 'removeUnusedCSS', config))
+  const options = merge(defaultOptions, get(config, 'removeUnusedCSS', config))
+
+  html = await removeInlinedClasses(html, options)
 
   return comb(html, options).result
 }

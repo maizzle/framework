@@ -360,7 +360,10 @@ test('filters (postcss)', async t => {
         margin-bottom: 3px;
         margin-left: 4px;
       }
-    </style>`
+    </style>`,
+    {
+      shorthandCSS: true
+    }
   )
 
   t.is(html.replace(/\n {2,}/g, ''), '<style>div {margin: 1px 2px 3px 4px;}</style>')

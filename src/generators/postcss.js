@@ -9,7 +9,9 @@ module.exports = {
     return postcss([
       postcssImport(),
       postcssNested(),
-      maizzleConfig.env === 'local' ? () => {} : mergeLonghand(),
+      get(maizzleConfig, 'shorthandCSS', get(maizzleConfig, 'shorthandInlineCSS')) === true ?
+        mergeLonghand() :
+        () => {},
       ...get(maizzleConfig, 'build.postcss.plugins', [])
     ])
       .process(css, {from: undefined})

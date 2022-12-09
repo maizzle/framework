@@ -99,7 +99,9 @@ module.exports = {
     const toProcess = [
       postcssNested(),
       tailwindcss(config),
-      get(maizzleConfig, 'shorthandInlineCSS') === true ? mergeLonghand() : () => {},
+      get(maizzleConfig, 'shorthandCSS', get(maizzleConfig, 'shorthandInlineCSS')) === true ?
+        mergeLonghand() :
+        () => {},
       ...get(maizzleConfig, 'build.postcss.plugins', [])
     ]
 

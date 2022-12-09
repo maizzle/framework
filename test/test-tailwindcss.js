@@ -128,7 +128,7 @@ test('respects `shorthandInlineCSS` in maizzle config', async t => {
     {},
     {
       env: 'maizzle-ci',
-      shorthandInlineCSS: true
+      shorthandCSS: true
     }
   )
 

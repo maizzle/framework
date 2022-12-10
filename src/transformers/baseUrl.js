@@ -19,9 +19,9 @@ module.exports = async (html, config = {}, direct = false) => {
       .then(result => result.html)
   }
 
-  // Handle `baseUrl` as an object
+  // Handle `baseURL` as an object
   if (isObject(url) && !isEmpty(url)) {
-    html = rewriteVMLs(html, url.url)
+    html = rewriteVMLs(html, get(url, 'url', ''))
 
     return posthtml([baseUrl(url)]).process(html, posthtmlOptions).then(result => result.html)
   }

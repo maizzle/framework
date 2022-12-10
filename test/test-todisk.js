@@ -537,3 +537,34 @@ test('skips compiling templates', async t => {
   t.is(parsedFilesFromStringSource, 2)
   t.is(parsedFilesFromArraySource, 1)
 })
+
+test('does not output omitted files', async t => {
+  const {files: fromStringSource} = await Maizzle.build('maizzle-ci', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: 'test/stubs/templates',
+        omit: '1.html',
+        destination: {
+          path: t.context.folder
+        }
+      }
+    }
+  })
+
+  const {files: fromArraySource} = await Maizzle.build('maizzle-ci', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: ['test/stubs/templates'],
+        omit: ['1.html', 'nested/3.html'],
+        destination: {
+          path: t.context.folder
+        }
+      }
+    }
+  })
+
+  t.is(fromStringSource.length, 3)
+  t.is(fromArraySource.length, 2)
+})

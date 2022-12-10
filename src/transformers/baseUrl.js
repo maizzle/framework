@@ -5,7 +5,7 @@ const {get, merge, isObject, isEmpty} = require('lodash')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {
-  const url = direct ? config : get(config, 'baseURL')
+  const url = direct ? config : get(config, 'baseURL', get(config, 'baseUrl'))
   const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
 
   // Handle `baseUrl` as a string
@@ -19,9 +19,9 @@ module.exports = async (html, config = {}, direct = false) => {
       .then(result => result.html)
   }
 
-  // Handle `baseUrl` as an object
+  // Handle `baseURL` as an object
   if (isObject(url) && !isEmpty(url)) {
-    html = rewriteVMLs(html, url.url)
+    html = rewriteVMLs(html, get(url, 'url', ''))
 
     return posthtml([baseUrl(url)]).process(html, posthtmlOptions).then(result => result.html)
   }

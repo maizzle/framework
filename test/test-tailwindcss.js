@@ -12,7 +12,7 @@ test('uses defaults if no config specified', async t => {
     '@tailwind utilities;',
     '<p class="xl:z-0"></p>',
     {},
-    {env: 'production'}
+    {env: 'maizzle-ci'}
   )
 
   t.not(css, undefined)
@@ -21,7 +21,7 @@ test('uses defaults if no config specified', async t => {
 
 test('uses css file provided in environment config', async t => {
   const config = {
-    env: 'production',
+    env: 'maizzle-ci',
     build: {
       tailwind: {
         css: './test/stubs/main.css'
@@ -98,7 +98,7 @@ test('uses maizzle template path as content source (single file)', async t => {
 
 test('uses custom postcss plugins from the maizzle config', async t => {
   const maizzleConfig = {
-    env: 'production',
+    env: 'maizzle-ci',
     build: {
       postcss: {
         plugins: [
@@ -108,8 +108,37 @@ test('uses custom postcss plugins from the maizzle config', async t => {
     }
   }
 
-  const css = await Tailwind.compile('.test {transform: scale(0.5)}', '<div class="test inline">Test</a>', {}, maizzleConfig)
+  const css = await Tailwind.compile('.test {transform: scale(0.5)}', '<div class="test inline">Test</div>', {}, maizzleConfig)
 
   t.not(css, undefined)
   t.is(css.trim(), '.inline {display: inline !important} .test {-webkit-transform: scale(0.5);transform: scale(0.5)}')
+})
+
+test('respects `shorthandInlineCSS` in maizzle config', async t => {
+  const shorthandDisabled = await Tailwind.compile(
+    '@layer utilities { .padded {@apply px-4 py-6;} }',
+    '<div class="padded">Test</div>',
+    {},
+    {env: 'maizzle-ci'}
+  )
+
+  const shorthandEnabled = await Tailwind.compile(
+    '@layer utilities { .padded {@apply px-4 py-6;} }',
+    '<div class="padded">Test</div>',
+    {},
+    {
+      env: 'maizzle-ci',
+      shorthandCSS: true
+    }
+  )
+
+  t.is(
+    shorthandDisabled.replace(/\s+/g, '').trim(),
+    '.padded{padding-left:1rem;padding-right:1rem;padding-top:1.5rem;padding-bottom:1.5rem}'
+  )
+
+  t.is(
+    shorthandEnabled.replace(/\s+/g, '').trim(),
+    '.padded{padding:1.5rem1rem}'
+  )
 })

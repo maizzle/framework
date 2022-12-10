@@ -5,7 +5,7 @@ const {get, merge, isObject, isEmpty} = require('lodash')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {
-  const url = direct ? config : get(config, 'baseURL')
+  const url = direct ? config : get(config, 'baseURL', get(config, 'baseUrl'))
   const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
 
   // Handle `baseUrl` as a string

@@ -67,6 +67,17 @@ module.exports = async (env, spinner, config) => {
       }
     }
 
+    // Create a pipe-delimited list of allowed extensions
+    // We only compile these, the rest are copied as-is
+    const extensions = Array.isArray(templateConfig.filetypes)
+      ? templateConfig.filetypes.join('|')
+      : templateConfig.filetypes || get(templateConfig, 'filetypes', 'html')
+
+    // List of files that won't be copied to the output directory
+    const omitted = Array.isArray(templateConfig.omit) ?
+      templateConfig.omit :
+      [get(templateConfig, 'omit', '')]
+
     // Parse each template source
     await asyncForEach(templateSource, async source => {
       /**
@@ -77,13 +88,22 @@ module.exports = async (env, spinner, config) => {
       const out = fs.lstatSync(source).isFile() ? `${outputDir}/${path.basename(source)}` : outputDir
 
       await fs
-        .copy(source, out)
+        .copy(source, out, {filter: file => {
+          // Do not copy omitted files
+          return !omitted
+            .filter(Boolean)
+            .some(omit => path.normalize(file).includes(path.normalize(omit)))
+        }})
         .then(async () => {
-          const extensions = Array.isArray(templateConfig.filetypes)
-            ? templateConfig.filetypes.join('|')
-            : templateConfig.filetypes || get(templateConfig, 'filetypes', 'html')
+          const allSourceFiles = await glob(`${outputDir}/**/*.+(${extensions})`)
 
-          const templates = await glob(`${outputDir}/**/*.+(${extensions})`)
+          const skipped = Array.isArray(templateConfig.skip) ?
+            templateConfig.skip :
+            [get(templateConfig, 'skip', '')]
+
+          const templates = allSourceFiles.filter(template => {
+            return !skipped.includes(template.replace(`${outputDir}/`, ''))
+          })
 
           if (templates.length === 0) {
             spinner.warn(`Error: no files with the .${extensions} extension found in ${templateConfig.source}`)

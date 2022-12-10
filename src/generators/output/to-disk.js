@@ -85,12 +85,12 @@ module.exports = async (env, spinner, config) => {
 
           const allSourceFiles = await glob(`${outputDir}/**/*.+(${extensions})`)
 
-          const excluded = Array.isArray(templateConfig.exclude) ?
-            templateConfig.exclude :
-            [get(templateConfig, 'exclude', '')]
+          const skipped = Array.isArray(templateConfig.skip) ?
+            templateConfig.skip :
+            [get(templateConfig, 'skip', '')]
 
           const templates = allSourceFiles.filter(template => {
-            return !excluded.includes(template.replace(`${outputDir}/`, ''))
+            return !skipped.includes(template.replace(`${outputDir}/`, ''))
           })
 
           if (templates.length === 0) {

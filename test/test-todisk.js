@@ -490,14 +490,14 @@ test('sets config.build.current.path', async t => {
   })
 })
 
-test('excludes templates from compilation', async t => {
+test('skips compiling templates', async t => {
   let parsedFilesFromStringSource = 0
   await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
         source: 'test/stubs/templates',
-        exclude: '1.html',
+        skip: '1.html',
         destination: {
           path: t.context.folder
         }
@@ -519,7 +519,7 @@ test('excludes templates from compilation', async t => {
       fail: 'silent',
       templates: {
         source: ['test/stubs/templates'],
-        exclude: ['1.html', 'nested/3.html'],
+        skip: ['1.html', 'nested/3.html'],
         destination: {
           path: t.context.folder
         }

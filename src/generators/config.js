@@ -13,16 +13,23 @@ module.exports = {
 
     const cwd = env === 'maizzle-ci' ? './test/stubs/config' : process.cwd()
 
-    for (const module of ['./config', './config.local']) {
+    for (const module of ['./config', './config.cjs', './config.local', './config.local.cjs']) {
       try {
         baseConfig = merge(baseConfig, requireUncached(path.resolve(cwd, module)))
       } catch {}
     }
 
     if (typeof env === 'string' && env !== 'local') {
-      try {
-        envConfig = merge(envConfig, requireUncached(path.resolve(cwd, `./config.${env}`)))
-      } catch {
+      let loaded = false
+      for (const module of [`./config.${env}`, `./config.${env}.cjs`]) {
+        try {
+          envConfig = merge(envConfig, requireUncached(path.resolve(cwd, module)))
+          loaded = true
+          break
+        } catch {}
+      }
+
+      if (!loaded) {
         throw new Error(`could not load config.${env}.js`)
       }
     }

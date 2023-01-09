@@ -59,7 +59,7 @@
     "posthtml": "^0.16.6",
     "posthtml-attrs-parser": "^0.1.1",
     "posthtml-base-url": "^1.0.1",
-    "posthtml-content": "^0.1.0",
+    "posthtml-content": "^0.1.2",
     "posthtml-expressions": "^1.8.1",
     "posthtml-extend": "^0.6.0",
     "posthtml-extra-attributes": "^1.0.0",

@@ -245,10 +245,7 @@ test('base URL (string)', async t => {
 test('base URL (object)', async t => {
   const source = await fixture('base-url')
   const html = await Maizzle.applyBaseUrl(source, {
-    url: 'https://example.com/',
-    allTags: true,
-    styleTag: true,
-    inlineCss: true
+    url: 'https://example.com/'
   })
 
   t.is(html, await expected('base-url'))

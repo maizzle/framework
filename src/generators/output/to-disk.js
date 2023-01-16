@@ -32,6 +32,11 @@ module.exports = async (env, spinner, config) => {
 
   // Parse each template config object
   await asyncForEach(templatesConfig, async templateConfig => {
+    if (!templateConfig) {
+      const configFileName = env === 'local' ? 'config.js' : `config.${env}.js`
+      throw new Error(`No template sources defined in \`build.templates\`, check your ${configFileName} file`)
+    }
+
     const outputDir = get(templateConfig, 'destination.path', `build_${env}`)
 
     await fs.remove(outputDir)

@@ -7,18 +7,13 @@ const defaultConfig = require('../generators/posthtml/defaultConfig')
 module.exports = async (html, config = {}, direct = false) => {
   const url = direct ? config : get(config, 'baseURL', get(config, 'baseUrl'))
   const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
-  const defaultOptions = {
-    allTags: true,
-    styleTag: true,
-    inlineCss: true
-  }
 
   // Handle `baseUrl` as a string
   if (typeof url === 'string' && url.length > 0) {
     html = rewriteVMLs(html, url)
 
     return posthtml([
-      baseUrl({url, ...defaultOptions})
+      baseUrl({url, allTags: true, styleTag: true, inlineCss: true})
     ])
       .process(html, posthtmlOptions)
       .then(result => result.html)
@@ -29,7 +24,7 @@ module.exports = async (html, config = {}, direct = false) => {
     html = rewriteVMLs(html, get(url, 'url', ''))
 
     return posthtml([
-      baseUrl(merge(defaultOptions, url))
+      baseUrl(merge({styleTag: true, inlineCss: true}, url))
     ])
       .process(html, posthtmlOptions)
       .then(result => result.html)

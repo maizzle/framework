@@ -389,7 +389,13 @@ test('local server does not compile unwanted file types', async t => {
 test('throws if it cannot spin up local development server', async t => {
   await t.throwsAsync(async () => {
     await Maizzle.serve('local', {})
-  }, {instanceOf: TypeError})
+  }, {instanceOf: Error})
+})
+
+test('`templates.source` undefined', async t => {
+  await t.throwsAsync(async () => {
+    await Maizzle.build('maizzle-ci')
+  }, {instanceOf: Error})
 })
 
 test('`templates.source` defined as function (string paths)', async t => {

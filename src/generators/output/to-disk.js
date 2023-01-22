@@ -139,7 +139,7 @@ module.exports = async (env, spinner, config) => {
                 ...config.events
               })
 
-              const destination = config.permalink || file
+              const destination = get(compiled, 'config.permalink', file)
 
               /**
                * Generate plaintext
@@ -150,7 +150,7 @@ module.exports = async (env, spinner, config) => {
 
               // Check if plaintext: true globally, fallback to template's front matter
               const plaintextConfig = get(templateConfig, 'plaintext', get(compiled.config, 'plaintext', false))
-              const plaintextPath = get(plaintextConfig, 'destination.path', config.permalink || file)
+              const plaintextPath = get(plaintextConfig, 'destination.path', destination)
 
               if (Boolean(plaintextConfig) || !isEmpty(plaintextConfig)) {
                 await Plaintext

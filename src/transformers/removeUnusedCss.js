@@ -4,7 +4,7 @@ const removeInlinedClasses = require('./removeInlinedSelectors')
 
 module.exports = async (html, config = {}) => {
   // If it's explicitly disabled, return the HTML
-  if (get(config, 'removeUnusedCSS') === false) {
+  if (get(config, 'removeUnusedCSS', get(config, 'removeUnusedCss')) === false) {
     return html
   }
 
@@ -34,7 +34,7 @@ module.exports = async (html, config = {}) => {
     whitelist: [...get(config, 'whitelist', []), ...safelist]
   }
 
-  const options = merge(defaultOptions, get(config, 'removeUnusedCSS', config))
+  const options = merge(defaultOptions, get(config, 'removeUnusedCSS', get(config, 'removeUnusedCss', config)))
 
   html = await removeInlinedClasses(html, options)
 

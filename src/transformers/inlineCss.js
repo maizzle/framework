@@ -2,17 +2,17 @@ const juice = require('juice')
 const {get, isObject, isEmpty} = require('lodash')
 
 module.exports = async (html, config = {}, direct = false) => {
-  if (get(config, 'inlineCSS') === false) {
+  if (get(config, 'inlineCSS', get(config, 'inlineCss')) === false) {
     return html
   }
 
-  const options = direct ? config : get(config, 'inlineCSS', {})
+  const options = direct ? config : get(config, 'inlineCSS', get(config, 'inlineCss', {}))
   // Default `removeStyleTags` to false so we can preserve
   // CSS selectors that are not present in the HTML
   const removeStyleTags = get(options, 'removeStyleTags', false)
-  const css = get(config, 'customCSS', false)
+  const css = get(config, 'customCSS', get(config, 'customCss', false))
 
-  if (get(config, 'inlineCSS') === true || !isEmpty(options)) {
+  if (get(config, 'inlineCSS', get(config, 'inlineCss')) === true || !isEmpty(options)) {
     options.applyAttributesTableElements = true
     juice.styleToAttribute = get(options, 'styleToAttribute', {'vertical-align': 'valign'})
 

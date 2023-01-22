@@ -6,7 +6,7 @@ const defaultConfig = require('../generators/posthtml/defaultConfig')
 module.exports = async (html, config, direct = false) => {
   config = direct ?
     (isObject(config) ? config : true) :
-    get(config, 'shorthandCSS', get(config, 'shorthandInlineCSS', []))
+    get(config, 'shorthandCSS', get(config, 'shorthandCss', get(config, 'shorthandInlineCSS', [])))
 
   const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
 

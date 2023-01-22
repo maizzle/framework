@@ -11,11 +11,13 @@ module.exports = async (html, config = {}, direct = false) => {
     return posthtml([removeInlineBGColor()]).process(html, posthtmlOptions).then(result => result.html)
   }
 
-  if (get(config, 'inlineCSS.preferBgColorAttribute') === true) {
+  if (get(config, 'inlineCSS.preferBgColorAttribute', get(config, 'inlineCss.preferBgColorAttribute')) === true) {
     return posthtml([removeInlineBGColor()]).process(html, posthtmlOptions).then(result => result.html)
   }
 
-  const tags = direct ? (Array.isArray(config) ? config : false) : get(config, 'inlineCSS.preferBgColorAttribute', false)
+  const tags = direct
+    ? (Array.isArray(config) ? config : false)
+    : get(config, 'inlineCSS.preferBgColorAttribute', get(config, 'inlineCss.preferBgColorAttribute', false))
 
   if (Array.isArray(tags)) {
     return posthtml([removeInlineBGColor({tags})]).process(html, posthtmlOptions).then(result => result.html)

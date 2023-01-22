@@ -5,7 +5,7 @@ const {get, merge, forEach, intersection, keys, isEmpty} = require('lodash')
 
 module.exports = async (html, config = {}, direct = false) => {
   const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
-  const attributes = get(config, 'inlineCSS.attributeToStyle', false)
+  const attributes = get(config, 'inlineCSS.attributeToStyle', get(config, 'inlineCss.attributeToStyle', false))
 
   if (typeof attributes === 'boolean' && attributes) {
     return posthtml([attributesToStyle()]).process(html, posthtmlOptions).then(result => result.html)

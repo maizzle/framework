@@ -5,7 +5,9 @@ const {toStyleString} = require('../utils/helpers')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {
-  const settings = direct ? config : get(config, 'inlineCSS.keepOnlyAttributeSizes', {})
+  const settings = direct
+    ? config
+    : get(config, 'inlineCSS.keepOnlyAttributeSizes', get(config, 'inlineCss.keepOnlyAttributeSizes', {}))
 
   if (!isEmpty(settings)) {
     const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))

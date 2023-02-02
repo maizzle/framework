@@ -9,6 +9,10 @@ const renderToString = require('../functions/render')
 const {get, merge, isObject} = require('lodash')
 const {clearConsole} = require('../utils/helpers')
 
+/**
+ * Initialize Browsersync on-demand
+ * https://github.com/maizzle/framework/issues/605
+ */
 const browsersync = () => {
   if (!global.cachedBrowserSync) {
     const bs = require('browser-sync')
@@ -18,16 +22,17 @@ const browsersync = () => {
   return global.cachedBrowserSync
 }
 
+const getConfig = async (env = 'local', config = {}) => merge(
+  config,
+  await Config.getMerged(env)
+)
+
 const serve = async (env = 'local', config = {}) => {
-  config = merge(
-    config,
-    await Config.getMerged(env),
-    {
-      build: {
-        command: 'serve'
-      }
+  config = await getConfig(env, merge(config, {
+    build: {
+      command: 'serve'
     }
-  )
+  }))
 
   const spinner = ora()
 
@@ -43,14 +48,17 @@ const serve = async (env = 'local', config = {}) => {
       'src/**',
       ...new Set(get(config, 'build.browsersync.watch', []))
     ]
+
     if (typeof tailwindConfig === 'string') {
-      globalPaths.push(tailwindConfig);
+      globalPaths.push(tailwindConfig)
     }
 
     // Watch for Template file changes
     browsersync()
       .watch(templatePaths)
       .on('change', async file => {
+        config = await getConfig(env, config)
+
         if (config.events && typeof config.events.beforeCreate === 'function') {
           await config.events.beforeCreate(config)
         }

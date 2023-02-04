@@ -28,7 +28,7 @@ module.exports = async (env, spinner, config) => {
 
   const css = (typeof get(config, 'build.tailwind.compiled') === 'string')
     ? config.build.tailwind.compiled
-    : await Tailwind.compile('', '', {}, config)
+    : await Tailwind.compile({config})
 
   // Parse each template config object
   await asyncForEach(templatesConfig, async templateConfig => {
@@ -209,12 +209,16 @@ module.exports = async (env, spinner, config) => {
           if (Array.isArray(assets.source)) {
             await asyncForEach(assets.source, async source => {
               if (fs.existsSync(source)) {
-                await fs.copy(source, path.join(templateConfig.destination.path, assets.destination)).catch(error => spinner.warn(error.message))
+                await fs
+                  .copy(source, path.join(templateConfig.destination.path, assets.destination))
+                  .catch(error => spinner.warn(error.message))
               }
             })
           } else {
             if (fs.existsSync(assets.source)) {
-              await fs.copy(assets.source, path.join(templateConfig.destination.path, assets.destination)).catch(error => spinner.warn(error.message))
+              await fs
+                .copy(assets.source, path.join(templateConfig.destination.path, assets.destination))
+                .catch(error => spinner.warn(error.message))
             }
           }
 

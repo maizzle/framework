@@ -9,14 +9,14 @@ const mergeLonghand = require('postcss-merge-longhand')
 const {get, isObject, isEmpty, merge} = require('lodash')
 
 module.exports = {
-  compile: async (css = '', html = '', tailwindConfig = {}, maizzleConfig = {}) => {
-    tailwindConfig = (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) ? tailwindConfig : get(maizzleConfig, 'build.tailwind.config', 'tailwind.config.js')
-
+  compile: async ({css = '', html = '', config = {}}) => {
     // Compute the Tailwind config to use
-    const userConfig = () => {
+    const userConfig = config => {
+      const tailwindUserConfig = get(config, 'build.tailwind.config', 'tailwind.config.js')
+
       // If a custom config object was passed, use that
-      if (isObject(tailwindConfig) && !isEmpty(tailwindConfig)) {
-        return tailwindConfig
+      if (isObject(tailwindUserConfig) && !isEmpty(tailwindUserConfig)) {
+        return tailwindUserConfig
       }
 
       /**
@@ -24,17 +24,17 @@ module.exports = {
        * This will use the default Tailwind config (with rem units etc)
        */
       try {
-        return requireUncached(path.resolve(process.cwd(), tailwindConfig))
+        return requireUncached(path.resolve(process.cwd(), tailwindUserConfig))
       } catch {
         return {}
       }
     }
 
     // Merge user's Tailwind config on top of a 'base' config
-    const layoutsRoot = get(maizzleConfig, 'build.layouts.root')
-    const componentsRoot = get(maizzleConfig, 'build.components.root')
+    const layoutsRoot = get(config, 'build.layouts.root')
+    const componentsRoot = get(config, 'build.components.root')
 
-    const config = merge({
+    const tailwindConfig = merge({
       important: true,
       content: {
         files: [
@@ -47,20 +47,20 @@ module.exports = {
           {raw: html, extension: 'html'}
         ]
       }
-    }, userConfig())
+    }, userConfig(config))
 
     // Add back the `{raw: html}` option if user provided own config
-    if (Array.isArray(config.content)) {
-      config.content = {
+    if (Array.isArray(tailwindConfig.content)) {
+      tailwindConfig.content = {
         files: [
-          ...config.content,
+          ...tailwindConfig.content,
           {raw: html, extension: 'html'}
         ]
       }
     }
 
     // Include all `build.templates.source` paths when scanning for selectors to preserve
-    const buildTemplates = get(maizzleConfig, 'build.templates')
+    const buildTemplates = get(config, 'build.templates')
 
     if (buildTemplates) {
       const templateObjects = Array.isArray(buildTemplates) ? buildTemplates : [buildTemplates]
@@ -68,12 +68,12 @@ module.exports = {
         const source = get(template, 'source')
 
         if (typeof source === 'function') {
-          const sources = source(maizzleConfig)
+          const sources = source(config)
 
           if (Array.isArray(sources)) {
-            sources.map(s => config.content.files.push(s))
+            sources.map(s => tailwindConfig.content.files.push(s))
           } else if (typeof sources === 'string') {
-            config.content.files.push(sources)
+            tailwindConfig.content.files.push(sources)
           }
 
           // Must return a valid `content` entry
@@ -82,7 +82,7 @@ module.exports = {
 
         // Support single-file sources i.e. src/templates/index.html
         if (typeof source === 'string' && Boolean(path.extname(source))) {
-          config.content.files.push(source)
+          tailwindConfig.content.files.push(source)
 
           return {raw: '', extension: 'html'}
         }
@@ -90,23 +90,24 @@ module.exports = {
         return `${source}/**/*.*`
       })
 
-      config.content.files.push(...templateSources)
+      tailwindConfig.content.files.push(...templateSources)
     }
 
-    const userFilePath = get(maizzleConfig, 'build.tailwind.css', path.join(process.cwd(), 'src/css/tailwind.css'))
+    const userFilePath = get(config, 'build.tailwind.css', path.join(process.cwd(), 'src/css/tailwind.css'))
     const userFileExists = await fs.pathExists(userFilePath)
 
     const toProcess = [
       postcssNested(),
-      tailwindcss(config),
-      get(maizzleConfig, 'shorthandCSS', get(maizzleConfig, 'shorthandInlineCSS')) === true ?
+      tailwindcss(tailwindConfig),
+      get(config, 'shorthandCSS', get(config, 'shorthandInlineCSS')) === true ?
         mergeLonghand() :
         () => {},
-      ...get(maizzleConfig, 'build.postcss.plugins', [])
+      ...get(config, 'build.postcss.plugins', [])
     ]
 
     if (userFileExists) {
       css = await fs.readFile(path.resolve(userFilePath), 'utf8') + css
+
       toProcess.unshift(
         postcssImport({path: path.dirname(userFilePath)})
       )

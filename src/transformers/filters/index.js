@@ -22,10 +22,19 @@ module.exports = async (html, config = {}, direct = false) => {
    * Compile CSS in <style {post|tailwind}css> tags
    */
   const maizzleConfig = omit(config, ['build.tailwind.css', 'css'])
-  const tailwindConfig = get(config, 'build.tailwind.config', 'tailwind.config.js')
 
   filters.postcss = css => PostCSS.process(css, maizzleConfig)
-  filters.tailwindcss = css => Tailwind.compile(css, html, tailwindConfig, maizzleConfig)
+  filters.tailwindcss = css => Tailwind.compile({
+    css,
+    html,
+    config: merge({
+      build: {
+        tailwind: {
+          config: get(config, 'build.tailwind.config', {})
+        }
+      }
+    }, maizzleConfig)
+  })
 
   const posthtmlPlugins = [
     styleDataEmbed(),

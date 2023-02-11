@@ -81,16 +81,21 @@ const serve = async (env = 'local', config = {}) => {
 
         spinner.start('Building email...')
 
-        file = file.replace(/\\/g, '/')
-
-        const renderOptions = {
-          maizzle: config,
-          ...config.events
-        }
-
         renderToString(
-          await fs.readFile(file, 'utf8'),
-          renderOptions
+          await fs.readFile(file.replace(/\\/g, '/'), 'utf8'),
+          {
+            maizzle: merge(
+              config,
+              {
+                build: {
+                  current: {
+                    path: path.parse(file)
+                  }
+                }
+              }
+            ),
+            ...config.events
+          }
         )
           .then(async ({html, config}) => {
             let source = ''

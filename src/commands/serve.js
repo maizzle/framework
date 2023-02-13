@@ -101,18 +101,19 @@ const serve = async (env = 'local', config = {}) => {
         }
       )
         .then(async ({html, config}) => {
+          // Write the file to disk
           let source = ''
           let dest = ''
           let ext = ''
 
           if (Array.isArray(config.build.templates)) {
             const match = config.build.templates.find(template => template.source === path.parse(file).dir)
-            source = get(match, 'source')
-            dest = get(match, 'destination.path', 'build_local')
+            source = path.normalize(get(match, 'source'))
+            dest = path.normalize(get(match, 'destination.path', 'build_local'))
             ext = get(match, 'destination.ext', 'html')
           } else if (isObject(config.build.templates)) {
-            source = get(config, 'build.templates.source')
-            dest = get(config, 'build.templates.destination.path', 'build_local')
+            source = path.normalize(get(config, 'build.templates.source'))
+            dest = path.normalize(get(config, 'build.templates.destination.path', 'build_local'))
             ext = get(config, 'build.templates.destination.ext', 'html')
           }
 

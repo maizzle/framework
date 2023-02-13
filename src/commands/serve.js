@@ -36,137 +36,153 @@ const serve = async (env = 'local', config = {}) => {
 
   const spinner = ora()
 
-  try {
-    await buildToFile(env, config)
+  // Build all emails first
+  await buildToFile(env, config)
 
-    let templates = get(config, 'build.templates')
-    templates = Array.isArray(templates) ? templates : [templates]
+  // Set some paths to watch
+  let templates = get(config, 'build.templates')
+  templates = Array.isArray(templates) ? templates : [templates]
 
-    const templatePaths = [...new Set(templates.map(config => `${get(config, 'source', 'src')}/**`))]
-    const tailwindConfig = get(config, 'build.tailwind.config', 'tailwind.config.js')
-    const globalPaths = [
-      'src/**',
-      ...new Set(get(config, 'build.browsersync.watch', []))
-    ]
+  const templatePaths = [...new Set(templates.map(config => `${get(config, 'source', 'src')}/**`))]
+  const tailwindConfig = get(config, 'build.tailwind.config', 'tailwind.config.js')
+  const globalPaths = [
+    'src/**',
+    ...new Set(get(config, 'build.browsersync.watch', []))
+  ]
 
-    if (typeof tailwindConfig === 'string') {
-      globalPaths.push(tailwindConfig)
-    }
+  if (typeof tailwindConfig === 'string') {
+    globalPaths.push(tailwindConfig)
+  }
 
-    // Watch for Template file changes
-    browsersync()
-      .watch(templatePaths)
-      .on('change', async file => {
-        config = await getConfig(env, config)
+  // Watch for Template file changes
+  browsersync()
+    .watch(templatePaths)
+    .on('change', async file => {
+      config = await getConfig(env, config)
 
-        if (config.events && typeof config.events.beforeCreate === 'function') {
-          await config.events.beforeCreate(config)
-        }
+      if (config.events && typeof config.events.beforeCreate === 'function') {
+        await config.events.beforeCreate(config)
+      }
 
-        // Don't render if file type is not configured
-        // eslint-disable-next-line
-        const filetypes = templates.reduce((acc, template) => {
-          return [...acc, ...get(template, 'filetypes', ['html'])]
-        }, [])
+      // Don't render if file type is not configured
+      // eslint-disable-next-line
+      const filetypes = templates.reduce((acc, template) => {
+        return [...acc, ...get(template, 'filetypes', ['html'])]
+      }, [])
 
-        if (!filetypes.includes(path.extname(file).slice(1))) {
-          return
-        }
+      if (!filetypes.includes(path.extname(file).slice(1))) {
+        return
+      }
 
-        if (get(config, 'build.console.clear')) {
-          clearConsole()
-        }
+      // Clear console if enabled
+      if (get(config, 'build.console.clear')) {
+        clearConsole()
+      }
 
-        const start = new Date()
+      // Start the spinner
+      const start = new Date()
+      spinner.start('Building email...')
 
-        spinner.start('Building email...')
-
-        renderToString(
-          await fs.readFile(file.replace(/\\/g, '/'), 'utf8'),
-          {
-            maizzle: merge(
-              config,
-              {
-                build: {
-                  current: {
-                    path: path.parse(file)
-                  }
+      // Render the template
+      renderToString(
+        await fs.readFile(file.replace(/\\/g, '/'), 'utf8'),
+        {
+          maizzle: merge(
+            config,
+            {
+              build: {
+                current: {
+                  path: path.parse(file)
                 }
               }
-            ),
-            ...config.events
-          }
-        )
-          .then(async ({html, config}) => {
-            let source = ''
-            let dest = ''
-            let ext = ''
-
-            if (Array.isArray(config.build.templates)) {
-              const match = config.build.templates.find(template => template.source === path.parse(file).dir)
-              source = get(match, 'source')
-              dest = get(match, 'destination.path', 'build_local')
-              ext = get(match, 'destination.ext', 'html')
-            } else if (isObject(config.build.templates)) {
-              source = get(config, 'build.templates.source')
-              dest = get(config, 'build.templates.destination.path', 'build_local')
-              ext = get(config, 'build.templates.destination.ext', 'html')
             }
+          ),
+          ...config.events
+        }
+      )
+        .then(async ({html, config}) => {
+          let source = ''
+          let dest = ''
+          let ext = ''
 
-            const fileDir = path.parse(file).dir.replace(source, '')
-            const finalDestination = path.join(dest, fileDir, `${path.parse(file).name}.${ext}`)
+          if (Array.isArray(config.build.templates)) {
+            const match = config.build.templates.find(template => template.source === path.parse(file).dir)
+            source = get(match, 'source')
+            dest = get(match, 'destination.path', 'build_local')
+            ext = get(match, 'destination.ext', 'html')
+          } else if (isObject(config.build.templates)) {
+            source = get(config, 'build.templates.source')
+            dest = get(config, 'build.templates.destination.path', 'build_local')
+            ext = get(config, 'build.templates.destination.ext', 'html')
+          }
 
-            await fs.outputFile(config.permalink || finalDestination, html)
-          })
-          .then(() => {
-            browsersync().reload()
-            spinner.succeed(`Compiled in ${(Date.now() - start) / 1000}s [${file}]`)
-          })
-          .catch(() => spinner.warn(`Received empty HTML, please save your file again [${file}]`))
+          const fileDir = path.parse(file).dir.replace(source, '')
+          const finalDestination = path.join(dest, fileDir, `${path.parse(file).name}.${ext}`)
+
+          await fs.outputFile(config.permalink || finalDestination, html)
+        })
+        .then(() => {
+          browsersync().reload()
+          spinner.succeed(`Compiled in ${(Date.now() - start) / 1000}s [${file}]`)
+        })
+        .catch(error => {
+          throw error
+        })
+    })
+
+  // Watch for changes in all other files
+  browsersync()
+    .watch(globalPaths, {ignored: templatePaths})
+    .on('change', () => buildToFile(env, config)
+      .then(() => browsersync().reload())
+      .catch(error => {
+        throw error
       })
-
-    // Watch for changes in all other files
-    browsersync()
-      .watch(globalPaths, {ignored: templatePaths})
-      .on('change', () => buildToFile(env, config).then(() => browsersync().reload()))
-      .on('unlink', () => buildToFile(env, config).then(() => browsersync().reload()))
-
-    // Watch for changes in config files
-    browsersync()
-      .watch('config*.js')
-      .on('change', async file => {
-        const parsedEnv = path.parse(file).name.split('.')[1] || 'local'
-
-        Config
-          .getMerged(parsedEnv)
-          .then(config => buildToFile(parsedEnv, config).then(() => browsersync().reload()))
+    )
+    .on('unlink', () => buildToFile(env, config)
+      .then(() => browsersync().reload())
+      .catch(error => {
+        throw error
       })
+    )
 
-    // Browsersync options
-    const baseDir = templates.map(t => t.destination.path)
+  // Watch for changes in config files
+  browsersync()
+    .watch('config*.js')
+    .on('change', async file => {
+      const parsedEnv = path.parse(file).name.split('.')[1] || 'local'
 
-    // Initialize Browsersync
-    browsersync()
-      .init(
-        merge(
-          {
-            notify: false,
-            open: false,
-            port: 3000,
-            server: {
-              baseDir,
-              directory: true
-            },
-            tunnel: false,
-            ui: {port: 3001},
-            logFileChanges: false
+      Config
+        .getMerged(parsedEnv)
+        .then(config => buildToFile(parsedEnv, config)
+          .then(() => browsersync().reload())
+          .catch(error => {
+            throw error
+          })
+        )
+    })
+
+  // Browsersync options
+  const baseDir = templates.map(t => t.destination.path)
+
+  // Initialize Browsersync
+  browsersync()
+    .init(
+      merge(
+        {
+          notify: false,
+          open: false,
+          port: 3000,
+          server: {
+            baseDir,
+            directory: true
           },
-          get(config, 'build.browsersync', {})
-        ), () => {})
-  } catch (error) {
-    spinner.fail(error)
-    throw error
-  }
+          tunnel: false,
+          ui: {port: 3001},
+          logFileChanges: false
+        },
+        get(config, 'build.browsersync', {})
+      ), () => {})
 }
 
 module.exports = serve

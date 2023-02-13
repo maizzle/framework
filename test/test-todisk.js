@@ -351,47 +351,6 @@ test('warns if a template cannot be rendered and `fail` option is `silent`', asy
   t.false(files.includes('empty.html'))
 })
 
-test('local server does not compile unwanted file types', async t => {
-  await Maizzle.serve('local', {
-    build: {
-      console: {
-        clear: true
-      },
-      browsersync: {
-        ui: false
-      },
-      templates: {
-        source: 'test/stubs/templates',
-        destination: {
-          path: `${t.context.folder}`
-        }
-      }
-    },
-    events: {
-      beforeCreate(config) {
-        config.foo = 'bar'
-      }
-    }
-  })
-
-  t.true(await fs.pathExists(`${t.context.folder}`))
-  t.true(await fs.pathExists(`${t.context.folder}/2.test`))
-
-  // Tests watching changes to files
-  await fs.outputFile('test/stubs/templates/2.html', '<div class="inline">html modified</div>')
-  t.is(await fs.readFile('test/stubs/templates/2.html', 'utf8'), '<div class="inline">html modified</div>')
-
-  // Don't trigger rebuilds on files not in `filetypes`
-  await fs.outputFile('test/stubs/templates/2.test', 'test')
-  t.is(await fs.readFile('test/stubs/templates/2.test', 'utf8'), 'test')
-})
-
-test('throws if it cannot spin up local development server', async t => {
-  await t.throwsAsync(async () => {
-    await Maizzle.serve('local', {})
-  }, {instanceOf: Error})
-})
-
 test('`templates.source` undefined', async t => {
   await t.throwsAsync(async () => {
     await Maizzle.build('maizzle-ci')

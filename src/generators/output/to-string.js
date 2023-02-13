@@ -37,7 +37,7 @@ module.exports = async (html, options) => {
       config: merge(config, {
         build: {
           tailwind: {
-            config: get(options, 'tailwind.config', {})
+            config: get(options, 'tailwind.config')
           }
         }
       })

@@ -9,7 +9,13 @@ const defaultConfig = require('./defaultConfig')
 module.exports = async (html, config) => {
   const layoutsOptions = get(config, 'build.layouts', {})
   const componentsOptions = get(config, 'build.components', {})
-  const expressionsOptions = merge({strictMode: false}, get(config, 'build.posthtml.expressions', {}))
+  const expressionsOptions = merge(
+    {
+      loopTags: ['each', 'for'],
+      strictMode: false
+    },
+    get(config, 'build.posthtml.expressions', {})
+  )
 
   const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
   const posthtmlPlugins = get(config, 'build.posthtml.plugins', [])

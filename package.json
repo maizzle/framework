@@ -68,7 +68,7 @@
     "posthtml-match-helper": "^1.0.3",
     "posthtml-mso": "^1.0.4",
     "posthtml-postcss-merge-longhand": "^1.0.2",
-    "posthtml-safe-class-names": "^2.0.0",
+    "posthtml-safe-class-names": "^3.0.0",
     "posthtml-url-parameters": "^1.0.4",
     "pretty": "^2.0.0",
     "query-string": "^7.1.3",

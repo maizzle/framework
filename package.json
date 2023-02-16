@@ -70,7 +70,7 @@
     "posthtml-mso": "^1.0.4",
     "posthtml-postcss-merge-longhand": "^1.0.2",
     "posthtml-safe-class-names": "^2.0.0",
-    "posthtml-url-parameters": "^1.0.4",
+    "posthtml-url-parameters": "^2.0.0",
     "pretty": "^2.0.0",
     "query-string": "^7.1.0",
     "string-remove-widows": "^2.1.0",

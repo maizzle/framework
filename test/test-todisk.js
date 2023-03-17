@@ -351,7 +351,7 @@ test('warns if a template cannot be rendered and `fail` option is `silent`', asy
   t.false(files.includes('empty.html'))
 })
 
-test('`templates.source` undefined', async t => {
+test('throws if `templates.source` is undefined', async t => {
   await t.throwsAsync(async () => {
     await Maizzle.build('maizzle-ci')
   }, {instanceOf: Error})

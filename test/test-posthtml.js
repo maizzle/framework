@@ -13,12 +13,12 @@ const expected = file => readFile('expected', file)
 
 const renderString = (string, options = {}) => render(string, options).then(({html}) => html)
 
-test('layouts', async t => {
+test('layouts (legacy)', async t => {
   const source = `---
 greeting: Hello
 ---
 
-<extends src="test/stubs/layouts/basic.html">
+<extends src="test/stubs/layouts/legacy.html">
   <block name="template">
     Front matter variable: {{ page.greeting }}
   </block>
@@ -33,12 +33,12 @@ greeting: Hello
   t.is(html.trim(), `Front matter variable: Hello`)
 })
 
-test('inheritance when extending a template', async t => {
+test('inheritance when extending a template (legacy)', async t => {
   const source = `---
 template: second
 ---
 
-<extends src="test/stubs/template.html">
+<extends src="test/stubs/template-legacy.html">
   <block name="button">Child in second.html</block>
 </extends>`
 
@@ -78,7 +78,7 @@ test('components', async t => {
   )
 })
 
-test('components (backwards compatibility)', async t => {
+test('components (legacy)', async t => {
   const source = await fixture('components/backwards-compatibility')
 
   const options = {
@@ -101,7 +101,7 @@ test('components (backwards compatibility)', async t => {
 })
 
 test('fetch component', async t => {
-  const source = `<extends src="test/stubs/layouts/basic.html">
+  const source = `<extends src="test/stubs/layouts/legacy.html">
   <block name="template">
     <fetch url="test/stubs/data.json">
       <each loop="user in response">[[ user.name + (loop.last ? '' : ', ') ]]</each>

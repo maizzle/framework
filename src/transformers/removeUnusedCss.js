@@ -1,10 +1,12 @@
 const {comb} = require('email-comb')
-const {get, merge} = require('lodash')
+const {get, merge, isEmpty, isObject} = require('lodash')
 const removeInlinedClasses = require('./removeInlinedSelectors')
 
-module.exports = async (html, config = {}) => {
-  // If it's explicitly disabled, return the HTML
-  if (get(config, 'removeUnusedCSS') === false) {
+module.exports = async (html, config = {}, direct = false) => {
+  config = direct ? config : get(config, 'removeUnusedCSS')
+
+  // Don't purge CSS if `removeUnusedCSS` is not set
+  if (!config || (isObject(config) && isEmpty(config))) {
     return html
   }
 
@@ -34,9 +36,13 @@ module.exports = async (html, config = {}) => {
     whitelist: [...get(config, 'whitelist', []), ...safelist]
   }
 
-  const options = merge(defaultOptions, get(config, 'removeUnusedCSS', config))
+  const options = merge(defaultOptions, get(config, 'removeUnusedCSS', {}))
 
-  html = await removeInlinedClasses(html, options)
+  /**
+   * Remove possibly inlined selectors, as long as we're not calling
+   * this function directly, i.e. Maizzle.removeUnusedCSS()
+   *  */
+  html = direct ? html : await removeInlinedClasses(html, options)
 
   return comb(html, options).result
 }

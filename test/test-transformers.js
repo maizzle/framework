@@ -163,12 +163,12 @@ test('remove unused CSS', async t => {
     <head>
       <style>
         @media (screen) {
-          .ignore {color: yellow}
+          .should-remove {color: yellow}
         }
         .foo {color: red}
         .foo:hover {color: blue}
         .bar-baz {color: blue}
-        .baz {color: white}
+        .should-remove {color: white}
       </style>
     </head>
     <body>
@@ -182,32 +182,19 @@ test('remove unused CSS', async t => {
       <style>
         .foo {color: red}
         .foo:hover {color: blue}
-        .bar-baz {color: blue}</style>
+        .bar-baz {color: blue}
+      </style>
     </head>
     <body>
       <div class="foo {{ test }}">test div with some text</div>
     </body>
   </html>`
 
-  const unsetResult = `<!DOCTYPE html>
-  <html>
-    <head>
-      <style>
-        .foo {color: red}
-        .foo:hover {color: blue}</style>
-    </head>
-    <body>
-      <div class="foo {{ test }}">test div with some text</div>
-    </body>
-  </html>`
-
-  const disabled = await Maizzle.removeUnusedCSS(html, {removeUnusedCSS: false})
+  const disabled = await Maizzle.removeUnusedCSS(html)
   const withOptions = await Maizzle.removeUnusedCSS(html, {whitelist: ['.bar*']})
-  const unset = await Maizzle.removeUnusedCSS(html)
 
   t.is(disabled, html)
   t.is(withOptions, withOptionsResult)
-  t.is(unset, unsetResult)
 })
 
 test('remove attributes', async t => {

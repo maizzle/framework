@@ -60,8 +60,7 @@ test('components', async t => {
         components: {
           folders: ['test/stubs/layouts', 'test/stubs/components']
         }
-      },
-      removeUnusedCSS: false
+      }
     },
     beforeRender(html, config) {
       config.foo = 'bar'
@@ -90,8 +89,7 @@ test('components (legacy)', async t => {
             delimiters: ['[[', ']]']
           }
         }
-      },
-      removeUnusedCSS: false
+      }
     }
   }
 

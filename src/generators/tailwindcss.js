@@ -34,25 +34,31 @@ module.exports = {
     const layoutsRoot = get(config, 'build.layouts.root')
     const componentsRoot = get(config, 'build.components.root')
 
+    const layoutsPath = typeof layoutsRoot === 'string' && layoutsRoot ?
+      `${layoutsRoot}/**/*.html`.replace(/\/\//g, '/') :
+      './src/layouts/**/*.html'
+
+    const componentsPath = typeof componentsRoot === 'string' && componentsRoot ?
+      `${componentsRoot}/**/*.html`.replace(/\/\//g, '/') :
+      './src/components/**/*.html'
+
     const tailwindConfig = merge({
       important: true,
       content: {
         files: [
-          typeof layoutsRoot === 'string' && layoutsRoot ?
-            `${layoutsRoot}/**/*.html`.replace(/\/\//g, '/') :
-            './src/layouts/**/*.html',
-          typeof componentsRoot === 'string' && componentsRoot ?
-            `${componentsRoot}/**/*.html`.replace(/\/\//g, '/') :
-            './src/components/**/*.html',
+          layoutsPath,
+          componentsPath,
           {raw: html, extension: 'html'}
         ]
       }
     }, userConfig(config))
 
-    // Add back the `{raw: html}` option if user provided own config
+    // If `content` is an array, add it to `content.files`
     if (Array.isArray(tailwindConfig.content)) {
       tailwindConfig.content = {
         files: [
+          layoutsPath,
+          componentsPath,
           ...tailwindConfig.content,
           {raw: html, extension: 'html'}
         ]

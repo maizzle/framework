@@ -146,3 +146,41 @@ test('respects `shorthandCSS` in maizzle config', async t => {
     '.padded{padding:1.5rem1rem}'
   )
 })
+
+test('works with custom `layouts.root`', async t => {
+  const css = await Tailwind.compile({
+    config: {
+      build: {
+        layouts: {
+          root: './test/stubs/layouts'
+        },
+        tailwind: {
+          config: {
+            content: ['./test/stubs/tailwind/*.html']
+          }
+        }
+      }
+    }
+  })
+
+  t.true(css.includes('.bg-red-500'))
+})
+
+test('works with custom `components.root`', async t => {
+  const css = await Tailwind.compile({
+    config: {
+      build: {
+        components: {
+          root: './test/stubs/components'
+        },
+        tailwind: {
+          config: {
+            content: ['./test/stubs/tailwind/*.html']
+          }
+        }
+      }
+    }
+  })
+
+  t.true(css.includes('.flex'))
+})

@@ -4,5 +4,5 @@ updates:
   directory: "/"
   schedule:
     interval: "daily"
-  target-branch: "next"
+  target-branch: "master"
   open-pull-requests-limit: 10

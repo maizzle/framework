@@ -52,7 +52,7 @@
     "is-url-superb": "^5.0.0",
     "juice": "^9.0.0",
     "lodash": "^4.17.20",
-    "ora": "^5.1.0",
+    "ora": "^6.2.0",
     "postcss": "^8.4.21",
     "postcss-import": "^15.0.0",
     "postcss-merge-longhand": "^5.1.7",

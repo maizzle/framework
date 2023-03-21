@@ -114,12 +114,12 @@ test('uses custom postcss plugins from the maizzle config', async t => {
 
   const css = await Tailwind.compile({
     css: '.test {transform: scale(0.5)}',
-    html: '<div class="test inline">Test</div>',
+    html: '<div class="test">Test</div>',
     config
   })
 
   t.not(css, undefined)
-  t.is(css.trim(), '.inline {display: inline !important} .test {-webkit-transform: scale(0.5);transform: scale(0.5)}')
+  t.is(css.trim(), '.test {-webkit-transform: scale(0.5);transform: scale(0.5)}')
 })
 
 test('respects `shorthandCSS` in maizzle config', async t => {
@@ -183,4 +183,43 @@ test('works with custom `components.root`', async t => {
   })
 
   t.true(css.includes('.flex'))
+})
+
+test('adds `!important` to selectors that will not be inlined', async t => {
+  const css = await Tailwind.compile({
+    config: {
+      build: {
+        tailwind: {
+          config: {
+            content: ['./test/stubs/tailwind/*.html']
+          }
+        }
+      }
+    }
+  })
+
+  t.true(css.includes('display: block !important'))
+  t.true(css.includes('display: flex !important'))
+  t.true(css.includes('opacity: 0.5 !important'))
+  t.true(css.includes('margin-top: 1rem !important'))
+  t.true(css.includes('text-transform: uppercase !important'))
+
+  t.false(css.includes('border: 0 !important'))
+})
+
+test('respects `important: false` from tailwind config', async t => {
+  const css = await Tailwind.compile({
+    config: {
+      build: {
+        tailwind: {
+          config: {
+            important: false,
+            content: ['./test/stubs/tailwind/*.html']
+          }
+        }
+      }
+    }
+  })
+
+  t.false(css.includes('display: block !important'))
 })

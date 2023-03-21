@@ -8,6 +8,22 @@ const {requireUncached} = require('../utils/helpers')
 const mergeLonghand = require('postcss-merge-longhand')
 const {get, isObject, isEmpty, merge} = require('lodash')
 
+const addImportantPlugin = () => {
+  return {
+    postcssPlugin: 'add-important',
+    Rule(rule) {
+      const shouldAddImportant = get(rule, 'raws.tailwind.layer') === 'variants'
+      || get(rule, 'parent.type') === 'atrule'
+
+      if (shouldAddImportant) {
+        rule.walkDecls(decl => {
+          decl.important = true
+        })
+      }
+    }
+  }
+}
+
 module.exports = {
   compile: async ({css = '', html = '', config = {}}) => {
     // Compute the Tailwind config to use
@@ -43,7 +59,6 @@ module.exports = {
       './src/components/**/*.html'
 
     const tailwindConfig = merge({
-      important: true,
       content: {
         files: [
           layoutsPath,
@@ -105,6 +120,7 @@ module.exports = {
     const toProcess = [
       postcssNested(),
       tailwindcss(tailwindConfig),
+      get(tailwindConfig, 'important') === false ? () => {} : addImportantPlugin(),
       get(config, 'shorthandCSS', get(config, 'shorthandInlineCSS')) === true ?
         mergeLonghand() :
         () => {},

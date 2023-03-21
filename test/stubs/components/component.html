@@ -1,4 +1,11 @@
-<p>Variable from attribute: [[ text ]]</p>
+<script props>
+  module.export = {
+    text: props.text || 'default text',
+    foo: props.foo || 'default foo'
+  }
+</script>
+
+<p class="flex">Variable from attribute: [[ text ]]</p>
 
 <p>Variable from locals attribute: [[ foo ]]</p>
 

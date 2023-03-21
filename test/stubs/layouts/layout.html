@@ -1,0 +1,13 @@
+<!DOCTYPE {{{ page.doctype || 'html' }}}>
+<html lang="{{ page.language || 'en' }}" xmlns:v="urn:schemas-microsoft-com:vml">
+  <head>
+    <stack name="styles" />
+    <style>
+      {{{ page.css }}}
+    </style>
+  </head>
+
+  <body class="{{ page.bodyClass ?? 'bg-red-500' }}">
+    <slot:template />
+  </body>
+</html>

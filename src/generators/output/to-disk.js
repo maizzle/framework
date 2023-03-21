@@ -2,7 +2,6 @@ const path = require('path')
 const fs = require('fs-extra')
 const glob = require('glob-promise')
 const {get, isEmpty, merge} = require('lodash')
-const {asyncForEach} = require('../../utils/helpers')
 
 const Config = require('../config')
 const Tailwind = require('../tailwindcss')
@@ -28,10 +27,15 @@ module.exports = async (env, spinner, config) => {
 
   const css = (typeof get(config, 'build.tailwind.compiled') === 'string')
     ? config.build.tailwind.compiled
-    : await Tailwind.compile('', '', {}, config)
+    : await Tailwind.compile({config})
 
   // Parse each template config object
-  await asyncForEach(templatesConfig, async templateConfig => {
+  for await (const templateConfig of templatesConfig) {
+    if (!templateConfig) {
+      const configFileName = env === 'local' ? 'config.js' : `config.${env}.js`
+      throw new Error(`No template sources defined in \`build.templates\`, check your ${configFileName} file`)
+    }
+
     const outputDir = get(templateConfig, 'destination.path', `build_${env}`)
 
     await fs.remove(outputDir)
@@ -67,23 +71,45 @@ module.exports = async (env, spinner, config) => {
       }
     }
 
+    // Create a pipe-delimited list of allowed extensions
+    // We only compile these, the rest are copied as-is
+    const extensions = Array.isArray(templateConfig.filetypes)
+      ? templateConfig.filetypes.join('|')
+      : templateConfig.filetypes || get(templateConfig, 'filetypes', 'html')
+
+    // List of files that won't be copied to the output directory
+    const omitted = Array.isArray(templateConfig.omit)
+      ? templateConfig.omit
+      : [get(templateConfig, 'omit', '')]
+
     // Parse each template source
-    await asyncForEach(templateSource, async source => {
+    for await (const source of templateSource) {
       /**
        * Copy single-file sources correctly
        * If `src` is a file, `dest` cannot be a directory
        * https://github.com/jprichardson/node-fs-extra/issues/323
        */
-      const out = fs.lstatSync(source).isFile() ? `${outputDir}/${path.basename(source)}` : outputDir
+      const out = fs.lstatSync(source).isFile()
+        ? `${outputDir}/${path.basename(source)}`
+        : outputDir
 
       await fs
-        .copy(source, out)
+        .copy(source, out, {filter: file => {
+          // Do not copy omitted files
+          return !omitted
+            .filter(Boolean)
+            .some(omit => path.normalize(file).includes(path.normalize(omit)))
+        }})
         .then(async () => {
-          const extensions = Array.isArray(templateConfig.filetypes)
-            ? templateConfig.filetypes.join('|')
-            : templateConfig.filetypes || get(templateConfig, 'filetypes', 'html')
+          const allSourceFiles = await glob(`${outputDir}/**/*.+(${extensions})`)
 
-          const templates = await glob(`${outputDir}/**/*.+(${extensions})`)
+          const skipped = Array.isArray(templateConfig.skip) ?
+            templateConfig.skip :
+            [get(templateConfig, 'skip', '')]
+
+          const templates = allSourceFiles.filter(template => {
+            return !skipped.includes(template.replace(`${outputDir}/`, ''))
+          })
 
           if (templates.length === 0) {
             spinner.warn(`Error: no files with the .${extensions} extension found in ${templateConfig.source}`)
@@ -94,7 +120,7 @@ module.exports = async (env, spinner, config) => {
             await config.events.beforeCreate(config)
           }
 
-          await asyncForEach(templates, async file => {
+          for await (const file of templates) {
             config.build.current = {
               path: path.parse(file)
             }
@@ -114,7 +140,7 @@ module.exports = async (env, spinner, config) => {
                 ...config.events
               })
 
-              const destination = config.permalink || file
+              const destination = get(compiled, 'config.permalink', file)
 
               /**
                * Generate plaintext
@@ -125,7 +151,7 @@ module.exports = async (env, spinner, config) => {
 
               // Check if plaintext: true globally, fallback to template's front matter
               const plaintextConfig = get(templateConfig, 'plaintext', get(compiled.config, 'plaintext', false))
-              const plaintextPath = get(plaintextConfig, 'destination.path', config.permalink || file)
+              const plaintextPath = get(plaintextConfig, 'destination.path', destination)
 
               if (Boolean(plaintextConfig) || !isEmpty(plaintextConfig)) {
                 await Plaintext
@@ -177,19 +203,23 @@ module.exports = async (env, spinner, config) => {
                   throw error
               }
             }
-          })
+          }
 
           const assets = {source: '', destination: 'assets', ...get(templateConfig, 'assets')}
 
           if (Array.isArray(assets.source)) {
-            await asyncForEach(assets.source, async source => {
+            for await (const source of assets.source) {
               if (fs.existsSync(source)) {
-                await fs.copy(source, path.join(templateConfig.destination.path, assets.destination)).catch(error => spinner.warn(error.message))
+                await fs
+                  .copy(source, path.join(templateConfig.destination.path, assets.destination))
+                  .catch(error => spinner.warn(error.message))
               }
-            })
+            }
           } else {
             if (fs.existsSync(assets.source)) {
-              await fs.copy(assets.source, path.join(templateConfig.destination.path, assets.destination)).catch(error => spinner.warn(error.message))
+              await fs
+                .copy(assets.source, path.join(templateConfig.destination.path, assets.destination))
+                .catch(error => spinner.warn(error.message))
             }
           }
 
@@ -199,8 +229,8 @@ module.exports = async (env, spinner, config) => {
             })
         })
         .catch(error => spinner.warn(error.message))
-    })
-  })
+    }
+  }
 
   if (config.events && typeof config.events.afterBuild === 'function') {
     await config.events.afterBuild(files)

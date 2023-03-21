@@ -22,9 +22,6 @@ module.exports = async (html, options) => {
 
   let config = merge(fileConfig, get(options, 'maizzle', {}))
 
-  const tailwindConfig = get(options, 'tailwind.config', {})
-  const cssString = get(options, 'tailwind.css', '')
-
   const {frontmatter} = fm(html)
 
   html = `---\n${frontmatter}\n---\n\n${fm(html).body}`
@@ -34,7 +31,17 @@ module.exports = async (html, options) => {
   if (typeof get(options, 'tailwind.compiled') === 'string') {
     config.css = options.tailwind.compiled
   } else {
-    config.css = await Tailwind.compile(cssString, html, tailwindConfig, config)
+    config.css = await Tailwind.compile({
+      css: get(options, 'tailwind.css', ''),
+      html,
+      config: merge(config, {
+        build: {
+          tailwind: {
+            config: get(options, 'tailwind.config')
+          }
+        }
+      })
+    })
   }
 
   if (options && typeof options.beforeRender === 'function') {

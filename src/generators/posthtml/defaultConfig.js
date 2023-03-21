@@ -1,3 +1,4 @@
 module.exports = {
-  recognizeNoValueAttribute: true
+  recognizeNoValueAttribute: true,
+  recognizeSelfClosing: true
 }

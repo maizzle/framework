@@ -154,10 +154,12 @@ test('preserves css in marked style tags (tailwindcss)', async t => {
 })
 
 test('@import css files in marked style tags', async t => {
-  const source = `<style class="inline" postcss>@import "test/stubs/post.css";</style>`
-  const html = await renderString(source)
+  const source = `<style postcss>@import "test/stubs/post.css";</style>`
+  const html = await renderString(source, {
+    maizzle: {
+      shorthandCSS: true
+    }
+  })
 
-  t.is(html, `<style class="inline">div {
-  margin: 1px 2px 3px 4px;
-}</style>`)
+  t.is(html.replace(/\n {2,}/g, ''), `<style>div {margin: 1px 2px 3px 4px;\n}</style>`)
 })

@@ -14,7 +14,7 @@ module.exports = async (html, config = {}, direct = false) => {
 
   if (get(config, 'inlineCSS') === true || !isEmpty(options)) {
     options.applyAttributesTableElements = true
-    juice.styleToAttribute = get(options, 'styleToAttribute', {'vertical-align': 'valign'})
+    juice.styleToAttribute = get(options, 'styleToAttribute', {})
 
     juice.widthElements = get(options, 'applyWidthAttributes', []).map(i => i.toUpperCase())
     juice.heightElements = get(options, 'applyHeightAttributes', []).map(i => i.toUpperCase())

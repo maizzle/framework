@@ -63,8 +63,8 @@ test('outputs files at the correct location', async t => {
   })
 
   t.true(await fs.pathExists(t.context.folder))
-  t.is(string.length, 3)
-  t.is(array.length, 3)
+  t.is(string.length, 4)
+  t.is(array.length, 4)
 })
 
 test('outputs files at the correct location if multiple template sources are used', async t => {
@@ -89,7 +89,7 @@ test('outputs files at the correct location if multiple template sources are use
   })
 
   t.true(await fs.pathExists(t.context.folder))
-  t.is(files.length, 6)
+  t.is(files.length, 7)
 })
 
 test('copies all files in the `filetypes` option to destination', async t => {
@@ -107,7 +107,7 @@ test('copies all files in the `filetypes` option to destination', async t => {
   })
 
   t.true(await fs.pathExists(t.context.folder))
-  t.is(files.length, 3)
+  t.is(files.length, 4)
 })
 
 test('outputs files with the correct extension', async t => {
@@ -283,7 +283,7 @@ test('runs the `afterBuild` event', async t => {
 })
 
 test('supports multiple asset paths', async t => {
-  await Maizzle.build('maizzle-ci', {
+  const {files} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -299,9 +299,9 @@ test('supports multiple asset paths', async t => {
     }
   })
 
-  t.true(await fs.pathExists(`${t.context.folder}/extras/foo.bar`))
-  t.true(await fs.pathExists(`${t.context.folder}/extras/plaintext.html`))
-  t.false(await fs.pathExists(`${t.context.folder}/extras/invalid`))
+  t.true(files.includes(`${t.context.folder}/extras/foo.bar`))
+  t.true(files.includes(`${t.context.folder}/extras/plaintext.html`))
+  t.false(files.includes(`${t.context.folder}/extras/invalid`))
 })
 
 test('warns if a template cannot be rendered and `fail` option is undefined', async t => {
@@ -351,48 +351,13 @@ test('warns if a template cannot be rendered and `fail` option is `silent`', asy
   t.false(files.includes('empty.html'))
 })
 
-test('local server does not compile unwanted file types', async t => {
-  await Maizzle.serve('local', {
-    build: {
-      console: {
-        clear: true
-      },
-      browsersync: {
-        ui: false
-      },
-      templates: {
-        source: 'test/stubs/templates',
-        destination: {
-          path: `${t.context.folder}`
-        }
-      }
-    },
-    events: {
-      beforeCreate(config) {
-        config.foo = 'bar'
-      }
-    }
-  })
-
-  t.true(await fs.pathExists(`${t.context.folder}`))
-  t.true(await fs.pathExists(`${t.context.folder}/2.test`))
-
-  // Tests watching changes to files
-  await fs.outputFile('test/stubs/templates/2.html', '<div class="inline">html modified</div>')
-  t.is(await fs.readFile('test/stubs/templates/2.html', 'utf8'), '<div class="inline">html modified</div>')
-
-  // Don't trigger rebuilds on files not in `filetypes`
-  await fs.outputFile('test/stubs/templates/2.test', 'test')
-  t.is(await fs.readFile('test/stubs/templates/2.test', 'utf8'), 'test')
-})
-
-test('throws if it cannot spin up local development server', async t => {
+test('throws if `templates.source` is undefined', async t => {
   await t.throwsAsync(async () => {
-    await Maizzle.serve('local', {})
-  }, {instanceOf: TypeError})
+    await Maizzle.build('maizzle-ci')
+  }, {instanceOf: Error})
 })
 
-test('works with templates.source defined as function (string paths)', async t => {
+test('`templates.source` defined as function (string paths)', async t => {
   const {files} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
@@ -405,11 +370,10 @@ test('works with templates.source defined as function (string paths)', async t =
     }
   })
 
-  t.true(await fs.pathExists(t.context.folder))
-  t.is(files.length, 3)
+  t.is(files.length, 4)
 })
 
-test('works with templates.source defined as function (array paths)', async t => {
+test('`templates.source` defined as function (array paths)', async t => {
   const {files} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
@@ -425,8 +389,7 @@ test('works with templates.source defined as function (array paths)', async t =>
     }
   })
 
-  t.true(await fs.pathExists(t.context.folder))
-  t.is(files.length, 3)
+  t.is(files.length, 4)
 })
 
 test('throws if templates path is invalid', async t => {
@@ -484,10 +447,89 @@ test('sets config.build.current.path', async t => {
   t.deepEqual(t.context.current, {
     path: {
       root: '',
-      dir: t.context.folder,
-      base: '2.html',
+      dir: `${t.context.folder}/nested`,
+      base: '3.html',
       ext: '.html',
-      name: '2'
+      name: '3'
     }
   })
+})
+
+test('skips compiling templates', async t => {
+  let parsedFilesFromStringSource = 0
+  await Maizzle.build('maizzle-ci', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: 'test/stubs/templates',
+        skip: '1.html',
+        destination: {
+          path: t.context.folder
+        }
+      }
+    },
+    // Increment counter for each file that was actually parsed
+    events: {
+      afterRender(html) {
+        parsedFilesFromStringSource++
+
+        return html
+      }
+    }
+  })
+
+  let parsedFilesFromArraySource = 0
+  await Maizzle.build('maizzle-ci', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: ['test/stubs/templates'],
+        skip: ['1.html', 'nested/3.html'],
+        destination: {
+          path: t.context.folder
+        }
+      }
+    },
+    events: {
+      afterRender(html) {
+        parsedFilesFromArraySource++
+
+        return html
+      }
+    }
+  })
+
+  t.is(parsedFilesFromStringSource, 2)
+  t.is(parsedFilesFromArraySource, 1)
+})
+
+test('does not output omitted files', async t => {
+  const {files: fromStringSource} = await Maizzle.build('maizzle-ci', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: 'test/stubs/templates',
+        omit: '1.html',
+        destination: {
+          path: t.context.folder
+        }
+      }
+    }
+  })
+
+  const {files: fromArraySource} = await Maizzle.build('maizzle-ci', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: ['test/stubs/templates'],
+        omit: ['1.html', 'nested/3.html'],
+        destination: {
+          path: t.context.folder
+        }
+      }
+    }
+  })
+
+  t.is(fromStringSource.length, 3)
+  t.is(fromArraySource.length, 2)
 })

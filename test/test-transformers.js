@@ -162,21 +162,13 @@ test('remove unused CSS', async t => {
   <html>
     <head>
       <style>
+        @media (screen) {
+          .should-remove {color: yellow}
+        }
         .foo {color: red}
+        .foo:hover {color: blue}
         .bar-baz {color: blue}
-        .baz {color: white}
-      </style>
-    </head>
-    <body>
-      <div class="foo {{ test }}">test div with some text</div>
-    </body>
-  </html>`
-
-  const enabledResult = `<!DOCTYPE html>
-  <html>
-    <head>
-      <style>
-        .foo {color: red}
+        .should-remove {color: white}
       </style>
     </head>
     <body>
@@ -189,6 +181,7 @@ test('remove unused CSS', async t => {
     <head>
       <style>
         .foo {color: red}
+        .foo:hover {color: blue}
         .bar-baz {color: blue}
       </style>
     </head>
@@ -197,45 +190,11 @@ test('remove unused CSS', async t => {
     </body>
   </html>`
 
-  const enabled = await Maizzle.removeUnusedCSS(html)
-  const disabled = await Maizzle.removeUnusedCSS(html, {removeUnusedCSS: false})
+  const disabled = await Maizzle.removeUnusedCSS(html)
   const withOptions = await Maizzle.removeUnusedCSS(html, {whitelist: ['.bar*']})
 
-  t.is(enabled, enabledResult)
   t.is(disabled, html)
   t.is(withOptions, withOptionsResult)
-})
-
-test('remove unused CSS (disabled)', async t => {
-  const html = `<!DOCTYPE html>
-  <html>
-    <head>
-      <style>
-        .foo {color: red}
-      </style>
-    </head>
-    <body>
-      <div class="foo">test div with some text</div>
-    </body>
-  </html>`
-
-  const result = `<!DOCTYPE html>
-  <html>
-    <head>
-      <style>
-        .foo {color: red}
-      </style>
-    </head>
-    <body>
-      <div class="foo">test div with some text</div>
-    </body>
-  </html>`
-
-  const disabled = await Maizzle.removeUnusedCSS(html, {removeUnusedCSS: false})
-  const unset = await Maizzle.removeUnusedCSS(html)
-
-  t.is(disabled, result)
-  t.is(unset, result)
 })
 
 test('remove attributes', async t => {
@@ -274,9 +233,7 @@ test('base URL (object)', async t => {
   const source = await fixture('base-url')
   const html = await Maizzle.applyBaseUrl(source, {
     url: 'https://example.com/',
-    allTags: true,
-    styleTag: true,
-    inlineCss: true
+    allTags: true
   })
 
   t.is(html, await expected('base-url'))
@@ -388,7 +345,10 @@ test('filters (postcss)', async t => {
         margin-bottom: 3px;
         margin-left: 4px;
       }
-    </style>`
+    </style>`,
+    {
+      shorthandCSS: true
+    }
   )
 
   t.is(html.replace(/\n {2,}/g, ''), '<style>div {margin: 1px 2px 3px 4px;}</style>')
@@ -539,13 +499,9 @@ test('remove inlined selectors', async t => {
           color: #00a8ff;
         }
 
-        .m-0 {margin: 0}
-
-        .mb-4 {margin-bottom: 16px}
-
-        .mt-0 {margin-top: 0}
-
-        .remove {color: red}
+        .padded {
+          padding: 0 20px;
+        }
 
         [data-ogsc] .hidden {display: none}
 
@@ -569,10 +525,10 @@ test('remove inlined selectors', async t => {
       </style>
     </head>
     <body>
-      <div no-value id="keepId" class="remove keep ignore foo-class" style="color: red; display: inline">
-        <h1 class="m-0 mb-4 mt-0 hover-text-blue" style="margin: 0 0 16px;">Title</h1>
+      <div no-value id="keepId" class="keep ignore foo-class" style="color: red; display: inline">
+        <h1 class="padded hover-text-blue" style="padding: 0 20px">Title</h1>
         <img src="https://example.com/image.jpg" style="border: 0; vertical-align: middle">
-        <div id="keepId" class="remove keep ignore" style="color: red; display: inline">text</div>
+        <div id="keepId" class="keep ignore" style="color: red; display: inline">text</div>
       </div>
     </body>
   </html>`
@@ -599,10 +555,10 @@ test('remove inlined selectors', async t => {
       <style>.keep {margin: 0}</style>
     </head>
     <body>
-      <div no-value id="keepId" class="keep foo-class" style="color: red; display: inline">
-        <h1 class="hover-text-blue" style="margin: 0 0 16px">Title</h1>
+      <div no-value id="keepId" class="keep ignore foo-class" style="color: red; display: inline">
+        <h1 class="hover-text-blue" style="padding: 0 20px">Title</h1>
         <img src="https://example.com/image.jpg" style="border: 0; vertical-align: middle">
-        <div id="keepId" class="keep" style="color: red; display: inline">text</div>
+        <div id="keepId" class="keep ignore" style="color: red; display: inline">text</div>
       </div>
     </body>
   </html>`

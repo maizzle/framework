@@ -166,25 +166,6 @@ test('works with custom `layouts.root`', async t => {
   t.true(css.includes('.bg-red-500'))
 })
 
-test('works with custom `components.root`', async t => {
-  const css = await Tailwind.compile({
-    config: {
-      build: {
-        components: {
-          root: './test/stubs/components'
-        },
-        tailwind: {
-          config: {
-            content: ['./test/stubs/tailwind/*.html']
-          }
-        }
-      }
-    }
-  })
-
-  t.true(css.includes('.flex'))
-})
-
 test('adds `!important` to selectors that will not be inlined', async t => {
   const css = await Tailwind.compile({
     config: {

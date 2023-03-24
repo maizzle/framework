@@ -4,6 +4,7 @@ module.exports = {
     semi: 0,
     complexity: 0,
     'max-params': 0,
+    'brace-style': 0,
     'no-lonely-if': 0,
     'unicorn/no-reduce': 0,
     'import/extensions': 0,

@@ -7,6 +7,7 @@ const postcssNested = require('tailwindcss/nesting')
 const {requireUncached} = require('../utils/helpers')
 const mergeLonghand = require('postcss-merge-longhand')
 const {get, isObject, isEmpty, merge} = require('lodash')
+const defaultComponentsConfig = require('./posthtml/defaultComponentsConfig')
 
 const addImportantPlugin = () => {
   return {
@@ -48,22 +49,24 @@ module.exports = {
 
     // Merge user's Tailwind config on top of a 'base' config
     const layoutsRoot = get(config, 'build.layouts.root')
-    const componentsRoot = get(config, 'build.components.root')
+    const componentsRoot = get(config, 'build.components.root', defaultComponentsConfig.root)
 
     const layoutsPath = typeof layoutsRoot === 'string' && layoutsRoot ?
-      `${layoutsRoot}/**/*.html`.replace(/\/\//g, '/') :
-      './src/layouts/**/*.html'
+      `${layoutsRoot}/**/*.*`.replace(/\/\//g, '/') :
+      'src/layouts/**/*.*'
 
-    const componentsPath = typeof componentsRoot === 'string' && componentsRoot ?
-      `${componentsRoot}/**/*.html`.replace(/\/\//g, '/') :
-      './src/components/**/*.html'
+    const componentsPath = defaultComponentsConfig.folders.map(folder => {
+      return path
+        .join(componentsRoot, folder, `**/*.${defaultComponentsConfig.fileExtension}`)
+        .replace(/\\/g, '/')
+        .replace(/\/\//g, '/')
+    })
 
     const tailwindConfig = merge({
       content: {
         files: [
-          layoutsPath,
-          componentsPath,
-          {raw: html, extension: 'html'}
+          ...componentsPath,
+          layoutsPath
         ]
       }
     }, userConfig(config))
@@ -72,12 +75,16 @@ module.exports = {
     if (Array.isArray(tailwindConfig.content)) {
       tailwindConfig.content = {
         files: [
+          ...componentsPath,
           layoutsPath,
-          componentsPath,
-          ...tailwindConfig.content,
-          {raw: html, extension: 'html'}
+          ...tailwindConfig.content
         ]
       }
+    }
+
+    // Add raw HTML if using API
+    if (html) {
+      tailwindConfig.content.files.push({raw: html, extension: 'html'})
     }
 
     // Include all `build.templates.source` paths when scanning for selectors to preserve
@@ -85,34 +92,35 @@ module.exports = {
 
     if (buildTemplates) {
       const templateObjects = Array.isArray(buildTemplates) ? buildTemplates : [buildTemplates]
-      const templateSources = templateObjects.map(template => {
+      const fileTypes = get(buildTemplates, 'filetypes', 'html')
+
+      templateObjects.forEach(template => {
         const source = get(template, 'source')
 
         if (typeof source === 'function') {
           const sources = source(config)
 
           if (Array.isArray(sources)) {
-            sources.map(s => tailwindConfig.content.files.push(s))
+            sources.map(s => tailwindConfig.content.files.push(`${s}/**/*.${fileTypes}`))
           } else if (typeof sources === 'string') {
             tailwindConfig.content.files.push(sources)
           }
-
-          // Must return a valid `content` entry
-          return {raw: '', extension: 'html'}
         }
 
         // Support single-file sources i.e. src/templates/index.html
-        if (typeof source === 'string' && Boolean(path.extname(source))) {
+        else if (typeof source === 'string' && Boolean(path.extname(source))) {
           tailwindConfig.content.files.push(source)
-
-          return {raw: '', extension: 'html'}
         }
 
-        return `${source}/**/*.*`
+        // Default behavior - directory sources as a string
+        else {
+          tailwindConfig.content.files.push(`${source}/**/*.${fileTypes}`)
+        }
       })
-
-      tailwindConfig.content.files.push(...templateSources)
     }
+
+    // Filter out any duplicate content paths
+    tailwindConfig.content.files = [...new Set(tailwindConfig.content.files)]
 
     const userFilePath = get(config, 'build.tailwind.css', path.join(process.cwd(), 'src/css/tailwind.css'))
     const userFileExists = await fs.pathExists(userFilePath)

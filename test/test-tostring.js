@@ -88,7 +88,7 @@ test('locals work when defined in all supported places', async t => {
   t.is(result, `1, 2, 3, undefined`)
 })
 
-test('prevents overwriting page object', async t => {
+test.serial('prevents overwriting page object', async t => {
   const result = await renderString(`{{ page.one }}, {{ two }}, {{ three }}, {{ inline }}`, {
     maizzle: {
       one: 1,

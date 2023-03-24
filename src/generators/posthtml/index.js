@@ -5,6 +5,7 @@ const fetch = require('posthtml-fetch')
 const layouts = require('posthtml-extend')
 const components = require('posthtml-component')
 const defaultConfig = require('./defaultConfig')
+const defaultComponentsConfig = require('./defaultComponentsConfig')
 
 module.exports = async (html, config) => {
   const layoutsOptions = get(config, 'build.layouts', {})
@@ -35,6 +36,20 @@ module.exports = async (html, config) => {
     )
   )
 
+  const defaultComponentsOptions = merge(
+    defaultComponentsConfig,
+    {
+      folders: [
+        ...defaultComponentsConfig.folders,
+        ...get(componentsOptions, 'folders', [])
+      ]
+    },
+    {
+      root: componentsOptions.root || './',
+      expressions: {...expressionsOptions, locals}
+    }
+  )
+
   return posthtml([
     fetchPlugin,
     layouts(
@@ -48,15 +63,7 @@ module.exports = async (html, config) => {
     ),
     components(
       merge(
-        {
-          root: componentsOptions.root || './',
-          folders: ['src/components', 'src/layouts', 'src/templates'],
-          tag: 'component',
-          attribute: 'src',
-          yield: 'content',
-          propsAttribute: 'locals',
-          expressions: {...expressionsOptions, locals}
-        },
+        defaultComponentsOptions,
         componentsOptions
       )
     ),

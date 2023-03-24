@@ -50,7 +50,55 @@ template: second
     Child in second.html`)
 })
 
-test('components', async t => {
+test('components (legacy)', async t => {
+  const source = await fixture('components/backwards-compatibility')
+
+  const options = {
+    maizzle: {
+      env: 'maizzle-ci',
+      build: {
+        posthtml: {
+          expressions: {
+            delimiters: ['[[', ']]']
+          }
+        }
+      }
+    }
+  }
+
+  const html = await renderString(source, options)
+
+  t.is(html.replace(/\n+/g, '\n').trim(), await expected('components/backwards-compatibility'))
+})
+
+test('fetch component', async t => {
+  const source = `<extends src="test/stubs/layouts/legacy.html">
+    <block name="template">
+      <fetch url="test/stubs/data.json">
+        <each loop="user in response">[[ user.name + (loop.last ? '' : ', ') ]]</each>
+      </fetch>
+    </block>
+  </extends>`
+
+  const options = {
+    maizzle: {
+      env: 'maizzle-ci',
+      build: {
+        posthtml: {
+          expressions: {
+            delimiters: ['[[', ']]']
+          }
+        }
+      }
+    }
+  }
+
+  const html = await renderString(source, options)
+
+  t.is(html.trim(), 'Leanne Graham, Ervin Howell, Clementine Bauch')
+})
+
+test.serial('components', async t => {
   const source = await fixture('components/kitchen-sink')
 
   const options = {
@@ -75,52 +123,4 @@ test('components', async t => {
     await prettify(html, {ocd: true}),
     await expected('components/kitchen-sink')
   )
-})
-
-test('components (legacy)', async t => {
-  const source = await fixture('components/backwards-compatibility')
-
-  const options = {
-    maizzle: {
-      env: 'maizzle-ci',
-      build: {
-        posthtml: {
-          expressions: {
-            delimiters: ['[[', ']]']
-          }
-        }
-      }
-    }
-  }
-
-  const html = await renderString(source, options)
-
-  t.is(html.replace(/\n+/g, '\n').trim(), await expected('components/backwards-compatibility'))
-})
-
-test('fetch component', async t => {
-  const source = `<extends src="test/stubs/layouts/legacy.html">
-  <block name="template">
-    <fetch url="test/stubs/data.json">
-      <each loop="user in response">[[ user.name + (loop.last ? '' : ', ') ]]</each>
-    </fetch>
-  </block>
-</extends>`
-
-  const options = {
-    maizzle: {
-      env: 'maizzle-ci',
-      build: {
-        posthtml: {
-          expressions: {
-            delimiters: ['[[', ']]']
-          }
-        }
-      }
-    }
-  }
-
-  const html = await renderString(source, options)
-
-  t.is(html.trim(), 'Leanne Graham, Ervin Howell, Clementine Bauch')
 })

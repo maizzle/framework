@@ -37,16 +37,16 @@ module.exports = async (html, config) => {
   )
 
   const defaultComponentsOptions = merge(
-    defaultComponentsConfig,
     {
+      ...defaultComponentsConfig,
       folders: [
         ...defaultComponentsConfig.folders,
         ...get(componentsOptions, 'folders', [])
-      ]
+      ],
+      expressions: {...expressionsOptions, locals}
     },
     {
-      root: componentsOptions.root || './',
-      expressions: {...expressionsOptions, locals}
+      root: componentsOptions.root || './'
     }
   )
 

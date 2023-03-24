@@ -62,8 +62,7 @@ module.exports = {
       content: {
         files: [
           layoutsPath,
-          componentsPath,
-          {raw: html, extension: 'html'}
+          componentsPath
         ]
       }
     }, userConfig(config))
@@ -74,10 +73,14 @@ module.exports = {
         files: [
           layoutsPath,
           componentsPath,
-          ...tailwindConfig.content,
-          {raw: html, extension: 'html'}
+          ...tailwindConfig.content
         ]
       }
+    }
+
+    // Add raw HTML if using API
+    if (html) {
+      tailwindConfig.content.files.push({raw: html, extension: 'html'})
     }
 
     // Include all `build.templates.source` paths when scanning for selectors to preserve

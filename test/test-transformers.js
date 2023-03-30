@@ -615,21 +615,11 @@ test('remove inlined selectors (disabled)', async t => {
     </body>
   </html>`
 
-  const expected = `<!DOCTYPE html>
-  <html>
-    <head>
-      <style>
-        .remove {color: red}
-      </style>
-    </head>
-    <body>
-      <div class="remove" style="color: red"></div>
-    </body>
-  </html>`
+  const withRemoveUnusedCSS = await Maizzle.removeUnusedCSS(html, {removeInlinedClasses: false})
+  const withRemoveInlinedSelectors = await Maizzle.removeInlinedClasses(html, {removeInlinedClasses: false})
 
-  const result = await Maizzle.removeInlinedClasses(html, {removeInlinedClasses: false})
-
-  t.is(result, expected)
+  t.is(withRemoveUnusedCSS, html)
+  t.is(withRemoveInlinedSelectors, html)
 })
 
 test('shorthand inline css', async t => {

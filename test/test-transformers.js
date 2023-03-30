@@ -627,8 +627,8 @@ test('remove inlined selectors (disabled)', async t => {
     </body>
   </html>`
 
-  const withRemoveUnusedCSS = await Maizzle.removeUnusedCSS(html, {removeInlinedClasses: false})
-  const withRemoveInlinedSelectors = await Maizzle.removeInlinedClasses(html, {removeInlinedClasses: false})
+  const withRemoveUnusedCSS = await Maizzle.removeUnusedCSS(html, {removeInlinedSelectors: false})
+  const withRemoveInlinedSelectors = await Maizzle.removeInlinedClasses(html, {removeInlinedSelectors: false})
 
   t.is(withRemoveUnusedCSS, html)
   t.is(withRemoveInlinedSelectors, html)

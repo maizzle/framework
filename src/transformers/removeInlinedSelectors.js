@@ -6,7 +6,7 @@ const matchHelper = require('posthtml-match-helper')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}) => {
-  if (get(config, 'removeInlinedClasses') === false) {
+  if (get(config, 'removeInlinedSelectors') === false) {
     return html
   }
 

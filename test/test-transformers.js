@@ -584,8 +584,19 @@ test('remove inlined selectors', async t => {
     </body>
   </html>`
 
+  const safelisted = `<!DOCTYPE html>
+  <html>
+    <head><style>.preserve-me {
+          color: red;
+        }</style></head>
+    <body>
+      <div class="preserve-me" style="color: red"></div>
+    </body>
+  </html>`
+
   const basic = await Maizzle.removeInlinedClasses(html)
   const noEmptyStyle = await Maizzle.removeInlinedClasses(html2)
+  const safelistedHTML = await Maizzle.removeInlinedClasses(safelisted, {whitelist: ['.preserve-me']})
 
   const withPostHTMLOptions = await Maizzle.removeInlinedClasses(html, {
     build: {
@@ -600,6 +611,7 @@ test('remove inlined selectors', async t => {
   t.is(basic, expectedHTML)
   t.is(withPostHTMLOptions, expectedHTML)
   t.is(noEmptyStyle, expectedNoEmptyStyleTags)
+  t.is(safelistedHTML, safelisted)
 })
 
 test('remove inlined selectors (disabled)', async t => {
@@ -615,21 +627,11 @@ test('remove inlined selectors (disabled)', async t => {
     </body>
   </html>`
 
-  const expected = `<!DOCTYPE html>
-  <html>
-    <head>
-      <style>
-        .remove {color: red}
-      </style>
-    </head>
-    <body>
-      <div class="remove" style="color: red"></div>
-    </body>
-  </html>`
+  const withRemoveUnusedCSS = await Maizzle.removeUnusedCSS(html, {removeInlinedSelectors: false})
+  const withRemoveInlinedSelectors = await Maizzle.removeInlinedClasses(html, {removeInlinedSelectors: false})
 
-  const result = await Maizzle.removeInlinedClasses(html, {removeInlinedClasses: false})
-
-  t.is(result, expected)
+  t.is(withRemoveUnusedCSS, html)
+  t.is(withRemoveInlinedSelectors, html)
 })
 
 test('shorthand inline css', async t => {

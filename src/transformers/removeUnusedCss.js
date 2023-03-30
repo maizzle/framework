@@ -36,7 +36,7 @@ module.exports = async (html, config = {}, direct = false) => {
     whitelist: [...get(config, 'whitelist', []), ...safelist]
   }
 
-  const options = merge(defaultOptions, get(config, 'removeUnusedCSS', {}))
+  const options = merge(defaultOptions, config)
 
   /**
    * Remove possibly inlined selectors, as long as we're not calling

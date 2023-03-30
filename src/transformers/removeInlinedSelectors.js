@@ -6,16 +6,19 @@ const matchHelper = require('posthtml-match-helper')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}) => {
-  if (get(config, 'removeInlinedClasses') === false) {
+  if (get(config, 'removeInlinedSelectors') === false) {
     return html
   }
 
-  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
+  const options = {
+    posthtml: merge(defaultConfig, get(config, 'build.posthtml.options', {})),
+    removeUnusedCSS: config
+  }
 
-  return posthtml([plugin(posthtmlOptions)]).process(html, posthtmlOptions).then(result => result.html)
+  return posthtml([plugin(options)]).process(html, options.posthtml).then(result => result.html)
 }
 
-const plugin = posthtmlOptions => tree => {
+const plugin = (options = {}) => tree => {
   const process = node => {
     // For each style tag...
     if (node.tag === 'style') {
@@ -41,8 +44,16 @@ const plugin = posthtmlOptions => tree => {
         }
 
         try {
+          const safelist = get(options.removeUnusedCSS, 'whitelist', [])
+
           // If we find the selector in the HTML...
           tree.match(matchHelper(selector), n => {
+            // If the selector is safelisted, preserve it
+            if (safelist.some(item => item.endsWith(selector) || item.startsWith(selector))) {
+              preservedClasses.push(selector)
+              return n
+            }
+
             const parsedAttrs = parseAttrs(n.attrs)
             const classAttr = get(parsedAttrs, 'class', [])
             const styleAttr = get(parsedAttrs, 'style', {})
@@ -64,7 +75,7 @@ const plugin = posthtmlOptions => tree => {
 
             // Fix issue with .compose() automatically quoting attributes with no values
             Object.entries(n.attrs).forEach(([name, value]) => {
-              if (value === '' && get(posthtmlOptions, 'recognizeNoValueAttribute') === true) {
+              if (value === '' && get(options.posthtml, 'recognizeNoValueAttribute') === true) {
                 n.attrs[name] = true
               }
             })

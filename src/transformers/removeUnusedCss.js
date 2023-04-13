@@ -33,7 +33,7 @@ module.exports = async (html, config = {}, direct = false) => {
       {heads: '{{', tails: '}}'},
       {heads: '{%', tails: '%}'}
     ],
-    whitelist: [...get(config, 'whitelist', []), ...safelist]
+    whitelist: get(config, 'whitelist', safelist)
   }
 
   const options = merge(defaultOptions, config)

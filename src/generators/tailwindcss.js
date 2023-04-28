@@ -92,7 +92,9 @@ module.exports = {
 
     if (buildTemplates) {
       const templateObjects = Array.isArray(buildTemplates) ? buildTemplates : [buildTemplates]
-      const fileTypes = get(buildTemplates, 'filetypes', 'html')
+      const configFileTypes = get(buildTemplates, 'filetypes', ['html'])
+      const fileTypes = Array.isArray(configFileTypes) ? configFileTypes : configFileTypes.split('|')
+      const fileTypesPattern = fileTypes.length > 1 ? `{${fileTypes.join(',')}}` : fileTypes[0]
 
       templateObjects.forEach(template => {
         const source = get(template, 'source')
@@ -101,7 +103,7 @@ module.exports = {
           const sources = source(config)
 
           if (Array.isArray(sources)) {
-            sources.map(s => tailwindConfig.content.files.push(`${s}/**/*.${fileTypes}`))
+            sources.map(s => tailwindConfig.content.files.push(`${s}/**/*.${fileTypesPattern}`))
           } else if (typeof sources === 'string') {
             tailwindConfig.content.files.push(sources)
           }
@@ -114,7 +116,7 @@ module.exports = {
 
         // Default behavior - directory sources as a string
         else {
-          tailwindConfig.content.files.push(`${source}/**/*.${fileTypes}`)
+          tailwindConfig.content.files.push(`${source}/**/*.${fileTypesPattern}`)
         }
       })
     }

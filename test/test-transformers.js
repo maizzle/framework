@@ -284,7 +284,7 @@ test('safe class names', async t => {
 })
 
 test('safe class names (disabled)', async t => {
-  const html = await Maizzle.safeClassNames('<div class="sm:text-left">foo</div>', {safeClassNames: false})
+  const html = await Maizzle.safeClassNames('<div class="sm:text-left">foo</div>')
 
   t.is(html, '<div class="sm:text-left">foo</div>')
 })

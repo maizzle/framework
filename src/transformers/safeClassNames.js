@@ -7,13 +7,14 @@ module.exports = async (html, config = {}, direct = false) => {
   /*
    * Don't run when:
    * - `config` is falsy or empty
-   * - developing locally and `safeClassNames` is not explicitly
-   *   set to `true`
+   * - developing locally and `safeClassNames` is not explicitly `true`
+   * - `safeClassNames` is explicitly `false`
    */
   if (
     !config
     || isEmpty(config)
     || (get(config, 'env') === 'local' && get(config, 'safeClassNames') !== true)
+    || get(config, 'safeClassNames') === false
   ) {
     return html
   }

@@ -1,20 +1,21 @@
 const posthtml = require('posthtml')
-const {get, merge} = require('lodash')
+const {get, merge, isEmpty} = require('lodash')
 const safeClassNames = require('posthtml-safe-class-names')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {
-  const option = get(config, 'safeClassNames')
-
-  if (option === false) {
-    return html
-  }
-
   /*
-   * Setting it to `true` in the config will run `safeClassNames`
-   * no matter the environment.
+   * Don't run when:
+   * - `config` is falsy or empty
+   * - developing locally and `safeClassNames` is not explicitly `true`
+   * - `safeClassNames` is explicitly `false`
    */
-  if (config.env === 'local' && !option) {
+  if (
+    !config
+    || isEmpty(config)
+    || (get(config, 'env') === 'local' && get(config, 'safeClassNames') !== true)
+    || get(config, 'safeClassNames') === false
+  ) {
     return html
   }
 

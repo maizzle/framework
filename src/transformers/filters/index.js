@@ -41,7 +41,11 @@ module.exports = async (html, config = {}, direct = false) => {
     posthtmlContent(filters)
   ]
 
-  if (get(config, 'safeClassNames') !== false) {
+  /**
+   * Run `safeClassNames` in filters only when not when developing locally and
+   * `safeClassNames` is not explicitly disabled (set to `false`).
+   */
+  if (get(config, 'env') !== 'local' && get(config, 'safeClassNames') !== false) {
     posthtmlPlugins.push(safeClassNames({
       replacements: {
         '{': '{',

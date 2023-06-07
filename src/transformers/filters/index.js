@@ -30,7 +30,7 @@ module.exports = async (html, config = {}, direct = false) => {
     config: merge({
       build: {
         tailwind: {
-          config: get(config, 'build.tailwind.config', {})
+          config: get(config, 'build.tailwind.config', 'tailwind.config.js')
         }
       }
     }, maizzleConfig)

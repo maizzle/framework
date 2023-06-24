@@ -14,14 +14,20 @@ module.exports = async (html, config = {}, direct = false) => {
     table: {
       cellpadding: 0,
       cellspacing: 0,
-      role: 'presentation'
+      role: 'none'
     },
     img: {
       alt: ''
     }
   }
 
-  attributes = direct ? {...attributes, ...config} : (isObject(config.extraAttributes) ? {...attributes, ...config.extraAttributes} : attributes)
+  attributes = direct
+    ? {...attributes, ...config}
+    : (
+      isObject(config.extraAttributes)
+        ? {...attributes, ...config.extraAttributes}
+        : attributes
+    )
 
   return posthtml([addAttributes({attributes})]).process(html, posthtmlOptions).then(result => result.html)
 }

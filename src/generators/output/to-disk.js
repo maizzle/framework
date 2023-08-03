@@ -233,7 +233,7 @@ module.exports = async (env, spinner, config) => {
   }
 
   if (config.events && typeof config.events.afterBuild === 'function') {
-    await config.events.afterBuild(files)
+    await config.events.afterBuild(files, config)
   }
 
   return {

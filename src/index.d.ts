@@ -1,497 +1,669 @@
 import type {CoreBeautifyOptions} from 'js-beautify';
-import type {Options} from 'markdown-it';
+import type {Options as MarkdownItOptions} from 'markdown-it';
 import type queryString from 'query-string';
 
 declare namespace MaizzleFramework {
   interface LayoutsConfig {
     /**
-     * Encoding to be used when reading a layout file from disk.
-     */
+    Encoding to be used when reading a layout file from disk.
+
+    @default 'utf8'
+    */
     encoding?: string;
+
     /**
-     * Name of the slot tag, where the content will be injected.
-     * This is typically used in a Layout file, to define the place where to inject a Template.
-     *
-     * Default: `'block'`
-     */
+    Name of the slot tag, where the content will be injected.
+    This is typically used in a Layout file, to define the place where to inject a Template.
+
+    @default 'block'
+    */
     slotTagName?: string;
+
     /**
-     * Name of the fill tag, inside of which content that will be injected is defined.
-     * This is typically used in a Template file, to extend a Layout.
-     *
-     * @default 'block'
-     */
+    Name of the fill tag, inside of which content that will be injected is defined.
+    This is typically used in a Template file, to extend a Layout.
+
+    @default 'block'
+    */
     fillTagName?: string;
+
     /**
-     * Path to the layouts folder, relative to the project root.
-     */
+    Path to the layouts folder, relative to the project root.
+
+    @default 'src/layouts'
+    */
     root?: string;
+
     /**
-     * Tag name to be used in HTML when extending a layout.
-     */
+    Tag name to be used in HTML when extending a layout.
+
+    @default 'extends'
+    */
     tagName?: string;
+
   }
 
   interface TemplatesConfig {
     /**
-     * Directory where Maizzle should look for Templates to compile.
-     */
+    Directory where Maizzle should look for Templates to compile.
+
+    @default 'src/templates'
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        templates: {
+          source: 'src/templates'
+        }
+      }
+    }
+    ```
+    */
     source?:
     | string
     | Array<string | TemplatesConfig>
     | ((config: Config) => string | string[]);
+
     /**
-     * Define what file extensions your Templates use.
-     * Maizzle will only compile files from your `source` directory that have these extensions.
-     */
+    Define what file extensions your Templates use.
+    Maizzle will only compile files from your `source` directory that have these extensions.
+
+    @default 'html'
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        templates: {
+          filetypes: ['html', 'blade.php']
+        }
+      }
+    }
+    ```
+    */
     filetypes?: string | string[];
+
     /**
-     * Define the output path for compiled Templates, and what file extension they should use.
-     */
+    Define the output path for compiled Templates, and what file extension they should use.
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        templates: {
+          destination: {
+            path: 'build_production',
+            extension: 'html'
+          }
+        }
+      }
+    }
+    ```
+    */
     destination?: {
       /**
-       * Directory where Maizzle should output compiled Templates.
-       */
+      Directory where Maizzle should output compiled Templates.
+
+      @default 'build_{env}'
+      */
       path?: string;
       /**
-       * File extension to be used for compiled Templates.
-       */
+      File extension to be used for compiled Templates.
+
+      @default 'html'
+      */
       extension: string;
     };
+
     /**
-     * Source and destination directories for your asset files.
-     */
+    Source and destination directories for your asset files.
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        templates: {
+          assets: {
+            source: 'src/images',
+            destination: 'images'
+          }
+        }
+      }
+    }
+    ```
+    */
     assets?: {
       /**
-       * Directory where Maizzle should look for asset files.
-       */
+      Directory where Maizzle should look for asset files.
+
+      @default ''
+      */
       source?: string;
       /**
-       * Directory where asset files should be copied to.
-       */
+      Directory where asset files should be copied to.
+
+      @default 'assets'
+      */
       destination?: string;
     };
+
     /**
-     * Paths to files or directories from your `source` that should _not_ be copied over to the build destination.
-     */
+    Paths to files or directories from your `source` that should _not_ be copied over to the build destination.
+
+    @default ['']
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        templates: {
+          source: 'src/templates',
+          omit: ['1.html', 'archive/4.html'],
+          // ...
+        }
+      }
+    }
+    ```
+    */
     omit?: string[];
+
     /**
-     * Paths to files relative to your `source` directory that should not be parsed.
-     * They will be copied over to the build destination as-is.
-     */
+    Paths to files relative to your `source` directory that should not be parsed.
+    They will be copied over to the build destination as-is.
+
+    @default ['']
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        templates: {
+          source: 'src/templates',
+          skip: ['1.html', 'archive/3.html'],
+        }
+      }
+    }
+    ```
+    */
     skip?: string | string[];
   }
 
   interface ComponentsConfig {
     /**
-     * Root path where to look for folders containing component files.
-     *
-     * @default './'
-     */
+    Root path where to look for folders containing component files.
+
+    @default './'
+    */
     root?: string;
+
     /**
-     * Paths where to look for component files. Must be relative to `root`.
-     */
+    Paths where to look for component files. Must be relative to `root`.
+
+    @default ['src/components', 'src/layouts', 'src/templates']
+    */
     folders?: string[];
+
     /**
-     * Prefix to use for component tags.
-     *
-     * @default 'x-'
-     */
+    Prefix to use for component tags.
+
+    @default 'x-'
+    */
     tagPrefix?: string;
+
     /**
-     * Tag name to be used in HTML when using a component.
-     *
-     * @default 'component'
-     */
+    Tag name to be used in HTML when using a component.
+
+    @default 'component'
+    */
     tag?: string;
+
     /**
-     * Attribute name to be used when referencing a component via its path.
-     *
-     * @default 'src'
-     */
+    Attribute name to be used when referencing a component via its path.
+
+    @default 'src'
+    */
     attribute?: string;
+
     /**
-     * File extension that component files must use.
-     * Any other files will be ignored and not be made available as components.
-     *
-     * @default 'html'
-     */
+    File extension that component files must use.
+    Any other files will be ignored and not be made available as components.
+
+    @default 'html'
+    */
     fileExtension?: string;
+
     /**
-     * Name of the tag that will be replaced with the content that is passed to the component.
-     *
-     * @default 'content'
-     */
+    Name of the tag that will be replaced with the content that is passed to the component.
+
+    @default 'content'
+    */
     yield?: string;
+
     /**
-     * Name of the slot tag, where the content will be injected.
-     *
-     * @default 'slot'
-     */
+    Name of the slot tag, where the content will be injected.
+
+    @default 'slot'
+    */
     slot?: string;
+
     /**
-     * Name of the fill tag, where the content to be injected is defined.
-     *
-     * @default 'fill'
-     */
+    Name of the fill tag, where the content to be injected is defined.
+
+    @default 'fill'
+    */
     fill?: string;
+
     /**
-     * String to use as a separator between the slot tag and its name.
-     *
-     * @default ':'
-     */
+    String to use as a separator between the slot tag and its name.
+
+    @default ':'
+    */
     slotSeparator?: string;
+
     /**
-     * Tag name for pushing content to a stack.
-     *
-     * @default 'push'
-     */
+    Tag name for pushing content to a stack.
+
+    @default 'push'
+    */
     push?: string;
+
     /**
-     * Tag name for popping (rendering) content from a stack.
-     *
-     * @default 'stack'
-     * */
+    Tag name for popping (rendering) content from a stack.
+
+    @default 'stack'
+    */
     stack?: string;
+
     /**
-     * Name of the props attribute to use in the `<script>` tag of a component.
-     *
-     * @default 'props'
-     */
+    Name of the props attribute to use in the `<script>` tag of a component.
+
+    @default 'props'
+    */
     propsScriptAttribute?: string;
+
     /**
-     * Name of the object that will be used to store the props of a component.
-     *
-     * @default 'props'
-     */
+    Name of the object that will be used to store the props of a component.
+
+    @default 'props'
+    */
     propsContext?: string;
+
     /**
-     * Name of the attribute that will be used to pass props to a component as JSON.
-     *
-     * @default 'locals'
-     */
+    Name of the attribute that will be used to pass props to a component as JSON.
+
+    @default 'locals'
+    */
     propsAttribute?: string;
+
     /**
-     * Name of the key to use when retrieving props passed to a slot via `$slots.slotName.props`.
-     *
-     * @default 'props'
-     */
+    Name of the key to use when retrieving props passed to a slot via `$slots.slotName.props`.
+
+    @default 'props'
+    */
     propsSlot?: string;
+
     /**
-     * Configure [`posthtml-parser`](https://github.com/posthtml/posthtml-parser).
-     *
-     * @default {recognizeSelfClosing:true}
-     */
+    Configure [`posthtml-parser`](https://github.com/posthtml/posthtml-parser).
+
+    @default {recognizeSelfClosing:true}
+    */
     parserOptions?: Record<string, any>;
+
     /**
-     * Configure [`posthtml-expressions`](https://github.com/posthtml/posthtml-expressions).
-     */
+    Configure [`posthtml-expressions`](https://github.com/posthtml/posthtml-expressions).
+
+    @default {} // custom object
+    */
     expressions?: Record<any, any>;
+
     /**
-     * PostHTML plugins to apply to each parsed component.
-     *
-     * @default []
-     */
+    PostHTML plugins to apply to each parsed component.
+
+    @default []
+    */
     plugins?: any[];
+
     /**
-     * Extra rules for the PostHTML plugin that is used by components to parse attributes.
-     *
-     * @default {}
-     */
+    Extra rules for the PostHTML plugin that is used by components to parse attributes.
+
+    @default {}
+    */
     attrsParserRules?: Record<any, any>;
+
     /**
-     * In strict mode, an error will be thrown if a component cannot be rendered.
-     *
-     * @default true
-     */
+    In strict mode, an error will be thrown if a component cannot be rendered.
+
+    @default true
+    */
     strict?: boolean;
+
     /**
-     * Utility methods to be passed to `<script props>` in a component.
-     *
-     * @default {merge: _.mergeWith, template: _.template}
-     */
+    Utility methods to be passed to `<script props>` in a component.
+
+    @default {merge: _.mergeWith, template: _.template}
+    */
     utilities?: Record<string, unknown>;
+
     /**
-     * Define additional attributes that should be preserved for specific HTML elements.
-     *
-     * @default {}
-     */
+    Define additional attributes that should be preserved for specific HTML elements.
+
+    @default {}
+    */
     elementAttributes?: Record<string, void>;
+
     /**
-     * Attributes that should be preserved on all elements in components.
-     *
-     * @default ['data-*']
-     */
+    Attributes that should be preserved on all elements in components.
+
+    @default ['data-*']
+    */
     safeListAttributes?: string[];
+
     /**
-     * Attributes that should be removed from all elements in components.
-     *
-     * @default []
-     */
+    Attributes that should be removed from all elements in components.
+
+    @default []
+    */
     blackListAttributes?: string[];
   }
 
   interface ExpressionsConfig {
     /**
-     * Define the starting and ending delimiters used for expressions.
-     *
-     * @default ['{{', '}}']
-     */
+    Define the starting and ending delimiters used for expressions.
+
+    @default ['{{', '}}']
+    */
     delimiters?: string[];
+
     /**
-     * Define the starting and ending delimiters used for unescaped expressions.
-     *
-     * @default ['{{{', '}}}']
-     */
+    Define the starting and ending delimiters used for unescaped expressions.
+
+    @default ['{{{', '}}}']
+    */
     unescapeDelimiters?: string[];
+
     /**
-     * Object containing data that will be available under the `page` object.
-     *
-     * @default {}
-     */
+    Object containing data that will be available under the `page` object.
+
+    @default {}
+    */
     locals?: Record<string, unknown>;
+
     /**
-     * Attribute name for `<script>` tags that contain locals.
-     *
-     * @default 'locals'
-     */
+    Attribute name for `<script>` tags that contain locals.
+
+    @default 'locals'
+    */
     localsAttr?: string;
+
     /**
-     * Whether to remove `<script>` tags that contain locals.
-     *
-     * @default false
-     */
+    Whether to remove `<script>` tags that contain locals.
+
+    @default false
+    */
     removeScriptLocals?: boolean;
+
     /**
-     * Tag names to be used for if/else statements.
-     *
-     * @default ['if', 'elseif', 'else']
-     */
+    Tag names to be used for if/else statements.
+
+    @default ['if', 'elseif', 'else']
+    */
     conditionalTags?: string[];
+
     /**
-     * Tag names to be used for switch statements.
-     *
-     * @default ['switch', 'case', 'default']
-     */
+    Tag names to be used for switch statements.
+
+    @default ['switch', 'case', 'default']
+    */
     switchTags?: string[];
+
     /**
-     * Tag names to be used for loops.
-     *
-     * @default ['each', 'for']
-     */
+    Tag names to be used for loops.
+
+    @default ['each', 'for']
+    */
     loopTags?: string[];
+
     /**
-     * Tag names to be used for scopes.
-     *
-     * @default ['scope']
-     */
+    Tag names to be used for scopes.
+
+    @default ['scope']
+    */
     scopeTags?: string[];
+
     /**
-     * Name of tag inside of which expression parsing is disabled.
-     *
-     * @default 'raw'
-     */
+    Name of tag inside of which expression parsing is disabled.
+
+    @default 'raw'
+    */
     ignoredTag?: string;
+
     /**
-     * Enabling strict mode will throw an error if an expression cannot be evaluated.
-     *
-     * @default false
-     */
+    Enabling strict mode will throw an error if an expression cannot be evaluated.
+
+    @default false
+    */
     strictMode?: boolean;
   }
 
   interface TailwindConfig {
     /**
-     * Path to the Tailwind config file.
-     *
-     * @default 'tailwind.config.js'
-     */
+    Path to the Tailwind config file.
+
+    @default 'tailwind.config.js'
+    */
     config?: string;
+
     /**
-     * Path to your main CSS file, that will be compiled with Tailwind CSS.
-     *
-     * @default 'src/css/tailwind.css'
-     */
+    Path to your main CSS file, that will be compiled with Tailwind CSS.
+
+    @default 'src/css/tailwind.css'
+    */
     css?: string;
+
     /**
-     * Pre-compiled CSS. Skip Tailwind CSS processing by providing your own CSS string.
-     *
-     * @default ''
-     */
+    Pre-compiled CSS. Skip Tailwind CSS processing by providing your own CSS string.
+
+    @default ''
+    */
     compiled?: string;
   }
 
   interface BrowserSyncConfig {
     /**
-     * Enable the file explorer when the dev server is started.
-     *
-     * @default true
-     */
+    Enable the file explorer when the dev server is started.
+
+    @default true
+    */
     directory?: boolean;
+
     /**
-     * Enable Browsersync's pop-over notifications.
-     *
-     * @default false
-     */
+    Enable Browsersync's pop-over notifications.
+
+    @default false
+    */
     notify?: boolean;
+
     /**
-     * Which URL to open automatically when Browsersync starts.
-     *
-     * @default false
-     */
+    Which URL to open automatically when Browsersync starts.
+
+    @default false
+    */
     open?: boolean | string;
+
     /**
-     * The port to run the dev server on.
-     *
-     * @default 3000
-     */
+    The port to run the dev server on.
+
+    @default 3000
+    */
     port?: number;
+
     /**
-     * Whether to tunnel the dev server through a random public URL.
-     */
-    tunnel?: boolean;
+    Whether to tunnel the dev server through a random public URL.
+
+    @default false
+    */
+    tunnel?: boolean | string;
+
     /**
-     * Configure the Browsersync server UI.
-     *
-     * @default {port: 3001}
-     */
+    Configure the Browsersync server UI.
+
+    @default {port: 3001}
+    */
     ui?: Record<any, any> | boolean;
+
     /**
-     * Additional paths for Browsersync to watch.
-     */
+    Additional paths for Browsersync to watch.
+
+    @default ['src/**', 'tailwind.config.js', 'config.*.js']
+    */
     watch?: string[];
   }
 
   interface PostHTMLConfig {
     /**
-     * Configure expressions.
-     */
+    Configure expressions.
+    */
     expressions?: ExpressionsConfig;
+
     /**
-     * Configure the PostHTML parser to process custom directives.
-     *
-     * @default []
-     */
+    Configure the PostHTML parser to process custom directives.
+
+    @default []
+    */
     directives?: any[];
+
     /**
-     * Enable `xmlMode` if you're using Maizzle to output XML content, and not actual HTML.
-     *
-     * @default false
-     */
+    Enable `xmlMode` if you're using Maizzle to output XML content, and not actual HTML.
+
+    @default false
+    */
     xmlMode?: boolean;
+
     /**
-     * Decode entities in the HTML.
-     *
-     * @default false
-     */
+    Decode entities in the HTML.
+
+    @default false
+    */
     decodeEntities?: boolean;
+
     /**
-     * Output all tags in lowercase. Works only when `xmlMode` is disabled.
-     *
-     * @default false
-     */
+    Output all tags in lowercase. Works only when `xmlMode` is disabled.
+
+    @default false
+    */
     lowerCaseTags?: boolean;
+
     /**
-     * Output all attribute names in lowercase.
-     *
-     * @default false
-     */
+    Output all attribute names in lowercase.
+
+    @default false
+    */
     lowerCaseAttributeNames?: boolean;
+
     /**
-     * Recognize CDATA sections as text even if the `xmlMode` option is disabled.
-     *
-     * @default false
-     */
+    Recognize CDATA sections as text even if the `xmlMode` option is disabled.
+
+    @default false
+    */
     recognizeCDATA?: boolean;
+
     /**
-     * Recognize self-closing tags.
-     * Disabling this will cause rendering to stop at the first self-closing custom (non-HTML) tag.
-     *
-     * @default true
-     */
+    Recognize self-closing tags.
+    Disabling this will cause rendering to stop at the first self-closing custom (non-HTML) tag.
+
+    @default true
+    */
     recognizeSelfClosing?: boolean;
+
     /**
-     * If enabled, AST nodes will have a location property containing the `start` and `end` line and column position of the node.
-     *
-     * @default false
-     */
+    If enabled, AST nodes will have a location property containing the `start` and `end` line and column position of the node.
+
+    @default false
+    */
     sourceLocations?: boolean;
+
     /**
-     * Whether attributes with no values should render exactly as they were written, without `=""` appended.
-     *
-     * @default true
-     */
+    Whether attributes with no values should render exactly as they were written, without `=""` appended.
+
+    @default true
+    */
     recognizeNoValueAttribute?: boolean;
+
     /**
-     * Tell PostHTML to treat custom tags as self-closing.
-     *
-     * @default []
-     */
+    Tell PostHTML to treat custom tags as self-closing.
+
+    @default []
+    */
     singleTags?: string[] | RegExp[];
+
     /**
-     * Define the closing format for single tags.
-     *
-     * @default 'default'
-     */
+    Define the closing format for single tags.
+
+    @default 'default'
+    */
     closingSingleTag?: 'tag' | 'slash';
+
     /**
-     * Whether to quote all attribute values.
-     *
-     * @default true
-     */
+    Whether to quote all attribute values.
+
+    @default true
+    */
     quoteAllAttributes?: boolean;
+
     /**
-     * Replaces quotes in attribute values with `&quote;`.
-     *
-     * @default true
-     */
+    Replaces quotes in attribute values with `&quote;`.
+
+    @default true
+    */
     replaceQuote?: boolean;
+
     /**
-     * Specify the style of quote arround the attribute values.
-     *
-     * @default 2
-     */
+    Specify the style of quote around the attribute values.
+
+    @default 2
+    */
     quoteStyle?: 0 | 1 | 2;
+
     /**
-     * PostHTML plugins that you would like to use.
-     * These will run last, after components.
-     *
-     * @default []
-     */
+    PostHTML plugins that you would like to use.
+    These will run last, after components.
+
+    @default []
+    */
     plugins?: any[];
   }
 
   interface BuildConfig {
     /**
-     * Templates configuration.
-     */
+    Templates configuration.
+    */
     templates: TemplatesConfig;
     /**
-     * Tailwind CSS configuration.
-     */
+    Tailwind CSS configuration.
+    */
     tailwind?: TailwindConfig;
     /**
-     * Layouts configuration (deprecated).
-     */
+    [DEPRECATED] Layouts configuration.
+    */
     layouts?: LayoutsConfig;
     /**
-     * Components configuration.
-     */
+    Components configuration.
+    */
     components?: ComponentsConfig;
     /**
-     * PostHTML configuration.
-     */
+    PostHTML configuration.
+    */
     posthtml?: PostHTMLConfig;
     /**
-     * Browsersync configuration.
-     */
+    Browsersync configuration.
+    */
     browserSync?: BrowserSyncConfig;
     /**
-     * Configure how build errors are handled when developing with the Maizzle CLI.
-     *
-     * @default undefined
-     */
+    Configure how build errors are handled when developing with the Maizzle CLI.
+
+    @default undefined
+    */
     fail?: 'silent' | 'verbose';
   }
 
@@ -505,63 +677,70 @@ declare namespace MaizzleFramework {
 
   interface InlineCSSConfig {
     /**
-     * Which CSS properties should be duplicated as what HTML attributes.
-     *
-     * @default {}
-     */
+    Which CSS properties should be duplicated as what HTML attributes.
+
+    @default {}
+    */
     styleToAttribute?: Record<string, string>;
+
     /**
-     * Duplicate HTML attributes to inline CSS.
-     *
-     * @default false
-     */
+    Duplicate HTML attributes to inline CSS.
+
+    @default false
+    */
     attributeToStyle?: boolean | AttributeToStyleSupportedAttributes[];
+
     /**
-     * HTML elements that will receive `width` attributes based on inline CSS width.
-     *
-     * @default []
-     */
+    HTML elements that will receive `width` attributes based on inline CSS width.
+
+    @default []
+    */
     applyWidthAttributes?: string[];
+
     /**
-     * HTML elements that will receive `height` attributes based on inline CSS height.
-     *
-     * @default []
-     */
+    HTML elements that will receive `height` attributes based on inline CSS height.
+
+    @default []
+    */
     applyHeightAttributes?: string[];
+
     /**
-     * List of elements that should only use `width` and `height`. Their inline CSS `width` and `height` will be removed.
-     */
+    List of elements that should only use `width` and `height`. Their inline CSS `width` and `height` will be removed.
+    */
     keepOnlyAttributeSizes?: {
       /**
-       * List of elements that should only use the `width` HTML attribute (inline CSS width will be removed).
-       *
-       * @default []
-       */
+      List of elements that should only use the `width` HTML attribute (inline CSS width will be removed).
+
+      @default []
+      */
       width?: string[];
       /**
-       * List of elements that should only use the `height` HTML attribute (inline CSS height will be removed).
-       *
-       * @default []
-       */
+      List of elements that should only use the `height` HTML attribute (inline CSS height will be removed).
+
+      @default []
+      */
       height?: string[];
     };
+
     /**
-     * Remove inlined `background-color` CSS on elements containing a `bgcolor` HTML attribute.
-     *
-     * @default false
-     */
+    Remove inlined `background-color` CSS on elements containing a `bgcolor` HTML attribute.
+
+    @default false
+    */
     preferBgColorAttribute?: boolean | string[];
+
     /**
-     * Array of CSS property names that should be excluded from the CSS inlining process. `--tw-shadow` is excluded by default.
-     *
-     * @default []
-     */
+    Array of CSS property names that should be excluded from the CSS inlining process. `--tw-shadow` is excluded by default.
+
+    @default []
+    */
     excludedProperties?: string[];
+
     /**
-     * An object where each value has a `start` and `end` to specify fenced code blocks that should be ignored during CSS inlining.
-     *
-     * @default {EJS: {}, HBS: {}}
-     */
+    An object where each value has a `start` and `end` to specify fenced code blocks that should be ignored during CSS inlining.
+
+    @default {EJS: {}, HBS: {}}
+    */
     codeBlocks?: {
       EJS?: Record<string, string>;
       HBS?: Record<string, string>;
@@ -570,144 +749,162 @@ declare namespace MaizzleFramework {
 
   interface RemoveUnusedCSSConfig {
     /**
-     * Classes or IDs that you don't want removed.
-     *
-     * @default []
-     */
+    Classes or IDs that you don't want removed.
+
+    @default []
+    */
     whitelist?: string[];
+
     /**
-     * Start and end delimiters for computed classes that you don't want removed.
-     *
-     * @default [{heads: '{{', tails: '}}'}, {heads: '{%', tails: '%}'}]
-     */
+    Start and end delimiters for computed classes that you don't want removed.
+
+    @default [{heads: '{{', tails: '}}'}, {heads: '{%', tails: '%}'}]
+    */
     backend?: Array<Record<string, string>>;
+
     /**
-     * Whether to remove `<!-- HTML comments -->`.
-     *
-     * @default true
-     */
+    Whether to remove `<!-- HTML comments -->`.
+
+    @default true
+    */
     removeHTMLComments?: boolean;
+
     /**
-     * Whether to remove `/* CSS comments *\/`.
-     *
-     * @default true
-     */
+    Whether to remove `/* CSS comments *\/`.
+
+    @default true
+    */
     removeCSSComments?: boolean;
+
     /**
-     * Whether to remove classes that have been inlined.
-     *
-     * @default undefined
-     */
+    Whether to remove classes that have been inlined.
+
+    @default undefined
+    */
     removeInlinedSelectors?: boolean;
+
     /**
-     * List of strings representing start of a conditional comment that should not be removed.
-     *
-     * @default ['[if', '[endif']
-     */
+    List of strings representing start of a conditional comment that should not be removed.
+
+    @default ['[if', '[endif']
+    */
     doNotRemoveHTMLCommentsWhoseOpeningTagContains: string[];
+
     /**
-     * Rename all classes and IDs in both your `<style>` tags and your body HTML elements, to be as few characters as possible.
-     *
-     * @default false
-     */
+    Rename all classes and IDs in both your `<style>` tags and your body HTML elements, to be as few characters as possible.
+
+    @default false
+    */
     uglify?: boolean;
   }
 
   interface URLParametersConfig {
     [key: string]: any;
     /**
-     * Array of tag names to process. Only URLs inside `href` attributes of tags in this array will be processed.
-     *
-     * @default ['a']
-     */
+    Array of tag names to process. Only URLs inside `href` attributes of tags in this array will be processed.
+
+    @default ['a']
+    */
     tags?: string[];
+
     /**
-     * By default, query parameters are appended only to valid URLs.
-     * Disable strict mode to append parameters to any string.
-     *
-     * @default true
-     */
+    By default, query parameters are appended only to valid URLs.
+    Disable strict mode to append parameters to any string.
+
+    @default true
+    */
     strict?: boolean;
+
     /**
-     * Options to pass to the `query-string` library.
-     */
+    Options to pass to the `query-string` library.
+    */
     qs?: queryString.StringifyOptions;
   }
 
   interface WidowWordsConfig {
     /**
-     * The attribute name to use.
-     *
-     * @default 'prevent-widows'
-     */
+    The attribute name to use.
+
+    @default 'prevent-widows'
+    */
     attrName?: string;
+
     /**
-     * Replace all widow word `nbsp;` instances with a single space.
-     * This is basically the opposite of preventing widow words.
-     *
-     * @default false
-     */
+    Replace all widow word `nbsp;` instances with a single space.
+    This is basically the opposite of preventing widow words.
+
+    @default false
+    */
     removeWindowPreventionMeasures?: boolean;
+
     /**
-     * Convert the space entity to the `targetLanguage`.
-     *
-     * @default true
-     */
+    Convert the space entity to the `targetLanguage`.
+
+    @default true
+    */
     convertEntities?: boolean;
+
     /**
-     * Language to encode non-breaking spaces in.
-     *
-     * @default 'html'
-     */
+    Language to encode non-breaking spaces in.
+
+    @default 'html'
+    */
     targetLanguage?: 'html' | 'css' | 'js';
+
     /**
-     * Should whitespace in front of dashes (-), n-dashes (–) or m-dashes (—) be replaced with a `&nbsp;`.
-     *
-     * @default true
-     */
+    Should whitespace in front of dashes (-), n-dashes (–) or m-dashes (—) be replaced with a `&nbsp;`.
+
+    @default true
+    */
     hyphens?: boolean;
+
     /**
-     * The minimum amount of words in a target string, in order to trigger the transformer.
-     *
-     * @default 3
-     */
+    The minimum amount of words in a target string, in order to trigger the transformer.
+
+    @default 3
+    */
     minWordCount?: number;
+
     /**
-     * The minimum amount non-whitespace characters in a target string, in order to trigger the transformer.
-     *
-     * @default 20
-     */
+    The minimum amount non-whitespace characters in a target string, in order to trigger the transformer.
+
+    @default 20
+    */
     minCharCount?: number;
+
     /**
-     * Start/end pairs of strings that will prevent the transformer from removing widow words inside them.
-     */
+    Start/end pairs of strings that will prevent the transformer from removing widow words inside them.
+    */
     ignore?: string | string[];
   }
 
   interface MarkdownConfig {
     /**
-     * Path relative to which markdown files are imported.
-     *
-     * @default './'
-     */
+    Path relative to which markdown files are imported.
+
+    @default './'
+    */
     root?: string;
+
     /**
-     * Encoding for imported Markdown files.
-     *
-     * @default 'utf8'
-     */
+    Encoding for imported Markdown files.
+
+    @default 'utf8'
+    */
     encoding?: string;
+
     /**
-     * Options to pass to the `markdown-it` library.
-     *
-     * @default {}
-     */
-    markdownit?: Options;
+    Options to pass to the `markdown-it` library.
+
+    @default {}
+    */
+    markdownit?: MarkdownItOptions;
+
     /**
-     * Plugins for the `markdown-it` library.
-     *
-     * @default []
-     */
+    Plugins for the `markdown-it` library.
+
+    @default []
+    */
     plugins?: any[];
   }
 
@@ -718,18 +915,21 @@ declare namespace MaizzleFramework {
     @default 500
     */
     lineLengthLimit?: number;
+
     /**
     Remove all line breaks from HTML when minifying.
 
     @default true
     */
     removeLineBreaks?: boolean;
+
     /**
     Remove code indentation when minifying HTML.
 
     @default true
     */
     removeIndentations?: boolean;
+
     /**
     Remove `<!-- HTML comments -->` when minifying HTML.
 
@@ -742,12 +942,14 @@ declare namespace MaizzleFramework {
     @default false
     */
     removeHTMLComments?: boolean | number;
+
     /**
     Remove CSS comments when minifying HTML.
 
     @default true
     */
     removeCSSComments?: boolean;
+
     /**
     When any of given strings are encountered and `removeLineBreaks` is true, current line will be terminated.
 
@@ -776,6 +978,7 @@ declare namespace MaizzleFramework {
     ]
     */
     breakToTheLeftOf?: string[] | boolean | null;
+
     /**
     Some inline tags can accidentally introduce extra text.
     The minifier will take extra precaution when minifying around these tags.
@@ -849,6 +1052,7 @@ declare namespace MaizzleFramework {
     @default undefined
     */
     url: string;
+
     /**
     Tags to apply the `url` to. When using this option, the `url` will only be prepended to the specified tags.
 
@@ -884,6 +1088,7 @@ declare namespace MaizzleFramework {
     ```
     */
     tags?: string[] | Record<string, unknown>;
+
     /**
     Key-value pairs of attributes and what to prepend to them.
 
@@ -904,12 +1109,14 @@ declare namespace MaizzleFramework {
     ```
     */
     attributes?: Record<string, unknown>;
+
     /**
     Whether `url` should be prepended to `url()` values in CSS `<style>` tags.
 
     @default true
     */
     styleTag?: boolean;
+
     /**
     Whether `url` should be prepended to `url()` values in inline CSS.
 
@@ -920,6 +1127,7 @@ declare namespace MaizzleFramework {
 
   interface Config {
     [key: string]: any;
+
     /**
     Configure build settings.
 
@@ -939,6 +1147,7 @@ declare namespace MaizzleFramework {
     ```
     */
     build: BuildConfig;
+
     /**
     Toggle the use of Transformers.
 
@@ -952,6 +1161,7 @@ declare namespace MaizzleFramework {
     ```
     */
     applyTransformers?: boolean;
+
     /**
     Configure CSS inlining.
 
@@ -964,6 +1174,7 @@ declare namespace MaizzleFramework {
     ```
     */
     inlineCSS?: boolean | InlineCSSConfig;
+
     /**
     Configure unused CSS purging.
 
@@ -976,6 +1187,7 @@ declare namespace MaizzleFramework {
     ```
     */
     removeUnusedCSS?: boolean | RemoveUnusedCSSConfig;
+
     /**
     Automatically remove HTML attributes.
 
@@ -989,6 +1201,7 @@ declare namespace MaizzleFramework {
       name: string;
       value: string | RegExp;
     }>;
+
     /**
     Prevent widow words inside a tag by adding a `&nbsp;` between its last two words.
 
@@ -1000,6 +1213,7 @@ declare namespace MaizzleFramework {
     ```
     */
     widowWords?: WidowWordsConfig;
+
     /**
     Add attributes to elements in your HTML.
 
@@ -1016,6 +1230,7 @@ declare namespace MaizzleFramework {
       }
     */
     extraAttributes?: boolean | Record<string, unknown>;
+
     /**
     Normalize escaped character class names like `\:` or `\/` by replacing them with email-safe alternatives.
 
@@ -1030,6 +1245,7 @@ declare namespace MaizzleFramework {
     ```
     */
     safeClassNames?: boolean | Record<string, string>;
+
     /**
     Rewrite longhand CSS inside style attributes with shorthand syntax.
     Only works with margin, padding and border, and only when all sides are specified.
@@ -1044,6 +1260,7 @@ declare namespace MaizzleFramework {
     ```
     */
     shorthandCSS?: boolean | string[];
+
     /**
     Define a string that will be prepended to sources and hrefs in your HTML and CSS.
 
@@ -1069,6 +1286,7 @@ declare namespace MaizzleFramework {
     ```
     */
     baseURL?: string | BaseURLConfig;
+
     /**
     Transform text inside elements marked with custom attributes.
 
@@ -1086,6 +1304,7 @@ declare namespace MaizzleFramework {
     ```
     */
     filters: Record<string, unknown>;
+
     /**
     Define variables outside of the `page` object.
 
@@ -1109,6 +1328,7 @@ declare namespace MaizzleFramework {
     ```
     */
     locals?: Record<string, unknown>;
+
     /**
     Configure custom parameters to append to URLs.
 
@@ -1130,6 +1350,7 @@ declare namespace MaizzleFramework {
     ```
     */
     urlParameters?: URLParametersConfig;
+
     /**
     Ensure that all your HEX colors inside `bgcolor` and `color` attributes are defined with six digits.
 
@@ -1143,6 +1364,7 @@ declare namespace MaizzleFramework {
     ```
     */
     sixHex?: boolean;
+
     /**
     Pretty print your HTML email code so that it's nicely indented and more human-readable.
 
@@ -1156,6 +1378,7 @@ declare namespace MaizzleFramework {
     ```
     */
     prettify?: boolean | CoreBeautifyOptions;
+
     /**
     Minify the compiled HTML email code.
 
@@ -1169,6 +1392,7 @@ declare namespace MaizzleFramework {
     ```
     */
     minify?: boolean | MinifyConfig;
+
     /**
     Configure the Markdown parser.
 
@@ -1186,6 +1410,7 @@ declare namespace MaizzleFramework {
     ```
     */
     markdown?: MarkdownConfig;
+
     /**
     Batch-replace strings in your HTML.
 
@@ -1224,6 +1449,7 @@ declare namespace MaizzleFramework {
     ```
     */
     maizzle: Config;
+
     /**
     Tailwind CSS configuration object.
 
@@ -1243,6 +1469,7 @@ declare namespace MaizzleFramework {
     ```
      */
     tailwind?: TailwindConfig;
+
     /**
     A function that runs after the Template's config has been computed, but just before it is compiled.
 
@@ -1265,6 +1492,7 @@ declare namespace MaizzleFramework {
     ```
     */
     beforeRender?: (html: string, config: Config) => string;
+
     /**
     A function that runs after the Template has been compiled, but before any Transformers have been applied.
 
@@ -1287,6 +1515,7 @@ declare namespace MaizzleFramework {
     ```
     */
     afterRender?: (html: string, config: Config) => string;
+
     /**
     A function that runs after all Transformers have been applied, just before the final HTML is returned.
 
@@ -1316,6 +1545,7 @@ declare namespace MaizzleFramework {
     The rendered HTML.
     */
     html: string;
+
     /**
     The Maizzle configuration object.
     */
@@ -1344,7 +1574,7 @@ declare namespace MaizzleFramework {
   @param {string} input String to compile with Markdown.
   @param {Options} [options] markdown-it options.
    */
-  function markdown(input: string, options?: Options): string;
+  function markdown(input: string, options?: MarkdownItOptions): string;
 
   /**
   Prevent widow words inside a tag by adding a `&nbsp;` between its last two words.

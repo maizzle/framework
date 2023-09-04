@@ -1174,26 +1174,40 @@ declare namespace MaizzleFramework {
 
   interface URLParametersConfig {
     [key: string]: any;
-    
-    /**
-    Array of tag names to process. Only URLs inside `href` attributes of tags in this array will be processed.
 
-    @default ['a']
-    */
-    tags?: string[];
+    _options?: {
+      /**
+      Array of tag names to process. Only URLs inside `href` attributes of tags in this array will be processed.
 
-    /**
-    By default, query parameters are appended only to valid URLs.
-    Disable strict mode to append parameters to any string.
+      @default ['a']
 
-    @default true
-    */
-    strict?: boolean;
+      @example
+      ```
+      module.exports = {
+        urlParameters: {
+          _options: {
+            tags: ['a[href*="example.com"]'],
+          },
+          utm_source: 'maizzle',
+        }
+      }
+      ```
+      */
+      tags?: string[];
 
-    /**
-    Options to pass to the `query-string` library.
-    */
-    qs?: StringifyOptions;
+      /**
+      By default, query parameters are appended only to valid URLs.
+      Disable strict mode to append parameters to any string.
+
+      @default true
+      */
+      strict?: boolean;
+
+      /**
+      Options to pass to the `query-string` library.
+      */
+      qs?: StringifyOptions;
+    }
   }
 
   interface WidowWordsConfig {

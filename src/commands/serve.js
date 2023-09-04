@@ -6,8 +6,8 @@ const Config = require('../generators/config')
 const buildToFile = require('../commands/build')
 const renderToString = require('../functions/render')
 
-const {get, merge, isObject} = require('lodash')
-const {clearConsole} = require('../utils/helpers')
+const {get, isObject} = require('lodash')
+const {clearConsole, merge} = require('../utils/helpers')
 
 /**
  * Initialize Browsersync on-demand

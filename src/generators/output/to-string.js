@@ -1,6 +1,7 @@
 const fm = require('front-matter')
-const {get, merge} = require('lodash')
+const {get} = require('lodash')
 const posthtml = require('../posthtml')
+const {merge} = require('../../utils/helpers')
 const Transformers = require('../../transformers')
 const Tailwind = require('../tailwindcss')
 const Config = require('../config')

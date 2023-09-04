@@ -1,5 +1,6 @@
+const {get} = require('lodash')
 const posthtml = require('posthtml')
-const {get, merge} = require('lodash')
+const {merge} = require('../utils/helpers')
 const markdown = require('posthtml-markdownit')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 

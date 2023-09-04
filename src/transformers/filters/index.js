@@ -1,5 +1,6 @@
 const posthtml = require('posthtml')
-const {get, omit, has, merge} = require('lodash')
+const {get, omit, has} = require('lodash')
+const {merge} = require('../../utils/helpers')
 const defaultFilters = require('./defaultFilters')
 const PostCSS = require('../../generators/postcss')
 const posthtmlContent = require('posthtml-content')

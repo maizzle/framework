@@ -1,6 +1,5 @@
 const path = require('path')
-const {merge} = require('lodash')
-const {requireUncached} = require('../utils/helpers')
+const {merge, requireUncached} = require('../utils/helpers')
 
 module.exports = {
   getMerged: async (env = 'local') => {

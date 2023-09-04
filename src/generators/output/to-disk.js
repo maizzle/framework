@@ -1,7 +1,8 @@
 const path = require('path')
 const fs = require('fs-extra')
 const glob = require('glob-promise')
-const {get, isEmpty, merge} = require('lodash')
+const {get, isEmpty} = require('lodash')
+const {merge} = require('../../utils/helpers')
 
 const Config = require('../config')
 const Tailwind = require('../tailwindcss')

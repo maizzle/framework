@@ -1271,7 +1271,7 @@ declare namespace MaizzleFramework {
     tags?: string[] | Record<string, unknown>;
 
     /**
-    Key-value pairs of attributes and what to prepend to them.
+    Key-value pairs of attributes and the string to prepend to their existing value.
 
     @default {}
 
@@ -1292,14 +1292,14 @@ declare namespace MaizzleFramework {
     attributes?: Record<string, unknown>;
 
     /**
-    Whether `url` should be prepended to `url()` values in CSS `<style>` tags.
+    Whether the string defined in `url` should be prepended to `url()` values in CSS `<style>` tags.
 
     @default true
     */
     styleTag?: boolean;
 
     /**
-    Whether `url` should be prepended to `url()` values in inline CSS.
+    Whether the string defined in `url` should be prepended to `url()` values in inline CSS.
 
     @default true
     */

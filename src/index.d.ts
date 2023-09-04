@@ -2018,7 +2018,7 @@ declare namespace MaizzleFramework {
     ComponentsConfig,
     ExpressionsConfig,
     TailwindConfig,
-    BrowserSyncConfig,
+    BrowsersyncConfig,
     PostHTMLConfig,
     BuildConfig,
     InlineCSSConfig,

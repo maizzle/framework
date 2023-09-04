@@ -1,5 +1,6 @@
 const posthtml = require('posthtml')
-const {get, merge, isObject} = require('lodash')
+const {get, isObject} = require('lodash')
+const {merge} = require('../utils/helpers')
 const addAttributes = require('posthtml-extra-attributes')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 

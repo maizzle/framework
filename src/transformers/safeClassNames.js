@@ -1,5 +1,6 @@
 const posthtml = require('posthtml')
-const {get, merge, isEmpty} = require('lodash')
+const {get, isEmpty} = require('lodash')
+const {merge} = require('../utils/helpers')
 const safeClassNames = require('posthtml-safe-class-names')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 

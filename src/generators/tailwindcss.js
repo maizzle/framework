@@ -3,10 +3,10 @@ const fs = require('fs-extra')
 const postcss = require('postcss')
 const tailwindcss = require('tailwindcss')
 const postcssImport = require('postcss-import')
+const {get, isObject, isEmpty} = require('lodash')
 const postcssNested = require('tailwindcss/nesting')
-const {requireUncached} = require('../utils/helpers')
+const {merge, requireUncached} = require('../utils/helpers')
 const mergeLonghand = require('postcss-merge-longhand')
-const {get, isObject, isEmpty, merge} = require('lodash')
 const defaultComponentsConfig = require('./posthtml/defaultComponentsConfig')
 
 const addImportantPlugin = () => {

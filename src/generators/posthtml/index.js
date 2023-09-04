@@ -1,25 +1,27 @@
 const fm = require('front-matter')
 const posthtml = require('posthtml')
-const {get, merge} = require('lodash')
+const {get, omit} = require('lodash')
 const fetch = require('posthtml-fetch')
 const layouts = require('posthtml-extend')
+const {merge} = require('../../utils/helpers')
 const components = require('posthtml-component')
-const defaultConfig = require('./defaultConfig')
+const defaultPosthtmlConfig = require('./defaultConfig')
 const defaultComponentsConfig = require('./defaultComponentsConfig')
 
 module.exports = async (html, config) => {
-  const layoutsOptions = get(config, 'build.layouts', {})
-  const componentsOptions = get(config, 'build.components', {})
+  const posthtmlOptions = merge(defaultPosthtmlConfig, get(config, 'build.posthtml.options', {}))
+  const posthtmlPlugins = get(config, 'build.posthtml.plugins', [])
+
+  const componentsUserOptions = get(config, 'build.components', {})
+
   const expressionsOptions = merge(
     {
       loopTags: ['each', 'for'],
       strictMode: false
     },
-    get(config, 'build.posthtml.expressions', {})
+    get(config, 'build.posthtml.expressions', {}),
+    get(componentsUserOptions, 'expressions', {})
   )
-
-  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
-  const posthtmlPlugins = get(config, 'build.posthtml.plugins', [])
 
   const locals = merge(
     get(expressionsOptions, 'locals', {}),
@@ -30,24 +32,29 @@ module.exports = async (html, config) => {
   const fetchPlugin = fetch(
     merge(
       {
-        expressions: merge({...expressionsOptions, locals})
+        expressions: merge(expressionsOptions, {locals})
       },
       get(config, 'build.posthtml.fetch', {})
     )
   )
 
-  const defaultComponentsOptions = merge(
+  const componentsOptions = merge(
     {
       ...defaultComponentsConfig,
       folders: [
-        ...defaultComponentsConfig.folders,
-        ...get(componentsOptions, 'folders', [])
+        ...get(componentsUserOptions, 'folders', []),
+        ...defaultComponentsConfig.folders
       ],
-      expressions: {...expressionsOptions, locals}
+      expressions: merge(expressionsOptions, {locals})
     },
     {
-      root: componentsOptions.root || './'
-    }
+      root: componentsUserOptions.root || './'
+    },
+    /**
+     * We omit `folders`, `root` and `expressions` in order to prevent duplicate
+     * array values, as they are already added above
+     */
+    omit(componentsUserOptions, ['folders', 'root', 'expressions'])
   )
 
   return posthtml([
@@ -56,17 +63,12 @@ module.exports = async (html, config) => {
       merge(
         {
           strict: false,
-          expressions: merge({...expressionsOptions, locals})
+          expressions: merge(expressionsOptions, {locals})
         },
-        layoutsOptions
+        get(config, 'build.layouts', {})
       )
     ),
-    components(
-      merge(
-        defaultComponentsOptions,
-        componentsOptions
-      )
-    ),
+    components(componentsOptions),
     ...posthtmlPlugins
   ])
     .process(html, {...posthtmlOptions})

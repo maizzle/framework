@@ -1,7 +1,8 @@
 const posthtml = require('posthtml')
+const {merge} = require('../utils/helpers')
 const parseAttrs = require('posthtml-attrs-parser')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
-const {get, merge, forEach, intersection, keys, isEmpty} = require('lodash')
+const {get, forEach, intersection, keys, isEmpty} = require('lodash')
 
 module.exports = async (html, config = {}, direct = false) => {
   const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))

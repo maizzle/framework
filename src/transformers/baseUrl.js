@@ -1,7 +1,8 @@
 const posthtml = require('posthtml')
 const isUrl = require('is-url-superb')
+const {merge} = require('../utils/helpers')
 const baseUrl = require('posthtml-base-url')
-const {get, merge, isObject, isEmpty} = require('lodash')
+const {get, isObject, isEmpty} = require('lodash')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {

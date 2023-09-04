@@ -601,12 +601,7 @@ declare namespace MaizzleFramework {
     watch?: string[];
   }
 
-  interface PostHTMLConfig {
-    /**
-    Configure expressions.
-    */
-    expressions?: ExpressionsConfig;
-
+  interface PostHTMLOptions {
     /**
     Configure the PostHTML parser to process custom directives.
 
@@ -703,16 +698,93 @@ declare namespace MaizzleFramework {
     Specify the style of quote around the attribute values.
 
     @default 2
+
+    @example
+
+    `0` - Quote style is based on attribute values (an alternative for `replaceQuote` option)
+
+    ```
+    <img src="example.jpg" onload='testFunc("test")'>
+    ```
+
+    @example
+
+    `1` - Attribute values are wrapped in single quotes
+
+    ```
+    <img src='example.jpg' onload='testFunc("test")'>
+    ```
+
+    @example
+
+    `2` - Attribute values are wrapped in double quotes
+
+    ```
+    <img src="example.jpg" onload="testFunc("test")">
+    ```
     */
     quoteStyle?: 0 | 1 | 2;
+  }
+
+  interface PostHTMLConfig {
+    /**
+    Configure expressions.
+    */
+    expressions?: ExpressionsConfig;
 
     /**
-    PostHTML plugins that you would like to use.
+    Configure PostHTML options.
+     */
+    options?: PostHTMLOptions;
+
+    /**
+    Additional PostHTML plugins that you would like to use.
+
     These will run last, after components.
 
     @default []
+
+    @example
+    ```
+    const spaceless = require('posthtml-spaceless')
+    module.exports = {
+      build: {
+        posthtml: {
+          plugins: [
+            spaceless()
+          ]
+        }
+      }
+    }
+    ```
     */
     plugins?: any[];
+
+    /**
+    Configure the `posthtml-mso` plugin.
+    */
+    outlook?: {
+      /**
+      The tag name to use for Outlook conditional comments.
+
+      @default 'outlook'
+
+      @example
+      ```
+      module.exports = {
+        build: {
+          posthtml: {
+            outlook: {
+              tag: 'mso'
+            }
+          }
+        }
+      }
+      // You now write <mso>...</mso> instead of <outlook>...</outlook>
+      ```
+      */
+      tag?: string;
+    };
   }
 
   interface BuildConfig {
@@ -736,6 +808,31 @@ declare namespace MaizzleFramework {
     PostHTML configuration.
     */
     posthtml?: PostHTMLConfig;
+    /**
+    Configure PostCSS
+     */
+    postcss?: {
+      /**
+      Additional PostCSS plugins that you would like to use.
+
+      @default []
+
+      @example
+      ```
+      const examplePlugin = require('postcss-example-plugin')
+      module.exports = {
+        build: {
+          postcss: {
+            plugins: [
+              examplePlugin()
+            ]
+          }
+        }
+      }
+      ```
+      */
+      plugins?: any[];
+    };
     /**
     Browsersync configuration.
 

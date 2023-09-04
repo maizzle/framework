@@ -1,6 +1,7 @@
+import type {StringifyOptions} from 'query-string';
 import type {CoreBeautifyOptions} from 'js-beautify';
 import type {Options as MarkdownItOptions} from 'markdown-it';
-import type queryString from 'query-string';
+import type {Opts as PlaintextOptions} from 'string-strip-html';
 
 declare namespace MaizzleFramework {
   interface LayoutsConfig {
@@ -41,6 +42,67 @@ declare namespace MaizzleFramework {
     */
     tagName?: string;
 
+  }
+
+  interface PlaintextConfig extends PlaintextOptions {
+    /**
+    Configure where plaintext files should be output.
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        plaintext: {
+          destination: {
+            path: 'dist/brand/plaintext',
+            extension: 'rtxt'
+          }
+        }
+      }
+    }
+    ```
+    */
+    destination?: {
+      /**
+      Directory where Maizzle should output compiled Plaintext files.
+
+      @default 'build_{env}'
+
+      @example
+      ```
+      module.exports = {
+        build: {
+          plaintext: {
+            destination: {
+              path: 'dist/brand/plaintext'
+            }
+          }
+        }
+      }
+      ```
+      */
+      path?: string;
+
+      /**
+      File extension to be used for compiled Plaintext files.
+
+      @default 'txt'
+
+      @example
+      ```
+      module.exports = {
+        build: {
+          plaintext: {
+            destination: {
+              extension: 'rtxt'
+            }
+          }
+        }
+      }
+      ```
+      */
+      extension: string;
+    };
   }
 
   interface TemplatesConfig {
@@ -149,6 +211,26 @@ declare namespace MaizzleFramework {
     };
 
     /**
+    Configure plaintext generation.
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        plaintext: {
+          skipHtmlDecoding: true,
+          destination: {
+            path: 'dist/brand/plaintext',
+            extension: 'rtxt'
+          }
+        }
+      }
+    }
+    ```
+    */
+    plaintext?: boolean | PlaintextConfig;
+
+    /**
     Paths to files or directories from your `source` that should _not_ be copied over to the build destination.
 
     @default ['']
@@ -160,7 +242,6 @@ declare namespace MaizzleFramework {
         templates: {
           source: 'src/templates',
           omit: ['1.html', 'archive/4.html'],
-          // ...
         }
       }
     }
@@ -357,14 +438,14 @@ declare namespace MaizzleFramework {
 
     @default ['data-*']
     */
-    safeListAttributes?: string[];
+    safelistAttributes?: string[];
 
     /**
     Attributes that should be removed from all elements in components.
 
     @default []
     */
-    blackListAttributes?: string[];
+    blacklistAttributes?: string[];
   }
 
   interface ExpressionsConfig {
@@ -469,7 +550,7 @@ declare namespace MaizzleFramework {
     compiled?: string;
   }
 
-  interface BrowserSyncConfig {
+  interface BrowsersyncConfig {
     /**
     Enable the file explorer when the dev server is started.
 
@@ -520,12 +601,7 @@ declare namespace MaizzleFramework {
     watch?: string[];
   }
 
-  interface PostHTMLConfig {
-    /**
-    Configure expressions.
-    */
-    expressions?: ExpressionsConfig;
-
+  interface PostHTMLOptions {
     /**
     Configure the PostHTML parser to process custom directives.
 
@@ -622,16 +698,93 @@ declare namespace MaizzleFramework {
     Specify the style of quote around the attribute values.
 
     @default 2
+
+    @example
+
+    `0` - Quote style is based on attribute values (an alternative for `replaceQuote` option)
+
+    ```
+    <img src="example.jpg" onload='testFunc("test")'>
+    ```
+
+    @example
+
+    `1` - Attribute values are wrapped in single quotes
+
+    ```
+    <img src='example.jpg' onload='testFunc("test")'>
+    ```
+
+    @example
+
+    `2` - Attribute values are wrapped in double quotes
+
+    ```
+    <img src="example.jpg" onload="testFunc("test")">
+    ```
     */
     quoteStyle?: 0 | 1 | 2;
+  }
+
+  interface PostHTMLConfig {
+    /**
+    Configure expressions.
+    */
+    expressions?: ExpressionsConfig;
 
     /**
-    PostHTML plugins that you would like to use.
+    Configure PostHTML options.
+     */
+    options?: PostHTMLOptions;
+
+    /**
+    Additional PostHTML plugins that you would like to use.
+
     These will run last, after components.
 
     @default []
+
+    @example
+    ```
+    const spaceless = require('posthtml-spaceless')
+    module.exports = {
+      build: {
+        posthtml: {
+          plugins: [
+            spaceless()
+          ]
+        }
+      }
+    }
+    ```
     */
     plugins?: any[];
+
+    /**
+    Configure the `posthtml-mso` plugin.
+    */
+    outlook?: {
+      /**
+      The tag name to use for Outlook conditional comments.
+
+      @default 'outlook'
+
+      @example
+      ```
+      module.exports = {
+        build: {
+          posthtml: {
+            outlook: {
+              tag: 'mso'
+            }
+          }
+        }
+      }
+      // You now write <mso>...</mso> instead of <outlook>...</outlook>
+      ```
+      */
+      tag?: string;
+    };
   }
 
   interface BuildConfig {
@@ -656,9 +809,37 @@ declare namespace MaizzleFramework {
     */
     posthtml?: PostHTMLConfig;
     /**
+    Configure PostCSS
+     */
+    postcss?: {
+      /**
+      Additional PostCSS plugins that you would like to use.
+
+      @default []
+
+      @example
+      ```
+      const examplePlugin = require('postcss-example-plugin')
+      module.exports = {
+        build: {
+          postcss: {
+            plugins: [
+              examplePlugin()
+            ]
+          }
+        }
+      }
+      ```
+      */
+      plugins?: any[];
+    };
+    /**
     Browsersync configuration.
+
+    When you run the `maizzle serve` command, Maizzle uses [Browsersync](https://browsersync.io/)
+    to start a local development server and open a directory listing of your emails in your default browser.
     */
-    browserSync?: BrowserSyncConfig;
+    browsersync?: BrowsersyncConfig;
     /**
     Configure how build errors are handled when developing with the Maizzle CLI.
 
@@ -680,6 +861,19 @@ declare namespace MaizzleFramework {
     Which CSS properties should be duplicated as what HTML attributes.
 
     @default {}
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        inlineCSS: {
+          styleToAttribute: {
+            'background-color': 'bgcolor',
+          }
+        }
+      }
+    }
+    ```
     */
     styleToAttribute?: Record<string, string>;
 
@@ -687,6 +881,17 @@ declare namespace MaizzleFramework {
     Duplicate HTML attributes to inline CSS.
 
     @default false
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        inlineCSS: {
+          attributeToStyle: ['width', 'bgcolor', 'background']
+        }
+      }
+    }
+    ```
     */
     attributeToStyle?: boolean | AttributeToStyleSupportedAttributes[];
 
@@ -694,6 +899,17 @@ declare namespace MaizzleFramework {
     HTML elements that will receive `width` attributes based on inline CSS width.
 
     @default []
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        inlineCSS: {
+          applyWidthAttributes: ['td', 'th']
+        }
+      }
+    }
+    ```
     */
     applyWidthAttributes?: string[];
 
@@ -701,23 +917,68 @@ declare namespace MaizzleFramework {
     HTML elements that will receive `height` attributes based on inline CSS height.
 
     @default []
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        inlineCSS: {
+          applyHeightAttributes: ['td', 'th']
+        }
+      }
+    }
+    ```
     */
     applyHeightAttributes?: string[];
 
     /**
     List of elements that should only use `width` and `height`. Their inline CSS `width` and `height` will be removed.
+
+    @example
+    ```
+    module.exports = {
+      inlineCSS: {
+        keepOnlyAttributeSizes: {
+          width: ['img', 'video'],
+          height: ['img', 'video']
+        }
+      }
+    }
+    ```
     */
     keepOnlyAttributeSizes?: {
       /**
       List of elements that should only use the `width` HTML attribute (inline CSS width will be removed).
 
       @default []
+
+      @example
+      ```
+      module.exports = {
+        inlineCSS: {
+          keepOnlyAttributeSizes: {
+            width: ['img', 'video'],
+          }
+        }
+      }
+      ```
       */
       width?: string[];
       /**
       List of elements that should only use the `height` HTML attribute (inline CSS height will be removed).
 
       @default []
+
+      @example
+      ```
+      module.exports = {
+        inlineCSS: {
+          keepOnlyAttributeSizes: {
+            height: ['img', 'video']
+          }
+        }
+      }
+      ```
       */
       height?: string[];
     };
@@ -726,6 +987,15 @@ declare namespace MaizzleFramework {
     Remove inlined `background-color` CSS on elements containing a `bgcolor` HTML attribute.
 
     @default false
+
+    @example
+    ```
+    module.exports = {
+      inlineCSS: {
+        preferBgColorAttribute: ['td'] // default: ['body', 'marquee', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr']
+      }
+    }
+    ```
     */
     preferBgColorAttribute?: boolean | string[];
 
@@ -733,6 +1003,15 @@ declare namespace MaizzleFramework {
     Array of CSS property names that should be excluded from the CSS inlining process. `--tw-shadow` is excluded by default.
 
     @default []
+
+    @example
+    ```
+    module.exports = {
+      inlineCSS: {
+        excludedProperties: ['padding', 'padding-left']
+      }
+    }
+    ```
     */
     excludedProperties?: string[];
 
@@ -740,11 +1019,41 @@ declare namespace MaizzleFramework {
     An object where each value has a `start` and `end` to specify fenced code blocks that should be ignored during CSS inlining.
 
     @default {EJS: {}, HBS: {}}
+
+    @example
+    ```
+    module.exports = {
+      EJS: { start: '<%', end: '%>' },
+      HBS: { start: '{{', end: '}}' },
+    }
+    ```
     */
     codeBlocks?: {
       EJS?: Record<string, string>;
       HBS?: Record<string, string>;
     };
+
+    /**
+    Provide your own CSS to be inlined. Must be vanilla or pre-compiled CSS.
+
+    Existing `<style>` in your HTML tags will be ignored and their contents won't be inlined.
+
+    @default undefined
+
+    @example
+    ```
+    module.exports = {
+      inlineCSS: {
+        customCSS: `
+          .custom-class {
+            color: red;
+          }
+        `
+      }
+    }
+    ```
+     */
+    customCSS?: string;
   }
 
   interface RemoveUnusedCSSConfig {
@@ -752,6 +1061,15 @@ declare namespace MaizzleFramework {
     Classes or IDs that you don't want removed.
 
     @default []
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        whitelist: ['.some-class', '.Mso*', '#*'],
+      }
+    }
+    ```
     */
     whitelist?: string[];
 
@@ -759,6 +1077,17 @@ declare namespace MaizzleFramework {
     Start and end delimiters for computed classes that you don't want removed.
 
     @default [{heads: '{{', tails: '}}'}, {heads: '{%', tails: '%}'}]
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        backend: [
+          { heads: '[[', tails: ']]' },
+        ]
+      }
+    }
+    ```
     */
     backend?: Array<Record<string, string>>;
 
@@ -766,6 +1095,15 @@ declare namespace MaizzleFramework {
     Whether to remove `<!-- HTML comments -->`.
 
     @default true
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        removeHTMLComments: false
+      }
+    }
+    ```
     */
     removeHTMLComments?: boolean;
 
@@ -773,6 +1111,15 @@ declare namespace MaizzleFramework {
     Whether to remove `/* CSS comments *\/`.
 
     @default true
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        removeCSSComments: false
+      }
+    }
+    ```
     */
     removeCSSComments?: boolean;
 
@@ -780,6 +1127,15 @@ declare namespace MaizzleFramework {
     Whether to remove classes that have been inlined.
 
     @default undefined
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        removeInlinedSelectors: false,
+      }
+    }
+    ```
     */
     removeInlinedSelectors?: boolean;
 
@@ -787,6 +1143,15 @@ declare namespace MaizzleFramework {
     List of strings representing start of a conditional comment that should not be removed.
 
     @default ['[if', '[endif']
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        doNotRemoveHTMLCommentsWhoseOpeningTagContains: ['[if', '[endif']
+      }
+    }
+    ```
     */
     doNotRemoveHTMLCommentsWhoseOpeningTagContains: string[];
 
@@ -794,31 +1159,55 @@ declare namespace MaizzleFramework {
     Rename all classes and IDs in both your `<style>` tags and your body HTML elements, to be as few characters as possible.
 
     @default false
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        uglify: true
+      }
+    }
+    ```
     */
     uglify?: boolean;
   }
 
   interface URLParametersConfig {
     [key: string]: any;
-    /**
-    Array of tag names to process. Only URLs inside `href` attributes of tags in this array will be processed.
 
-    @default ['a']
-    */
-    tags?: string[];
+    _options?: {
+      /**
+      Array of tag names to process. Only URLs inside `href` attributes of tags in this array will be processed.
 
-    /**
-    By default, query parameters are appended only to valid URLs.
-    Disable strict mode to append parameters to any string.
+      @default ['a']
 
-    @default true
-    */
-    strict?: boolean;
+      @example
+      ```
+      module.exports = {
+        urlParameters: {
+          _options: {
+            tags: ['a[href*="example.com"]'],
+          },
+          utm_source: 'maizzle',
+        }
+      }
+      ```
+      */
+      tags?: string[];
 
-    /**
-    Options to pass to the `query-string` library.
-    */
-    qs?: queryString.StringifyOptions;
+      /**
+      By default, query parameters are appended only to valid URLs.
+      Disable strict mode to append parameters to any string.
+
+      @default true
+      */
+      strict?: boolean;
+
+      /**
+      Options to pass to the `query-string` library.
+      */
+      qs?: StringifyOptions;
+    };
   }
 
   interface WidowWordsConfig {
@@ -1090,7 +1479,7 @@ declare namespace MaizzleFramework {
     tags?: string[] | Record<string, unknown>;
 
     /**
-    Key-value pairs of attributes and what to prepend to them.
+    Key-value pairs of attributes and the string to prepend to their existing value.
 
     @default {}
 
@@ -1111,14 +1500,14 @@ declare namespace MaizzleFramework {
     attributes?: Record<string, unknown>;
 
     /**
-    Whether `url` should be prepended to `url()` values in CSS `<style>` tags.
+    Whether the string defined in `url` should be prepended to `url()` values in CSS `<style>` tags.
 
     @default true
     */
     styleTag?: boolean;
 
     /**
-    Whether `url` should be prepended to `url()` values in inline CSS.
+    Whether the string defined in `url` should be prepended to `url()` values in inline CSS.
 
     @default true
     */
@@ -1194,6 +1583,13 @@ declare namespace MaizzleFramework {
     By default, empty `style` and `class` attributes are removed.
 
     @default ['style', 'class']
+
+    @example
+    ```
+    module.exports = {
+      removeAttributes: ['data-src']
+    }
+    ```
     */
     removeAttributes?:
     | string[]
@@ -1215,7 +1611,7 @@ declare namespace MaizzleFramework {
     widowWords?: WidowWordsConfig;
 
     /**
-    Add attributes to elements in your HTML.
+    [Add attributes](https://maizzle.com/docs/transformers/add-attributes) to elements in your HTML.
 
     @default
       {
@@ -1366,7 +1762,7 @@ declare namespace MaizzleFramework {
     sixHex?: boolean;
 
     /**
-    Pretty print your HTML email code so that it's nicely indented and more human-readable.
+    [Pretty print](https://maizzle.com/docs/transformers/prettify) your HTML email code so that it's nicely indented and more human-readable.
 
     @default undefined
 
@@ -1687,6 +2083,18 @@ declare namespace MaizzleFramework {
   */
   function replaceStrings(html: string, replacements?: Record<string, string>): string;
 
+  /**
+  Generate a plaintext version of an HTML string.
+
+  @param {string} html The HTML string to use.
+  @param {PlaintextConfig} [options] Options to pass to the plaintext generator.
+  */
+  function plaintext(html: string, options?: PlaintextConfig): Promise<{
+    html: string;
+    plaintext: string;
+    destination: string;
+  }>;
+
   export {
     // Configurations
     Config,
@@ -1697,7 +2105,7 @@ declare namespace MaizzleFramework {
     ComponentsConfig,
     ExpressionsConfig,
     TailwindConfig,
-    BrowserSyncConfig,
+    BrowsersyncConfig,
     PostHTMLConfig,
     BuildConfig,
     InlineCSSConfig,
@@ -1708,6 +2116,7 @@ declare namespace MaizzleFramework {
     MinifyConfig,
     MarkdownConfig,
     BaseURLConfig,
+    PlaintextConfig,
     // Functions
     render,
     safeClassNames,
@@ -1724,6 +2133,7 @@ declare namespace MaizzleFramework {
     addURLParameters,
     ensureSixHex,
     minify,
+    plaintext,
     replaceStrings
   };
 }

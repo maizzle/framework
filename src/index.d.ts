@@ -1207,7 +1207,7 @@ declare namespace MaizzleFramework {
       Options to pass to the `query-string` library.
       */
       qs?: StringifyOptions;
-    }
+    };
   }
 
   interface WidowWordsConfig {

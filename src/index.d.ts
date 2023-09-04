@@ -2116,6 +2116,7 @@ declare namespace MaizzleFramework {
     MinifyConfig,
     MarkdownConfig,
     BaseURLConfig,
+    PlaintextConfig,
     // Functions
     render,
     safeClassNames,

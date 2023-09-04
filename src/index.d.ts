@@ -1,6 +1,7 @@
 import type {StringifyOptions} from 'query-string';
 import type {CoreBeautifyOptions} from 'js-beautify';
 import type {Options as MarkdownItOptions} from 'markdown-it';
+import type {Opts as PlaintextOptions} from 'string-strip-html';
 
 declare namespace MaizzleFramework {
   interface LayoutsConfig {
@@ -41,6 +42,67 @@ declare namespace MaizzleFramework {
     */
     tagName?: string;
 
+  }
+
+  interface PlaintextConfig extends PlaintextOptions {
+    /**
+    Configure where plaintext files should be output.
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        plaintext: {
+          destination: {
+            path: 'dist/brand/plaintext',
+            extension: 'rtxt'
+          }
+        }
+      }
+    }
+    ```
+    */
+    destination?: {
+      /**
+      Directory where Maizzle should output compiled Plaintext files.
+
+      @default 'build_{env}'
+
+      @example
+      ```
+      module.exports = {
+        build: {
+          plaintext: {
+            destination: {
+              path: 'dist/brand/plaintext'
+            }
+          }
+        }
+      }
+      ```
+      */
+      path?: string;
+
+      /**
+      File extension to be used for compiled Plaintext files.
+
+      @default 'txt'
+
+      @example
+      ```
+      module.exports = {
+        build: {
+          plaintext: {
+            destination: {
+              extension: 'rtxt'
+            }
+          }
+        }
+      }
+      ```
+      */
+      extension: string;
+    };
   }
 
   interface TemplatesConfig {
@@ -149,6 +211,26 @@ declare namespace MaizzleFramework {
     };
 
     /**
+    Configure plaintext generation.
+
+    @example
+    ```
+    module.exports = {
+      build: {
+        plaintext: {
+          skipHtmlDecoding: true,
+          destination: {
+            path: 'dist/brand/plaintext',
+            extension: 'rtxt'
+          }
+        }
+      }
+    }
+    ```
+    */
+    plaintext?: boolean | PlaintextConfig;
+
+    /**
     Paths to files or directories from your `source` that should _not_ be copied over to the build destination.
 
     @default ['']
@@ -160,7 +242,6 @@ declare namespace MaizzleFramework {
         templates: {
           source: 'src/templates',
           omit: ['1.html', 'archive/4.html'],
-          // ...
         }
       }
     }
@@ -1687,6 +1768,18 @@ declare namespace MaizzleFramework {
   */
   function replaceStrings(html: string, replacements?: Record<string, string>): string;
 
+  /**
+  Generate a plaintext version of an HTML string.
+
+  @param {string} html The HTML string to use.
+  @param {PlaintextConfig} [options] Options to pass to the plaintext generator.
+  */
+  function plaintext(html: string, options?: PlaintextConfig): Promise<{
+    html: string;
+    plaintext: string;
+    destination: string;
+  }>;
+
   export {
     // Configurations
     Config,
@@ -1724,6 +1817,7 @@ declare namespace MaizzleFramework {
     addURLParameters,
     ensureSixHex,
     minify,
+    plaintext,
     replaceStrings
   };
 }

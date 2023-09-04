@@ -438,14 +438,14 @@ declare namespace MaizzleFramework {
 
     @default ['data-*']
     */
-    safeListAttributes?: string[];
+    safelistAttributes?: string[];
 
     /**
     Attributes that should be removed from all elements in components.
 
     @default []
     */
-    blackListAttributes?: string[];
+    blacklistAttributes?: string[];
   }
 
   interface ExpressionsConfig {
@@ -550,7 +550,7 @@ declare namespace MaizzleFramework {
     compiled?: string;
   }
 
-  interface BrowserSyncConfig {
+  interface BrowsersyncConfig {
     /**
     Enable the file explorer when the dev server is started.
 
@@ -738,8 +738,11 @@ declare namespace MaizzleFramework {
     posthtml?: PostHTMLConfig;
     /**
     Browsersync configuration.
+
+    When you run the `maizzle serve` command, Maizzle uses [Browsersync](https://browsersync.io/)
+    to start a local development server and open a directory listing of your emails in your default browser.
     */
-    browserSync?: BrowserSyncConfig;
+    browsersync?: BrowsersyncConfig;
     /**
     Configure how build errors are handled when developing with the Maizzle CLI.
 

@@ -1583,6 +1583,13 @@ declare namespace MaizzleFramework {
     By default, empty `style` and `class` attributes are removed.
 
     @default ['style', 'class']
+
+    @example
+    ```
+    module.exports = {
+      removeAttributes: ['data-src']
+    }
+    ```
     */
     removeAttributes?:
     | string[]
@@ -1604,7 +1611,7 @@ declare namespace MaizzleFramework {
     widowWords?: WidowWordsConfig;
 
     /**
-    Add attributes to elements in your HTML.
+    [Add attributes](https://maizzle.com/docs/transformers/add-attributes) to elements in your HTML.
 
     @default
       {
@@ -1755,7 +1762,7 @@ declare namespace MaizzleFramework {
     sixHex?: boolean;
 
     /**
-    Pretty print your HTML email code so that it's nicely indented and more human-readable.
+    [Pretty print](https://maizzle.com/docs/transformers/prettify) your HTML email code so that it's nicely indented and more human-readable.
 
     @default undefined
 

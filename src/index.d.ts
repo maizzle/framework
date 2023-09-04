@@ -1061,6 +1061,15 @@ declare namespace MaizzleFramework {
     Classes or IDs that you don't want removed.
 
     @default []
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        whitelist: ['.some-class', '.Mso*', '#*'],
+      }
+    }
+    ```
     */
     whitelist?: string[];
 
@@ -1068,6 +1077,17 @@ declare namespace MaizzleFramework {
     Start and end delimiters for computed classes that you don't want removed.
 
     @default [{heads: '{{', tails: '}}'}, {heads: '{%', tails: '%}'}]
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        backend: [
+          { heads: '[[', tails: ']]' },
+        ]
+      }
+    }
+    ```
     */
     backend?: Array<Record<string, string>>;
 
@@ -1075,6 +1095,15 @@ declare namespace MaizzleFramework {
     Whether to remove `<!-- HTML comments -->`.
 
     @default true
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        removeHTMLComments: false
+      }
+    }
+    ```
     */
     removeHTMLComments?: boolean;
 
@@ -1082,6 +1111,15 @@ declare namespace MaizzleFramework {
     Whether to remove `/* CSS comments *\/`.
 
     @default true
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        removeCSSComments: false
+      }
+    }
+    ```
     */
     removeCSSComments?: boolean;
 
@@ -1089,6 +1127,15 @@ declare namespace MaizzleFramework {
     Whether to remove classes that have been inlined.
 
     @default undefined
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        removeInlinedSelectors: false,
+      }
+    }
+    ```
     */
     removeInlinedSelectors?: boolean;
 
@@ -1096,6 +1143,15 @@ declare namespace MaizzleFramework {
     List of strings representing start of a conditional comment that should not be removed.
 
     @default ['[if', '[endif']
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        doNotRemoveHTMLCommentsWhoseOpeningTagContains: ['[if', '[endif']
+      }
+    }
+    ```
     */
     doNotRemoveHTMLCommentsWhoseOpeningTagContains: string[];
 
@@ -1103,12 +1159,22 @@ declare namespace MaizzleFramework {
     Rename all classes and IDs in both your `<style>` tags and your body HTML elements, to be as few characters as possible.
 
     @default false
+
+    @example
+    ```
+    module.exports = {
+      removeUnusedCSS: {
+        uglify: true
+      }
+    }
+    ```
     */
     uglify?: boolean;
   }
 
   interface URLParametersConfig {
     [key: string]: any;
+    
     /**
     Array of tag names to process. Only URLs inside `href` attributes of tags in this array will be processed.
 

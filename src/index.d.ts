@@ -1,6 +1,6 @@
+import type {StringifyOptions} from 'query-string';
 import type {CoreBeautifyOptions} from 'js-beautify';
 import type {Options as MarkdownItOptions} from 'markdown-it';
-import type queryString from 'query-string';
 
 declare namespace MaizzleFramework {
   interface LayoutsConfig {
@@ -818,7 +818,7 @@ declare namespace MaizzleFramework {
     /**
     Options to pass to the `query-string` library.
     */
-    qs?: queryString.StringifyOptions;
+    qs?: StringifyOptions;
   }
 
   interface WidowWordsConfig {

@@ -45,7 +45,7 @@
     "autoprefixer": "^10.4.14",
     "browser-sync": "^2.28.3",
     "color-shorthand-hex-to-six-digit": "^3.0.2",
-    "email-comb": "^5.2.0",
+    "email-comb": "^7.0.17",
     "front-matter": "^4.0.0",
     "fs-extra": "^10.0.0",
     "glob-promise": "^4.1.0",

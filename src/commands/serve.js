@@ -149,9 +149,12 @@ const serve = async (env = 'local', config = {}) => {
 
   // Watch for changes in config files
   browsersync()
-    .watch('config*.js')
+    .watch('{maizzle.config*,config*}.{js,cjs}')
     .on('change', async file => {
-      const parsedEnv = path.parse(file).name.split('.')[1] || 'local'
+      const fileName = path.parse(file).base
+      const match = fileName.match(/\.?config\.(.+?)\./)
+
+      const parsedEnv = match ? match[1] : env || 'local'
 
       Config
         .getMerged(parsedEnv)

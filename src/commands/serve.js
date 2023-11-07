@@ -183,7 +183,13 @@ const serve = async (env = 'local', config = {}) => {
           },
           tunnel: false,
           ui: {port: 3001},
-          logFileChanges: false
+          logFileChanges: false,
+          watchOptions: {
+            awaitWriteFinish: {
+              stabilityThreshold: 150,
+              pollInterval: 25
+            }
+          }
         },
         get(config, 'build.browsersync', {})
       ), () => {})

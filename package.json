@@ -80,7 +80,7 @@
   "devDependencies": {
     "@types/js-beautify": "^1.14.0",
     "@types/markdown-it": "^13.0.0",
-    "ava": "^5.2.0",
+    "ava": "^6.0.1",
     "c8": "^8.0.0",
     "np": "*",
     "xo": "0.39.1"

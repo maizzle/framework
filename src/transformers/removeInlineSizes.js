@@ -18,14 +18,13 @@ module.exports = async (html, config = {}, direct = false) => {
 
 const removeInlineSizes = (mappings = {}) => tree => {
   const process = node => {
-    const attrs = parseAttrs(node.attrs)
-
     Object.entries(mappings).forEach(([attribute, tags]) => {
       tags = Object.values(tags).map(tag => tag.toLowerCase())
-
       if (!tags.includes(node.tag)) {
         return node
       }
+
+      const attrs = parseAttrs(node.attrs)
 
       tags.forEach(() => {
         if (get(node, 'attrs.style')) {

@@ -1,7 +1,6 @@
-const {get} = require('lodash')
 const posthtml = require('posthtml')
+const {get, merge} = require('lodash')
 const outlook = require('posthtml-mso')
-const {merge} = require('../utils/helpers')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config) => {

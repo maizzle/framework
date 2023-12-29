@@ -1,7 +1,6 @@
 const postcss = require('postcss')
 const posthtml = require('posthtml')
-const {merge} = require('../utils/helpers')
-const {get, has, remove} = require('lodash')
+const {get, merge, has, remove} = require('lodash')
 const parseAttrs = require('posthtml-attrs-parser')
 const matchHelper = require('posthtml-match-helper')
 const defaultConfig = require('../generators/posthtml/defaultConfig')

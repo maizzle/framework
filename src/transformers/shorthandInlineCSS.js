@@ -1,6 +1,5 @@
 const posthtml = require('posthtml')
-const {merge} = require('../utils/helpers')
-const {get, isObject, isEmpty} = require('lodash')
+const {get, merge, isObject, isEmpty} = require('lodash')
 const mergeInlineLonghand = require('posthtml-postcss-merge-longhand')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 

@@ -1,7 +1,7 @@
 const posthtml = require('posthtml')
-const {get, isEmpty} = require('lodash')
+const {get, merge, isEmpty} = require('lodash')
 const parseAttrs = require('posthtml-attrs-parser')
-const {merge, toStyleString} = require('../utils/helpers')
+const {toStyleString} = require('../utils/helpers')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {

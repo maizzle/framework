@@ -1,10 +1,9 @@
 const fm = require('front-matter')
-const {get} = require('lodash')
-const posthtml = require('../posthtml')
-const {merge} = require('../../utils/helpers')
-const Transformers = require('../../transformers')
-const Tailwind = require('../tailwindcss')
 const Config = require('../config')
+const {get, merge} = require('lodash')
+const posthtml = require('../posthtml')
+const Tailwind = require('../tailwindcss')
+const Transformers = require('../../transformers')
 
 module.exports = async (html, options) => {
   process.env.NODE_ENV = get(options, 'maizzle.env', 'local')

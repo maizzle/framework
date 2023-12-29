@@ -1,5 +1,6 @@
 const path = require('path')
-const {merge, requireUncached} = require('../utils/helpers')
+const {merge} = require('lodash')
+const {requireUncached} = require('../utils/helpers')
 
 const baseConfigFileNames = [
   './maizzle.config.js',

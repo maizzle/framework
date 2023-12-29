@@ -20,6 +20,7 @@ const removeInlineSizes = (mappings = {}) => tree => {
   const process = node => {
     Object.entries(mappings).forEach(([attribute, tags]) => {
       tags = Object.values(tags).map(tag => tag.toLowerCase())
+
       if (!tags.includes(node.tag)) {
         return node
       }

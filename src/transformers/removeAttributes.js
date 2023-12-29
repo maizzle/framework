@@ -1,6 +1,5 @@
-const {get} = require('lodash')
 const posthtml = require('posthtml')
-const {merge} = require('../utils/helpers')
+const {get, merge} = require('lodash')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 
 module.exports = async (html, config = {}, direct = false) => {

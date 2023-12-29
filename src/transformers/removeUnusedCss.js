@@ -1,6 +1,5 @@
 const {comb} = require('email-comb')
-const {merge} = require('../utils/helpers')
-const {get, isEmpty, isObject} = require('lodash')
+const {get, merge, isEmpty, isObject} = require('lodash')
 const removeInlinedClasses = require('./removeInlinedSelectors')
 
 module.exports = async (html, config = {}, direct = false) => {

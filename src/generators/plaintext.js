@@ -1,7 +1,6 @@
 const path = require('path')
-const {get} = require('lodash')
 const posthtml = require('posthtml')
-const {merge} = require('../utils/helpers')
+const {get, merge} = require('lodash')
 const {stripHtml} = require('string-strip-html')
 const defaultConfig = require('./posthtml/defaultConfig')
 

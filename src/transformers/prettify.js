@@ -1,7 +1,6 @@
 /* eslint-disable camelcase */
 const pretty = require('pretty')
-const {merge} = require('../utils/helpers')
-const {get, isEmpty, isObject} = require('lodash')
+const {get, merge, isEmpty, isObject} = require('lodash')
 
 module.exports = async (html, config = {}, direct = false) => {
   const defaultConfig = {

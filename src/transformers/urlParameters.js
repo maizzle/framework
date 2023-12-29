@@ -1,6 +1,5 @@
 const posthtml = require('posthtml')
-const {get, isEmpty} = require('lodash')
-const {merge} = require('../utils/helpers')
+const {get, merge, isEmpty} = require('lodash')
 const urlParams = require('posthtml-url-parameters')
 const defaultConfig = require('../generators/posthtml/defaultConfig')
 

@@ -119,7 +119,7 @@ test('uses custom postcss plugins from the maizzle config', async t => {
   })
 
   t.not(css, undefined)
-  t.is(css.trim(), '.test {-webkit-transform: scale(0.5);transform: scale(0.5)}')
+  t.is(css.trim(), '.test {transform: scale(0.5)}')
 })
 
 test('respects `shorthandCSS` in maizzle config', async t => {

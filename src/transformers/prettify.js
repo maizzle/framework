@@ -31,9 +31,9 @@ const reFormat = (html, config) => {
   }
 
   return html
-    .replaceAll(/,\s*/g, ', ')
-    .replaceAll(/(\s+style="\s+)([\s\S]*?)(\s+")/g, (match, p1, p2, p3) => {
-      const formattedStyle = p2.replaceAll(/\s+/g, ' ').trim()
+    .replace(/,\s*/g, ', ')
+    .replace(/(\s+style="\s+)([\s\S]*?)(\s+")/g, (match, p1, p2, p3) => {
+      const formattedStyle = p2.replace(/\s+/g, ' ').trim()
       return p1.trim() + formattedStyle + p3.trim()
     })
 }

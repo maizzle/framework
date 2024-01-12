@@ -118,9 +118,10 @@ test.serial('components', async t => {
   }
 
   const html = await renderString(source, options)
+  const expectedHtml = await expected('components/kitchen-sink')
 
   t.is(
-    await prettify(html, {ocd: true}),
-    await expected('components/kitchen-sink')
+    await prettify(html, {printWidth: 500}),
+    expectedHtml + '\n'
   )
 })

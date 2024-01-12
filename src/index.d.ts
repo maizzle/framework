@@ -1,5 +1,5 @@
 import type {StringifyOptions} from 'query-string';
-import type {CoreBeautifyOptions} from 'js-beautify';
+import type {Config as PrettierOptions} from 'prettier';
 import type {Options as MarkdownItOptions} from 'markdown-it';
 import type {Opts as PlaintextOptions} from 'string-strip-html';
 
@@ -1773,7 +1773,7 @@ declare namespace MaizzleFramework {
     }
     ```
     */
-    prettify?: boolean | CoreBeautifyOptions;
+    prettify?: boolean | PrettierOptions;
 
     /**
     Minify the compiled HTML email code.
@@ -2041,9 +2041,9 @@ declare namespace MaizzleFramework {
   /**
   Pretty print HTML code so that it's nicely indented and more human-readable.
   @param {string} html The HTML string to prettify.
-  @param {CoreBeautifyOptions} [options] Options to pass to the prettifier.
+  @param {PrettierOptions} [options] Options to pass to the prettifier.
   */
-  function prettify(html: string, options?: CoreBeautifyOptions): string;
+  function prettify(html: string, options?: PrettierOptions): string;
 
   /**
   Prepend a string to sources and hrefs in an HTML string.

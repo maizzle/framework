@@ -27,7 +27,7 @@ module.exports = async (html, config = {}, direct = false) => {
 
 const reFormat = (html, config) => {
   if (/<!doctype html>/i.test(html) && !config.xmlMode) {
-    html = html.replaceAll(/<(.+?)(\s\/)>/g, '<$1>')
+    html = html.replace(/<(.+?)(\s\/)>/g, '<$1>')
   }
 
   return html

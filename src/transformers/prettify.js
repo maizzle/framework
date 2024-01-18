@@ -7,6 +7,7 @@ module.exports = async (html, config = {}, direct = false) => {
   const defaultConfig = {
     parser: 'html',
     printWidth: 500,
+    embeddedLanguageFormatting: 'off',
     htmlWhitespaceSensitivity: 'ignore',
     xmlMode: get(config, 'posthtml.options.xmlMode', false)
   }

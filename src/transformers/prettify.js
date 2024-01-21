@@ -32,10 +32,4 @@ const reFormat = (html, config) => {
   }
 
   return html
-    .replace(/,\s*/g, ', ')
-    .replace(/(\s+style="\s+)([\s\S]*?)(\s+")/g, (match, p1, p2, p3) => {
-      return p1.replace(/\n\s+?(style)/g, ' $1').trimEnd()
-        + p2.replace(/\s+/g, ' ').trim()
-        + p3.trim()
-    })
 }

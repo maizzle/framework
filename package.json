@@ -58,7 +58,7 @@
     "postcss-import": "^15.0.0",
     "postcss-merge-longhand": "^6.0.0",
     "posthtml": "^0.16.6",
-    "posthtml-attrs-parser": "^0.1.1",
+    "posthtml-attrs-parser": "^1.0.0",
     "posthtml-base-url": "^2.0.0",
     "posthtml-component": "^1.1.0",
     "posthtml-content": "^1.0.2",

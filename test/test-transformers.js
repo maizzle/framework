@@ -240,13 +240,18 @@ test('base URL (object)', async t => {
 })
 
 test('prettify', async t => {
-  // With custom object config
-  const html = await Maizzle.prettify('<div><p>with options</p></div>', {printWidth: 12})
-  t.is(html, '<div>\n  <p>\n    with\n    options\n  </p>\n</div>\n')
+  const source = await fixture('prettify')
+
+  const html = await Maizzle.prettify(source, {
+    printWidth: 500,
+    rewriteSelfClosing: true
+  })
+
+  t.is(html.trim(), (await expected('prettify')))
 
   // `prettify: true`
-  const html2 = await Maizzle.prettify('<!doctype html><meta name="test" /><div><p>prettify: true</p></div>', true)
-  t.is(html2, '<!doctype html>\n<meta name="test">\n<div><p>prettify: true</p></div>\n')
+  const html2 = await Maizzle.prettify('<!doctype html><meta name="test" /><custom /><div><p>prettify: true</p></div>', true)
+  t.is(html2, '<!doctype html>\n<meta name="test">\n<custom />\n<div><p>prettify: true</p></div>\n')
 
   // No config
   const html3 = await Maizzle.prettify('<div><p>test</p></div>')

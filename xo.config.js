@@ -6,6 +6,7 @@ module.exports = {
     'max-params': 0,
     'brace-style': 0,
     'no-lonely-if': 0,
+    'no-useless-escape': 0,
     'unicorn/no-reduce': 0,
     'import/extensions': 0,
     'operator-linebreak': 0,

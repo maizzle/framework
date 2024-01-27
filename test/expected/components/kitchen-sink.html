@@ -1,91 +1,73 @@
-{{ test }} The Website Weekly Newsletter bar {% capture email_title %}Hey {{customer.first_name}} {{ customer.last_name}}, {% endcapture %}
-
-<!doctype html>
+{{ test }}
+The Website Weekly Newsletter
+bar
+{% capture email_title %}Hey {{customer.first_name}} {{ customer.last_name}}, {% endcapture %}
+<!DOCTYPE html>
 <html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
-  <head>
-    <style>
-      .text-sm {
-        font-size: 0.875rem;
-        line-height: 1.25rem;
-      }
-    </style>
-  </head>
+<head>
+  <style>
+  </style>
+</head>
+<body class="bg-red-500">
+  <h1>H1 in fill:template</h1>
 
-  <body class="bg-red-500">
-    <h1 class="text-sm">H1 in fill:template</h1>
+  <!-- Expressions -->
+  Compiled: maizzle-ci
+  Ignored: {{ page.env }}
+  Inside component: maizzle-ci
+  Inside component (ignored): {{ page.env }}
+  Inside nested component: maizzle-ci
+  Inside nested component (ignored): {{ page.env }}
 
-    <!-- Expressions -->
-    Compiled: maizzle-ci Ignored: {{ page.env }} Inside component: maizzle-ci Inside component (ignored): {{ page.env }} Inside nested component: maizzle-ci Inside nested component (ignored): {{ page.env }}
+  <!-- Component slots -->
+  Slot header
 
-    <!-- Component slots -->
-
-    Slot header
-
-    <!-- Markdown -->
-    <h3>Heading</h3>
-    <pre><code class="language-js">console.log('Hello world!')
+  <!-- Markdown -->
+  <h3>Heading</h3>
+  <pre><code class="language-js">console.log('Hello world!')
 </code></pre>
+  <h3>Markdown in component</h3>
 
-    <h3>Markdown in component</h3>
+  <!-- Passing props to component -->
+  Environment: maizzle-ci
+  Environment (ignore expression): {{ page.env }}
 
-    <!-- Passing props to component -->
+  <!-- Nesting components, with props -->
+  Parent
+  Childish
 
-    Environment: maizzle-ci Environment (ignore expression): {{ page.env }}
+  <!-- <fetch> tag -->
+  <ul>
+    <li>
+      Leanne Graham
+    </li>
+    <li>
+      Ervin Howell
+    </li>
+    <li>
+      Clementine Bauch (last item)
+    </li>
+  </ul>
 
-    <!-- Nesting components, with props -->
+  <!-- <outlook> tag -->
 
-    Parent Childish
+  <!--[if mso]>in outlook<![endif]-->
 
-    <!-- <fetch> tag -->
+  <!-- Conditionals -->
+  <p>Using Maizzle programmatically</p>
 
-    <ul>
-      <li>Leanne Graham</li>
+  <!-- Loops -->
+  {{ i }} is <i>1</i>
+  {{ i }} is <i>2 (last)</i>
 
-      <li>Ervin Howell</li>
+  <!-- Switch -->
+  page.foo is bar
 
-      <li>Clementine Bauch (last item)</li>
-    </ul>
+  <!-- Scope -->
+  Author: John
+  Editor: Jane
 
-    <!-- <outlook> tag -->
-
-    <!--[if mso]>in outlook<![endif]-->
-
-    <!-- Conditionals -->
-
-    <p>Using Maizzle programmatically</p>
-
-    <!-- Loops -->
-
-    {{ i }} is
-    <i>1</i>
-
-    {{ i }} is
-    <i>2 (last)</i>
-
-    <!-- Switch -->
-
-    page.foo is bar
-
-    <!-- Scope -->
-
-    Author: John Editor: Jane
-
-    <!-- Raw -->
-
-    Expression should be ignored: {{ foo }}
-
-    <!-- MSO Comments -->
-
-    <div>
-      <a href="#">
-        <!--[if mso]>
-          <i>&nbsp;</i>
-        <![endif]-->
-        <span>Read more &rarr;</span>
-        <!--[if mso]>
-          <i>&nbsp;</i>
-        <![endif]-->
-      </a>
-    </div>
-  </body>
+  <!-- Raw -->
+  Expression should be ignored: {{ foo }}
+</body>
 </html>

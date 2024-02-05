@@ -1,6 +1,6 @@
 const path = require('path')
 const fs = require('fs-extra')
-const glob = require('glob-promise')
+const {glob} = require('fast-glob')
 const {get, merge, isEmpty} = require('lodash')
 
 const Config = require('../config')
@@ -73,9 +73,10 @@ module.exports = async (env, spinner, config) => {
 
     // Create a pipe-delimited list of allowed extensions
     // We only compile these, the rest are copied as-is
-    const extensions = Array.isArray(templateConfig.filetypes)
-      ? templateConfig.filetypes.join('|')
-      : templateConfig.filetypes || get(templateConfig, 'filetypes', 'html')
+    const fileTypes = get(templateConfig, 'filetypes', 'html')
+    const extensionsList = Array.isArray(fileTypes)
+      ? fileTypes.join(',')
+      : fileTypes.split('|').join(',')
 
     // List of files that won't be copied to the output directory
     const omitted = Array.isArray(templateConfig.omit)
@@ -101,7 +102,10 @@ module.exports = async (env, spinner, config) => {
             .some(omit => path.normalize(file).includes(path.normalize(omit)))
         }})
         .then(async () => {
-          const allSourceFiles = await glob(`${outputDir}/**/*.+(${extensions})`)
+          const extensions = extensionsList.includes(',')
+            ? `{${extensionsList}}`
+            : extensionsList
+          const allSourceFiles = await glob(`${outputDir}/**/*.${extensions}`)
 
           const skipped = Array.isArray(templateConfig.skip) ?
             templateConfig.skip :
@@ -223,7 +227,7 @@ module.exports = async (env, spinner, config) => {
             }
           }
 
-          await glob(path.join(templateConfig.destination.path, '/**/*.*'))
+          await glob(path.join(templateConfig.destination.path, '/**').replace(/\\/g, '/'))
             .then(contents => {
               files = [...new Set([...files, ...contents])]
             })

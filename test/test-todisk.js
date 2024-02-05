@@ -38,11 +38,12 @@ test('skips if no templates found', async t => {
 })
 
 test('outputs files at the correct location', async t => {
-  const {files: string} = await Maizzle.build('maizzle-ci', {
+  const {files: stringSource} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
         source: 'test/stubs/templates',
+        filetypes: 'html|test',
         destination: {
           path: t.context.folder
         }
@@ -50,7 +51,8 @@ test('outputs files at the correct location', async t => {
     }
   })
 
-  const {files: array} = await Maizzle.build('maizzle-ci', {
+  // `filetypes` will default to `html` if not set
+  const {files: arraySource} = await Maizzle.build('maizzle-ci', {
     build: {
       fail: 'silent',
       templates: {
@@ -63,8 +65,8 @@ test('outputs files at the correct location', async t => {
   })
 
   t.true(await fs.pathExists(t.context.folder))
-  t.is(string.length, 4)
-  t.is(array.length, 4)
+  t.is(stringSource.length, 4)
+  t.is(arraySource.length, 4)
 })
 
 test('outputs files at the correct location if multiple template sources are used', async t => {

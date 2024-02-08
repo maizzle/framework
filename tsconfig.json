@@ -17,6 +17,6 @@
         ]
     },
     "files": [
-        "src/index.d.ts"
+        "types/index.d.ts"
     ]
 }

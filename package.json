@@ -4,7 +4,7 @@
   "description": "Maizzle is a framework that helps you quickly build HTML emails with Tailwind CSS.",
   "license": "MIT",
   "main": "src/index.js",
-  "types": "src/index.d.ts",
+  "types": "types/index.d.ts",
   "bin": {
     "maizzle": "bin/maizzle"
   },
@@ -38,6 +38,7 @@
   },
   "files": [
     "src/**/*",
+    "types/**/*",
     "bin/*"
   ],
   "dependencies": {

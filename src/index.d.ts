@@ -2,6 +2,7 @@ import type {StringifyOptions} from 'query-string';
 import type {CoreBeautifyOptions} from 'js-beautify';
 import type {Options as MarkdownItOptions} from 'markdown-it';
 import type {Opts as PlaintextOptions} from 'string-strip-html';
+import type {Options as BrowserSyncOptions} from 'browser-sync';
 
 declare namespace MaizzleFramework {
   interface LayoutsConfig {
@@ -550,56 +551,7 @@ declare namespace MaizzleFramework {
     compiled?: string;
   }
 
-  interface BrowsersyncConfig {
-    /**
-    Enable the file explorer when the dev server is started.
-
-    @default true
-    */
-    directory?: boolean;
-
-    /**
-    Enable Browsersync's pop-over notifications.
-
-    @default false
-    */
-    notify?: boolean;
-
-    /**
-    Which URL to open automatically when Browsersync starts.
-
-    @default false
-    */
-    open?: boolean | string;
-
-    /**
-    The port to run the dev server on.
-
-    @default 3000
-    */
-    port?: number;
-
-    /**
-    Whether to tunnel the dev server through a random public URL.
-
-    @default false
-    */
-    tunnel?: boolean | string;
-
-    /**
-    Configure the Browsersync server UI.
-
-    @default {port: 3001}
-    */
-    ui?: Record<any, any> | boolean;
-
-    /**
-    Additional paths for Browsersync to watch.
-
-    @default ['src/**', 'tailwind.config.js', 'config.*.js']
-    */
-    watch?: string[];
-  }
+  type BrowserSyncConfig = BrowserSyncOptions
 
   interface PostHTMLOptions {
     /**
@@ -839,7 +791,7 @@ declare namespace MaizzleFramework {
     When you run the `maizzle serve` command, Maizzle uses [Browsersync](https://browsersync.io/)
     to start a local development server and open a directory listing of your emails in your default browser.
     */
-    browsersync?: BrowsersyncConfig;
+    browsersync?: BrowserSyncConfig;
     /**
     Configure how build errors are handled when developing with the Maizzle CLI.
 
@@ -1529,7 +1481,7 @@ declare namespace MaizzleFramework {
         layouts: LayoutsConfig,
         components: ComponentsConfig,
         posthtml: PostHTMLConfig,
-        browserSync: BrowserSyncConfig,
+        browsersync: BrowserSyncConfig,
         fail: 'silent' // or 'verbose'
       }
     }
@@ -2105,7 +2057,7 @@ declare namespace MaizzleFramework {
     ComponentsConfig,
     ExpressionsConfig,
     TailwindConfig,
-    BrowsersyncConfig,
+    BrowserSyncConfig,
     PostHTMLConfig,
     BuildConfig,
     InlineCSSConfig,

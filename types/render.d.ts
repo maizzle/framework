@@ -1,3 +1,8 @@
+import {
+  beforeRenderType,
+  afterRenderType,
+  afterTransformersType
+} from './events';
 import type Config from './config';
 import type TailwindConfig from './tailwind';
 
@@ -75,7 +80,7 @@ export default interface RenderOptions {
     .then(({html, config}) => console.log(html, config))
   ```
   */
-  beforeRender?: (html: string, config: Config) => string;
+  beforeRender?: beforeRenderType;
 
   /**
   A function that runs after the Template has been compiled, but before any Transformers have been applied.
@@ -98,7 +103,7 @@ export default interface RenderOptions {
     .then(({html, config}) => console.log(html, config))
   ```
   */
-  afterRender?: (html: string, config: Config) => string;
+  afterRender?: afterRenderType;
 
   /**
   A function that runs after all Transformers have been applied, just before the final HTML is returned.
@@ -121,5 +126,5 @@ export default interface RenderOptions {
     .then(({html, config}) => console.log(html, config))
   ```
   */
-  afterTransformers?: (html: string, config: Config) => string;
+  afterTransformers?: afterTransformersType;
 }

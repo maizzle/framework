@@ -7,6 +7,7 @@ import type URLParametersConfig from './urlParameters';
 import type {CoreBeautifyOptions} from 'js-beautify';
 import type MinifyConfig from './minify';
 import type MarkdownConfig from './markdown';
+import type EventsConfig from './events';
 
 export default interface Config {
   [key: string]: any;
@@ -20,7 +21,7 @@ export default interface Config {
     build: {
       templates: TemplatesConfig,
       tailwind: TailwindConfig,
-      layouts: LayoutsTypes,
+      layouts: LayoutsConfig,
       components: ComponentsConfig,
       posthtml: PostHTMLConfig,
       browsersync: BrowserSyncConfig,
@@ -317,4 +318,24 @@ export default interface Config {
   ```
   */
   replaceStrings?: Record<string, string>;
+
+  /**
+  When compiling your email templates, Maizzle goes through a series of steps like generating a Template config, rendering, or applying Transformers.
+  You can hook into the build process and manipulate it by using functions that run before or after some of these steps.
+
+  @default {}
+
+  @example
+  ```
+  module.exports = {
+    events: {
+      beforeRender: async (html, config) => {
+        // do something with html and config
+        return html;
+      },
+    }
+  }
+  ```
+  */
+  events?: EventsConfig;
 }

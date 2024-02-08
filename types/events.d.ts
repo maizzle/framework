@@ -2,7 +2,7 @@ export type beforeCreateType = (config: any) => Promise<void>;
 export type beforeRenderType = (html: string, config: any) => Promise<string>;
 export type afterRenderType = (html: string, config: any) => Promise<string>;
 export type afterTransformersType = (html: string, config: any) => Promise<string>;
-export type afterBuildType = (files: Array<any>, config: any) => Promise<void>;
+export type afterBuildType = (files: any[], config: any) => Promise<void>;
 
 export default interface EventsConfig {
   /**

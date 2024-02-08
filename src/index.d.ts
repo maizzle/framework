@@ -552,7 +552,7 @@ declare namespace MaizzleFramework {
     compiled?: string;
   }
 
-  type BrowserSyncConfig = BrowserSyncOptions
+  type BrowserSyncConfig = BrowserSyncOptions;
 
   interface PostHTMLOptions {
     /**
@@ -2053,7 +2053,7 @@ declare namespace MaizzleFramework {
     plugins?: {
       after?: (tree: any) => void;
       before?: Array<(tree: any) => void>;
-    }
+    };
   }
 
   /**

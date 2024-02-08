@@ -211,3 +211,5 @@ declare namespace MaizzleFramework {
     shorthandCSS
   };
 }
+
+export = MaizzleFramework;

@@ -1,26 +1,16 @@
 import type {AttributeToStyleSupportedAttributes} from './inlineCss';
-import type {Options as BrowserSyncConfig} from 'browser-sync';
 import type BaseURLConfig from './baseURL';
-import type BuildConfig from './build';
-import type ComponentsConfig from './components';
 import type Config from './config';
-import type ExpressionsConfig from './expressions';
+import type {CoreBeautifyOptions} from 'js-beautify';
 import type InlineCSSConfig from './inlineCss';
-import type LayoutsConfig from './layouts';
-import type MarkdownConfig from './markdown';
+import type {Options as MarkdownItOptions} from 'markdown-it';
 import type MinifyConfig from './minify';
 import type PlaintextConfig from './plaintext';
-import type PostHTMLConfig from './posthtml';
 import type RenderOptions from './render';
 import type {RenderOutput} from './render';
 import type RemoveUnusedCSSConfig from './removeUnusedCss';
-import type TailwindConfig from './tailwind';
-import type TemplatesConfig from './templates';
 import type URLParametersConfig from './urlParameters';
 import type WidowWordsConfig from './widowWords';
-
-import type {CoreBeautifyOptions} from 'js-beautify';
-import type {Options as MarkdownItOptions} from 'markdown-it';
 
 declare namespace MaizzleFramework {
   /**
@@ -171,26 +161,8 @@ declare namespace MaizzleFramework {
   }>;
 
   export {
-    AttributeToStyleSupportedAttributes,
-    BaseURLConfig,
-    BrowserSyncConfig,
-    BuildConfig,
-    ComponentsConfig,
     Config,
-    ExpressionsConfig,
-    InlineCSSConfig,
-    LayoutsConfig,
-    MarkdownConfig,
-    MinifyConfig,
-    PlaintextConfig,
-    PostHTMLConfig,
-    RemoveUnusedCSSConfig,
     RenderOptions,
-    RenderOutput,
-    TailwindConfig,
-    TemplatesConfig,
-    URLParametersConfig,
-    WidowWordsConfig,
     // Functions
     addAttributes,
     addURLParameters,

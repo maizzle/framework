@@ -187,7 +187,7 @@ export default interface PostHTMLConfig {
   };
 
   /**
-  Configure the <fetch> tag.
+  Configure the `<fetch>` tag behavior.
 
   @default {}
   */

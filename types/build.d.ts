@@ -1,4 +1,4 @@
-import type LayoutsTypes from './layouts';
+import type LayoutsConfig from './layouts';
 import type PostHTMLConfig from './posthtml';
 import type TailwindConfig from './tailwind';
 import type TemplatesConfig from './templates';
@@ -19,7 +19,7 @@ export default interface BuildConfig {
   /**
   [DEPRECATED] Layouts configuration.
   */
-  layouts?: LayoutsTypes;
+  layouts?: LayoutsConfig;
 
   /**
   Components configuration.

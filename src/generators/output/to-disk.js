@@ -211,9 +211,9 @@ module.exports = async (env, spinner, config) => {
 
           const assets = Array.isArray(get(templateConfig, 'assets'))
             ? get(templateConfig, 'assets')
-            : [{ source: '', destination: 'assets', ...get(templateConfig, 'assets') }]
+            : [{source: '', destination: 'assets', ...get(templateConfig, 'assets')}]
 
-          for await (let asset of assets) {
+          for await (const asset of assets) {
             if (Array.isArray(asset.source)) {
               for await (const source of asset.source) {
                 if (fs.existsSync(source)) {

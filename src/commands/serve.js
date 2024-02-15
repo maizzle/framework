@@ -107,7 +107,7 @@ const serve = async (env = 'local', config = {}) => {
           let ext = ''
 
           if (Array.isArray(config.build.templates)) {
-            const match = config.build.templates.find(template => template.source === path.parse(file).dir)
+            const match = config.build.templates.find(template => path.parse(file).dir.includes(path.normalize(template.source)))
             source = path.normalize(get(match, 'source'))
             dest = path.normalize(get(match, 'destination.path', 'build_local'))
             ext = get(match, 'destination.ext', 'html')

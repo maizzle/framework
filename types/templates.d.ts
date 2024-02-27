@@ -108,7 +108,7 @@ export default interface TemplatesConfig {
     /**
      * An array of objects specifying source and destination directories for asset files.
      */
-    assets: {
+    assets: Array<{
       /**
        * Directory where Maizzle should look for asset files.
        */
@@ -117,7 +117,7 @@ export default interface TemplatesConfig {
        * Directory where asset files should be copied to.
        */
       destination: string;
-    }[];
+    }>;
   };
 
   /**

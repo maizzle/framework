@@ -368,13 +368,65 @@ test('supports multiple assets array paths', async t => {
 
   t.true(files.includes(`${t.context.folder}/extras/plaintext.html`))
   t.false(files.includes(`${t.context.folder}/extras/invalid`))
-  t.false(files.includes(`${t.context.folder}/extras/invalid`))
-  t.false(files.includes(`${t.context.folder}/extras/invalid`))
 
   t.true(files.includes(`${t.context.folder}/assets/images1/foo.bar`))
 
   t.true(files.includes(`${t.context.folder}/assets/images2/foo1.bar`))
   t.true(files.includes(`${t.context.folder}/assets/images2/foo2.bar`))
+})
+
+test('supports multiple assets array paths with templates array', async t => {
+  const {files} = await Maizzle.build('maizzle-ci', {
+    build: {
+      fail: 'silent',
+      templates: [
+        {
+          source: 'test/stubs/plaintext',
+          destination: {
+            path: t.context.folder
+          },
+          assets: [
+            {
+              source: ['test/stubs/invalid', 'test/stubs/assets'],
+              destination: 'assets/extras1'
+            },
+            {
+              source: ['test/stubs/assets2'],
+              destination: 'assets/extras2'
+            }
+          ]
+        },
+        {
+          source: 'test/stubs/templates',
+          destination: {
+            path: t.context.folder
+          },
+          assets: [
+            {
+              source: ['test/stubs/invalid', 'test/stubs/assets'],
+              destination: 'assets/extras3'
+            },
+            {
+              source: ['test/stubs/assets2'],
+              destination: 'assets/extras4'
+            }
+          ]
+        }
+      ]
+    }
+  })
+
+  t.false(files.includes(`${t.context.folder}/assets/extras1/invalid`))
+  t.true(files.includes(`${t.context.folder}/assets/extras1/foo.bar`))
+
+  t.true(files.includes(`${t.context.folder}/assets/extras2/foo1.bar`))
+  t.true(files.includes(`${t.context.folder}/assets/extras2/foo2.bar`))
+
+  t.false(files.includes(`${t.context.folder}/assets/extras3/invalid`))
+  t.true(files.includes(`${t.context.folder}/assets/extras3/foo.bar`))
+
+  t.true(files.includes(`${t.context.folder}/assets/extras4/foo1.bar`))
+  t.true(files.includes(`${t.context.folder}/assets/extras4/foo2.bar`))
 })
 
 test('warns if a template cannot be rendered and `fail` option is undefined', async t => {

@@ -75,35 +75,49 @@ export default interface TemplatesConfig {
   };
 
   /**
-  Source and destination directories for your asset files.
-
-  @example
-  ```
-  module.exports = {
-    build: {
-      templates: {
-        assets: {
-          source: 'src/images',
-          destination: 'images'
-        }
-      }
-    }
-  }
-  ```
-  */
+   * Source and destination directories for your asset files.
+   *
+   * @example
+   * ```
+   * module.exports = {
+   *   build: {
+   *     templates: {
+   *       assets: {
+   *         source: 'src/images',
+   *         destination: 'images'
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   */
   assets?: {
     /**
-    Directory where Maizzle should look for asset files.
-
-    @default ''
-    */
+     * Directory where Maizzle should look for asset files.
+     *
+     * @default ''
+     */
     source?: string;
     /**
-    Directory where asset files should be copied to.
-
-    @default 'assets'
-    */
+     * Directory where asset files should be copied to.
+     *
+     * @default 'assets'
+     */
     destination?: string;
+  } | {
+    /**
+     * An array of objects specifying source and destination directories for asset files.
+     */
+    assets: {
+      /**
+       * Directory where Maizzle should look for asset files.
+       */
+      source: string;
+      /**
+       * Directory where asset files should be copied to.
+       */
+      destination: string;
+    }[];
   };
 
   /**

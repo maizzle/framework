@@ -333,7 +333,6 @@ test('supports multiple asset paths', async t => {
       }
     }
   })
-  console.log('files', files)
 
   t.true(files.includes(`${t.context.folder}/extras/foo.bar`))
   t.true(files.includes(`${t.context.folder}/extras/plaintext.html`))

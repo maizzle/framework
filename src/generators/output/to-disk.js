@@ -209,21 +209,25 @@ module.exports = async (env, spinner, config) => {
             }
           }
 
-          const assets = {source: '', destination: 'assets', ...get(templateConfig, 'assets')}
+          const assets = Array.isArray(get(templateConfig, 'assets'))
+            ? get(templateConfig, 'assets')
+            : [{source: '', destination: 'assets', ...get(templateConfig, 'assets')}]
 
-          if (Array.isArray(assets.source)) {
-            for await (const source of assets.source) {
-              if (fs.existsSync(source)) {
+          for await (const asset of assets) {
+            if (Array.isArray(asset.source)) {
+              for await (const source of asset.source) {
+                if (fs.existsSync(source)) {
+                  await fs
+                    .copy(source, path.join(templateConfig.destination.path, asset.destination))
+                    .catch(error => spinner.warn(error.message))
+                }
+              }
+            } else {
+              if (fs.existsSync(asset.source)) {
                 await fs
-                  .copy(source, path.join(templateConfig.destination.path, assets.destination))
+                  .copy(asset.source, path.join(templateConfig.destination.path, asset.destination))
                   .catch(error => spinner.warn(error.message))
               }
-            }
-          } else {
-            if (fs.existsSync(assets.source)) {
-              await fs
-                .copy(assets.source, path.join(templateConfig.destination.path, assets.destination))
-                .catch(error => spinner.warn(error.message))
             }
           }
 

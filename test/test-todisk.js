@@ -237,6 +237,39 @@ test('copies assets to destination', async t => {
   t.is(filelist.length, 1)
 })
 
+test('copies assets array to destinations', async t => {
+  await Maizzle.build('maizzle-ci', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: 'test/stubs/templates',
+        destination: {
+          path: t.context.folder
+        },
+        assets: [
+          {
+            source: 'test/stubs/assets',
+            destination: 'assets/images1'
+          },
+          {
+            source: 'test/stubs/assets2',
+            destination: 'assets/images2'
+          }
+        ]
+      }
+    }
+  })
+
+  const images1 = await fs.readdir(`${t.context.folder}/assets/images1`)
+  t.is(await fs.pathExists(`${t.context.folder}/assets/images1`), true)
+  t.true(images1.includes('foo.bar'))
+
+  const images2 = await fs.readdir(`${t.context.folder}/assets/images2`)
+  t.is(await fs.pathExists(`${t.context.folder}/assets/images2`), true)
+  t.true(images2.includes('foo1.bar'))
+  t.true(images2.includes('foo2.bar'))
+})
+
 test('runs the `beforeCreate` event', async t => {
   await Maizzle.build('maizzle-ci', {
     build: {
@@ -300,10 +333,49 @@ test('supports multiple asset paths', async t => {
       }
     }
   })
+  console.log('files', files)
 
   t.true(files.includes(`${t.context.folder}/extras/foo.bar`))
   t.true(files.includes(`${t.context.folder}/extras/plaintext.html`))
   t.false(files.includes(`${t.context.folder}/extras/invalid`))
+})
+
+test('supports multiple assets array paths', async t => {
+  const {files} = await Maizzle.build('maizzle-ci', {
+    build: {
+      fail: 'silent',
+      templates: {
+        source: 'test/stubs/templates',
+        destination: {
+          path: t.context.folder
+        },
+        assets: [
+          {
+            source: ['test/stubs/plaintext', 'test/stubs/invalid'],
+            destination: 'extras'
+          },
+          {
+            source: ['test/stubs/assets'],
+            destination: 'assets/images1'
+          },
+          {
+            source: ['test/stubs/assets2'],
+            destination: 'assets/images2'
+          }
+        ]
+      }
+    }
+  })
+
+  t.true(files.includes(`${t.context.folder}/extras/plaintext.html`))
+  t.false(files.includes(`${t.context.folder}/extras/invalid`))
+  t.false(files.includes(`${t.context.folder}/extras/invalid`))
+  t.false(files.includes(`${t.context.folder}/extras/invalid`))
+
+  t.true(files.includes(`${t.context.folder}/assets/images1/foo.bar`))
+
+  t.true(files.includes(`${t.context.folder}/assets/images2/foo1.bar`))
+  t.true(files.includes(`${t.context.folder}/assets/images2/foo2.bar`))
 })
 
 test('warns if a template cannot be rendered and `fail` option is undefined', async t => {

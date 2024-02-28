@@ -37,9 +37,9 @@
     "release": "np"
   },
   "files": [
-    "src/**/*",
-    "types/**/*",
-    "bin/*"
+    "src",
+    "types",
+    "bin"
   ],
   "dependencies": {
     "@maizzle/cli": "^1.5.1",

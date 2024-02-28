@@ -20,7 +20,7 @@ module.exports = async (html, config) => {
       strictMode: false
     },
     get(componentsUserOptions, 'expressions', {}),
-    get(config, 'build.posthtml.expressions', {}),
+    get(config, 'build.posthtml.expressions', {})
   )
 
   const locals = merge(

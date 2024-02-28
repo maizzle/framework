@@ -16,6 +16,7 @@ module.exports = async (html, config) => {
   const expressionsOptions = merge(
     {
       loopTags: ['each', 'for'],
+      missingLocal: '{local}',
       strictMode: false
     },
     get(config, 'build.posthtml.expressions', {}),

@@ -85,11 +85,11 @@ test('locals work when defined in all supported places', async t => {
     }
   })
 
-  t.is(result, `1, 2, 3, undefined`)
+  t.is(result, `1, 2, 3, {{ inline }}`)
 })
 
 test.serial('prevents overwriting page object', async t => {
-  const result = await renderString(`{{ page.one }}, {{ two }}, {{ three }}, {{ inline }}`, {
+  const result = await renderString(`{{ page.one }}, {{ page.two }}, {{ page.three }}, {{ inline }}`, {
     maizzle: {
       one: 1,
       build: {
@@ -111,7 +111,7 @@ test.serial('prevents overwriting page object', async t => {
     }
   })
 
-  t.is(result, `1, undefined, undefined, undefined`)
+  t.is(result, `1, 2, 3, {{ inline }}`)
 })
 
 test('preserves css in marked style tags (tailwindcss)', async t => {

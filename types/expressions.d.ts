@@ -75,4 +75,26 @@ export default interface ExpressionsConfig {
   @default false
   */
   strictMode?: boolean;
+
+  /**
+  What to render when referencing a value that is not defined in `locals`.
+
+  By default the original expression reference will be output, i.e. `{{ foo }}`.
+
+  @default '{local}'
+
+  @example
+
+  ```
+  // Output empty string if value is not defined
+  missingLocal: ''
+
+  // Output original reference if value is not defined
+  missingLocal: '{local}'
+
+  // Output custom string if value is not defined
+  missingLocal: 'ERR_NO_VALUE: {local}'
+  ```
+  */
+  missingLocal?: string;
 }

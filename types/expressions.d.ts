@@ -79,9 +79,9 @@ export default interface ExpressionsConfig {
   /**
   What to render when referencing a value that is not defined in `locals`.
 
-  By default the original expression reference will be output, i.e. `{{ foo }}`.
+  By default, the string 'undefined' will be output.
 
-  @default '{local}'
+  @default undefined
 
   @example
 

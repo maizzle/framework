@@ -85,7 +85,7 @@ test('locals work when defined in all supported places', async t => {
     }
   })
 
-  t.is(result, `1, 2, 3, {{ inline }}`)
+  t.is(result, `1, 2, 3, undefined`)
 })
 
 test.serial('prevents overwriting page object', async t => {
@@ -111,7 +111,7 @@ test.serial('prevents overwriting page object', async t => {
     }
   })
 
-  t.is(result, `1, 2, 3, {{ inline }}`)
+  t.is(result, `1, 2, 3, undefined`)
 })
 
 test('preserves css in marked style tags (tailwindcss)', async t => {

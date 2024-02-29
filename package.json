@@ -67,7 +67,7 @@
     "posthtml-extra-attributes": "^2.0.0",
     "posthtml-fetch": "^3.0.0",
     "posthtml-markdownit": "^1.3.1",
-    "posthtml-match-helper": "^1.0.3",
+    "posthtml-match-helper": "^2.0.0",
     "posthtml-mso": "^2.0.1",
     "posthtml-postcss-merge-longhand": "^2.1.0",
     "posthtml-safe-class-names": "^3.0.0",

@@ -50,7 +50,7 @@
     "fast-glob": "^3.3.2",
     "front-matter": "^4.0.0",
     "fs-extra": "^11.2.0",
-    "html-crush": "^4.0.0",
+    "html-crush": "^6.0.19",
     "is-url-superb": "^5.0.0",
     "juice": "^10.0.0",
     "lodash": "^4.17.20",

@@ -395,7 +395,7 @@ test('attribute to style', async t => {
   </table>`
 
   const expected = `<table width="100%" height="600" align="left" bgcolor="#FFFFFF" background="https://example.com/image.jpg" style="width: 100%; height: 600px; float: left; background-color: #FFFFFF; background-image: url('https://example.com/image.jpg')">
-    <tr style="">
+    <tr style>
       <td align="center" valign="top" style="text-align: center; vertical-align: top"></td>
     </tr>
   </table>`
@@ -407,8 +407,8 @@ test('attribute to style', async t => {
   </table>`
 
   const expected2 = `<table align="center" style="margin-left: auto; margin-right: auto">
-    <tr style="">
-      <td style=""></td>
+    <tr style>
+      <td style></td>
     </tr>
   </table>`
 

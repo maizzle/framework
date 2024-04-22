@@ -69,7 +69,7 @@
     "posthtml-markdownit": "^1.3.1",
     "posthtml-match-helper": "^1.0.3",
     "posthtml-mso": "^2.0.1",
-    "posthtml-postcss-merge-longhand": "^2.1.0",
+    "posthtml-postcss-merge-longhand": "^3.1.0",
     "posthtml-safe-class-names": "^3.0.0",
     "posthtml-url-parameters": "^2.0.0",
     "pretty": "^2.0.0",

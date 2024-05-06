@@ -82,7 +82,7 @@
     "@types/browser-sync": "^2.29.0",
     "@types/js-beautify": "^1.14.0",
     "@types/markdown-it": "^14.0.0",
-    "ava": "^5.2.0",
+    "ava": "^6.1.3",
     "c8": "^9.0.0",
     "np": "*",
     "xo": "0.39.1"

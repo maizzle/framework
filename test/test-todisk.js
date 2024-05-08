@@ -20,6 +20,21 @@ test('throws if config cannot be computed', async t => {
   }, {instanceOf: Error})
 })
 
+test('throws if a template cannot be rendered', async t => {
+  await t.throwsAsync(async () => {
+    await Maizzle.build('maizzle-ci', {
+      build: {
+        templates: {
+          source: 'test/stubs/breaking',
+          destination: {
+            path: t.context.folder
+          }
+        }
+      }
+    })
+  }, {instanceOf: Error})
+})
+
 test('skips if no templates found', async t => {
   const {files} = await Maizzle.build('maizzle-ci', {
     build: {
@@ -427,21 +442,6 @@ test('supports multiple assets array paths with templates array', async t => {
 
   t.true(files.includes(`${t.context.folder}/assets/extras4/foo1.bar`))
   t.true(files.includes(`${t.context.folder}/assets/extras4/foo2.bar`))
-})
-
-test('warns if a template cannot be rendered and `fail` option is undefined', async t => {
-  const {files} = await Maizzle.build('maizzle-ci', {
-    build: {
-      templates: {
-        source: 'test/stubs/breaking',
-        destination: {
-          path: t.context.folder
-        }
-      }
-    }
-  })
-
-  t.false(files.includes('empty.html'))
 })
 
 test('warns if a template cannot be rendered and `fail` option is `verbose`', async t => {

@@ -236,7 +236,9 @@ module.exports = async (env, spinner, config) => {
               files = [...new Set([...files, ...contents])]
             })
         })
-        .catch(error => spinner.warn(error.message))
+        .catch(error => {
+          throw error
+        })
     }
   }
 

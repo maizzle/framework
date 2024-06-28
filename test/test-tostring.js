@@ -63,11 +63,11 @@ test('runs the `afterTransformers` event', async t => {
     }
   })
 
-  t.is(result, `<div class="inline">bar</div>`)
+  t.is(result, '<div class="inline">bar</div>')
 })
 
 test('locals work when defined in all supported places', async t => {
-  const result = await renderString(`{{ page.one }}, {{ two }}, {{ three }}, {{ inline }}`, {
+  const result = await renderString('{{ page.one }}, {{ two }}, {{ three }}, {{ inline }}', {
     maizzle: {
       one: 1,
       build: {
@@ -85,11 +85,11 @@ test('locals work when defined in all supported places', async t => {
     }
   })
 
-  t.is(result, `1, 2, 3, undefined`)
+  t.is(result, '1, 2, 3, undefined')
 })
 
 test.serial('prevents overwriting page object', async t => {
-  const result = await renderString(`{{ page.one }}, {{ page.two }}, {{ page.three }}, {{ inline }}`, {
+  const result = await renderString('{{ page.one }}, {{ page.two }}, {{ page.three }}, {{ inline }}', {
     maizzle: {
       one: 1,
       build: {
@@ -111,7 +111,7 @@ test.serial('prevents overwriting page object', async t => {
     }
   })
 
-  t.is(result, `1, 2, 3, undefined`)
+  t.is(result, '1, 2, 3, undefined')
 })
 
 test('preserves css in marked style tags (tailwindcss)', async t => {
@@ -154,12 +154,12 @@ test('preserves css in marked style tags (tailwindcss)', async t => {
 })
 
 test('@import css files in marked style tags', async t => {
-  const source = `<style postcss>@import "test/stubs/post.css";</style>`
+  const source = '<style postcss>@import "test/stubs/post.css";</style>'
   const html = await renderString(source, {
     maizzle: {
       shorthandCSS: true
     }
   })
 
-  t.is(html.replace(/\n {2,}/g, ''), `<style>div {margin: 1px 2px 3px 4px;\n}</style>`)
+  t.is(html.replace(/\n {2,}/g, ''), '<style>div {margin: 1px 2px 3px 4px;\n}</style>')
 })

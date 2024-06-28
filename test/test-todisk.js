@@ -10,7 +10,7 @@ test.beforeEach(t => {
 test.afterEach.always(async t => {
   if (t.context.folder) {
     await fs.remove(t.context.folder)
-    delete t.context.folder
+    t.context.folder = undefined
   }
 })
 

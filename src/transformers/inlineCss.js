@@ -26,9 +26,9 @@ module.exports = async (html, config = {}, direct = false) => {
     }
 
     if (isObject(options.codeBlocks) && !isEmpty(options.codeBlocks)) {
-      Object.entries(options.codeBlocks).forEach(([k, v]) => {
+      for (const [k, v] of Object.entries(options.codeBlocks)) {
         juice.codeBlocks[k] = v
-      })
+      }
     }
 
     html = css ?

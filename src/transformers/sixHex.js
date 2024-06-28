@@ -18,11 +18,11 @@ const sixHex = () => tree => {
 
   const process = node => {
     if (node.attrs) {
-      Object.entries(node.attrs).forEach(([name, value]) => {
+      for (const [name, value] of Object.entries(node.attrs)) {
         if (targets.has(name) && node.attrs[name]) {
           node.attrs[name] = conv(value)
         }
-      })
+      }
     }
 
     return node

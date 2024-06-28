@@ -18,6 +18,7 @@ module.exports = async (html, config = {}, direct = false) => {
 
 const removeInlineSizes = (mappings = {}) => tree => {
   const process = node => {
+    // biome-ignore lint: yes
     Object.entries(mappings).forEach(([attribute, tags]) => {
       tags = Object.values(tags).map(tag => tag.toLowerCase())
 
@@ -27,6 +28,7 @@ const removeInlineSizes = (mappings = {}) => tree => {
 
       const attrs = parseAttrs(node.attrs)
 
+      // biome-ignore lint: yes
       tags.forEach(() => {
         if (get(node, 'attrs.style')) {
           delete attrs.style[attribute]

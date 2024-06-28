@@ -1,8 +1,8 @@
 const test = require('ava')
 const Maizzle = require('../src')
 
-const path = require('path')
-const fs = require('fs')
+const fs = require('node:fs')
+const path = require('node:path')
 
 const readFile = (dir, filename) => fs.promises
   .readFile(path.join(__dirname, dir, `${filename}.html`), 'utf8')
@@ -149,8 +149,8 @@ test('inline CSS', async t => {
 })
 
 test('inline CSS (disabled)', async t => {
-  const html = `<div class="foo">test</div>`
-  const css = `.foo {color: red}`
+  const html = '<div class="foo">test</div>'
+  const css = '.foo {color: red}'
 
   const result = await Maizzle.inlineCSS(html, {inlineCSS: false, customCSS: css})
 
@@ -333,7 +333,7 @@ test('filters (tailwindcss)', async t => {
     </style>`
   )
 
-  t.true(html.replace(/\s/g, '').includes(`div{display:none}`))
+  t.true(html.replace(/\s/g, '').includes('div{display:none}'))
 })
 
 test('filters (postcss)', async t => {

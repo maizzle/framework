@@ -41,9 +41,10 @@ const removeInlineBGColor = (options = {}) => tree => {
       }
     })
 
-    if (attrs.style && attrs.style['background-color']) {
+    if (attrs.style?.['background-color']) {
       node.attrs.bgcolor = attrs.style['background-color']
 
+      // biome-ignore lint: assigning value will output the attribute
       delete attrs.style['background-color']
 
       node.attrs.style = toStyleString(attrs.style)

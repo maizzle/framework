@@ -1,6 +1,6 @@
 const ora = require('ora')
-const path = require('path')
 const fs = require('fs-extra')
+const path = require('node:path')
 
 const Config = require('../generators/config')
 const buildToFile = require('../commands/build')

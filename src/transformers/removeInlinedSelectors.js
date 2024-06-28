@@ -74,11 +74,11 @@ const plugin = (options = {}) => tree => {
             n.attrs = parsedAttrs.compose()
 
             // Fix issue with .compose() automatically quoting attributes with no values
-            Object.entries(n.attrs).forEach(([name, value]) => {
+            for (const [name, value] of Object.entries(n.attrs)) {
               if (value === '' && get(options.posthtml, 'recognizeNoValueAttribute') === true) {
                 n.attrs[name] = true
               }
-            })
+            }
 
             return n
           })

@@ -1,5 +1,5 @@
-const path = require('path')
 const fs = require('fs-extra')
+const path = require('node:path')
 const postcss = require('postcss')
 const tailwindcss = require('tailwindcss')
 const postcssImport = require('postcss-import')
@@ -96,7 +96,7 @@ module.exports = {
       const fileTypes = Array.isArray(configFileTypes) ? configFileTypes : configFileTypes.split('|')
       const fileTypesPattern = fileTypes.length > 1 ? `{${fileTypes.join(',')}}` : fileTypes[0]
 
-      templateObjects.forEach(template => {
+      for (const template of templateObjects) {
         const source = get(template, 'source')
 
         if (typeof source === 'function') {
@@ -118,7 +118,7 @@ module.exports = {
         else {
           tailwindConfig.content.files.push(`${source}/**/*.${fileTypesPattern}`)
         }
-      })
+      }
     }
 
     // Filter out any duplicate content paths

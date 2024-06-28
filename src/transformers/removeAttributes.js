@@ -36,7 +36,7 @@ const removeAttributes = (attributes = {}, posthtmlOptions = {}) => tree => {
     })
 
     if (node.attrs) {
-      normalizedAttrs.forEach(attr => {
+      for (const attr of normalizedAttrs) {
         const targetAttrValue = get(node.attrs, attr.name)
 
         if (
@@ -46,7 +46,7 @@ const removeAttributes = (attributes = {}, posthtmlOptions = {}) => tree => {
         ) {
           node.attrs[attr.name] = false
         }
-      })
+      }
     }
 
     return node

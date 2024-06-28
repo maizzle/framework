@@ -42,7 +42,7 @@ const rewriteVMLs = (html, url) => {
   const vImageMatches = html.match(/<v:image[^>]+src="?([^"\s]+)"/g)
 
   if (vImageMatches) {
-    vImageMatches.forEach(match => {
+    for (const match of vImageMatches) {
       const vImage = match.match(/<v:image[^>]+src="?([^"\s]+)"/)
       const vImageSrc = vImage[1]
 
@@ -51,14 +51,14 @@ const rewriteVMLs = (html, url) => {
         const vImageReplace = vImage[0].replace(vImageSrc, vImageSrcUrl)
         html = html.replace(vImage[0], vImageReplace)
       }
-    })
+    }
   }
 
   // Handle <v:fill>
   const vFillMatches = html.match(/<v:fill[^>]+src="?([^"\s]+)"/g)
 
   if (vFillMatches) {
-    vFillMatches.forEach(match => {
+    for (const match of vFillMatches) {
       const vFill = match.match(/<v:fill[^>]+src="?([^"\s]+)"/)
       const vFillSrc = vFill[1]
 
@@ -67,7 +67,7 @@ const rewriteVMLs = (html, url) => {
         const vFillReplace = vFill[0].replace(vFillSrc, vFillSrcUrl)
         html = html.replace(vFill[0], vFillReplace)
       }
-    })
+    }
   }
 
   return html

@@ -1,5 +1,5 @@
 const test = require('ava')
-const path = require('path')
+const path = require('node:path')
 const h = require('../src/utils/helpers')
 
 test('requires an uncached module', t => {

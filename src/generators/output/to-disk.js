@@ -1,5 +1,5 @@
-const path = require('path')
 const fs = require('fs-extra')
+const path = require('node:path')
 const {glob} = require('fast-glob')
 const {get, merge, isEmpty} = require('lodash')
 

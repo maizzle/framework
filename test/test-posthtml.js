@@ -1,8 +1,8 @@
 const test = require('ava')
 const {render, prettify} = require('../src')
 
-const path = require('path')
-const fs = require('fs')
+const path = require('node:path')
+const fs = require('node:fs')
 
 const readFile = (dir, filename) => fs.promises
   .readFile(path.join(__dirname, dir, `${filename}.html`), 'utf8')
@@ -30,7 +30,7 @@ greeting: Hello
     }
   })
 
-  t.is(html.trim(), `Front matter variable: Hello`)
+  t.is(html.trim(), 'Front matter variable: Hello')
 })
 
 test('inheritance when extending a template (legacy)', async t => {

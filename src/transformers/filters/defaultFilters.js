@@ -13,13 +13,14 @@ const unescapeMap = {
   '&#34;': '"',
   '&#39;': '\''
 }
-
+// biome-ignore lint: not shadowing
 const unescape = string => string.replace(/&(amp|lt|gt|#34|#39);/g, m => unescapeMap[m])
 
 const append = (content, attribute) => content + attribute
 const capitalize = content => content.charAt(0).toUpperCase() + content.slice(1)
 const ceil = content => Math.ceil(Number.parseFloat(content))
 const divide = (content, attribute) => Number.parseFloat(content) / Number.parseFloat(attribute)
+// biome-ignore lint: not shadowing
 const escape = content => content.replace(/["&'<>]/g, m => escapeMap[m])
 const escapeOnce = content => escape(unescape(content))
 const floor = content => Math.floor(Number.parseFloat(content))

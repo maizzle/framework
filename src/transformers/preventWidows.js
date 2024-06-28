@@ -59,7 +59,9 @@ const removeWidowsPlugin = options => tree => {
   ]
 
   if (Array.isArray(removeWidowsOptions.ignore)) {
-    removeWidowsOptions.ignore.forEach(pair => mappings.push(pair))
+    for (const pair of removeWidowsOptions.ignore) {
+      mappings.push(pair)
+    }
   }
 
   if (typeof removeWidowsOptions.ignore !== 'string') {

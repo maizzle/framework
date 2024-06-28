@@ -1,4 +1,4 @@
-const path = require('path')
+const path = require('node:path')
 const posthtml = require('posthtml')
 const {get, merge} = require('lodash')
 const {stripHtml} = require('string-strip-html')

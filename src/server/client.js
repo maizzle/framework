@@ -3,7 +3,8 @@ var lastKnownScrollPosition = 0
 
 function connectWebSocket() {
   if (!('WebSocket' in window)) {
-    return
+    // Force reload if WebSocket is not supported
+    window.location.reload()
   }
 
   const { hostname, port } = window.location

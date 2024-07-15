@@ -1,14 +1,15 @@
 import express from 'express'
 const router = express.Router()
 import fs from 'node:fs/promises'
-import { dirname, join } from 'pathe'
+import { cwd } from 'node:process'
 import { fileURLToPath } from 'node:url'
+import { dirname, join, resolve } from 'pathe'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 router.get('/hmr.js', async (req, res) => {
   const morphdomScript = await fs.readFile(
-    join(__dirname, '../../../node_modules/morphdom/dist/morphdom-umd.js'),
+    resolve(cwd(), 'node_modules/morphdom/dist/morphdom-umd.js'),
     'utf8'
   )
 

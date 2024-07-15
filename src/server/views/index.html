@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maizzle | Templates</title>
+</head>
+<body>
+  <each loop="items, index in templates">
+    <div>
+      <h2>{{ index }}</h2>
+      <ul>
+        <each loop="item in items">
+          <li>
+            <a href="{{ item.href }}">
+              {{ item.base }}
+            </a>
+          </li>
+        </each>
+      </ul>
+    </div>
+  </each>
+</body>
+</html>

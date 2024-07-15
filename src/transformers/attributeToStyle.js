@@ -1,44 +1,28 @@
-const {
-  get,
-  merge,
-  forEach,
-  intersection,
-  keys,
-  isEmpty
-} = require('lodash')
-const posthtml = require('posthtml')
-const parseAttrs = require('posthtml-attrs-parser')
-const defaultConfig = require('../generators/posthtml/defaultConfig')
+import posthtml from 'posthtml'
+import get from 'lodash-es/get.js'
+import { defu as merge } from 'defu'
+import keys from 'lodash-es/keys.js'
+import forEach from 'lodash-es/forEach.js'
+import parseAttrs from 'posthtml-attrs-parser'
+import intersection from 'lodash-es/intersection.js'
+import posthtmlConfig from '../posthtml/defaultConfig.js'
 
-module.exports = async (html, config = {}, direct = false) => {
-  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
-  const attributes = get(config, 'inlineCSS.attributeToStyle', false)
-
-  if (typeof attributes === 'boolean' && attributes) {
-    return posthtml([attributesToStyle()]).process(html, posthtmlOptions).then(result => result.html)
+const posthtmlPlugin = (attributes = []) => tree => {
+  if (!Array.isArray(attributes)) {
+    return tree
   }
 
-  if (Array.isArray(attributes) && !isEmpty(attributes)) {
-    return posthtml([attributesToStyle({attributes})]).process(html, posthtmlOptions).then(result => result.html)
+  if (attributes.length === 0) {
+    return tree
   }
-
-  if (direct) {
-    return posthtml([
-      attributesToStyle({
-        attributes: Array.isArray(config) ? config : []
-      })
-    ]).process(html, posthtmlOptions).then(result => result.html)
-  }
-
-  return html
-}
-
-const attributesToStyle = (options = {}) => tree => {
-  options.attributes = options.attributes || ['width', 'height', 'bgcolor', 'background', 'align', 'valign']
 
   const process = node => {
+    if (!node.attrs) {
+      return node
+    }
+
     const nodeAttributes = parseAttrs(node.attrs)
-    const matches = intersection(keys(nodeAttributes), options.attributes)
+    const matches = intersection(keys(nodeAttributes), attributes)
     const nodeStyle = get(node.attrs, 'style')
     const cssToInline = []
 
@@ -87,7 +71,7 @@ const attributesToStyle = (options = {}) => tree => {
       }
     })
 
-    nodeAttributes.style = nodeStyle ? `${nodeStyle} ${cssToInline.join('; ')}` : `${cssToInline.join('; ')}`
+    nodeAttributes.style = nodeStyle ? `${nodeStyle.split(';').join(';')} ${cssToInline.join('; ')}` : `${cssToInline.join('; ')}`
 
     node.attrs = nodeAttributes.compose()
 
@@ -95,4 +79,14 @@ const attributesToStyle = (options = {}) => tree => {
   }
 
   return tree.walk(process)
+}
+
+export default posthtmlPlugin
+
+export async function attributeToStyle(html = '', attributes = [], posthtmlOptions = {}) {
+  return posthtml([
+    posthtmlPlugin(attributes)
+  ])
+    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .then(result => result.html)
 }

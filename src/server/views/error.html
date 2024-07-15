@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error</title>
+  <style>
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      padding: 24px;
+    }
+
+    .stack-trace-wrapper {
+      width: 100%;
+      max-width: 90ch;
+      margin-top: 2.25rem;
+    }
+
+    .stack-trace {
+      overflow-x: auto;
+      padding: 24px;
+      border-radius: 4px;
+      text-align: left;
+      font-size: 1rem;
+      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.1);
+      border-left: 4px solid #FB7185;
+      background-color: rgba(248, 250, 252, 0.7);
+      backdrop-filter: blur(4px);
+      font-family: 'Courier New', Courier, monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 style="font-size: 3rem; color: #0F172A; margin: 2.25rem 0">
+      <span style="color: #4f46e5">Oops!</span>
+      Something went wrong.
+    </h1>
+
+    <p style="margin: 0 0 2.25rem; font-size: 1.25rem; line-height: 1.5; color: #64748B;">
+      {{ page.error.message }}
+    </p>
+
+    <span style="padding: 2px 12px; font-size: 1rem; line-height: 1.5; color: #fff; background-color: #64748B; border-radius: 8px;">
+      {{ page.method }}
+    </span>
+
+    <p style="margin: 1rem 0 0; font-size: 1rem; line-height: 1.5; font-weight: 600; color: #334155;">
+      {{ page.url }}
+    </p>
+
+    <if condition="page.error.code">
+      <p style="margin: 1rem 0 0; font-size: 1rem; line-height: 1.5; font-weight: 600; color: #334155;">
+        {{ page.error.code }}
+      </p>
+    </if>
+
+    <div class="stack-trace-wrapper">
+      <div class="stack-trace">
+        <each loop="line, index in page.error.stack.split('\n')">
+          <p>{{{ line }}}</p>
+        </each>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: fixed; bottom: 0; right: 0; pointer-events: none; user-select: none;">
+    <svg width="883" height="536" fill="none" xmlns="http://www.w3.org/2000/svg"><mask id="a" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="1100" height="536"><path fill="#D9D9D9" d="M0 .955h1100V536H0z"/></mask><g mask="url(#a)" stroke="#94A3B8" stroke-miterlimit="10"><path d="M1056.93 92.587c0-50.03-43.95-90.587-98.168-90.587-54.22 0-98.174 40.557-98.174 90.587v483.125c0 50.029 43.954 90.586 98.174 90.586 54.218 0 98.168-40.557 98.168-90.586V92.587ZM646.241 92.587C646.241 42.556 602.287 2 548.067 2c-54.219 0-98.173 40.557-98.173 90.587v483.125c0 50.029 43.954 90.586 98.173 90.586 54.22 0 98.174-40.557 98.174-90.586V92.587Z"/><path d="M1036.18 148.383c33.41-39.402 25.88-96.336-16.82-127.164C976.657-9.61 914.955-2.66 881.544 36.742L471.586 520.215c-33.411 39.402-25.879 96.336 16.824 127.164 42.702 30.829 104.404 23.879 137.815-15.523l409.955-483.473ZM625.093 148.396c33.411-39.403 25.878-96.336-16.824-127.164C565.567-9.597 503.865-2.647 470.454 36.755L60.495 520.228c-33.41 39.402-25.878 96.336 16.825 127.164 42.702 30.829 104.404 23.879 137.815-15.523l409.958-483.473Z"/></g></svg>
+  </div>
+</body>
+</html>

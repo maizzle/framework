@@ -1,11 +1,16 @@
-const posthtml = require('posthtml')
-const {get, merge} = require('lodash')
-const outlook = require('posthtml-mso')
-const defaultConfig = require('../generators/posthtml/defaultConfig')
+import posthtml from 'posthtml'
+import { defu as merge } from 'defu'
+import posthtmlMso from 'posthtml-mso'
+import posthtmlConfig from '../posthtml/defaultConfig.js'
 
-module.exports = async (html, config) => {
-  const outlookOptions = get(config, 'build.posthtml.outlook', {})
-  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
+export default function posthtmlPlugin(options = {}) {
+  return posthtmlMso(options)
+}
 
-  return posthtml([outlook({...outlookOptions})]).process(html, posthtmlOptions).then(result => result.html)
+export async function useMso(html = '', options = {}, posthtmlOptions = {}) {
+  return posthtml([
+    posthtmlPlugin(options)
+  ])
+    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .then(result => result.html)
 }

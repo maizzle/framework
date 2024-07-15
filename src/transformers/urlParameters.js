@@ -1,20 +1,22 @@
-const posthtml = require('posthtml')
-const {get, merge, isEmpty} = require('lodash')
-const urlParams = require('posthtml-url-parameters')
-const defaultConfig = require('../generators/posthtml/defaultConfig')
+import posthtml from 'posthtml'
+import get from 'lodash-es/get.js'
+import { defu as merge } from 'defu'
+import urlParameters from 'posthtml-url-parameters'
+import posthtmlConfig from '../posthtml/defaultConfig.js'
 
-module.exports = async (html, config = {}, direct = false) => {
-  const urlParameters = direct ? config : get(config, 'urlParameters', {})
+export default function posthtmlPlugin(options = {}) {
+  const { _options, ...parameters } = options
+  const tags = get(_options, 'tags', ['a'])
+  const strict = get(_options, 'strict', true)
+  const qs = get(_options, 'qs', { encode: false })
 
-  if (!isEmpty(urlParameters)) {
-    const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
-    const {_options, ...parameters} = urlParameters
-    const tags = get(_options, 'tags', ['a'])
-    const strict = get(_options, 'strict', true)
-    const qs = get(_options, 'qs', {encode: false})
+  return urlParameters({ parameters, tags, qs, strict })
+}
 
-    return posthtml([urlParams({parameters, tags, qs, strict})]).process(html, posthtmlOptions).then(result => result.html)
-  }
-
-  return html
+export async function addURLParams(html = '', options = {}, posthtmlOptions = {}) {
+  return posthtml([
+    posthtmlPlugin(options)
+  ])
+    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .then(result => result.html)
 }

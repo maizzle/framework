@@ -1,74 +1,134 @@
-import type LayoutsConfig from './layouts';
-import type PostHTMLConfig from './posthtml';
-import type TailwindConfig from './tailwind';
-import type TemplatesConfig from './templates';
-import type ComponentsConfig from './components';
-import type {Options as BrowserSyncConfig} from 'browser-sync';
+import ComponentsConfig from './components';
+import type { SpinnerName } from 'cli-spinners';
 
 export default interface BuildConfig {
   /**
-  Templates configuration.
-  */
-  templates: TemplatesConfig;
-
-  /**
-  Tailwind CSS configuration.
-  */
-  tailwind?: TailwindConfig;
-
-  /**
-  [DEPRECATED] Layouts configuration.
-  */
-  layouts?: LayoutsConfig;
-
-  /**
-  Components configuration.
-  */
+   * Components configuration.
+   */
   components?: ComponentsConfig;
 
   /**
-  PostHTML configuration.
-  */
-  posthtml?: PostHTMLConfig;
+   * Directory where Maizzle should look for Templates to compile.
+   *
+   * @default ['src/templates/**\/*.html']
+   *
+   * @example
+   * ```
+   * export default {
+   *   build: {
+   *     files: ['src/templates/**\/*.html']
+   *   }
+   * }
+   * ```
+   */
+  files?: string | string[];
 
   /**
-  Configure PostCSS
+   * Define the output path for compiled Templates, and what file extension they should use.
+   *
+   * @example
+   * ```
+   * export default {
+   *   build: {
+   *     output: {
+   *       path: 'build_production',
+   *       extension: 'html'
+   *     }
+   *   }
+   * }
+   * ```
    */
-  postcss?: {
+  output?: {
     /**
-    Additional PostCSS plugins that you would like to use.
-
-    @default []
-
-    @example
-    ```
-    const examplePlugin = require('postcss-example-plugin')
-    module.exports = {
-      build: {
-        postcss: {
-          plugins: [
-            examplePlugin()
-          ]
-        }
-      }
-    }
-    ```
-    */
-    plugins?: any[];
+     * Directory where Maizzle should output compiled Templates.
+     *
+     * @default 'build_{env}'
+     */
+    path?: string;
+    /**
+     * File extension to be used for compiled Templates.
+     *
+     * @default 'html'
+     */
+    extension: string;
   };
 
   /**
-  Browsersync configuration.
-
-  When you run the `maizzle serve` command, Maizzle uses [Browsersync](https://browsersync.io/)
-  to start a local development server and open a directory listing of your emails in your default browser.
-  */
-  browsersync?: BrowserSyncConfig;
+   * Source and destination directories for static files.
+   *
+   * @example
+   * ```
+   * export default {
+   *   build: {
+   *     static: {
+   *       source: ['src/images/**\/*.*'],
+   *       destination: 'images'
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  static?: {
+    /**
+     * Array of paths where Maizzle should look for static files.
+     *
+     * @default undefined
+     */
+    source?: string[];
+    /**
+     * Directory where static files should be copied to,
+     * relative to the `build.output` path.
+     *
+     * @default undefined
+     */
+    destination?: string;
+  } | {
+    /**
+     * An array of objects specifying source and destination directories for static files.
+     */
+    static: Array<{
+      /**
+       * Array of paths where Maizzle should look for static files.
+       */
+      source: string[];
+      /**
+       * Directory where static files should be copied to,
+       * relative to the `build.output` path.
+       */
+      destination: string;
+    }>;
+  };
 
   /**
-  Configure how build errors are handled when developing with the Maizzle CLI.
+   * Type of spinner to show in the console.
+   *
+   * @default 'dots'
+   *
+   * @example
+   * ```
+   * export default {
+   *   build: {
+   *     spinner: 'bounce'
+   *   }
+   * }
+   * ```
+   */
+  spinner?: SpinnerName;
 
-  @default undefined
-  */
-  fail?: 'silent' | 'verbose';
+  /**
+   * Show a summary of files that were compiled, along with their
+   * size and the time it took to compile them.
+   *
+   * @default false
+   *
+   * @example
+   * ```
+   * export default {
+   *   build: {
+   *     summary: true
+   *   }
+   * }
+   * ```
+   */
+  summary?: boolean;
 }

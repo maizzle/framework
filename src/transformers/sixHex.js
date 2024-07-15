@@ -1,19 +1,9 @@
-const posthtml = require('posthtml')
-const {get, merge} = require('lodash')
-const {conv} = require('color-shorthand-hex-to-six-digit')
-const defaultConfig = require('../generators/posthtml/defaultConfig')
+import posthtml from 'posthtml'
+import { defu as merge } from 'defu'
+import { conv } from 'color-shorthand-hex-to-six-digit'
+import posthtmlConfig from '../posthtml/defaultConfig.js'
 
-module.exports = async (html, config = {}) => {
-  if (get(config, 'sixHex') === false) {
-    return html
-  }
-
-  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
-
-  return posthtml([sixHex()]).process(html, posthtmlOptions).then(result => result.html)
-}
-
-const sixHex = () => tree => {
+const posthtmlPlugin = () => tree => {
   const targets = new Set(['bgcolor', 'color'])
 
   const process = node => {
@@ -29,4 +19,14 @@ const sixHex = () => tree => {
   }
 
   return tree.walk(process)
+}
+
+export default posthtmlPlugin
+
+export async function sixHEX(html = '', posthtmlOptions = {}) {
+  return posthtml([
+    posthtmlPlugin()
+  ])
+    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .then(result => result.html)
 }

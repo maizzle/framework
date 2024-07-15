@@ -1,28 +1,29 @@
-const posthtml = require('posthtml')
-const {get, merge} = require('lodash')
-const safeClassNames = require('posthtml-safe-class-names')
-const defaultConfig = require('../generators/posthtml/defaultConfig')
+import posthtml from 'posthtml'
+import { defu as merge } from 'defu'
+import posthtmlConfig from '../posthtml/defaultConfig.js'
+import posthtmlSafeClassNames from 'posthtml-safe-class-names'
 
-module.exports = async (html, config = {}, direct = false) => {
-  const option = get(config, 'safeClassNames')
-
-  if (option === false) {
-    return html
+export default function posthtmlPlugin(options = {}) {
+  // If options is boolean, convert to object
+  if (typeof options === 'boolean') {
+    options = {}
   }
 
-  /*
-   * Setting it to `true` in the config will run `safeClassNames`
-   * no matter the environment.
-   */
-  if (config.env === 'local' && !option) {
-    return html
-  }
+  // Default options
+  options = merge({
+    replacements: {
+      '{': '{',
+      '}': '}'
+    }
+  }, options)
 
-  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
-  const replacements = direct ? config : get(config, 'safeClassNames', {
-    '{': '{',
-    '}': '}'
-  })
+  return posthtmlSafeClassNames(options)
+}
 
-  return posthtml([safeClassNames({replacements})]).process(html, posthtmlOptions).then(result => result.html)
+export async function safeClassNames(html = '', options = {}, posthtmlOptions = {}) {
+  return posthtml([
+    posthtmlPlugin(options)
+  ])
+    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .then(result => result.html)
 }

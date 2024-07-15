@@ -1,22 +1,13 @@
-const posthtml = require('posthtml')
-const {get, merge, isEmpty} = require('lodash')
-const {removeWidows} = require('string-remove-widows')
-const defaultConfig = require('../generators/posthtml/defaultConfig')
+import posthtml from 'posthtml'
+import { defu as merge } from 'defu'
+import { removeWidows } from 'string-remove-widows'
+import posthtmlConfig from '../posthtml/defaultConfig.js'
 
-module.exports = async (html, config = {}) => {
-  if (isEmpty(config)) {
-    return removeWidows(html).res
-  }
-
-  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
-
-  return posthtml([removeWidowsPlugin(config)]).process(html, posthtmlOptions).then(result => result.html)
-}
-
-const removeWidowsPlugin = options => tree => {
-  const {attrName = 'prevent-widows', ...removeWidowsOptions} = get(options, 'widowWords', options)
-
-  removeWidowsOptions.minWordCount = removeWidowsOptions.minWordCount || 3
+const posthtmlPlugin = (options = {}) => tree => {
+  options = merge(options, {
+    minWordCount: 3,
+    attrName: 'prevent-widows'
+  })
 
   // Ignore defaults
   const mappings = [
@@ -58,24 +49,39 @@ const removeWidowsPlugin = options => tree => {
     }
   ]
 
-  if (Array.isArray(removeWidowsOptions.ignore)) {
-    removeWidowsOptions.ignore.forEach(pair => mappings.push(pair))
+  if (Array.isArray(options.ignore)) {
+    options.ignore.forEach(pair => mappings.push(pair))
   }
 
-  if (typeof removeWidowsOptions.ignore !== 'string') {
-    removeWidowsOptions.ignore = mappings
+  if (typeof options.ignore !== 'string') {
+    options.ignore = mappings
   }
 
   const process = node => {
-    if (node.attrs && Object.keys(node.attrs).includes(attrName)) {
-      const widowsRemovedString = removeWidows(tree.render(node.content), removeWidowsOptions).res
-
+    if (node.attrs && Object.keys(node.attrs).includes(options.attrName)) {
+      const widowsRemovedString = removeWidows(tree.render(node.content), options).res
       node.content = tree.render(tree.parser(widowsRemovedString))
-      node.attrs[attrName] = false
+      delete node.attrs[options.attrName]
     }
 
     return node
   }
 
   return tree.walk(process)
+}
+
+export default posthtmlPlugin
+
+export async function preventWidows(html = '', options = {}, posthtmlOptions = {}) {
+  // Apply only to elements that contain the `prevent-widows` attribute
+  if (options.withAttributes) {
+    return posthtml([
+      posthtmlPlugin(options)
+    ])
+      .process(html, merge(posthtmlOptions, posthtmlConfig))
+      .then(result => result.html)
+  }
+
+  // Apply to all elements
+  return removeWidows(html, options).res
 }

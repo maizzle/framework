@@ -1,20 +1,19 @@
-const posthtml = require('posthtml')
-const {get, merge} = require('lodash')
-const markdown = require('posthtml-markdownit')
-const defaultConfig = require('../generators/posthtml/defaultConfig')
+import posthtml from 'posthtml'
+import { defu as merge } from 'defu'
+import md from 'posthtml-markdownit'
+import posthtmlConfig from '../posthtml/defaultConfig.js'
 
-module.exports = async (html, config = {}, direct = false) => {
-  if (get(config, 'markdown') === false) {
-    return html
-  }
-
-  const userMarkdownOptions = direct ? config : get(config, 'markdown', {})
-  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
-  const markdownOptions = merge({markdownit: {html: true}}, userMarkdownOptions)
+export async function markdown(html = '', options = {}, posthtmlOptions = {}) {
+  /**
+   * Automatically wrap in <md> tag, unless manual mode is enabled
+   * With manual mode, user must wrap the markdown content in a <md> tag
+   * https://github.com/posthtml/posthtml-markdownit#usage
+   */
+  html = options.manual ? html : `<md>${html}</md>`
 
   return posthtml([
-    markdown({...markdownOptions})
+    md(options)
   ])
-    .process(html, posthtmlOptions)
+    .process(html, merge(posthtmlOptions, posthtmlConfig))
     .then(result => result.html)
 }

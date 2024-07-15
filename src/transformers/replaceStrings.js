@@ -1,14 +1,35 @@
-const {get, isEmpty} = require('lodash')
+import posthtml from 'posthtml'
+import { defu as merge } from 'defu'
+import { render } from 'posthtml-render'
+import isEmpty from 'lodash-es/isEmpty.js'
+import { parser as parse } from 'posthtml-parser'
+import posthtmlConfig from '../posthtml/defaultConfig.js'
 
-module.exports = async (html, config = {}, direct = false) => {
-  const replacements = direct ? config : get(config, 'replaceStrings', {})
-
+const posthtmlPlugin = (replacements = {}) => tree => {
   if (!isEmpty(replacements)) {
-    Object.entries(replacements).forEach(([k, v]) => {
-      const regex = new RegExp(k, 'gi')
-      html = html.replace(regex, v)
-    })
+    const regexes = Object.entries(replacements).map(([k, v]) => [new RegExp(k, 'gi'), v])
+    const patterns = new RegExp(Object.keys(replacements).join('|'), 'gi')
+
+    return parse(
+      render(tree).replace(patterns, matched => {
+        for (const [regex, replacement] of regexes) {
+          if (regex.test(matched)) {
+            return replacement
+          }
+        }
+      })
+    )
   }
 
-  return html
+  return tree
+}
+
+export default posthtmlPlugin
+
+export async function replaceStrings(html = '', replacements = {}, posthtmlOptions = {}) {
+  return posthtml([
+    posthtmlPlugin(replacements)
+  ])
+    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .then(result => result.html)
 }

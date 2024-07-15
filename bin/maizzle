@@ -1,3 +1,5 @@
 #!/usr/bin/env node
 
-require('@maizzle/cli')
+import bootstrap from '@maizzle/cli'
+
+await bootstrap()

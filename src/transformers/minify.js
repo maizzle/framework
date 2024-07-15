@@ -1,21 +1,26 @@
-const {crush} = require('html-crush')
-const {get, isEmpty} = require('lodash')
+import posthtml from 'posthtml'
+import { crush } from 'html-crush'
+import { defu as merge } from 'defu'
+import { render } from 'posthtml-render'
+import { parser as parse } from 'posthtml-parser'
+import posthtmlConfig from '../posthtml/defaultConfig.js'
 
-module.exports = async (html, config = {}, direct = false) => {
-  if (get(config, 'minify') === false) {
-    return html
-  }
-
-  config = direct ? {
-    lineLengthLimit: 500,
-    removeIndentations: true,
+const posthtmlPlugin = (options = {}) => tree => {
+  options = merge(options, {
     removeLineBreaks: true,
-    ...config
-  } : get(config, 'minify', {})
+  })
 
-  if (!isEmpty(config)) {
-    html = crush(html, {removeLineBreaks: true, ...config}).result
-  }
+  const { result: html } = crush(render(tree), options)
 
-  return html
+  return parse(html)
+}
+
+export default posthtmlPlugin
+
+export async function minify(html = '', options = {}, posthtmlOptions = {}) {
+  return posthtml([
+    posthtmlPlugin(options)
+  ])
+    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .then(result => result.html)
 }

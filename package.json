@@ -23,9 +23,10 @@
   },
   "scripts": {
     "dev": "vitest",
-    "lint": "biome lint ./src ./test",
+    "release": "npx np",
     "pretest": "npm run lint",
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage",
+    "lint": "biome lint ./src ./test"
   },
   "repository": {
     "type": "git",

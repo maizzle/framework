@@ -56,7 +56,7 @@ describe.concurrent('Transformers', () => {
 
     const withPostHTML = await useTransformers(html, {
       css: {
-        safeClassNames: {
+        safe: {
           replacements: {
             '.': '_dot_',
           }

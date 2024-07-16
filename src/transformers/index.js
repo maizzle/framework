@@ -56,9 +56,9 @@ export async function run(html = '', config = {}) {
    * Rewrite Tailwind CSS class names to email-safe alternatives,
    * unless explicitly disabled
    */
-  if (get(config, 'css.safeClassNames') !== false) {
+  if (get(config, 'css.safe') !== false) {
     posthtmlPlugins.push(
-      safeClassNames(get(config, 'css.safeClassNames', {}))
+      safeClassNames(get(config, 'css.safe', {}))
     )
   }
 

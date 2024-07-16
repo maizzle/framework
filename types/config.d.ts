@@ -136,7 +136,7 @@ export default interface Config {
      * ```
      * export default {
      *   css: {
-     *     safeClassNames: {
+     *     safe: {
      *       ':': '__',
      *       '!': 'i-',
      *     }
@@ -144,7 +144,7 @@ export default interface Config {
      * }
      * ```
      */
-    safeClassNames?: boolean | Record<string, string>;
+    safe?: boolean | Record<string, string>;
 
     /**
      * Ensure that all your HEX colors inside `bgcolor` and `color` attributes are defined with six digits.

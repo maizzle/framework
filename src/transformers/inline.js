@@ -116,7 +116,7 @@ export async function inline(html = '', options = {}) {
       rule.walkDecls(decl => {
         // Resolve calc() values to static values
         if (options.resolveCalc) {
-          decl.value = decl.value.includes('calc(') ? calc(decl.value) : decl.value
+          decl.value = decl.value.includes('calc(') ? calc(decl.value, {precision: 2}) : decl.value
         }
 
         declarations.add(decl)

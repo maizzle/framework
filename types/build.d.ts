@@ -8,7 +8,7 @@ export default interface BuildConfig {
   components?: ComponentsConfig;
 
   /**
-   * Directory where Maizzle should look for Templates to compile.
+   * Paths where Maizzle should look for Templates to compile.
    *
    * @default ['src/templates/**\/*.html']
    *
@@ -16,12 +16,12 @@ export default interface BuildConfig {
    * ```
    * export default {
    *   build: {
-   *     files: ['src/templates/**\/*.html']
+   *     content: ['src/templates/**\/*.html']
    *   }
    * }
    * ```
    */
-  files?: string | string[];
+  content?: string | string[];
 
   /**
    * Define the output path for compiled Templates, and what file extension they should use.

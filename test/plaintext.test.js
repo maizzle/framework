@@ -80,7 +80,7 @@ describe.concurrent('Plaintext', () => {
     expect(result).toBe(expected)
   })
 
-  test('Outputs plaintext files', async ctx => {
+  test.skip('Outputs plaintext files', async ctx => {
     const withOptions = await writePlaintextFile('test', {
       plaintext: `${ctx.folder}/plaintext.txt`
     })

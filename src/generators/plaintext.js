@@ -134,7 +134,7 @@ export async function generatePlaintext(html = '', config = {}) {
   ).result
 }
 
-export async function writePlaintextFile(plaintext = '', templateConfig = {}) {
+export async function writePlaintextFile(plaintext = '', config = {}) {
   if (!plaintext) {
     throw new Error('Missing plaintext content.')
   }
@@ -149,8 +149,8 @@ export async function writePlaintextFile(plaintext = '', templateConfig = {}) {
    * Fall back to template's build output path and extension, for example:
    * `config.build.output.path`
    */
-  const plaintextConfig = get(templateConfig, 'plaintext')
-  let plaintextOutputPath = get(plaintextConfig, 'output.path', get(templateConfig, 'build.output.path'))
+  const plaintextConfig = get(config, 'plaintext')
+  let plaintextOutputPath = get(plaintextConfig, 'output.path', get(config, 'build.output.path'))
   const plaintextExtension = get(plaintextConfig, 'output.extension', 'txt')
 
   /**
@@ -158,15 +158,12 @@ export async function writePlaintextFile(plaintext = '', templateConfig = {}) {
    */
   if (plaintextConfig === true) {
     // If the template has a `permalink` key set in the FM
-    if (typeof templateConfig.permalink === 'string') {
+    if (typeof config.permalink === 'string') {
       // Output plaintext at the `permalink` path
-      plaintextOutputPath = templateConfig.permalink
+      plaintextOutputPath = config.permalink
     } else {
       // Output plaintext at the same directory as the HTML file
-      plaintextOutputPath = path.join(
-        get(templateConfig, 'build.output.path'),
-        get(templateConfig, 'build.current.relativePath')
-      )
+      plaintextOutputPath = get(config, 'build.output.path')
     }
   }
 
@@ -186,8 +183,8 @@ export async function writePlaintextFile(plaintext = '', templateConfig = {}) {
    */
   if (path.extname(plaintextOutputPath)) {
     // Ensure the target directory exists
-    await lstat(path.dirname(plaintextOutputPath)).catch(async () => {
-      await mkdir(path.dirname(plaintextOutputPath), { recursive: true })
+    await lstat(plaintextOutputPath).catch(async () => {
+      await mkdir(plaintextOutputPath, { recursive: true })
     })
 
     // Ensure correct extension is used
@@ -196,17 +193,19 @@ export async function writePlaintextFile(plaintext = '', templateConfig = {}) {
       path.basename(plaintextOutputPath, path.extname(plaintextOutputPath)) + '.' + plaintextExtension
     )
 
+    console.log('plaintextOutputPath', plaintextOutputPath);
+
     return writeFile(plaintextOutputPath, plaintext)
   }
 
   /**
    * If `plaintextOutputPath` is a directory path, output file there, using the template's name
    */
-  const templateFileName = get(templateConfig, 'build.current.path.name')
+  const templateFileName = get(config, 'build.current.path.name')
 
   plaintextOutputPath = path.join(
-    plaintextOutputPath,
-    get(templateConfig, 'build.current.path.dir'),
+    path.dirname(plaintextOutputPath),
+    get(config, 'build.current.path.dir'),
     templateFileName + '.' + plaintextExtension
   )
 

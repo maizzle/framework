@@ -1,7 +1,13 @@
+import path from 'pathe'
 import os from 'node:os'
 import gm from 'gray-matter'
 import pico from 'picocolors'
 import { humanFileSize } from './string.js'
+import {
+  copyFile,
+  mkdir,
+  readdir
+} from 'node:fs/promises'
 
 // Return a local IP address
 export function getLocalIP() {
@@ -65,4 +71,21 @@ export function parseFrontMatter(html) {
    */
   const { content, data, matter, stringify } = gm(html, {})
   return { content, data, matter, stringify }
+}
+
+export async function copyDirectory(src, dest) {
+  await mkdir(dest, { recursive: true })
+
+  const entries = await readdir(src, { withFileTypes: true })
+
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name)
+    const destPath = path.join(dest, entry.name)
+
+    if (entry.isDirectory()) {
+      await copyDirectory(srcPath, destPath) // Recursively copy subdirectories
+    } else {
+      await copyFile(srcPath, destPath) // Copy files
+    }
+  }
 }

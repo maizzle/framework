@@ -1,5 +1,4 @@
 import path from 'pathe'
-import fg from 'fast-glob'
 import build from '../src/commands/build.js'
 import { rm, readFile } from 'node:fs/promises'
 import { describe, expect, test, beforeEach, afterEach, afterAll, vi } from 'vitest'
@@ -21,7 +20,7 @@ describe.concurrent('Build', () => {
   })
 
   test('Throws if no templates found', async () => {
-    await expect(() => build({ foo: 'bar' })).rejects.toThrow('No templates found in')
+    await expect(() => build({ build: { content: ['test/fixtures/**/*.php'] } })).rejects.toThrow('No templates found in')
   })
 
   test('Throws if build.files is invalid', async () => {
@@ -33,17 +32,12 @@ describe.concurrent('Build', () => {
   })
 
   test('Runs `beforeCreate` event', async ctx => {
-    await build(
+    const { config } = await build(
       {
         build: {
-          content: 'test/fixtures/**/beforeCreate.html',
+          content: ['test/fixtures/build/beforeCreate.html'],
           output: {
             path: ctx.folder
-          }
-        },
-        css: {
-          tailwind: {
-            content: ['test/fixtures/build/**/*.html']
           }
         },
         async beforeCreate({ config }) {
@@ -53,10 +47,7 @@ describe.concurrent('Build', () => {
       }
     )
 
-    const files = await fg.glob(`${ctx.folder}/**/*.html`)
-    const fileContents = await readFile(files[0], 'utf8')
-
-    expect(fileContents).toContain('`beforeCreate` with build()')
+    expect(config.foo).toBe('`beforeCreate` with build()')
   })
 
   test('Runs `afterBuild` event', async ctx => {
@@ -82,7 +73,7 @@ describe.concurrent('Build', () => {
       }
     )
 
-    expect(ctx.afterBuild).toContain(`${ctx.folder}/test/fixtures/build/beforeCreate.html`)
+    expect(ctx.afterBuild).toContain(`${ctx.folder}/build/beforeCreate.html`)
   })
 
   test('Outputs files', async ctx => {
@@ -92,7 +83,7 @@ describe.concurrent('Build', () => {
           content: ['test/fixtures/**/*.html', '!test/fixtures/filters.html', '!test/fixtures/build/expandLinkTag.html'],
           output: {
             path: ctx.folder,
-            extension: 'blade.php'
+            extension: 'php'
           }
         },
         css: {
@@ -119,8 +110,8 @@ describe.concurrent('Build', () => {
       }
     ).then(({ files }) => files)
 
-    expect(ctx.arrayGlobFiles.length).toBe(3)
-    expect(ctx.arrayGlobFiles).toContain(`${ctx.folder}/build/beforeCreate.blade.php`)
+    expect(ctx.arrayGlobFiles.length).toBe(5)
+    expect(ctx.arrayGlobFiles).toContain(`${ctx.folder}/build/beforeCreate.php`)
 
     expect(ctx.stringGlobFiles.length).toBe(5)
     expect(ctx.stringGlobFiles).toContain(`${ctx.folder}/str/filters.html`)
@@ -150,7 +141,8 @@ describe.concurrent('Build', () => {
       }
     )
 
-    expect(consoleMock).toHaveBeenCalledOnce()
+    expect(consoleMock).toHaveBeenCalled()
+    expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('Build time'))
   })
 
   test('Copies static files to output directory', async ctx => {
@@ -173,7 +165,7 @@ describe.concurrent('Build', () => {
       }
     ).then(({ files }) => files)
 
-    expect(ctx.files.length).toBe(3)
+    expect(ctx.files.length).toBe(4)
     expect(ctx.files).toContain(`${ctx.folder}/image.png`)
   })
 
@@ -195,14 +187,14 @@ describe.concurrent('Build', () => {
       }
     ).then(({ files }) => files)
 
-    expect(ctx.files).toContain(`${ctx.folder}/test/fixtures/build/beforeCreate.txt`)
+    expect(ctx.files).toContain(`${ctx.folder}/build/beforeCreate.txt`)
   })
 
   test('Expands <link> tags', async ctx => {
-    ctx.files = await build(
+    const { files } = await build(
       {
         build: {
-          content: ['test/fixtures/**/expandLinkTag.html'],
+          content: ['test/fixtures/build/expandLinkTag.html'],
           output: {
             path: ctx.folder
           },
@@ -213,9 +205,9 @@ describe.concurrent('Build', () => {
           }
         },
       }
-    ).then(({ files }) => files)
+    )
 
-    const fileContents = await readFile(ctx.files[0], 'utf8')
+    const fileContents = await readFile(files.filter(f => f.includes('expandLinkTag'))[0], 'utf8')
 
     expect(fileContents).toContain('display: none')
     expect(fileContents).not.toContain('expand')

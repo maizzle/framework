@@ -1,7 +1,6 @@
 import {
   readFile,
   writeFile,
-  copyFile,
   lstat,
   mkdir,
   rm
@@ -12,21 +11,31 @@ import { defu as merge } from 'defu'
 
 import get from 'lodash/get.js'
 import isEmpty from 'lodash-es/isEmpty.js'
-import { isBinary } from 'istextorbinary'
 
 import ora from 'ora'
 import pico from 'picocolors'
 import cliTable from 'cli-table3'
 
 import { render } from '../generators/render.js'
-import { formatTime } from '../utils/string.js'
-import { getColorizedFileSize } from '../utils/node.js'
-import { readFileConfig } from '../utils/getConfigByFilePath.js'
+
+import {
+  formatTime,
+  getRootDirectories,
+  getFileExtensionsFromPattern,
+} from '../utils/string.js'
+
+import {
+  getColorizedFileSize,
+  copyDirectory,
+} from '../utils/node.js'
+
 import {
   generatePlaintext,
   handlePlaintextTags,
   writePlaintextFile
 } from '../generators/plaintext.js'
+
+import { readFileConfig } from '../utils/getConfigByFilePath.js'
 
 /**
  * Compile templates and output to the build directory.
@@ -72,9 +81,19 @@ export default async (config = {}) => {
       head: ['File name', 'File size', 'Build time'].map(item => pico.bold(item)),
     })
 
-    // Determine paths of templates to build
-    const userFilePaths = get(config, 'build.content', 'src/templates/**/*.html')
-    const templateFolders = Array.isArray(userFilePaths) ? userFilePaths : [userFilePaths]
+    /**
+     * Determine paths to handle
+     *
+     * 1. Resolve globs in `build.content` to folders that should be copied over to `build.output.path`
+     * 2. Check that templates to be built, actually exist
+     */
+    const contentPaths = get(config, 'build.content', 'src/templates/**/*.html')
+
+    // 1. Resolve globs in `build.content` to folders that should be copied over to `build.output.path`
+    const rootDirs = await getRootDirectories(contentPaths)
+
+    // 2. Check that templates to be built, actually exist
+    const templateFolders = Array.isArray(contentPaths) ? contentPaths : [contentPaths]
     const templatePaths = await fg.glob([...new Set(templateFolders)])
 
     // If there are no templates to build, throw error
@@ -82,37 +101,44 @@ export default async (config = {}) => {
       throw new Error(`No templates found in ${pico.inverse(templateFolders)}`)
     }
 
-    const baseDirs = templateFolders.filter(p => !p.startsWith('!')).map(p => {
-      const parts = p.split('/')
-      // remove the glob part (e.g., **/*.html):
-      return parts.filter(part => !part.includes('*')).join('/')
-    })
+    /**
+     * Copy source directories to destination
+     *
+     * Copies each `build.content` path to the `build.output.path` directory.
+     */
+    for await (const rootDir of rootDirs) {
+      await copyDirectory(rootDir, buildOutputPath)
+    }
 
     /**
-     * Check for binary files
+     * Get a list of files to render, from the output directory
      *
-     * We store paths to binary files in a separate array, because we don't want
-     * to render them. These files will be treated as static files and will
-     * be copied directly to the output directory, just like the
-     * `build.static` folders.
+     * Uses all file extensions from non-negated glob paths in `build.content`
+     * to determine which files to render from the output directory.
      */
-    const binaryPaths = await fg.glob([...new Set(baseDirs.map(base => `${base}/**/*.*`))])
-      .then(paths => paths.filter(file => isBinary(file)))
+    const outputExtensions = new Set()
+
+    for (const pattern of contentPaths) {
+      outputExtensions.add(...getFileExtensionsFromPattern(pattern))
+    }
+
+    /**
+     * Create a list of templates to compile
+     */
+    const extensions = outputExtensions.size > 1 ? `{${[...outputExtensions].join(',')}}` : 'html'
+
+    const templatesToCompile = await fg.glob(
+      path.join(
+        buildOutputPath,
+        `**/*.${extensions}`
+      )
+    )
 
     /**
      * Render templates
-     *
-     * Render each template and write the output to the output directory,
-     * preserving the relative path.
      */
-    for await (const templatePath of templatePaths) {
+    for await (const templatePath of templatesToCompile) {
       const templateBuildStartTime = Date.now()
-
-      // Determine the base directory the template belongs to
-      const baseDir = baseDirs.find(base => templatePath.startsWith(base))
-
-      // Compute the relative path
-      const relativePath = path.relative(baseDir, templatePath)
 
       /**
        * Add the current template path to the config
@@ -122,8 +148,6 @@ export default async (config = {}) => {
        */
       config.build.current = {
         path: path.parse(templatePath),
-        baseDir,
-        relativePath,
       }
 
       const html = await readFile(templatePath, 'utf8')
@@ -158,8 +182,9 @@ export default async (config = {}) => {
        * We do this before generating plaintext, so that
        * any paths will already have been created.
        */
-      const outputPathFromConfig = get(rendered.config, 'permalink', path.join(buildOutputPath, relativePath))
+      const outputPathFromConfig = get(rendered.config, 'permalink', templatePath)
       const parsedOutputPath = path.parse(outputPathFromConfig)
+      // This keeps original file extension if no output extension is set
       const extension = get(rendered.config, 'build.output.extension', parsedOutputPath.ext.slice(1))
       const outputPath = `${parsedOutputPath.dir}/${parsedOutputPath.name}.${extension}`
 
@@ -173,6 +198,14 @@ export default async (config = {}) => {
        * Write the rendered HTML to disk, creating directories if needed
        */
       await writeFile(outputPath, rendered.html)
+
+      /**
+       * Remove original file if its path is different
+       * from the final destination path.
+       */
+      if (outputPath !== templatePath) {
+        await rm(templatePath)
+      }
 
       /**
        * Add file to CLI table for build summary logging
@@ -189,36 +222,16 @@ export default async (config = {}) => {
     /**
      * Copy static files
      *
-     * Copy binary files that are alongside templates as well as
-     * files from `build.static`, to the output directory.
-     *
-     * TODO: support an array of objects with source and destination, i.e. static: [{ source: 'src/assets', destination: 'assets' }, ...]
+     * TODO: support an array of objects with source and destination,
+     * i.e. static: [{ source: 'src/assets', destination: 'assets' }, ...]
      */
-
-    // Copy binary files that are alongside templates
-    for await (const binaryPath of binaryPaths) {
-      const relativePath = path.relative(get(config, 'build.current.baseDir'), binaryPath)
-      const outputPath = path.join(get(config, 'build.output.path'), get(config, 'build.static.destination'), relativePath)
-
-      await mkdir(path.dirname(outputPath), { recursive: true })
-      await copyFile(binaryPath, outputPath)
-    }
-
-    // Copy files from `build.static`
     const staticSourcePaths = await fg.glob([...new Set(get(config, 'build.static.source', []))])
-      .then(paths => paths.filter(file => isBinary(file)))
 
-    if (!isEmpty(staticSourcePaths)) {
-      for await (const staticPath of staticSourcePaths) {
-        const relativePath = path.relative(get(config, 'build.current.baseDir'), staticPath)
-        const outputPath = path.join(get(config, 'build.output.path'), get(config, 'build.static.destination'), relativePath)
-
-        await mkdir(path.dirname(outputPath), { recursive: true })
-        await copyFile(staticPath, outputPath)
-      }
+    for await (const rootDir of await getRootDirectories(staticSourcePaths)) {
+      await copyDirectory(rootDir, path.join(buildOutputPath, get(config, 'build.static.destination')))
     }
 
-    const compiledFiles = await fg.glob(path.join(config.build.output.path, '**/*'))
+    const compiledFiles = await fg.glob(path.join(buildOutputPath, '**/*'))
 
     /**
      * Run `afterBuild` event
@@ -229,8 +242,6 @@ export default async (config = {}) => {
 
     /**
      * Log a build summary if enabled in the config
-     *
-     * Need to first clear the spinner
      */
 
     spinner.clear()

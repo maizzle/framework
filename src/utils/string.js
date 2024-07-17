@@ -115,3 +115,49 @@ export function humanFileSize(bytes, si=false, dp=2) {
 
   return bytes.toFixed(dp) + ' ' + units[u]
 }
+
+/**
+ * Get the root directories from a list of globs.
+ * @param {*} globs
+ * @returns
+ */
+export function getRootDirectories(globs) {
+  globs = Array.isArray(globs) ? globs : [globs]
+
+  const positiveGlobs = new Set(globs.filter(g => !g.startsWith('!')))
+
+  const rootDirs = new Set()
+
+  for (const pattern of positiveGlobs) {
+    rootDirs.add(pattern.split('/').slice(0, pattern.split('/').indexOf('**')).join('/'))
+  }
+
+  return Array.from(rootDirs)
+}
+
+/**
+ * Get the file extensions from a glob pattern.
+ * @param {*} pattern
+ * @returns
+ */
+export function getFileExtensionsFromPattern(pattern) {
+  const starExtPattern = /\.([^\*\{\}]+)$/ // Matches .ext but not .* or .{ext}
+  const bracePattern = /\.{([^}]+)}$/ // Matches .{ext} or .{ext,ext}
+  const wildcardPattern = /\.\*$/ // Matches .*
+
+  if (wildcardPattern.test(pattern)) {
+    return ['html'] // We default to 'html' if the pattern is a wildcard
+  }
+
+  const braceMatch = pattern.match(bracePattern);
+  if (braceMatch) {
+    return braceMatch[1].split(',') // Split and return extensions inside braces
+  }
+
+  const starExtMatch = pattern.match(starExtPattern)
+  if (starExtMatch) {
+    return [starExtMatch[1]] // Return single extension
+  }
+
+  return ['html'] // No recognizable extension pattern, default to 'html'
+}

@@ -182,7 +182,7 @@ export async function inline(html = '', options = {}) {
               let [property, value] = i.split(':').map(i => i.trim())
 
               if (value && options.resolveCalc) {
-                value = value.includes('calc') ? calc(value) : value
+                value = value.includes('calc') ? calc(value, {precision: 2}) : value
               }
 
               if (value && options.preferUnitlessValues) {

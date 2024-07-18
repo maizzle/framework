@@ -1,5 +1,6 @@
 import ComponentsConfig from './components';
 import type { SpinnerName } from 'cli-spinners';
+import type ExpressionsConfig from './expressions';
 
 export default interface BuildConfig {
   /**
@@ -22,6 +23,11 @@ export default interface BuildConfig {
    * ```
    */
   content?: string | string[];
+
+  /**
+  Configure expressions.
+  */
+  expressions?: ExpressionsConfig;
 
   /**
    * Define the output path for compiled Templates, and what file extension they should use.

@@ -5,7 +5,7 @@ import { defu as merge } from 'defu'
 import expressions from 'posthtml-expressions'
 import { parseFrontMatter } from '../utils/node.js'
 import { process as compilePostHTML } from '../posthtml/index.js'
-import { run as useTransformers } from '../transformers/index.js'
+import { run as useTransformers, transformers } from '../transformers/index.js'
 
 export async function render(html = '', config = {}) {
   if (typeof html !== 'string') {
@@ -65,7 +65,8 @@ export async function render(html = '', config = {}) {
     content = await templateConfig.beforeRender(({
       html: content,
       config: templateConfig,
-      render
+      posthtml: compilePostHTML,
+      transform: transformers,
     })) ?? content
   }
 
@@ -85,7 +86,8 @@ export async function render(html = '', config = {}) {
     compiled.html = await templateConfig.afterRender(({
       html: compiled.html,
       config: templateConfig,
-      render
+      posthtml: compilePostHTML,
+      transform: transformers,
     })) ?? compiled.html
   }
 
@@ -117,7 +119,8 @@ export async function render(html = '', config = {}) {
     compiled.html = await templateConfig.afterTransformers(({
       html: compiled.html,
       config: templateConfig,
-      render
+      posthtml: compilePostHTML,
+      transform: transformers,
     })) ?? compiled.html
   }
 

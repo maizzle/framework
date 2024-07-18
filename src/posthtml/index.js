@@ -7,6 +7,7 @@ import components from 'posthtml-component'
 import posthtmlPostcss from 'posthtml-postcss'
 import defaultPosthtmlConfig from './defaultConfig.js'
 import expandLinkTag from './plugins/expandLinkTag.js'
+import envAttributes from './plugins/envAttributes.js'
 
 // PostCSS
 import tailwindcss from 'tailwindcss'
@@ -50,6 +51,7 @@ export async function process(html = '', config = {}) {
 
   return posthtml([
     ...get(config, 'posthtml.plugins.before', []),
+    envAttributes(config.env),
     expandLinkTag,
     postcssPlugin,
     components(

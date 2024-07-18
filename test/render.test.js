@@ -80,4 +80,17 @@ describe.concurrent('Render', () => {
     expect(withHtmlReturned).toBe('<div class="inline">baz</div>')
     expect(nothingReturned).toBe('<div class="inline">bar</div>')
   })
+
+  test('Uses env-based attributes', async () => {
+    const source = '<div title="local" title-production="{{ page.env }}"></div>'
+
+    const { html: inDev } = await render(source)
+
+    const { html: inProduction } = await render(source, {
+      env: 'production'
+    })
+
+    expect(inDev).toBe('<div title="local" title-production="{{ page.env }}"></div>')
+    expect(inProduction).toBe('<div title="production"></div>')
+  })
 })

@@ -267,3 +267,23 @@ export async function run(html = '', config = {}) {
       html: result.html,
     }))
 }
+
+export const transformers = {
+  comb,
+  sixHex,
+  minify,
+  baseUrl,
+  inlineCSS,
+  prettify,
+  filters,
+  markdown,
+  posthtmlMso,
+  shorthandCss,
+  preventWidows,
+  addAttributes,
+  urlParameters,
+  safeClassNames,
+  replaceStrings,
+  attributeToStyle,
+  removeAttributes,
+}

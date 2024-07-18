@@ -64,11 +64,11 @@ describe.concurrent('Build', () => {
             content: ['test/fixtures/build/**/*.html']
           }
         },
-        async afterBuild({ files, config, render }) {
+        async afterBuild({ files, config, transform }) {
           ctx.afterBuild = files
           expect(config).toBeInstanceOf(Object)
           expect(files).toBeInstanceOf(Array)
-          expect(render).toBeInstanceOf(Function)
+          expect(transform.inlineCSS).toBeInstanceOf(Function)
         }
       }
     )

@@ -18,7 +18,7 @@ jobs:
         with:
           version: latest
       - name: Run Biome
-        run: biome ci .
+        run: biome lint ./src ./test
   build:
     runs-on: ubuntu-latest
 

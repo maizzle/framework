@@ -37,6 +37,8 @@ import {
 
 import { readFileConfig } from '../utils/getConfigByFilePath.js'
 
+import { transformers } from '../transformers/index.js'
+
 /**
  * Compile templates and output to the build directory.
  * Returns a promise containing an object with files output and the config object.
@@ -227,7 +229,7 @@ export default async (config = {}) => {
      */
     const staticSourcePaths = await fg.glob([...new Set(get(config, 'build.static.source', []))])
 
-    for await (const rootDir of await getRootDirectories(staticSourcePaths)) {
+    for await (const rootDir of getRootDirectories(staticSourcePaths)) {
       await copyDirectory(rootDir, path.join(buildOutputPath, get(config, 'build.static.destination')))
     }
 
@@ -237,7 +239,11 @@ export default async (config = {}) => {
      * Run `afterBuild` event
      */
     if (typeof config.afterBuild === 'function') {
-      await config.afterBuild({ files: compiledFiles, config, render })
+      await config.afterBuild({
+        config,
+        files: compiledFiles,
+        transform: transformers,
+      })
     }
 
     /**

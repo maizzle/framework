@@ -92,7 +92,7 @@
     "ws": "^8.17.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.8.3",
+    "@biomejs/biome": "1.8.3",
     "@types/js-beautify": "^1.14.3",
     "@types/markdown-it": "^14.1.1",
     "@vitest/coverage-v8": "^2.0.1",

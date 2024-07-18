@@ -24,6 +24,7 @@
   "scripts": {
     "dev": "vitest",
     "release": "npx np",
+    "pretest": "npm run lint",
     "test": "vitest run --coverage",
     "lint": "biome lint ./src ./test"
   },

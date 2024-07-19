@@ -11,6 +11,18 @@ const posthtmlPlugin = (config = {}) => tree => {
       node.content = ['']
     }
 
+    /**
+     * Custom attributes to prevent inlining CSS from <style> tags
+     */
+    if (
+      node.tag === 'style'
+      && (node.attrs?.['no-inline'] || node.attrs?.embed)
+    ) {
+      node.attrs['no-inline'] = false
+      node.attrs.embed = false
+      node.attrs['data-embed'] = true
+    }
+
     return node
   }
 

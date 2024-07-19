@@ -30,7 +30,19 @@ describe.concurrent('Transformers', () => {
       { _dev: true }
     )
 
+    // Custom attributes to prevent inlining CSS from <style> tags
+    const withNoInlineAttr = await useTransformers(
+      '<style no-inline>keep</style>',
+      { _dev: true }
+    )
+    const withNoInlineAndDataEmbedAttr = await useTransformers(
+      '<style no-inline data-embed>keep</style>',
+      { _dev: true }
+    )
+
     expect(removesPlaintextTag.html).toBe('keep')
+    expect(withNoInlineAttr.html).toBe('<style data-embed>keep</style>')
+    expect(withNoInlineAndDataEmbedAttr.html).toBe('<style data-embed>keep</style>')
   })
 
   test('Safe class names', async () => {

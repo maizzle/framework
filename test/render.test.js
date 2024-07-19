@@ -93,4 +93,24 @@ describe.concurrent('Render', () => {
     expect(inDev).toBe('<div title="local" title-production="{{ page.env }}"></div>')
     expect(inProduction).toBe('<div title="production"></div>')
   })
+
+  test('Parses <env:> tags based on current environment', async () => {
+    const source = `
+      <env:local>
+        {{ page.env }}
+      </env:local>
+      <env:production>
+        {{ page.env }}
+      </env:production>
+    `
+
+    const { html: inDev } = await render(source)
+
+    const { html: inProduction } = await render(source, {
+      env: 'production'
+    })
+
+    expect(inDev.trim()).toBe('{{ page.env }}') // we don't pass `env` to the page object so it remains as-is
+    expect(inProduction.trim()).toBe('production')
+  })
 })

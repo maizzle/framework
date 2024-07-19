@@ -8,6 +8,7 @@ import posthtmlPostcss from 'posthtml-postcss'
 import defaultPosthtmlConfig from './defaultConfig.js'
 import expandLinkTag from './plugins/expandLinkTag.js'
 import envAttributes from './plugins/envAttributes.js'
+import envTags from './plugins/envTags.js'
 
 // PostCSS
 import tailwindcss from 'tailwindcss'
@@ -51,6 +52,7 @@ export async function process(html = '', config = {}) {
 
   return posthtml([
     ...get(config, 'posthtml.plugins.before', []),
+    envTags(config.env),
     envAttributes(config.env),
     expandLinkTag,
     postcssPlugin,

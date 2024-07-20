@@ -10,6 +10,7 @@ import * as cheerio from 'cheerio/lib/slim'
 import safeParser from 'postcss-safe-parser'
 import isObject from 'lodash-es/isObject.js'
 import { parser as parse } from 'posthtml-parser'
+import { parseCSSRule } from '../utils/string.js'
 import { useAttributeSizes } from './useAttributeSizes.js'
 
 const posthtmlPlugin = (options = {}) => tree => {
@@ -179,7 +180,7 @@ export async function inline(html = '', options = {}) {
 
           if (styleAttr) {
             inlineStyles = styleAttr.split(';').reduce((acc, i) => {
-              let [property, value] = i.split(':').map(i => i.trim())
+              let { property, value } = parseCSSRule(i)
 
               if (value && options.resolveCalc) {
                 value = value.includes('calc') ? calc(value, {precision: 2}) : value

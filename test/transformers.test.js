@@ -206,6 +206,7 @@ describe.concurrent('Transformers', () => {
       .foo {color: red}
       .bar {cursor: pointer; margin: calc(4px * 0)}
       .hover\\:foo:hover {color: blue}
+      .bg-custom {background-image: url('https://picsum.photos/600/400') !important}
       @media (max-width: 600px) {
         .sm\\:text-center {text-align: center}
       }
@@ -215,7 +216,7 @@ describe.concurrent('Transformers', () => {
     const html = `
       <style>${css}</style>
       <p class="bar">test</p>
-      <table class="w-1 h-1 sm:text-center">
+      <table class="w-1 h-1 sm:text-center bg-custom">
         <tr>
           <td class="foo bar h-1">test</td>
         </tr>
@@ -239,7 +240,7 @@ describe.concurrent('Transformers', () => {
       }
     </style>
       <p style="cursor: pointer; margin: 0">test</p>
-      <table class="sm:text-center" style="width: 4px; height: 4px">
+      <table class="sm:text-center" style="width: 4px; height: 4px; background-image: url('https://picsum.photos/600/400')">
         <tr>
           <td style="height: 4px; color: red; cursor: pointer; margin: 0">test</td>
         </tr>
@@ -257,12 +258,13 @@ describe.concurrent('Transformers', () => {
       .foo {color: red}
       .bar {cursor: pointer; margin: calc(4px * 0)}
       .hover\\:foo:hover {color: blue}
+      .bg-custom {background-image: url('https://picsum.photos/600/400') !important}
       @media (max-width: 600px) {
         .sm\\:text-center {text-align: center}
       }
     </style>
       <p class="bar" style="cursor: pointer; margin: 0">test</p>
-      <table class="w-1 h-1 sm:text-center" style="width: 4px; height: 4px">
+      <table class="w-1 h-1 sm:text-center bg-custom" style="width: 4px; height: 4px; background-image: url('https://picsum.photos/600/400')">
         <tr>
           <td class="foo bar h-1" style="height: 4px; color: red; cursor: pointer; margin: 0">test</td>
         </tr>
@@ -282,7 +284,7 @@ describe.concurrent('Transformers', () => {
       }
     </style>
       <p style="cursor: pointer; margin: 0">test</p>
-      <table class="sm-text-center" style="width: 4px; height: 4px">
+      <table class="sm-text-center" style="width: 4px; height: 4px; background-image: url('https://picsum.photos/600/400')">
         <tr>
           <td style="height: 4px; color: red; cursor: pointer; margin: 0">test</td>
         </tr>

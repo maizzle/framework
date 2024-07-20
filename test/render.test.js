@@ -3,7 +3,6 @@ import { render } from '../src/generators/render.js'
 
 const cleanString = (str) => str.replace(/\s+/g, ' ').trim()
 
-
 describe.concurrent('Render', () => {
   test('Throws if first argument is not a string', async () => {
     const html = true
@@ -97,7 +96,7 @@ describe.concurrent('Render', () => {
     expect(inProduction).toBe('<div title="production"></div>')
   })
 
-  test('Parses <env:> tags based on current environment', async () => {
+  test('<env:> tags', async () => {
     const source = `
       <env:local>{{ page.env }}</env:local>
       <env:production>{{ page.env }}</env:production>

@@ -8,6 +8,7 @@ import minify from './minify.js'
 import baseUrl from './baseUrl.js'
 import inlineCSS from './inline.js'
 import prettify from './prettify.js'
+import templateTag from './template.js'
 import filters from './filters/index.js'
 import markdown from 'posthtml-markdownit'
 import posthtmlMso from './posthtmlMso.js'
@@ -251,7 +252,14 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 18. Replace strings
+   * 18. <template> tags
+   *
+   * Replace <template> tags with their content
+   */
+  posthtmlPlugins.push(templateTag())
+
+  /**
+   * 19. Replace strings
    *
    * Replace strings through regular expressions
    */

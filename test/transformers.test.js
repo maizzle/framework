@@ -22,6 +22,8 @@ import {
 } from '../src/index.js'
 import { run as useTransformers } from '../src/transformers/index.js'
 
+const cleanString = (str) => str.replace(/\s+/g, ' ').trim()
+
 describe.concurrent('Transformers', () => {
   test('Core', async () => {
     // Removes <plaintext> tag in local dev
@@ -583,5 +585,14 @@ describe.concurrent('Transformers', () => {
     expect(
       await useTransformers('initial text', { replaceStrings: { 'initial': 'updated' } }).then(({ html }) => html)
     ).toBe('updated text')
+  })
+
+  test('<template> tags', async () => {
+    const { html } = await useTransformers(`
+      <template uppercase>test</template>
+      <template preserve>test</template>
+    `)
+
+    expect(cleanString(html)).toBe('TEST <template>test</template>')
   })
 })

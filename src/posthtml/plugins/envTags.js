@@ -10,7 +10,7 @@ const plugin = (env => tree => {
     const tagEnv = node.tag.split(':').pop()
 
     // Tag targets current env, remove it and return its content
-    if (node.tag.endsWith(`:${env}`)) {
+    if (node.tag === `env:${env}`) {
       node.tag = false
     }
 

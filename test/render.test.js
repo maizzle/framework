@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import { render } from '../src/generators/render.js'
 
+const cleanString = (str) => str.replace(/\s+/g, ' ').trim()
+
+
 describe.concurrent('Render', () => {
   test('Throws if first argument is not a string', async () => {
     const html = true
@@ -96,12 +99,9 @@ describe.concurrent('Render', () => {
 
   test('Parses <env:> tags based on current environment', async () => {
     const source = `
-      <env:local>
-        {{ page.env }}
-      </env:local>
-      <env:production>
-        {{ page.env }}
-      </env:production>
+      <env:local>{{ page.env }}</env:local>
+      <env:production>{{ page.env }}</env:production>
+      <fake:production>ignore</fake:production>
     `
 
     const { html: inDev } = await render(source)
@@ -110,7 +110,8 @@ describe.concurrent('Render', () => {
       env: 'production'
     })
 
-    expect(inDev.trim()).toBe('{{ page.env }}') // we don't pass `env` to the page object so it remains as-is
-    expect(inProduction.trim()).toBe('production')
+    // we don't pass `env` to the page object so it remains as-is
+    expect(cleanString(inDev)).toBe('{{ page.env }} <fake:production>ignore</fake:production>')
+    expect(inProduction.trim()).toBe('production\n      <fake:production>ignore</fake:production>')
   })
 })

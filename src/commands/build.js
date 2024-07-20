@@ -212,13 +212,11 @@ export default async (config = {}) => {
       /**
        * Add file to CLI table for build summary logging
        */
-      if (config.build.summary) {
-        table.push([
-          path.relative(get(rendered.config, 'build.output.path'), outputPath),
-          getColorizedFileSize(rendered.html),
-          formatTime(Date.now() - templateBuildStartTime)
-        ])
-      }
+      table.push([
+        path.relative(get(rendered.config, 'build.output.path'), outputPath),
+        getColorizedFileSize(rendered.html),
+        formatTime(Date.now() - templateBuildStartTime)
+      ])
     }
 
     /**
@@ -256,7 +254,7 @@ export default async (config = {}) => {
       console.log(table.toString() + '\n')
     }
 
-    spinner.succeed(`Build completed in ${formatTime(Date.now() - startTime)}`)
+    spinner.succeed(`Built ${table.length} template${table.length > 1 ? 's' : ''} in ${formatTime(Date.now() - startTime)}`)
 
     return {
       files: allOutputFiles,

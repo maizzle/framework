@@ -102,6 +102,7 @@ describe.concurrent('Render', () => {
       <env:local>{{ page.env }}</env:local>
       <env:production>{{ page.env }}</env:production>
       <fake:production>ignore</fake:production>
+      <env:>test</env:>
     `
 
     const { html: inDev } = await render(source)

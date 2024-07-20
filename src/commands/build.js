@@ -233,7 +233,7 @@ export default async (config = {}) => {
       await copyDirectory(rootDir, path.join(buildOutputPath, get(config, 'build.static.destination')))
     }
 
-    const compiledFiles = await fg.glob(path.join(buildOutputPath, '**/*'))
+    const allOutputFiles = await fg.glob(path.join(buildOutputPath, '**/*'))
 
     /**
      * Run `afterBuild` event
@@ -241,7 +241,7 @@ export default async (config = {}) => {
     if (typeof config.afterBuild === 'function') {
       await config.afterBuild({
         config,
-        files: compiledFiles,
+        files: allOutputFiles,
         transform: transformers,
       })
     }
@@ -259,7 +259,7 @@ export default async (config = {}) => {
     spinner.succeed(`Build completed in ${formatTime(Date.now() - startTime)}`)
 
     return {
-      files: compiledFiles,
+      files: allOutputFiles,
       config
     }
   } catch (error) {

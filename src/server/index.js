@@ -50,6 +50,7 @@ export default async (config = {}) => {
    */
   const shouldScroll = get(config, 'server.scrollSync', false)
   const useHmr = get(config, 'server.hmr', true)
+  spinner.spinner = get(config, 'server.spinner', 'circleHalves')
 
   // Add static assets root prefix so user doesn't have to
   if (!config.baseURL) {

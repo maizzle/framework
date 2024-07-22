@@ -5,6 +5,7 @@ import type MarkdownConfig from './markdown';
 import type { ProcessOptions } from 'postcss';
 import type PurgeCSSConfig from './css/purge';
 import type CSSInlineConfig from './css/inline';
+import type { SpinnerName } from 'cli-spinners';
 import type ComponentsConfig from './components';
 import type WidowWordsConfig from './widowWords';
 import type { CoreBeautifyOptions } from 'js-beautify';
@@ -404,6 +405,22 @@ export default interface Config {
      * @default false
      */
     reportFileSize?: boolean;
+
+    /**
+     * Type of spinner to show in the console.
+     *
+     * @default 'circleHalves'
+     *
+     * @example
+     * ```
+     * export default {
+     *   server: {
+     *     spinner: 'bounce'
+     *   }
+     * }
+     * ```
+     */
+    spinner?: SpinnerName;
   }
 
   /**

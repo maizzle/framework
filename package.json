@@ -64,7 +64,7 @@
     "istextorbinary": "^9.5.0",
     "juice": "^10.0.0",
     "lodash-es": "^4.17.21",
-    "morphdom": "^2.7.3",
+    "morphdom": "^2.7.4",
     "ora": "^8.0.1",
     "pathe": "^1.1.2",
     "postcss": "^8.4.39",

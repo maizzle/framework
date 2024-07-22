@@ -117,22 +117,34 @@ export function humanFileSize(bytes, si=false, dp=2) {
 }
 
 /**
- * Get the root directories from a list of globs.
- * @param {*} globs
- * @returns
+ * Get the root directories from a list of glob patterns.
+ *
+ * @param {array} patterns List of glob patterns.
+ * @returns {array} List of root directories.
  */
-export function getRootDirectories(globs) {
-  globs = Array.isArray(globs) ? globs : [globs]
-
-  const positiveGlobs = new Set(globs.filter(g => !g.startsWith('!')))
-
-  const rootDirs = new Set()
-
-  for (const pattern of positiveGlobs) {
-    rootDirs.add(pattern.split('/').slice(0, pattern.split('/').indexOf('**')).join('/'))
+export function getRootDirectories(patterns = []) {
+  if (!Array.isArray(patterns)) {
+    return []
   }
 
-  return Array.from(rootDirs)
+  if (patterns.length === 0) {
+    return []
+  }
+
+  return [...new Set(
+    patterns
+      .filter(pattern => !pattern.startsWith('!'))
+      .map(pattern => {
+        // If the pattern doesn't include wildcards, use it as is
+        if (!pattern.includes('*')) {
+          return pattern.replace(/\/$/, '') // Remove trailing slash if present
+        }
+        // For patterns with wildcards, get the part before the first wildcard
+        const parts = pattern.split(/[*{]/)[0].split('/')
+        return parts.slice(0, -1).join('/')
+      })
+      .filter(Boolean)
+  )]
 }
 
 /**

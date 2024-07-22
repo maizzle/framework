@@ -35,7 +35,7 @@ describe.concurrent('Build', () => {
     const { config } = await build(
       {
         build: {
-          content: ['test/fixtures/build/beforeCreate.html'],
+          content: ['test/fixtures/build/**/*.html'],
           output: {
             path: ctx.folder
           }
@@ -54,7 +54,7 @@ describe.concurrent('Build', () => {
     await build(
       {
         build: {
-          content: 'test/fixtures/**/beforeCreate.html',
+          content: ['test/fixtures/**/beforeCreate.html'],
           output: {
             path: ctx.folder
           }
@@ -97,7 +97,7 @@ describe.concurrent('Build', () => {
     ctx.stringGlobFiles = await build(
       {
         build: {
-          content: 'test/fixtures/**/*.html',
+          content: ['test/fixtures/**/*.html'],
           output: {
             path: path.join(ctx.folder, 'str'),
           }
@@ -149,12 +149,12 @@ describe.concurrent('Build', () => {
     ctx.files = await build(
       {
         build: {
-          content: 'test/fixtures/build/*.html',
+          content: ['test/fixtures/build/*.html'],
           output: {
             path: ctx.folder
           },
           static: {
-            source: ['test/stubs/static/*'],
+            source: ['test/stubs/static/**/*'],
           }
         },
         css: {
@@ -173,7 +173,7 @@ describe.concurrent('Build', () => {
     ctx.files = await build(
       {
         build: {
-          content: 'test/fixtures/**/beforeCreate.html',
+          content: ['test/fixtures/**/beforeCreate.html'],
           output: {
             path: ctx.folder
           },
@@ -194,7 +194,7 @@ describe.concurrent('Build', () => {
     const { files } = await build(
       {
         build: {
-          content: ['test/fixtures/build/expandLinkTag.html'],
+          content: ['test/fixtures/build/**/*.html'],
           output: {
             path: ctx.folder
           },

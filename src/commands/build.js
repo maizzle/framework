@@ -3,7 +3,8 @@ import {
   writeFile,
   lstat,
   mkdir,
-  rm
+  rm,
+  cp,
 } from 'node:fs/promises'
 import path from 'pathe'
 import fg from 'fast-glob'
@@ -24,10 +25,7 @@ import {
   getFileExtensionsFromPattern,
 } from '../utils/string.js'
 
-import {
-  getColorizedFileSize,
-  copyDirectory,
-} from '../utils/node.js'
+import { getColorizedFileSize } from '../utils/node.js'
 
 import {
   generatePlaintext,
@@ -109,7 +107,7 @@ export default async (config = {}) => {
      * Copies each `build.content` path to the `build.output.path` directory.
      */
     for await (const rootDir of rootDirs) {
-      await copyDirectory(rootDir, buildOutputPath)
+      await cp(rootDir, buildOutputPath, { recursive: true })
     }
 
     /**
@@ -225,10 +223,10 @@ export default async (config = {}) => {
      * TODO: support an array of objects with source and destination,
      * i.e. static: [{ source: 'src/assets', destination: 'assets' }, ...]
      */
-    const staticSourcePaths = await fg.glob([...new Set(get(config, 'build.static.source', []))])
+    const staticSourcePaths = getRootDirectories([...new Set(get(config, 'build.static.source', []))])
 
-    for await (const rootDir of getRootDirectories(staticSourcePaths)) {
-      await copyDirectory(rootDir, path.join(buildOutputPath, get(config, 'build.static.destination')))
+    for await (const rootDir of staticSourcePaths) {
+      await cp(rootDir, path.join(buildOutputPath, get(config, 'build.static.destination')), { recursive: true })
     }
 
     const allOutputFiles = await fg.glob(path.join(buildOutputPath, '**/*'))

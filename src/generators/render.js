@@ -58,13 +58,16 @@ export async function render(html = '', config = {}) {
    *
    * @param {Object} options
    * @param {string} options.html - The HTML to be transformed
+   * @param {Object} options.matter - The front matter data
    * @param {Object} options.config - The current template config
-   * @param {function} options.render - The render function
+   * @param {function} options.posthtml - The PostHTML compiler
+   * @param {Object} options.transform - The transformers object
    * @returns {string} - The transformed HTML, or the original one if nothing was returned
    */
   if (typeof templateConfig.beforeRender === 'function') {
     content = await templateConfig.beforeRender(({
       html: content,
+      matter: matterData,
       config: templateConfig,
       posthtml: compilePostHTML,
       transform: transformers,
@@ -79,13 +82,16 @@ export async function render(html = '', config = {}) {
    *
    * @param {Object} options
    * @param {string} options.html - The HTML to be transformed
+   * @param {Object} options.matter - The front matter data
    * @param {Object} options.config - The current template config
-   * @param {function} options.render - The render function
+   * @param {function} options.posthtml - The PostHTML compiler
+   * @param {Object} options.transform - The transformers object
    * @returns {string} - The transformed HTML, or the original one if nothing was returned
    */
   if (typeof templateConfig.afterRender === 'function') {
     compiled.html = await templateConfig.afterRender(({
       html: compiled.html,
+      matter: matterData,
       config: templateConfig,
       posthtml: compilePostHTML,
       transform: transformers,
@@ -112,13 +118,16 @@ export async function render(html = '', config = {}) {
    *
    * @param {Object} options
    * @param {string} options.html - The HTML to be transformed
+   * @param {Object} options.matter - The front matter data
    * @param {Object} options.config - The current template config
-   * @param {function} options.render - The render function
+   * @param {function} options.posthtml - The PostHTML compiler
+   * @param {Object} options.transform - The transformers object
    * @returns {string} - The transformed HTML, or the original one if nothing was returned
    */
   if (typeof templateConfig.afterTransformers === 'function') {
     compiled.html = await templateConfig.afterTransformers(({
       html: compiled.html,
+      matter: matterData,
       config: templateConfig,
       posthtml: compilePostHTML,
       transform: transformers,

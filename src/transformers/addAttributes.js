@@ -11,7 +11,7 @@ export default function posthtmlPlugin(attributes = {}) {
       role: 'none'
     },
     img: {
-      alt: ''
+      alt: true,
     }
   }
 

@@ -1,3 +1,4 @@
+import type Events from './events';
 import type BuildConfig from './build';
 import type MinifyConfig from './minify';
 import type PostHTMLConfig from './posthtml';
@@ -11,20 +12,11 @@ import type WidowWordsConfig from './widowWords';
 import type { CoreBeautifyOptions } from 'js-beautify';
 import type { BaseURLConfig } from 'posthtml-base-url';
 import type URLParametersConfig from './urlParameters';
-import type {
-  beforeCreateType,
-  beforeRenderType,
-  afterRenderType,
-  afterTransformersType,
-  afterBuildType
-} from './events';
 import type PlaintextConfig from './plaintext';
 
 import type { Config as TailwindConfig } from 'tailwindcss';
 
 export default interface Config {
-  [key: string]: any; // eslint-disable-line
-
   /**
    * Add or remove attributes from elements.
    */
@@ -488,83 +480,87 @@ export default interface Config {
   * @example
   * ```
   * export default {
-  *   beforeCreate: async (config) => {
+  *   beforeCreate: async ({config}) => {
   *     // do something with `config`
   *   }
   * }
   * ```
   */
-  beforeCreate: beforeCreateType;
+  beforeCreate: Events['beforeCreate'];
 
   /**
    * Runs after the Template's config has been computed, but just before it is compiled.
-   * It exposes the Template's HTML, its config, and the Maizzle `render` function.
-   * Must return the `html` string.
+   *
+   * Must return the `html` string, otherwise the original will be used.
    *
    * @default undefined
    *
    * @example
    * ```
    * export default {
-   *   beforeRender: async ({html, config, render}) => {
+   *   beforeRender: async ({html, matter, config, posthtml, transform}) => {
    *     // do something...
    *     return html;
    *   }
    * }
    * ```
    */
-  beforeRender: beforeRenderType;
+  beforeRender: Events['beforeRender'];
 
   /**
   * Runs after the Template has been compiled, but before any Transformers have been applied.
-  * Exposes the rendered `html` string and the `config`. Must return the `html` string.
+  *
+  * Must return the `html` string, otherwise the original will be used.
   *
   * @default undefined
   *
   * @example
   * ```
   * export default {
-  *   afterRender: async ({html, config}) => {
+  *   afterRender: async ({html, matter, config, posthtml, transform}) => {
   *     // do something...
   *     return html;
   *   }
   * }
   * ```
   */
-  afterRender: afterRenderType;
+  afterRender: Events['afterRender'];
 
   /**
   * Runs after all Transformers have been applied, just before the final HTML is returned.
-  * Exposes the rendered `html` string and the `config`. Must return the `html` string.
+  *
+  * Must return the `html` string, otherwise the original will be used.
   *
   * @default undefined
   *
   * @example
   * ```
   * export default {
-  *   afterTransformers: async ({html, config, render}) => {
+  *   afterTransformers: async ({html, matter, config, posthtml, transform}) => {
   *     // do something...
   *     return html;
   *   }
   * }
   * ```
   */
-  afterTransformers: afterTransformersType;
+  afterTransformers: Events['afterTransformers'];
 
   /**
   * Runs after all Templates have been compiled and output to disk.
-  * The files parameter will contain the paths to all the files inside the `build.templates.destination.path` directory.
+  * `files` will contain the paths to all the files inside the `build.output.path` directory.
   *
   * @default undefined
   *
   * @example
   * ```
   * export default {
-  *   afterBuild: async ({files, config, render}) => {
+  *   afterBuild: async ({files, config, transform}) => {
   *     // do something...
   *   }
   * }
   * ```
   */
-  afterBuild: afterBuildType;
+  afterBuild: Events['afterBuild'];
+
+  [key: string]: any;
 }

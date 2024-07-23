@@ -57,11 +57,15 @@ export async function process(html = '', config = {}) {
     expandLinkTag,
     postcssPlugin,
     components(
-      merge({
-        expressions: {
-          locals,
-        }
-      }, defaultComponentsConfig)
+      merge(
+        {
+          expressions: {
+            locals,
+          }
+        },
+        componentsUserOptions,
+        defaultComponentsConfig
+      )
     ),
     expandLinkTag,
     postcssPlugin,

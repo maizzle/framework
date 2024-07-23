@@ -327,7 +327,7 @@ describe.concurrent('Transformers', () => {
       await useTransformers('<style>.size-10px {width: 10px; height: 10px}</style><img class="size-10px">', {
         css: { inline: { removeInlinedSelectors: true } },
       }).then(({ html }) => html)
-    ).toBe('<style></style><img style="width: 10px; height: 10px" width="10" height="10" alt="">')
+    ).toBe('<style></style><img style="width: 10px; height: 10px" width="10" height="10" alt>')
   })
 
   test('Purge CSS', async () => {
@@ -447,7 +447,7 @@ describe.concurrent('Transformers', () => {
           }
         })
         .then(({ html }) => html)
-    ).toBe('<img src="image.jpg" width="100" height="auto" alt="">')
+    ).toBe('<img src="image.jpg" width="100" height="auto" alt>')
   })
 
   test('Base URL', async () => {

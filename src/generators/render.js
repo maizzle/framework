@@ -4,6 +4,7 @@ import { cwd } from 'node:process'
 import { defu as merge } from 'defu'
 import expressions from 'posthtml-expressions'
 import { parseFrontMatter } from '../utils/node.js'
+import defaultConfig from '../posthtml/defaultConfig.js'
 import { process as compilePostHTML } from '../posthtml/index.js'
 import { run as useTransformers, transformers } from '../transformers/index.js'
 
@@ -40,7 +41,7 @@ export async function render(html = '', config = {}) {
       })
     ]
   )
-    .process(matter)
+    .process(matter, defaultConfig)
     .then(({ html }) => parseFrontMatter(`---${html}\n---`))
 
   const templateConfig = merge(matterData, config)

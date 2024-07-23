@@ -1,13 +1,7 @@
-import path from 'pathe'
 import os from 'node:os'
 import gm from 'gray-matter'
 import pico from 'picocolors'
 import { humanFileSize } from './string.js'
-import {
-  copyFile,
-  mkdir,
-  readdir
-} from 'node:fs/promises'
 
 // Return a local IP address
 export function getLocalIP() {

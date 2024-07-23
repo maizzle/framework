@@ -12,9 +12,10 @@ import isObject from 'lodash-es/isObject.js'
 import { parser as parse } from 'posthtml-parser'
 import { parseCSSRule } from '../utils/string.js'
 import { useAttributeSizes } from './useAttributeSizes.js'
+import defaultPostHTMLConfig from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = (options = {}) => tree => {
-  return inline(render(tree), options).then(html => parse(html))
+  return inline(render(tree), options).then(html => parse(html, defaultPostHTMLConfig))
 }
 
 export default posthtmlPlugin

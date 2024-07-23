@@ -4,6 +4,7 @@ import { render } from 'posthtml-render'
 import isEmpty from 'lodash-es/isEmpty.js'
 import { parser as parse } from 'posthtml-parser'
 import posthtmlConfig from '../posthtml/defaultConfig.js'
+import defaultPostHTMLConfig from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = (replacements = {}) => tree => {
   if (!isEmpty(replacements)) {
@@ -17,7 +18,8 @@ const posthtmlPlugin = (replacements = {}) => tree => {
             return replacement
           }
         }
-      })
+      }),
+      defaultPostHTMLConfig
     )
   }
 

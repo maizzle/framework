@@ -4,6 +4,7 @@ import { defu as merge } from 'defu'
 import { render } from 'posthtml-render'
 import { parser as parse } from 'posthtml-parser'
 import posthtmlConfig from '../posthtml/defaultConfig.js'
+import defaultPostHTMLConfig from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = (options = {}) => tree => {
   options = merge(options, {
@@ -12,7 +13,7 @@ const posthtmlPlugin = (options = {}) => tree => {
 
   const { result: html } = crush(render(tree), options)
 
-  return parse(html)
+  return parse(html, defaultPostHTMLConfig)
 }
 
 export default posthtmlPlugin

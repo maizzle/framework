@@ -37,7 +37,7 @@ const posthtmlPlugin = options => tree => {
 
   const { result: html } = emailComb(render(tree), options)
 
-  return parse(html)
+  return parse(html, posthtmlConfig)
 }
 
 export default posthtmlPlugin

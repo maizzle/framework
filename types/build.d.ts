@@ -1,13 +1,7 @@
-import ComponentsConfig from './components';
 import type { SpinnerName } from 'cli-spinners';
 import type ExpressionsConfig from './expressions';
 
 export default interface BuildConfig {
-  /**
-   * Components configuration.
-   */
-  components?: ComponentsConfig;
-
   /**
    * Paths where Maizzle should look for Templates to compile.
    *
@@ -22,7 +16,7 @@ export default interface BuildConfig {
    * }
    * ```
    */
-  content?: string | string[];
+  content?: string[];
 
   /**
   Configure expressions.
@@ -88,21 +82,6 @@ export default interface BuildConfig {
      * @default undefined
      */
     destination?: string;
-  } | {
-    /**
-     * An array of objects specifying source and destination directories for static files.
-     */
-    static: Array<{
-      /**
-       * Array of paths where Maizzle should look for static files.
-       */
-      source: string[];
-      /**
-       * Directory where static files should be copied to,
-       * relative to the `build.output` path.
-       */
-      destination: string;
-    }>;
   };
 
   /**

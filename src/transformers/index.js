@@ -2,6 +2,7 @@ import posthtml from 'posthtml'
 import get from 'lodash-es/get.js'
 import { defu as merge } from 'defu'
 
+import core from './core.js'
 import comb from './comb.js'
 import sixHex from './sixHex.js'
 import minify from './minify.js'
@@ -21,19 +22,17 @@ import replaceStrings from './replaceStrings.js'
 import attributeToStyle from './attributeToStyle.js'
 import removeAttributes from './removeAttributes.js'
 
-import coreTransformers from './core.js'
-
 import defaultPosthtmlConfig from '../posthtml/defaultConfig.js'
 
 /**
  * Use Maizzle Transformers on an HTML string.
  *
- * Only Transformers that are enabled in the `config` will be used.
+ * Only Transformers that are enabled in the passed
+ * `config` parameter will be used.
  *
  * @param {string} html The HTML content
  * @param {object} config The Maizzle config object
- * @returns {Promise<{ original: string, config: object, html: string }>}
- *   A Promise resolving to an object containing the original HTML, modified HTML, and the config
+ * @returns {Promise<{ html: string }>} A Promise resolving to an object containing the modified HTML
  */
 export async function run(html = '', config = {}) {
   const posthtmlPlugins = []
@@ -46,16 +45,16 @@ export async function run(html = '', config = {}) {
   /**
    * 1. Core transformers
    *
-   * Transformers that are always enabled
+   * Transformers that are always enabled.
    *
    */
-  posthtmlPlugins.push(coreTransformers(config))
+  posthtmlPlugins.push(core(config))
 
   /**
    * 2. Safe class names
    *
    * Rewrite Tailwind CSS class names to email-safe alternatives,
-   * unless explicitly disabled
+   * unless explicitly disabled.
    */
   if (get(config, 'css.safe') !== false) {
     posthtmlPlugins.push(
@@ -66,7 +65,6 @@ export async function run(html = '', config = {}) {
   /**
    * 3. Filters
    *
-   * Apply filters to HTML.
    * Filters are always applied, unless explicitly disabled.
    */
   if (get(config, 'filters') !== false) {
@@ -78,7 +76,7 @@ export async function run(html = '', config = {}) {
   /**
    * 4. Markdown
    *
-   * Convert Markdown to HTML with Markdown-it, unless explicitly disabled
+   * Convert Markdown to HTML with markdown-it, unless explicitly disabled.
    */
   if (get(config, 'markdown') !== false) {
     posthtmlPlugins.push(
@@ -88,7 +86,9 @@ export async function run(html = '', config = {}) {
 
   /**
    * 5. Prevent widow words
-   * Always runs, unless explicitly disabled
+   *
+   * Enabled by default, will prevent widow words in elements
+   * wrapped with a `prevent-widows` attribute.
    */
   if (get(config, 'widowWords') !== false) {
     posthtmlPlugins.push(
@@ -110,7 +110,7 @@ export async function run(html = '', config = {}) {
   /**
    * 7. Inline CSS
    *
-   * Inline CSS into HTML
+   * Inline CSS into HTML.
    */
   if (get(config, 'css.inline')) {
     posthtmlPlugins.push(inlineCSS(
@@ -150,7 +150,7 @@ export async function run(html = '', config = {}) {
   /**
    * 10. Shorthand CSS
    *
-   * Convert longhand CSS properties to shorthand in `style` attributes
+   * Convert longhand CSS properties to shorthand in `style` attributes.
    */
   if (get(config, 'css.shorthand')) {
     posthtmlPlugins.push(
@@ -161,7 +161,7 @@ export async function run(html = '', config = {}) {
   /**
    * 11. Add attributes
    *
-   * Add attributes to HTML tags
+   * Add attributes to HTML tags.
    */
   if (get(config, 'attributes.add') !== false) {
     posthtmlPlugins.push(
@@ -172,7 +172,7 @@ export async function run(html = '', config = {}) {
   /**
    * 12. Base URL
    *
-   * Add a base URL to relative paths
+   * Add a base URL to relative paths.
    */
   if (get(config, 'baseURL', get(config, 'baseUrl'))) {
     posthtmlPlugins.push(
@@ -180,7 +180,7 @@ export async function run(html = '', config = {}) {
     )
   } else {
     /**
-     * Set baseURL to `build.static.destination` if it's not already set
+     * Set baseURL to `build.static.destination` if it's not already set.
      */
     const destination = get(config, 'build.static.destination', '')
     if (destination && !config._dev) {
@@ -198,7 +198,7 @@ export async function run(html = '', config = {}) {
   /**
    * 13. URL parameters
    *
-   * Add parameters to URLs
+   * Add parameters to URLs.
    */
   if (get(config, 'urlParameters')) {
     posthtmlPlugins.push(
@@ -209,8 +209,7 @@ export async function run(html = '', config = {}) {
   /**
    * 14. Six-digit HEX
    *
-   * Convert three-digit HEX colors to six-digit
-   * Always runs, unless explicitly disabled
+   * Enabled by default, converts three-digit HEX colors to six-digit.
    */
   if (get(config, 'css.sixHex') !== false) {
     posthtmlPlugins.push(
@@ -221,7 +220,7 @@ export async function run(html = '', config = {}) {
   /**
    * 15. PostHTML MSO
    *
-   * Simplify writing MSO conditionals for Outlook
+   * Enabled by default, simplifies writing MSO conditionals for Outlook.
    */
   if (get(config, 'outlook') !== false) {
     posthtmlPlugins.push(
@@ -232,7 +231,7 @@ export async function run(html = '', config = {}) {
   /**
    * 16. Prettify
    *
-   * Pretty-print HTML using js-beautify
+   * Pretty-print HTML using js-beautify.
    */
   if (get(config, 'prettify')) {
     posthtmlPlugins.push(
@@ -243,7 +242,7 @@ export async function run(html = '', config = {}) {
   /**
    * 17. Minify
    *
-   * Minify HTML using html-crush
+   * Minify HTML using html-crush.
    */
   if (get(config, 'minify')) {
     posthtmlPlugins.push(
@@ -254,14 +253,14 @@ export async function run(html = '', config = {}) {
   /**
    * 18. <template> tags
    *
-   * Replace <template> tags with their content
+   * Replace <template> tags with their content.
    */
   posthtmlPlugins.push(templateTag())
 
   /**
    * 19. Replace strings
    *
-   * Replace strings through regular expressions
+   * Replace strings through regular expressions.
    */
   if (get(config, 'replaceStrings')) {
     posthtmlPlugins.push(
@@ -274,24 +273,4 @@ export async function run(html = '', config = {}) {
     .then(result => ({
       html: result.html,
     }))
-}
-
-export const transformers = {
-  comb,
-  sixHex,
-  minify,
-  baseUrl,
-  inlineCSS,
-  prettify,
-  filters,
-  markdown,
-  posthtmlMso,
-  shorthandCss,
-  preventWidows,
-  addAttributes,
-  urlParameters,
-  safeClassNames,
-  replaceStrings,
-  attributeToStyle,
-  removeAttributes,
 }

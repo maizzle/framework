@@ -6,7 +6,7 @@ import expressions from 'posthtml-expressions'
 import { parseFrontMatter } from '../utils/node.js'
 import defaultConfig from '../posthtml/defaultConfig.js'
 import { process as compilePostHTML } from '../posthtml/index.js'
-import { run as useTransformers, transformers } from '../transformers/index.js'
+import { run as useTransformers } from '../transformers/index.js'
 
 export async function render(html = '', config = {}) {
   if (typeof html !== 'string') {
@@ -70,7 +70,6 @@ export async function render(html = '', config = {}) {
       matter: matterData,
       config: templateConfig,
       posthtml: compilePostHTML,
-      transform: transformers,
     })) ?? content
   }
 
@@ -94,7 +93,6 @@ export async function render(html = '', config = {}) {
       matter: matterData,
       config: templateConfig,
       posthtml: compilePostHTML,
-      transform: transformers,
     })) ?? compiled.html
   }
 
@@ -130,7 +128,6 @@ export async function render(html = '', config = {}) {
       matter: matterData,
       config: templateConfig,
       posthtml: compilePostHTML,
-      transform: transformers,
     })) ?? compiled.html
   }
 

@@ -28,12 +28,11 @@ describe.concurrent('Render', () => {
 
   test('Runs the `beforeRender` event', async () => {
     const { html } = await render('<div class="inline">{{ page.foo }}</div>', {
-      beforeRender({ config, posthtml, transform }) {
+      beforeRender({ config, posthtml }) {
         config.foo = 'bar'
 
         expect(config).toBeInstanceOf(Object)
         expect(posthtml).toBeInstanceOf(Function)
-        expect(transform.inlineCSS).toBeInstanceOf(Function)
       }
     })
 
@@ -42,14 +41,13 @@ describe.concurrent('Render', () => {
 
   test('Runs the `afterRender` event', async () => {
     const { html } = await render('<div class="inline">foo</div>', {
-      afterRender({ config, posthtml, transform }) {
+      afterRender({ config, posthtml }) {
         config.replaceStrings = {
           foo: 'bar'
         }
 
         expect(config).toBeInstanceOf(Object)
         expect(posthtml).toBeInstanceOf(Function)
-        expect(transform.inlineCSS).toBeInstanceOf(Function)
       }
     })
 
@@ -61,10 +59,9 @@ describe.concurrent('Render', () => {
       replaceStrings: {
         foo: 'bar'
       },
-      afterTransformers({ html, config, posthtml, transform }) {
+      afterTransformers({ html, config, posthtml }) {
         expect(config).toBeInstanceOf(Object)
         expect(posthtml).toBeInstanceOf(Function)
-        expect(transform.inlineCSS).toBeInstanceOf(Function)
 
         return html.replace('bar', 'baz')
       }

@@ -1,7 +1,7 @@
 import type { URLParametersConfig as URLParamsConfig } from 'posthtml-url-parameters';
 
 export default interface URLParametersConfig {
-  [key: string]: any; // eslint-disable-line
+  [key: string]: any;
 
   _options?: {
     /**

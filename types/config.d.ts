@@ -5,6 +5,7 @@ import type PostHTMLConfig from './posthtml';
 import type MarkdownConfig from './markdown';
 import type { ProcessOptions } from 'postcss';
 import type PurgeCSSConfig from './css/purge';
+import type PlaintextConfig from './plaintext';
 import type CSSInlineConfig from './css/inline';
 import type { SpinnerName } from 'cli-spinners';
 import type ComponentsConfig from './components';
@@ -12,7 +13,6 @@ import type WidowWordsConfig from './widowWords';
 import type { CoreBeautifyOptions } from 'js-beautify';
 import type { BaseURLConfig } from 'posthtml-base-url';
 import type URLParametersConfig from './urlParameters';
-import type PlaintextConfig from './plaintext';
 
 import type { Config as TailwindConfig } from 'tailwindcss';
 
@@ -60,20 +60,8 @@ export default interface Config {
   }
 
   /**
-  Configure build settings.
-
-  @example
-  ```
-  export default {
-    build: {
-      components: ComponentsConfig,
-      posthtml: PostHTMLConfig,
-      tailwind: TailwindConfig,
-      templates: TemplatesConfig,
-    }
-  }
-  ```
-  */
+   * Configure build settings.
+   */
   build: BuildConfig;
 
   /**
@@ -177,7 +165,6 @@ export default interface Config {
 
     /**
      * Use a custom Tailwind CSS configuration object.
-     *
      */
     tailwind?: TailwindConfig;
   }
@@ -221,7 +208,7 @@ export default interface Config {
    * <p>{{ company.name }}</p>
    * ```
    */
-  locals?: Record<string, any>; // eslint-disable-line
+  locals?: Record<string, any>;
 
   /**
    * Configure the Markdown parser.

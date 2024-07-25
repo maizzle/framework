@@ -3,12 +3,13 @@ import { defu as merge } from 'defu'
 
 // PostHTML
 import posthtml from 'posthtml'
+import posthtmlFetch from 'posthtml-fetch'
+import envTags from './plugins/envTags.js'
 import components from 'posthtml-component'
 import posthtmlPostcss from 'posthtml-postcss'
 import defaultPosthtmlConfig from './defaultConfig.js'
 import expandLinkTag from './plugins/expandLinkTag.js'
 import envAttributes from './plugins/envAttributes.js'
-import envTags from './plugins/envTags.js'
 
 // PostCSS
 import tailwindcss from 'tailwindcss'
@@ -50,12 +51,29 @@ export async function process(html = '', config = {}) {
     { page: config },
   )
 
+  const fetchPlugin = posthtmlFetch(
+    merge(
+      {
+        expressions: merge(
+          locals,
+          expressionsOptions,
+          {
+            missingLocal: '{local}',
+            strictMode: false,
+          },
+        ),
+      },
+      get(config, 'build.fetch', {})
+    )
+  )
+
   return posthtml([
     ...get(config, 'posthtml.plugins.before', []),
     envTags(config.env),
     envAttributes(config.env),
     expandLinkTag,
     postcssPlugin,
+    fetchPlugin,
     components(
       merge(
         {

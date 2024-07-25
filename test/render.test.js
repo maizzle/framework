@@ -111,4 +111,24 @@ describe.concurrent('Render', () => {
     expect(cleanString(inDev)).toBe('{{ page.env }} <fake:production>ignore</fake:production>')
     expect(inProduction.trim()).toBe('production\n      <fake:production>ignore</fake:production>')
   })
+
+  test('fetch component', async () => {
+    const source = `
+      <x-list>
+        <fetch url="test/stubs/data.json">
+          {{ undefinedVariable }}
+          <each loop="user in response">{{ user.name + (loop.last ? '' : ', ') }}</each>
+          @{{ ignored }}
+        </fetch>
+      </x-list>
+    `
+
+    const { html } = await render(source, {
+      components: {
+        folders: ['test/stubs/components'],
+      }
+    })
+
+    expect(cleanString(html)).toBe('<h1>Results</h1> {{ undefinedVariable }} Leanne Graham, Ervin Howell {{ ignored }}')
+  })
 })

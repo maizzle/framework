@@ -77,6 +77,7 @@
     "posthtml-component": "^1.1.0",
     "posthtml-content": "^2.0.1",
     "posthtml-extra-attributes": "^3.0.0",
+    "posthtml-fetch": "^4.0.0",
     "posthtml-markdownit": "^3.0.1",
     "posthtml-mso": "^3.0.0",
     "posthtml-parser": "^0.12.0",

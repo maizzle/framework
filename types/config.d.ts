@@ -12,6 +12,7 @@ import type WidowWordsConfig from './widowWords';
 import type { CoreBeautifyOptions } from 'js-beautify';
 import type { BaseURLConfig } from 'posthtml-base-url';
 import type URLParametersConfig from './urlParameters';
+import type { PostHTMLFetchConfig } from 'posthtml-fetch';
 import type { PostHTMLComponents } from 'posthtml-component';
 
 import type { Config as TailwindConfig } from 'tailwindcss';
@@ -168,6 +169,11 @@ export default interface Config {
      */
     tailwind?: TailwindConfig;
   }
+
+  /**
+   * Configure the [`<fetch>`](https://maizzle.com/docs/tags#fetch) tag.
+   */
+  fetch?: PostHTMLFetchConfig;
 
   /**
    * Transform text inside elements marked with custom attributes.

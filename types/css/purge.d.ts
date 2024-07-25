@@ -102,7 +102,7 @@ export default interface PurgeCSSConfig {
    * }
    * ```
   */
-  doNotRemoveHTMLCommentsWhoseOpeningTagContains: Opts['doNotRemoveHTMLCommentsWhoseOpeningTagContains'];
+  doNotRemoveHTMLCommentsWhoseOpeningTagContains?: Opts['doNotRemoveHTMLCommentsWhoseOpeningTagContains'];
 
   /**
    * Rename all classes and IDs in both your `<style>` tags and your body HTML elements,

@@ -62,7 +62,7 @@ export default interface Config {
   /**
    * Configure build settings.
    */
-  build: BuildConfig;
+  build?: BuildConfig;
 
   /**
   Define a string that will be prepended to sources and hrefs in your HTML and CSS.
@@ -98,7 +98,7 @@ export default interface Config {
   /**
    * Configure how CSS is handled.
    */
-  css: {
+  css?: {
     /**
      * Configure CSS inlining.
      */
@@ -184,7 +184,7 @@ export default interface Config {
    * }
    * ```
    */
-  filters: boolean | Record<string, (str: string) => string>;
+  filters?: boolean | Record<string, (str: string) => string>;
 
   /**
    * Define variables outside of the `page` object.
@@ -473,7 +473,7 @@ export default interface Config {
   * }
   * ```
   */
-  beforeCreate: Events['beforeCreate'];
+  beforeCreate?: Events['beforeCreate'];
 
   /**
    * Runs after the Template's config has been computed, but just before it is compiled.
@@ -492,7 +492,7 @@ export default interface Config {
    * }
    * ```
    */
-  beforeRender: Events['beforeRender'];
+  beforeRender?: Events['beforeRender'];
 
   /**
   * Runs after the Template has been compiled, but before any Transformers have been applied.
@@ -511,7 +511,7 @@ export default interface Config {
   * }
   * ```
   */
-  afterRender: Events['afterRender'];
+  afterRender?: Events['afterRender'];
 
   /**
   * Runs after all Transformers have been applied, just before the final HTML is returned.
@@ -530,7 +530,7 @@ export default interface Config {
   * }
   * ```
   */
-  afterTransformers: Events['afterTransformers'];
+  afterTransformers?: Events['afterTransformers'];
 
   /**
   * Runs after all Templates have been compiled and output to disk.
@@ -547,7 +547,7 @@ export default interface Config {
   * }
   * ```
   */
-  afterBuild: Events['afterBuild'];
+  afterBuild?: Events['afterBuild'];
 
   [key: string]: any;
 }

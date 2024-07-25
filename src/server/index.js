@@ -40,6 +40,71 @@ app.use(hmrRoute)
 
 let viewing = ''
 const spinner = ora()
+let templatePaths = []
+
+function getTemplateFolders(config) {
+  return Array.isArray(get(config, 'build.content'))
+    ? config.build.content
+    : [config.build.content]
+}
+
+async function getTemplatePaths(templateFolders) {
+  return await fg.glob([...new Set(templateFolders)])
+}
+
+async function getUpdatedRoutes(app, config) {
+  return getTemplatePaths(getTemplateFolders(config))
+}
+
+async function renderUpdatedFile(file, config) {
+  try {
+    const startTime = Date.now()
+    spinner.start('Building...')
+
+    // beforeCreate event
+    if (typeof config.beforeCreate === 'function') {
+      await config.beforeCreate(config)
+    }
+
+    // Read the file
+    const fileContent = await fs.readFile(file, 'utf8')
+
+    // Set a `dev` flag on the config
+    config._dev = true
+
+    // Render the file with PostHTML
+    let { html } = await render(fileContent, config)
+
+    // Update console message
+    const shouldReportFileSize = get(config, 'server.reportFileSize', false)
+
+    spinner.succeed(
+      `Done in ${formatTime(Date.now() - startTime)}`
+      + `${pico.gray(` [${path.relative(cwd(), file)}]`)}`
+      + `${shouldReportFileSize ? ' · ' + getColorizedFileSize(html) : ''}`
+    )
+
+    /**
+     * Inject HMR script
+     */
+    html = injectScript(html, '<script src="/hmr.js"></script>')
+
+    // Notify connected websocket clients about the change
+    wss.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+          type: 'change',
+          content: html,
+          scrollSync: get(config, 'server.scrollSync', false),
+          hmr: get(config, 'server.hmr', true),
+        }))
+      }
+    })
+  } catch (error) {
+    spinner.fail('Failed to render template.')
+    throw error
+  }
+}
 
 export default async (config = {}) => {
   // Read the Maizzle config file
@@ -63,15 +128,17 @@ export default async (config = {}) => {
    */
   initWebSockets(wss, { scrollSync: shouldScroll, hmr: useHmr })
 
-  // Get a list of all template paths
-  const templateFolders = Array.isArray(get(config, 'build.content'))
-    ? config.build.content
-    : [config.build.content]
+  // Register routes
+  templatePaths = await getUpdatedRoutes(app, config)
 
-  const templatePaths = await fg.glob([...new Set(templateFolders)])
-
-  // Set the template paths on the app, we use them in the index view
+  /**
+   * Store template paths on the request object
+   *
+   * We use it in the index view to list all templates.
+   * */
   app.request.templatePaths = templatePaths
+
+  // await updateRoutes(app, config)
 
   /**
    * Create route pattern
@@ -84,7 +151,7 @@ export default async (config = {}) => {
     )
   ].join('|')
 
-  const routePattern = Array.isArray(templateFolders)
+  const routePattern = Array.isArray(getTemplateFolders(config))
     ? `*/:file.(${extensions})`
     : `:file.(${extensions})`
 
@@ -127,7 +194,7 @@ export default async (config = {}) => {
   })
 
   // Error-handling middleware
-  app.use(async (error, req, res, next) => { // eslint-disable-line
+  app.use(async (error, req, res, next) => {
     console.error(error)
 
     const view = await fs.readFile(path.join(__dirname, 'views', 'error.html'), 'utf8')
@@ -145,60 +212,32 @@ export default async (config = {}) => {
    *
    * Watches for changes in the configured Templates and Components paths
    */
+  let isWatcherReady = false
   chokidar
-    .watch([...templatePaths, ...get(config, 'components.folders', defaultComponentsConfig.folders) ])
+    .watch([...templatePaths, ...get(config, 'components.folders', defaultComponentsConfig.folders)])
     .on('change', async () => {
-      // Not viewing a component in the browser, no need to rebuild
-      if (!viewing) {
-        return
+      if (viewing) {
+        await renderUpdatedFile(viewing, config)
       }
-
-      try {
-        const startTime = Date.now()
-        spinner.start('Building...')
-
-        // beforeCreate event
-        if (typeof config.beforeCreate === 'function') {
-          await config.beforeCreate(config)
-        }
-
-        // Read the file
-        const fileContent = await fs.readFile(viewing, 'utf8')
-
-        // Set a `dev` flag on the config
-        config._dev = true
-
-        // Render the file with PostHTML
-        let { html } = await render(fileContent, config)
-
-        // Update console message
-        const shouldReportFileSize = get(config, 'server.reportFileSize', false)
-
-        spinner.succeed(
-          `Done in ${formatTime(Date.now() - startTime)}`
-          + `${pico.gray(` [${path.relative(cwd(), viewing)}]`)}`
-          + `${ shouldReportFileSize ? ' · ' + getColorizedFileSize(html) : ''}`
-        )
-
-        /**
-         * Inject HMR script
-         */
-        html = injectScript(html, '<script src="/hmr.js"></script>')
-
-        // Notify connected websocket clients about the change
-        wss.clients.forEach(client => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({
-              type: 'change',
-              content: html,
-              scrollSync: get(config, 'server.scrollSync', false),
-              hmr: get(config, 'server.hmr', true),
-            }))
-          }
-        })
-      } catch (error) {
-        spinner.fail('Failed to render template.')
-        throw error
+    })
+    .on('ready', () => {
+      /**
+       * `add` fires immediately when the watcher is created,
+       * so we use this trick to detect new files added
+       * after it has started.
+       */
+      isWatcherReady = true
+    })
+    .on('add', async () => {
+      if (isWatcherReady) {
+        templatePaths = await getUpdatedRoutes(app, config)
+        app.request.templatePaths = templatePaths
+      }
+    })
+    .on('unlink', async () => {
+      if (isWatcherReady) {
+        templatePaths = await getUpdatedRoutes(app, config)
+        app.request.templatePaths = templatePaths
       }
     })
 
@@ -255,7 +294,7 @@ export default async (config = {}) => {
       spinner.succeed(
         `Done in ${formatTime(Date.now() - startTime)}`
         + `${pico.gray(` [${path.relative(cwd(), filePath)}]`)}`
-        + `${ shouldReportFileSize ? ' · ' + getColorizedFileSize(html) : ''}`
+        + `${shouldReportFileSize ? ' · ' + getColorizedFileSize(html) : ''}`
       )
 
       /**
@@ -302,12 +341,12 @@ export default async (config = {}) => {
       '**/*/',
       ...get(config, 'build.static.source', [])
     ], {
-      onlyFiles: false,
-      ignore: [
-        'node_modules',
-        get(config, 'build.output.path', 'build_*'),
-      ]
-    })
+    onlyFiles: false,
+    ignore: [
+      'node_modules',
+      get(config, 'build.output.path', 'build_*'),
+    ]
+  })
 
   srcFoldersList.forEach(folder => {
     app.use(express.static(path.join(config.cwd, folder)))

@@ -64,7 +64,7 @@
     "posthtml-content": "^2.1.0",
     "posthtml-extend": "^0.6.0",
     "posthtml-extra-attributes": "^2.0.0",
-    "posthtml-fetch": "^3.0.0",
+    "posthtml-fetch": "^4.0.0",
     "posthtml-markdownit": "^3.1.0",
     "posthtml-match-helper": "^1.0.3",
     "posthtml-mso": "^3.1.0",

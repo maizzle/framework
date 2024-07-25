@@ -63,7 +63,7 @@ export async function process(html = '', config = {}) {
           },
         ),
       },
-      get(config, 'build.fetch', {})
+      get(config, 'fetch', {})
     )
   )
 

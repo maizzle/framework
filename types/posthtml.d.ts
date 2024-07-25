@@ -1,5 +1,5 @@
 import type { Directive } from 'posthtml-parser';
-import type ExpressionsConfig from './expressions';
+import type { PostHTMLExpressions } from 'posthtml-expressions';
 
 export interface PostHTMLOptions {
   /**
@@ -128,9 +128,9 @@ export interface PostHTMLOptions {
 
 export default interface PostHTMLConfig {
   /**
-  Configure expressions.
+  Configure [posthtml-expressions](https://github.com/posthtml/posthtml-expressions) options.
   */
-  expressions?: ExpressionsConfig;
+  expressions?: PostHTMLExpressions;
 
   /**
   Configure PostHTML options.

@@ -8,11 +8,11 @@ import type PurgeCSSConfig from './css/purge';
 import type PlaintextConfig from './plaintext';
 import type CSSInlineConfig from './css/inline';
 import type { SpinnerName } from 'cli-spinners';
-import type ComponentsConfig from './components';
 import type WidowWordsConfig from './widowWords';
 import type { CoreBeautifyOptions } from 'js-beautify';
 import type { BaseURLConfig } from 'posthtml-base-url';
 import type URLParametersConfig from './urlParameters';
+import type { PostHTMLComponents } from 'posthtml-component';
 
 import type { Config as TailwindConfig } from 'tailwindcss';
 
@@ -93,7 +93,7 @@ export default interface Config {
   /**
    * Configure components.
    */
-  components?: ComponentsConfig;
+  components?: PostHTMLComponents;
 
   /**
    * Configure how CSS is handled.

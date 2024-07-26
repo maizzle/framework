@@ -87,6 +87,8 @@ export async function process(html = '', config = {}) {
     ),
     expandLinkTag,
     postcssPlugin,
+    envTags(config.env),
+    envAttributes(config.env),
     ...get(config, 'posthtml.plugins.after', get(config, 'posthtml.plugins', []))
   ])
     .process(html, posthtmlOptions)

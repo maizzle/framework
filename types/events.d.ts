@@ -18,7 +18,12 @@ export default interface Events {
   * }
   * ```
   */
-  beforeCreate?: (params: { config: Config }) => void | Promise<void>;
+  beforeCreate?: (params: {
+    /**
+     * The computed Maizzle config object.
+     */
+    config: Config
+  }) => void | Promise<void>;
 
   /**
   * Runs after the Template's config has been computed, but just before it is compiled.
@@ -43,11 +48,13 @@ export default interface Events {
      */
     html: string;
     /**
-     * The Template's Front Matter.
+     * The Template's Front Matter data.
      */
     matter: { [key: string]: string };
     /**
      * The Template's computed config.
+     *
+     * This is the Environment config merged with the Template's Front Matter.
      */
     config: Config;
     /**
@@ -82,11 +89,13 @@ export default interface Events {
      */
     html: string;
     /**
-     * The Template's Front Matter.
+     * The Template's Front Matter data.
      */
     matter: { [key: string]: string };
     /**
      * The Template's computed config.
+     *
+     * This is the Environment config merged with the Template's Front Matter.
      */
     config: Config;
     /**
@@ -121,11 +130,13 @@ export default interface Events {
      */
     html: string;
     /**
-     * The Template's Front Matter.
+     * The Template's Front Matter data.
      */
     matter: { [key: string]: string };
     /**
      * The Template's computed config.
+     *
+     * This is the Environment config merged with the Template's Front Matter.
      */
     config: Config;
     /**
@@ -146,7 +157,7 @@ export default interface Events {
   * @example
   * ```
   * export default {
-  *   afterBuild: async ({files, config}) => {
+  *   afterBuild: async ({config, files}) => {
   *     // do something...
   *   }
   * }
@@ -154,12 +165,12 @@ export default interface Events {
   */
   afterBuild?: (params: {
     /**
+     * The computed Maizzle config object.
+     */
+    config: Config;
+    /**
      * An array of paths to all the files inside the `build.output.path` directory.
      */
     files: string[];
-    /**
-     * The Maizzle config object.
-     */
-    config: Config;
   }) => string | Promise<string>;
 }

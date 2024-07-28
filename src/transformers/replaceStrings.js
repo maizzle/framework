@@ -6,6 +6,7 @@ import { parser as parse } from 'posthtml-parser'
 import posthtmlConfig from '../posthtml/defaultConfig.js'
 import defaultPostHTMLConfig from '../posthtml/defaultConfig.js'
 
+const captureRegex = new RegExp('\\$\\d', 'gi')
 const posthtmlPlugin = (replacements = {}) => tree => {
   if (!isEmpty(replacements)) {
     const regexes = Object.entries(replacements).map(([k, v]) => [new RegExp(k, 'gi'), v])
@@ -15,7 +16,8 @@ const posthtmlPlugin = (replacements = {}) => tree => {
       render(tree).replace(patterns, matched => {
         for (const [regex, replacement] of regexes) {
           if (regex.test(matched)) {
-            return replacement
+            if (captureRegex.test(replacement)) return matched.replace(regex, replacement)
+            else return replacement
           }
         }
       }),
@@ -35,3 +37,4 @@ export async function replaceStrings(html = '', replacements = {}, posthtmlOptio
     .process(html, merge(posthtmlOptions, posthtmlConfig))
     .then(result => result.html)
 }
+

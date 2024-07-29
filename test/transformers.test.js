@@ -581,7 +581,8 @@ describe.concurrent('Transformers', () => {
     expect(await replaceStrings('initial text', {})).toBe('initial text')
     expect(await replaceStrings('initial text', { '/not/': 'found' })).toBe('initial text')
     expect(await replaceStrings('initial text', { 'initial': 'updated' })).toBe('updated text')
-
+    expect(await replaceStrings('initial [text]', { '(initial) \\[(text)\\]': '($2) updated' })).toBe('(text) updated')
+    
     expect(
       await useTransformers('initial text', { replaceStrings: { 'initial': 'updated' } }).then(({ html }) => html)
     ).toBe('updated text')

@@ -18,7 +18,7 @@ const posthtmlPlugin = (replacements = {}) => tree => {
         for (const [regex, replacement] of regexes) {
           if (regex.test(matched)) {
             if (captureRegex.test(replacement)) {
-              matched.replace(regex, replacement)
+              return matched.replace(regex, replacement)
             }
 
             return replacement

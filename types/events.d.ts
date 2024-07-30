@@ -1,7 +1,5 @@
 import type Config from "./config";
 
-type PostHTMLType = (html: string, config: Config) => { html: string; config: Config };
-
 export default interface Events {
   /**
   * Runs after the Environment config has been computed, but before Templates are processed.
@@ -57,13 +55,6 @@ export default interface Events {
      * This is the Environment config merged with the Template's Front Matter.
      */
     config: Config;
-    /**
-     * A function to process an HTML string with PostHTML.
-     *
-     * @param {string} html The HTML string to process.
-     * @param {Config} config The Maizzle config object.
-     */
-    posthtml: PostHTMLType;
   }) => string | Promise<string>;
 
   /**
@@ -98,13 +89,6 @@ export default interface Events {
      * This is the Environment config merged with the Template's Front Matter.
      */
     config: Config;
-    /**
-    * A function to process an HTML string with PostHTML.
-    *
-    * @param {string} html The HTML string to process.
-    * @param {Config} config The Maizzle config object.
-    */
-    posthtml: PostHTMLType;
   }) => string | Promise<string>;
 
   /**
@@ -139,13 +123,6 @@ export default interface Events {
      * This is the Environment config merged with the Template's Front Matter.
      */
     config: Config;
-    /**
-    * A function to process an HTML string with PostHTML.
-    *
-    * @param {string} html The HTML string to process.
-    * @param {Config} config The Maizzle config object.
-    */
-    posthtml: PostHTMLType;
   }) => string | Promise<string>;
 
   /**

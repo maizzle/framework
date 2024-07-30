@@ -178,21 +178,6 @@ export async function run(html = '', config = {}) {
     posthtmlPlugins.push(
       baseUrl(get(config, 'baseURL', get(config, 'baseUrl', {})))
     )
-  } else {
-    /**
-     * Set baseURL to `build.static.destination` if it's not already set.
-     */
-    const destination = get(config, 'build.static.destination', '')
-    if (destination && !config._dev) {
-      posthtmlPlugins.push(
-        baseUrl({
-          url: destination,
-          allTags: true,
-          styleTag: true,
-          inlineCss: true,
-        })
-      )
-    }
   }
 
   /**

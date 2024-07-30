@@ -16,14 +16,9 @@ const posthtmlPlugin = (replacements = {}) => tree => {
     return parse(
       render(tree).replace(patterns, matched => {
         for (const [regex, replacement] of regexes) {
-          if (regex.test(matched)) {
-            if (captureRegex.test(replacement)) {
-              return matched.replace(regex, replacement)
-            }
-
-            return replacement
-          }
+          if (regex.test(matched)) return matched.replace(regex, replacement)
         }
+      return matched
       }),
       defaultPostHTMLConfig
     )

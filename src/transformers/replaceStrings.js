@@ -6,8 +6,6 @@ import { parser as parse } from 'posthtml-parser'
 import posthtmlConfig from '../posthtml/defaultConfig.js'
 import defaultPostHTMLConfig from '../posthtml/defaultConfig.js'
 
-const captureRegex = /\$\d/gi
-
 const posthtmlPlugin = (replacements = {}) => tree => {
   if (!isEmpty(replacements)) {
     const regexes = Object.entries(replacements).map(([k, v]) => [new RegExp(k, 'gi'), v])

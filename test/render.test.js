@@ -123,7 +123,12 @@ describe.concurrent('Render', () => {
       </x-list>
     `
 
-    const { html } = await render(source, {
+    const { html } = await render(source, { 
+      build: {
+        expressions: {
+          removeScriptLocals: true
+        }
+      },
       components: {
         folders: ['test/stubs/components'],
       }

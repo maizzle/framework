@@ -214,7 +214,19 @@ export default async (config = {}) => {
    */
   let isWatcherReady = false
   chokidar
-    .watch([...templatePaths, ...get(config, 'components.folders', defaultComponentsConfig.folders)])
+    .watch(
+      [
+        ...templatePaths,
+        ...get(config, 'components.folders', defaultComponentsConfig.folders)
+      ],
+      {
+        ignoreInitial: true,
+        awaitWriteFinish: {
+          stabilityThreshold: 150,
+          pollInterval: 25,
+        },
+      }
+    )
     .on('change', async () => {
       if (viewing) {
         await renderUpdatedFile(viewing, config)
@@ -326,6 +338,10 @@ export default async (config = {}) => {
         get(config, 'build.output.path', 'build_production'),
       ],
       ignoreInitial: true,
+      awaitWriteFinish: {
+        stabilityThreshold: 150,
+        pollInterval: 25,
+      },
     })
     .on('change', async file => await globalPathsHandler(file, 'change'))
     .on('add', async file => await globalPathsHandler(file, 'add'))

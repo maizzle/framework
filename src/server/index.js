@@ -256,20 +256,33 @@ export default async (config = {}) => {
   /**
    * Global watcher
    *
-   * Watch for changes in the config file, Tailwind CSS config, and CSS files
+   * Watch for changes in the config files, Tailwind CSS config, CSS files,
+   * configured static assets, and user-defined watch paths.
    */
   const globalWatchedPaths = new Set([
     'config*.{js,cjs,ts}',
     'maizzle.config*.{js,cjs,ts}',
     'tailwind*.config.{js,ts}',
     '**/*.css',
-    ...get(config, 'server.watch', [])
+    ...get(config, 'build.static.source', []),
+    ...get(config, 'server.watch', []),
   ])
 
   async function globalPathsHandler(file, eventType) {
+    // Update express.static to serve new files
+    if (eventType === 'add') {
+      app.use(express.static(path.dirname(file)))
+    }
+
+    // Stop serving deleted files
+    if (eventType === 'unlink') {
+      app._router.stack = app._router.stack.filter(
+        layer => layer.regexp.source !== path.dirname(file).replace(/\\/g, '/')
+      )
+    }
+
     // Not viewing a component in the browser, no need to rebuild
     if (!viewing) {
-      spinner.info(`file ${eventType}: ${file}`)
       return
     }
 
@@ -326,7 +339,7 @@ export default async (config = {}) => {
         }
       })
     } catch (error) {
-      spinner.fail('Failed to render template.')
+      spinner.fail(`Failed to render template: ${file}`)
       throw error
     }
   }
@@ -349,8 +362,6 @@ export default async (config = {}) => {
 
   /**
    * Serve all folders in the cwd as static files
-   *
-   * TODO: change to include build.assets or build.static, which may be outside cwd
    */
   const srcFoldersList = await fg.glob(
     [

@@ -247,9 +247,9 @@ export default async (config = {}) => {
    * Watch for changes in the config file, Tailwind CSS config, and CSS files
    */
   const globalWatchedPaths = new Set([
-    'config*.js',
-    'maizzle.config*.js',
-    'tailwind*.config.js',
+    'config*.{js,cjs}',
+    'maizzle.config*.{js,cjs}',
+    'tailwind*.config.{js,ts}',
     '**/*.css',
     ...get(config, 'server.watch', [])
   ])

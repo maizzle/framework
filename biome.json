@@ -7,12 +7,12 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
-      "performance": {
-        "noAccumulatingSpread": "off"
+      "complexity": {
+        "noForEach": "off"
       },
       "style": {
-        "noParameterAssign": "off",
-        "useTemplate": "off"
+        "useTemplate": "off",
+        "noParameterAssign": "off"
       }
 		}
 	}

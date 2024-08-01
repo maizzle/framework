@@ -1,3 +1,5 @@
+import type { Opts } from 'string-remove-widows';
+
 export default interface WidowWordsConfig {
   /**
   The attribute name to use.
@@ -12,45 +14,45 @@ export default interface WidowWordsConfig {
 
   @default false
   */
-  removeWindowPreventionMeasures?: boolean;
+  removeWidowPreventionMeasures?: Opts['removeWidowPreventionMeasures'];
 
   /**
   Convert the space entity to the `targetLanguage`.
 
   @default true
   */
-  convertEntities?: boolean;
+  convertEntities?: Opts['convertEntities'];
 
   /**
   Language to encode non-breaking spaces in.
 
   @default 'html'
   */
-  targetLanguage?: 'html' | 'css' | 'js';
+  targetLanguage?: Opts['targetLanguage'];
 
   /**
   Should whitespace in front of dashes (-), n-dashes (–) or m-dashes (—) be replaced with a `&nbsp;`.
 
   @default true
   */
-  hyphens?: boolean;
+  hyphens?: Opts['hyphens'];
 
   /**
   The minimum amount of words in a target string, in order to trigger the transformer.
 
   @default 3
   */
-  minWordCount?: number;
+  minWordCount?: Opts['minWordCount'];
 
   /**
   The minimum amount non-whitespace characters in a target string, in order to trigger the transformer.
 
   @default 20
   */
-  minCharCount?: number;
+  minCharCount?: Opts['minCharCount'];
 
   /**
   Start/end pairs of strings that will prevent the transformer from removing widow words inside them.
   */
-  ignore?: string | string[];
+  ignore?: Opts['ignore'];
 }

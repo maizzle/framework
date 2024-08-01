@@ -1,105 +1,153 @@
-export type beforeCreateType = (config: any) => Promise<void>;
-export type beforeRenderType = (html: string, config: any) => Promise<string>;
-export type afterRenderType = (html: string, config: any) => Promise<string>;
-export type afterTransformersType = (html: string, config: any) => Promise<string>;
-export type afterBuildType = (files: any[], config: any) => Promise<void>;
+import type Config from "./config";
 
-export default interface EventsConfig {
+export default interface Events {
   /**
-  Runs after the Environment config has been computed, but before Templates are processed.
-  Exposes the `config` object so you can further customize it.
-
-  @default undefined
-
-  @example
-  ```
-  module.exports = {
-    events: {
-      beforeCreate: async (config) => {
-        // do something with `config`
-      }
-    }
-  }
-  ```
+  * Runs after the Environment config has been computed, but before Templates are processed.
+  * Exposes the `config` object so you can further customize it.
+  *
+  * @default undefined
+  *
+  * @example
+  * ```
+  * export default {
+  *   beforeCreate: async ({config}) => {
+  *     // do something with `config`
+  *   }
+  * }
+  * ```
   */
-  beforeCreate: beforeCreateType;
-
-  /**
-  Runs after the Template's config has been computed, but just before it is compiled.
-  It exposes the Template's config, as well as the HTML. Must return the `html` string.
-
-  @default undefined
-
-  @example
-  ```
-  module.exports = {
-    events: {
-      beforeRender: async (html, config) => {
-        // do something with html and config
-        return html;
-      }
-    }
-  }
-  ```
-  */
-  beforeRender: beforeRenderType;
+  beforeCreate?: (params: {
+    /**
+     * The computed Maizzle config object.
+     */
+    config: Config
+  }) => void | Promise<void>;
 
   /**
-  Runs after the Template has been compiled, but before any Transformers have been applied.
-  Exposes the rendered `html` string and the `config`. Must return the `html` string.
-
-  @default undefined
-
-  @example
-  ```
-  module.exports = {
-    events: {
-      afterRender: async (html, config) => {
-        // do something with html and config
-        return html;
-      }
-    }
-  }
-  ```
+  * Runs after the Template's config has been computed, but just before it is compiled.
+  *
+  * Must return the `html` string, otherwise the original will be used.
+  *
+  * @default undefined
+  *
+  * @example
+  * ```
+  * export default {
+  *   beforeRender: async ({html, matter, config, posthtml}) => {
+  *     // do something...
+  *     return html;
+  *   }
+  * }
+  * ```
   */
-  afterRender: afterRenderType;
+  beforeRender?: (params: {
+    /**
+     * The Template's HTML string.
+     */
+    html: string;
+    /**
+     * The Template's Front Matter data.
+     */
+    matter: { [key: string]: string };
+    /**
+     * The Template's computed config.
+     *
+     * This is the Environment config merged with the Template's Front Matter.
+     */
+    config: Config;
+  }) => string | Promise<string>;
 
   /**
-  Runs after all Transformers have been applied, just before the final HTML is returned.
-  Exposes the rendered `html` string and the `config`. Must return the `html` string.
-
-  @default undefined
-
-  @example
-  ```
-  module.exports = {
-    events: {
-      afterTransformers: async (html, config) => {
-        // do something with html and config
-        return html;
-      }
-    }
-  }
-  ```
+  * Runs after the Template has been compiled, but before any Transformers have been applied.
+  *
+  * Must return the `html` string, otherwise the original will be used.
+  *
+  * @default undefined
+  *
+  * @example
+  * ```
+  * export default {
+  *   afterRender: async async ({html, matter, config, posthtml}) => {
+  *     // do something...
+  *     return html;
+  *   }
+  * }
+  * ```
   */
-  afterTransformers: afterTransformersType;
+  afterRender?: (params: {
+    /**
+     * The Template's HTML string.
+     */
+    html: string;
+    /**
+     * The Template's Front Matter data.
+     */
+    matter: { [key: string]: string };
+    /**
+     * The Template's computed config.
+     *
+     * This is the Environment config merged with the Template's Front Matter.
+     */
+    config: Config;
+  }) => string | Promise<string>;
 
   /**
-  Runs after all Templates have been compiled and output to disk.
-  The files parameter will contain the paths to all the files inside the `build.templates.destination.path` directory.
-
-  @default undefined
-
-  @example
-  ```
-  module.exports = {
-    events: {
-      afterBuild: async (files, config) => {
-        // do something with files or config
-      }
-    }
-  }
-  ```
+  * Runs after all Transformers have been applied, just before the final HTML is returned.
+  *
+  * Must return the `html` string, otherwise the original will be used.
+  *
+  * @default undefined
+  *
+  * @example
+  * ```
+  * export default {
+  *   afterTransformers: async ({html, matter, config, posthtml}) => {
+  *     // do something...
+  *     return html;
+  *   }
+  * }
+  * ```
   */
-  afterBuild: afterBuildType;
+  afterTransformers?: (params: {
+    /**
+     * The Template's HTML string.
+     */
+    html: string;
+    /**
+     * The Template's Front Matter data.
+     */
+    matter: { [key: string]: string };
+    /**
+     * The Template's computed config.
+     *
+     * This is the Environment config merged with the Template's Front Matter.
+     */
+    config: Config;
+  }) => string | Promise<string>;
+
+  /**
+  * Runs after all Templates have been compiled and output to disk.
+  * `files` will contain the paths to all the files inside the `build.output.path` directory.
+  *
+  * @default undefined
+  *
+  * @example
+  * ```
+  * export default {
+  *   afterBuild: async ({config, files}) => {
+  *     // do something...
+  *   }
+  * }
+  * ```
+  */
+  afterBuild?: (params: {
+    /**
+     * The computed Maizzle config object.
+     */
+    config: Config;
+    /**
+     * An array of paths to all the files inside the `build.output.path` directory.
+     */
+    files: string[];
+  }) => string | Promise<string>;
 }

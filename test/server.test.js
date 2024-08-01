@@ -71,4 +71,11 @@ describe.concurrent('Server', () => {
     expect(res.status).toBe(200)
     expect(res.text).toContain('<style>.hidden {')
   })
+
+  test('404 page', async () => {
+    const res = await request('http://localhost:3000').get('/error.php')
+
+    expect(res.status).toBe(404)
+    expect(res.text).toContain('Template Not Found')
+  })
 })

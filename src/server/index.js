@@ -193,20 +193,6 @@ export default async (config = {}) => {
     })
   })
 
-  // Error-handling middleware
-  app.use(async (error, req, res, next) => {
-    console.error(error)
-
-    const view = await fs.readFile(path.join(__dirname, 'views', 'error.html'), 'utf8')
-    const { html } = await render(view, {
-      method: req.method,
-      url: req.url,
-      error
-    })
-
-    res.status(500).send(html)
-  })
-
   /**
    * Components watcher
    *
@@ -377,6 +363,16 @@ export default async (config = {}) => {
 
   srcFoldersList.forEach(folder => {
     app.use(express.static(path.join(config.cwd, folder)))
+  })
+
+  // Error-handling middleware
+  app.use(async (req, res) => {
+    const view = await fs.readFile(path.join(__dirname, 'views', '404.html'), 'utf8')
+    const { html } = await render(view, {
+      url: req.url,
+    })
+
+    res.status(404).send(html)
   })
 
   /**

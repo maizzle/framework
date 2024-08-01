@@ -55,7 +55,7 @@ export async function process(html = '', config = {}) {
     merge(
       {
         expressions: merge(
-          locals,
+          { locals },
           expressionsOptions,
           {
             missingLocal: '{local}',

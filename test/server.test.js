@@ -5,9 +5,9 @@ import { describe, expect, test, beforeAll } from 'vitest'
 const init = async () => {
   await serve({
     build: {
-      content: 'test/fixtures/build/**/*.html',
+      content: ['test/fixtures/build/**/*.html'],
       static: {
-        source: 'test/fixtures/build/**/*.png',
+        source: ['test/fixtures/build/**/*.png'],
       }
     },
     components: {

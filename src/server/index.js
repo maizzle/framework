@@ -112,10 +112,12 @@ export default async (config = {}) => {
 
   /**
    * Dev server settings
-   */
+  */
+  spinner.spinner = get(config, 'server.spinner', 'circleHalves')
+  spinner.start('Starting server...')
+
   const shouldScroll = get(config, 'server.scrollSync', false)
   const useHmr = get(config, 'server.hmr', true)
-  spinner.spinner = get(config, 'server.spinner', 'circleHalves')
 
   // Add static assets root prefix so user doesn't have to
   if (!config.baseURL) {
@@ -384,8 +386,6 @@ export default async (config = {}) => {
 
   function startServer(port) {
     const serverStartTime = Date.now()
-    spinner.start('Starting server...')
-
     const server = createServer(app)
 
     /**

@@ -116,4 +116,31 @@ export default interface BuildConfig {
    * ```
    */
   summary?: boolean;
+
+  /**
+   * Information about the Template currently being compiled.
+   *
+   * @example
+   *
+   * ```
+   * {
+      path: {
+        root: 'build_production',
+        dir: 'build_production',
+        base: 'transactional.html',
+        ext: '.html',
+        name: 'transactional'
+      }
+    }
+    * ```
+   */
+  current?: {
+    path?: {
+      root: string;
+      dir: string;
+      base: string;
+      ext: string;
+      name: string;
+    };
+  };
 }

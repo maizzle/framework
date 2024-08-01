@@ -51,6 +51,29 @@ export default interface BuildConfig {
      * @default 'html'
      */
     extension: string;
+    /**
+     * Path or array of paths that will be unwrapped.
+     * Everything inside them will be copied to
+     * the root of the output directory.
+     *
+     * @example
+     *
+     * ```
+     * export default {
+     *  build: {
+     *   content: ['test/fixtures/**\/*.html'],
+     *   output: {
+     *    from: ['test/fixtures'],
+     *  }
+     * }
+     * ```
+     *
+     * This will copy everything inside `test/fixtures` to the root
+     * of the output directory, not creating the `test/fixtures`
+     * directory.
+     *
+     */
+    from: string;
   };
 
   /**

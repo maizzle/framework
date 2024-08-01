@@ -78,8 +78,8 @@ export async function process(html = '', config = {}) {
       merge(
         {
           expressions: merge(
+            { locals },
             expressionsOptions,
-            {locals}
           )
         },
         componentsUserOptions,

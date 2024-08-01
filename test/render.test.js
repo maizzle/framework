@@ -113,7 +113,7 @@ describe.concurrent('Render', () => {
   })
 
   test('fetch component', async () => {
-    const source = `
+    const { html } = await render(`
       <x-list>
         <fetch url="test/stubs/data.json">
           {{ undefinedVariable }}
@@ -121,19 +121,31 @@ describe.concurrent('Render', () => {
           @{{ ignored }}
         </fetch>
       </x-list>
-    `
-
-    const { html } = await render(source, { 
-      build: {
-        expressions: {
-          removeScriptLocals: true
-        }
-      },
+    `, {
       components: {
         folders: ['test/stubs/components'],
       }
     })
 
     expect(cleanString(html)).toBe('<h1>Results</h1> {{ undefinedVariable }} Leanne Graham, Ervin Howell {{ ignored }}')
+  })
+
+  test('uses expressions options', async () => {
+    const { html } = await render(`
+      <script locals>
+        module.exports = { name: 'John' }
+      </script>
+      <h1>Hello {{ name }}</h1>
+    `,
+      {
+        build: {
+          expressions: {
+            removeScriptLocals: true,
+          }
+        }
+      }
+    )
+
+    expect(cleanString(html)).toBe('<h1>Hello John</h1>')
   })
 })

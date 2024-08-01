@@ -1,6 +1,7 @@
 import {
   readFile,
   writeFile,
+  copyFile,
   lstat,
   mkdir,
   rm,
@@ -36,6 +37,27 @@ import {
 import { readFileConfig } from '../utils/getConfigByFilePath.js'
 
 /**
+ * Ensures that a directory exists, creating it if needed.
+ *
+ * @param {string} filePath - The path to the file to check.
+ */
+async function ensureDirectoryExistence(filePath) {
+  const dirname = path.dirname(filePath)
+  await mkdir(dirname, { recursive: true })
+}
+
+/**
+ * Copy a file from source to target.
+ *
+ * @param {string} source - The source file path.
+ * @param {string} target - The target file path.
+ */
+async function copyFileAsync(source, target) {
+  await ensureDirectoryExistence(target)
+  await copyFile(source, target)
+}
+
+/**
  * Compile templates and output to the build directory.
  * Returns a promise containing an object with files output and the config object.
  *
@@ -48,7 +70,10 @@ export default async (config = {}) => {
   try {
     const startTime = Date.now()
 
-    // Compute config
+    /**
+     * Read the config file for this environment,
+     * merging it with the default config.
+     */
     config = await readFileConfig(config).catch(() => { throw new Error('Could not compute config') })
 
     /**
@@ -80,17 +105,10 @@ export default async (config = {}) => {
     })
 
     /**
-     * Determine paths to handle
-     *
-     * 1. Resolve globs in `build.content` to folders that should be copied over to `build.output.path`
-     * 2. Check that templates to be built, actually exist
+     * Check that templates to be built, actually exist
      */
-    const contentPaths = get(config, 'build.content', 'src/templates/**/*.html')
+    const contentPaths = get(config, 'build.content', ['src/templates/**/*.html'])
 
-    // 1. Resolve globs in `build.content` to folders that should be copied over to `build.output.path`
-    const rootDirs = await getRootDirectories(contentPaths)
-
-    // 2. Check that templates to be built, actually exist
     const templateFolders = Array.isArray(contentPaths) ? contentPaths : [contentPaths]
     const templatePaths = await fg.glob([...new Set(templateFolders)])
 
@@ -104,8 +122,48 @@ export default async (config = {}) => {
      *
      * Copies each `build.content` path to the `build.output.path` directory.
      */
-    for await (const rootDir of rootDirs) {
-      await cp(rootDir, buildOutputPath, { recursive: true })
+    let from = get(config, 'build.output.from', ['src/templates', 'src'])
+
+    const globPathsToCopy = contentPaths.map(glob => {
+      // Keep negated paths as they are
+      if (glob.startsWith('!')) {
+        return glob
+      }
+
+      // Keep single-file sources as they are
+      if (!/\*/.test(glob)) {
+        return glob
+      }
+
+      // Update non-negated paths to target all files, avoiding duplication
+      return glob.replace(/\/\*\*\/\*\.\{.*?\}$|\/\*\*\/\*\.[^/]*$|\/*\.[^/]*$/, '/**/*')
+    })
+
+    try {
+      from = Array.isArray(from) ? from : [from]
+
+      /**
+       * Copy files from source to destination
+       *
+       * The array/set conversion is to remove duplicates
+       */
+      for (const file of await fg(Array.from(new Set(globPathsToCopy)))) {
+        let relativePath
+        for (const dir of from) {
+          if (file.startsWith(dir)) {
+            relativePath = path.relative(dir, file)
+            break
+          }
+        }
+        if (!relativePath) {
+          relativePath = path.relative('.', file)
+        }
+
+        const targetPath = path.join(config.build.output.path, relativePath)
+        await copyFileAsync(file, targetPath)
+      }
+    } catch (error) {
+      console.error(`Error while processing pattern ${pattern}: `, err);
     }
 
     /**

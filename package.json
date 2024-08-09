@@ -56,7 +56,7 @@
     "ora": "^5.1.0",
     "postcss": "^8.4.21",
     "postcss-import": "^15.0.0",
-    "postcss-merge-longhand": "^6.0.0",
+    "postcss-merge-longhand": "^7.0.3",
     "posthtml": "^0.16.6",
     "posthtml-attrs-parser": "^1.1.0",
     "posthtml-base-url": "^2.0.2",

@@ -50,7 +50,7 @@
   "dependencies": {
     "@csstools/css-calc": "^1.2.4",
     "@maizzle/cli": "next",
-    "cheerio": "^1.0.0-rc.12",
+    "cheerio": "^1.0.0",
     "chokidar": "^3.6.0",
     "cli-table3": "^0.6.5",
     "color-shorthand-hex-to-six-digit": "^5.0.16",

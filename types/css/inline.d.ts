@@ -85,6 +85,8 @@ export default interface InlineCSSConfig {
    * Prefer HTML `width` and `height` attributes over inline CSS.
    * The inline CSS `width` and `height` will be removed.
    *
+   * Applies to elements set in `widthElements` and `heightElements`.
+   *
    * @example
    * ```
    * export default {

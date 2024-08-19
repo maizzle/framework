@@ -32,6 +32,7 @@ describe.concurrent('Server', () => {
 
     expect(res.status).toBe(200)
     expect(res.text).toContain('<title>Maizzle | Templates</title>')
+    expect(res.text).toContain('insignia') // checks for insignia SVG on index page
 
     // Test if the server serves static files from `build.static.source`
     const imageRes = await request('http://localhost:3000').get('/image.png')
@@ -62,7 +63,7 @@ describe.concurrent('Server', () => {
     const res = await request('http://localhost:3000').get('/')
 
     expect(res.status).toBe(200)
-    expect(res.text).toContain('<h2>test/fixtures/build</h2>')
+    expect(res.text).toContain('<strong>test/fixtures/build</strong>')
   })
 
   test('Renders template', async () => {

@@ -140,7 +140,7 @@ export default async (config = {}) => {
    * */
   app.request.templatePaths = templatePaths
 
-  // await updateRoutes(app, config)
+  app.request.maizzleConfig = config
 
   /**
    * Create route pattern

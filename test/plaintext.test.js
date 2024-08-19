@@ -80,7 +80,10 @@ describe.concurrent('Plaintext', () => {
     expect(result).toBe(expected)
   })
 
-  test.skip('Outputs plaintext files', async ctx => {
+  test('Outputs plaintext files', async ctx => {
+    /**
+     * `plaintext` as a file path
+     */
     const withOptions = await writePlaintextFile('test', {
       plaintext: `${ctx.folder}/plaintext.txt`
     })
@@ -93,9 +96,31 @@ describe.concurrent('Plaintext', () => {
     expect(withOptionsFiles).toContain('plaintext.txt')
     expect(withOptionsFileContents).toBe('test')
 
+    /**
+     * `plaintext` as a directory path
+     */
+    const withDirPath = await writePlaintextFile('test', {
+      build: {
+        current: {
+          path: {
+            name: 'plaintext'
+          }
+        }
+      },
+      plaintext: `${ctx.folder}/txt`
+    })
+
+    const withDirPathFiles = await readdir(`${ctx.folder}/txt`)
+    const withDirPathFileContents = await readFile(`${ctx.folder}/txt/plaintext.txt`, 'utf8')
+
+    // Successful file write fulfills the promise with `undefined`
+    expect(withDirPath).toBe(undefined)
+    expect(withDirPathFiles).toContain('plaintext.txt')
+    expect(withDirPathFileContents).toBe('test')
+
     const withPermalink = await writePlaintextFile('with permalink', {
       plaintext: true ,
-      permalink: `${ctx.folder}/plaintext2.txt`
+      permalink: `${ctx.folder}/plaintext2.html`
     })
 
     const withPermalinkFiles = await readdir(ctx.folder)

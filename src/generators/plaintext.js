@@ -154,17 +154,11 @@ export async function writePlaintextFile(plaintext = '', config = {}) {
   const plaintextExtension = get(plaintextConfig, 'output.extension', 'txt')
 
   /**
-   * If `plaintext: true` (either from Front Matter or from config)
+   * If `plaintext: true` (either from Front Matter or from config),
+   * output plaintext file in the same location as the HTML file.
    */
   if (plaintextConfig === true) {
-    // If the template has a `permalink` key set in the FM
-    if (typeof config.permalink === 'string') {
-      // Output plaintext at the `permalink` path
-      plaintextOutputPath = config.permalink
-    } else {
-      // Output plaintext at the same directory as the HTML file
-      plaintextOutputPath = get(config, 'build.output.path')
-    }
+    plaintextOutputPath = get(config, 'build.output.path')
   }
 
   /**
@@ -179,12 +173,22 @@ export async function writePlaintextFile(plaintext = '', config = {}) {
   // No need to handle if it's an object, since we already set it to that initially
 
   /**
-   * If `plaintextOutputPath` is a file path, output file there
+   * If the template has a `permalink` key set in the FM, always output plaintext file there
+   */
+  if (typeof config.permalink === 'string') {
+    plaintextOutputPath = config.permalink
+  }
+
+  /**
+   * If `plaintextOutputPath` is a file path, output file there.
+   *
+   * The file will be output relative to the project root, and the extension
+   * doesn't matter, it will be replaced with `plaintextExtension`.
    */
   if (path.extname(plaintextOutputPath)) {
     // Ensure the target directory exists
     await lstat(plaintextOutputPath).catch(async () => {
-      await mkdir(plaintextOutputPath, { recursive: true })
+      await mkdir(path.dirname(plaintextOutputPath), { recursive: true })
     })
 
     // Ensure correct extension is used
@@ -193,19 +197,19 @@ export async function writePlaintextFile(plaintext = '', config = {}) {
       path.basename(plaintextOutputPath, path.extname(plaintextOutputPath)) + '.' + plaintextExtension
     )
 
-    console.log('plaintextOutputPath', plaintextOutputPath);
-
     return writeFile(plaintextOutputPath, plaintext)
   }
 
   /**
-   * If `plaintextOutputPath` is a directory path, output file there, using the template's name
+   * If `plaintextOutputPath` is a directory path, output file there using the Template's name.
+   *
+   * The file will be output relative to the `build.output.path` directory.
    */
   const templateFileName = get(config, 'build.current.path.name')
 
   plaintextOutputPath = path.join(
-    path.dirname(plaintextOutputPath),
     get(config, 'build.current.path.dir'),
+    plaintextOutputPath,
     templateFileName + '.' + plaintextExtension
   )
 

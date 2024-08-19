@@ -221,12 +221,15 @@ export default async (config = {}) => {
       if (Boolean(plaintextConfig) || !isEmpty(plaintextConfig)) {
         const posthtmlOptions = get(rendered.config, 'posthtml.options', {})
 
-        const plaintext = await generatePlaintext(rendered.html, merge(plaintextConfig, posthtmlOptions))
-        rendered.html = await handlePlaintextTags(rendered.html, posthtmlOptions)
-        await writePlaintextFile(plaintext, rendered.config)
+        await writePlaintextFile(
+          await generatePlaintext(rendered.html, merge(plaintextConfig, posthtmlOptions)),
+          rendered.config
+        )
           .catch(error => {
             throw new Error(`Error writing plaintext file: ${error}`)
           })
+
+        rendered.html = await handlePlaintextTags(rendered.html, posthtmlOptions)
       }
 
       /**

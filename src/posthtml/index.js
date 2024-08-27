@@ -94,7 +94,7 @@ export async function process(html = '', config = {}) {
   ])
     .process(html, posthtmlOptions)
     .then(result => ({
-      config,
+      config: merge(config, { page: config }),
       html: result.html,
     }))
     .catch(error => {

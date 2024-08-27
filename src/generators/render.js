@@ -70,7 +70,9 @@ export async function render(html = '', config = {}) {
     })) ?? content
   }
 
-  //  Compile PostHTML
+  /**
+   * Compile PostHTML
+   */
   const compiled = await compilePostHTML(content, templateConfig)
 
   /**
@@ -86,11 +88,10 @@ export async function render(html = '', config = {}) {
     compiled.html = await templateConfig.afterRender(({
       html: compiled.html,
       matter: matterData,
-      config: templateConfig,
+      config: compiled.config,
     })) ?? compiled.html
   }
 
-  // Run Transformers
   /**
    * Run Transformers
    *
@@ -101,10 +102,9 @@ export async function render(html = '', config = {}) {
    * @returns {string} - The transformed HTML
    */
   if (templateConfig.useTransformers !== false) {
-    compiled.html = await useTransformers(compiled.html, templateConfig).then(({ html }) => html)
+    compiled.html = await useTransformers(compiled.html, compiled.config).then(({ html }) => html)
   }
 
-  // Run `afterTransformers` event
   /**
    * Run `afterTransformers` event
    *
@@ -118,12 +118,12 @@ export async function render(html = '', config = {}) {
     compiled.html = await templateConfig.afterTransformers(({
       html: compiled.html,
       matter: matterData,
-      config: templateConfig,
+      config: compiled.config,
     })) ?? compiled.html
   }
 
   return {
-    config: templateConfig,
+    config: compiled.config,
     html: compiled.html,
   }
 }

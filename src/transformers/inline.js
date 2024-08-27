@@ -2,11 +2,11 @@ import juice from 'juice'
 import postcss from 'postcss'
 import get from 'lodash-es/get.js'
 import has from 'lodash-es/has.js'
+import * as cheerio from 'cheerio/slim'
 import remove from 'lodash-es/remove.js'
 import { render } from 'posthtml-render'
 import { calc } from '@csstools/css-calc'
 import isEmpty from 'lodash-es/isEmpty.js'
-import * as cheerio from 'cheerio/lib/slim'
 import safeParser from 'postcss-safe-parser'
 import isObject from 'lodash-es/isObject.js'
 import { parser as parse } from 'posthtml-parser'
@@ -47,7 +47,12 @@ export async function inline(html = '', options = {}) {
     })
   }
 
-  const $ = cheerio.load(html, { decodeEntities: false, _useHtmlParser2: true })
+  const $ = cheerio.load(html, {
+    xml: {
+      decodeEntities: false,
+      xmlMode: false,
+    }
+  })
 
   // Add a `data-embed` attribute to style tags that have the embed attribute
   $('style[embed]').each((i, el) => {

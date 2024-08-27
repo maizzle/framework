@@ -48,9 +48,9 @@
     "html-emails"
   ],
   "dependencies": {
-    "@csstools/css-calc": "^1.2.4",
+    "@csstools/css-calc": "^2.0.1",
     "@maizzle/cli": "next",
-    "cheerio": "1.0.0-rc.12",
+    "cheerio": "^1.0.0",
     "chokidar": "^3.6.0",
     "cli-table3": "^0.6.5",
     "color-shorthand-hex-to-six-digit": "^5.0.16",
@@ -62,13 +62,13 @@
     "html-crush": "^6.0.18",
     "is-url-superb": "^6.1.0",
     "istextorbinary": "^9.5.0",
-    "juice": "^10.0.1",
+    "juice": "^11.0.0",
     "lodash-es": "^4.17.21",
     "morphdom": "^2.7.4",
-    "ora": "^8.0.1",
+    "ora": "^8.1.0",
     "pathe": "^1.1.2",
     "postcss": "^8.4.39",
-    "postcss-custom-properties": "^13.3.12",
+    "postcss-custom-properties": "^14.0.1",
     "postcss-import": "^16.1.0",
     "postcss-safe-parser": "^7.0.0",
     "posthtml": "^0.16.6",
@@ -90,7 +90,7 @@
     "pretty": "^2.0.0",
     "string-remove-widows": "^4.0.22",
     "string-strip-html": "^13.4.8",
-    "tailwindcss": "^3.4.7",
+    "tailwindcss": "^3.4.10",
     "ws": "^8.17.0"
   },
   "devDependencies": {

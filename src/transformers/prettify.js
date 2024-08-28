@@ -2,6 +2,7 @@ import pretty from 'pretty'
 import posthtml from 'posthtml'
 import { defu as merge } from 'defu'
 import { render } from 'posthtml-render'
+import { parser as parse } from 'posthtml-parser'
 import posthtmlConfig from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = (options = {}) => tree => {
@@ -14,7 +15,7 @@ const posthtmlPlugin = (options = {}) => tree => {
 
   const config = merge(options, defaultConfig)
 
-  return pretty(render(tree), config)
+  return parse(pretty(render(tree), config), posthtmlConfig)
 }
 
 export default posthtmlPlugin

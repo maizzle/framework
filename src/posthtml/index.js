@@ -41,7 +41,7 @@ export async function process(html = '', config = {}) {
   const componentsUserOptions = get(config, 'components', {})
 
   const expressionsOptions = merge(
-    get(config, 'build.expressions', get(config, 'posthtml.expressions', {})),
+    get(config, 'expressions', get(config, 'posthtml.expressions', {})),
     get(componentsUserOptions, 'expressions', {}),
   )
 

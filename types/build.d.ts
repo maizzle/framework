@@ -1,5 +1,4 @@
 import type { SpinnerName } from 'cli-spinners';
-import type { PostHTMLExpressions } from 'posthtml-expressions';
 
 export default interface BuildConfig {
   /**
@@ -17,11 +16,6 @@ export default interface BuildConfig {
    * ```
    */
   content?: string[];
-
-  /**
-  Configure [posthtml-expressions](https://github.com/posthtml/posthtml-expressions) options.
-  */
-  expressions?: PostHTMLExpressions;
 
   /**
    * Define the output path for compiled Templates, and what file extension they should use.

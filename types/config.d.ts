@@ -13,9 +13,9 @@ import type { CoreBeautifyOptions } from 'js-beautify';
 import type { BaseURLConfig } from 'posthtml-base-url';
 import type URLParametersConfig from './urlParameters';
 import type { PostHTMLFetchConfig } from 'posthtml-fetch';
-import type { PostHTMLComponents } from 'posthtml-component';
-
 import type { Config as TailwindConfig } from 'tailwindcss';
+import type { PostHTMLComponents } from 'posthtml-component';
+import type { PostHTMLExpressions } from 'posthtml-expressions';
 
 export default interface Config {
   /**
@@ -169,6 +169,11 @@ export default interface Config {
      */
     tailwind?: TailwindConfig;
   }
+
+  /**
+  Configure [posthtml-expressions](https://github.com/posthtml/posthtml-expressions) options.
+  */
+  expressions?: PostHTMLExpressions;
 
   /**
    * Configure the [`<fetch>`](https://maizzle.com/docs/tags#fetch) tag.

@@ -138,10 +138,8 @@ describe.concurrent('Render', () => {
       <h1>Hello {{ name }}</h1>
     `,
       {
-        build: {
-          expressions: {
-            removeScriptLocals: true,
-          }
+        expressions: {
+          removeScriptLocals: true,
         }
       }
     )

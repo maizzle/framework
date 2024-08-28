@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0-beta.24] - 2024-08-28
+
+### Fixed
+
+- synchronized scrolling  619fb51
+- checking `<template>` tag for `preserve` attribute  f957568
+- return tree from `prettify` transformer  1d15fc5
+- use correct config object in events  e3a4b36
+
+### Changed
+
+- move expressions config object to root  43a1d76
+- **[breaking]** bump required node version to `18.20`  b305d56
+- updated dependencies  e42050d
+
+https://github.com/maizzle/framework/compare/v5.0.0-beta.23...v5.0.0-beta.24
+
 ## [5.0.0-beta.23] - 2024-08-19
 
 ### Fixed

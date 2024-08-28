@@ -375,11 +375,11 @@ export default interface Config {
     hmr?: boolean;
 
     /**
-     * Enable synchronized scrolling across devices.
+     * Enable synchronized scrolling across browser tabs.
      *
      * @default false
      */
-    syncScroll?: boolean;
+    scrollSync?: boolean;
 
     /**
      * Paths to watch for changes.

@@ -128,7 +128,7 @@ export default async (config = {}) => {
    * Initialize WebSocket server
    * Used to send messages between the server and the browser
    */
-  initWebSockets(wss, { scrollSync: shouldScroll, hmr: useHmr })
+  initWebSockets(wss, { shouldScroll, useHmr })
 
   // Register routes
   templatePaths = await getUpdatedRoutes(app, config)

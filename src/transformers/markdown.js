@@ -3,17 +3,26 @@ import { defu as merge } from 'defu'
 import md from 'posthtml-markdownit'
 import posthtmlConfig from '../posthtml/defaultConfig.js'
 
-export async function markdown(html = '', options = {}, posthtmlOptions = {}) {
+export async function markdown(input = '', options = {}, posthtmlOptions = {}) {
   /**
-   * Automatically wrap in <md> tag, unless manual mode is enabled
-   * With manual mode, user must wrap the markdown content in a <md> tag
+   * If no input is provided, return an empty string.
+   */
+  if (!input) {
+    return ''
+  }
+
+  /**
+   * Automatically wrap in <md> tag, unless manual mode is enabled.
+   *
+   * With manual mode, user must wrap the input in a <md> tag.
+   *
    * https://github.com/posthtml/posthtml-markdownit#usage
    */
-  html = options.manual ? html : `<md>${html}</md>`
+  input = options.manual ? input : `<md>${input}</md>`
 
   return posthtml([
     md(options)
   ])
-    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .process(input, merge(posthtmlOptions, posthtmlConfig))
     .then(result => result.html)
 }

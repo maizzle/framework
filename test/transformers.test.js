@@ -120,11 +120,19 @@ describe.concurrent('Transformers', () => {
   })
 
   test('Markdown', async () => {
-    const result = await markdown('# Foo\n_foo_')
-    const result2 = await markdown('<md tag="section"># Foo\n_foo_</md>', { manual: true })
+    expect(await markdown('')).toBe('')
 
-    expect(result).toBe('<h1>Foo</h1>\n<p><em>foo</em></p>\n')
-    expect(result2).toBe('<section>\n<h1>Foo</h1>\n<p><em>foo</em></p>\n</section>')
+    expect(
+      await markdown('maizzle.com', { markdownit: { linkify: true } })
+    ).toBe('<p><a href="http://maizzle.com">maizzle.com</a></p>\n')
+
+    expect(await markdown('# Foo\n_foo_'))
+      .toBe('<h1>Foo</h1>\n<p><em>foo</em></p>\n')
+
+    expect(
+      await markdown('<md tag="section"># Foo\n_foo_</md>', { manual: true })
+    ).toBe('<section>\n<h1>Foo</h1>\n<p><em>foo</em></p>\n</section>')
+
     expect(
       await useTransformers('# Foo\n_foo_', { markdown: false }).then(({ html }) => html)
     ).toBe('# Foo\n_foo_')
@@ -583,7 +591,7 @@ describe.concurrent('Transformers', () => {
     expect(await replaceStrings('initial text', { 'initial': 'updated' })).toBe('updated text')
     expect(await replaceStrings('initial [text]', { '(initial) \\[(text)\\]': '($2) updated' })).toBe('(text) updated')
     expect(await replaceStrings('«initial» «text»', { '«(.*?)»' : '«&nbsp;$1&nbsp;»' })).toBe('«&nbsp;initial&nbsp;» «&nbsp;text&nbsp;»')
-    
+
     expect(
       await useTransformers('initial text', { replaceStrings: { 'initial': 'updated' } }).then(({ html }) => html)
     ).toBe('updated text')

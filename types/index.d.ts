@@ -37,10 +37,11 @@ declare namespace MaizzleFramework {
    *
    * @param {string} input The Markdown string to compile.
    * @param {MarkdownConfig} [options] A configuration object for the Markdown compiler.
-   * @returns {string} The compiled HTML string.
-   * @see https://maizzle.com/docs/transformers/markdown
+   * @param {PostHTMLConfig} [posthtmlOptions] A configuration object for PostHTML.
+   * @returns {Promise<string>} The compiled HTML string.
+   * @see https://maizzle.com/docs/markdown#api
    */
-  function markdown(input: string, options?: MarkdownConfig): string;
+  function markdown(input: string, options?: MarkdownConfig, posthtmlOptions?: PostHTMLConfig): Promise<string>;
 
   /**
    * Prevent widow words inside a tag by adding a `&nbsp;` between its last two words.

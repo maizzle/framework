@@ -168,7 +168,7 @@ export default async (config = {}) => {
       }
 
       try {
-        const filePath = templatePaths.find(t => t.endsWith(req.url.slice(1)))
+        const filePath = templatePaths.find(t => t.endsWith(decodeURI(req.url.slice(1))))
 
         // Set the file being viewed
         viewing = filePath

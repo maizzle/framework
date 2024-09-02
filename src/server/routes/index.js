@@ -27,7 +27,7 @@ function groupFilesByDirectories(globs, files) {
         const fileName = parts[parts.length - 1]
         current[fileName] = {
           name: fileName,
-          href: file,
+          href: encodeURI(file),
         }
       }
     })

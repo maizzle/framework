@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0-beta.25] - 2024-09-10
+
+### Added
+
+- feat: toggle nested folders in dev index page  368f04b
+
+### Fixed
+
+- fix: config object in beforeCreate event  81288f8
+- fix: encode index URI for special characters  d7053a8
+- fix: error when filename has a space  5ca34b5
+
+### Changed
+
+- chore: update markdown type definition  9dd5708
+- feat: return early in markdown transformer  daea021
+
+https://github.com/maizzle/framework/compare/v5.0.0-beta.24...v5.0.0-beta.25
+
 ## [5.0.0-beta.24] - 2024-08-28
 
 ### Fixed

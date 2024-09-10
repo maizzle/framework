@@ -68,9 +68,13 @@ describe.concurrent('Server', () => {
 
   test('Renders template', async () => {
     const res = await request('http://localhost:3000').get('/expandLinkTag.html')
+    const res2 = await request('http://localhost:3000').get('/with spaces.html')
 
     expect(res.status).toBe(200)
     expect(res.text).toContain('<style>.hidden {')
+
+    expect(res2.status).toBe(200)
+    expect(res2.text).toContain('works')
   })
 
   test('404 page', async () => {

@@ -114,10 +114,10 @@ describe.concurrent('Build', () => {
       }
     ).then(({ files }) => files)
 
-    expect(ctx.arrayGlobFiles.length).toBe(3)
+    expect(ctx.arrayGlobFiles.length).toBe(4)
     expect(ctx.arrayGlobFiles).toContain(`${ctx.folder}/test/fixtures/build/beforeCreate.php`)
 
-    expect(ctx.stringGlobFiles.length).toBe(5)
+    expect(ctx.stringGlobFiles.length).toBe(6)
     expect(ctx.stringGlobFiles).toContain(`${ctx.folder}/str/filters.html`)
   })
 
@@ -169,7 +169,7 @@ describe.concurrent('Build', () => {
       }
     ).then(({ files }) => files)
 
-    expect(ctx.files.length).toBe(4)
+    expect(ctx.files.length).toBe(5)
     expect(ctx.files).toContain(`${ctx.folder}/test/fixtures/build/image.png`)
   })
 

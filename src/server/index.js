@@ -63,7 +63,7 @@ async function renderUpdatedFile(file, config) {
 
     // beforeCreate event
     if (typeof config.beforeCreate === 'function') {
-      await config.beforeCreate(config)
+      await config.beforeCreate({ config })
     }
 
     // Read the file
@@ -164,7 +164,7 @@ export default async (config = {}) => {
     app.get(routePattern, async (req, res, next) => {
       // Run beforeCreate event
       if (typeof config.beforeCreate === 'function') {
-        config.beforeCreate(config)
+        await config.beforeCreate({ config })
       }
 
       try {
@@ -288,7 +288,7 @@ export default async (config = {}) => {
 
       // Run beforeCreate event
       if (typeof config.beforeCreate === 'function') {
-        await config.beforeCreate(config)
+        await config.beforeCreate({ config })
       }
 
       // Read the file

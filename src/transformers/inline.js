@@ -55,8 +55,11 @@ export async function inline(html = '', options = {}) {
   })
 
   // Add a `data-embed` attribute to style tags that have the embed attribute
-  $('style[embed]').each((i, el) => {
+  $('style[embed]:not([data-embed])').each((i, el) => {
     $(el).attr('data-embed', '')
+  })
+  $('style[data-embed]:not([embed])').each((i, el) => {
+    $(el).attr('embed', '')
   })
 
   /**

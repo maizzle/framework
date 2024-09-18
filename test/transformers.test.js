@@ -324,9 +324,11 @@ describe.concurrent('Transformers', () => {
     expect(
       await inlineCSS(`
         <style embed>.foo {color: red}</style>
+        <style data-embed>.foo {display: flex}</style>
         <p class="foo">test</p>`)
     ).toBe(`
         <style>.foo {color: red}</style>
+        <style>.foo {display: flex}</style>
         <p class="foo">test</p>`
     )
 

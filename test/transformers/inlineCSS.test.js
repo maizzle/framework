@@ -13,6 +13,9 @@ const css = `
   @media (max-width: 600px) {
     .sm\\:text-center {text-align: center}
   }
+  u + .body .gmail\\:hidden {
+    display: none;
+  }
 `
 
 const html = `
@@ -20,7 +23,7 @@ const html = `
   <p class="bar">test</p>
   <table class="w-1 h-1 sm:text-center bg-custom">
     <tr>
-      <td class="foo bar h-1">test</td>
+      <td class="foo bar h-1 gmail:hidden">test</td>
     </tr>
   </table>`
 
@@ -47,11 +50,12 @@ describe.concurrent('Inline CSS', () => {
         @media (max-width: 600px) {
           .sm\\:text-center {text-align: center}
         }
+        u + .body .gmail\\:hidden { display: none; }
       </style>
       <p style="cursor: pointer; margin: 0">test</p>
       <table class="sm:text-center" style="width: 4px; height: 4px; background-image: url('https://picsum.photos/600/400')">
         <tr>
-          <td style="height: 4px; color: red; cursor: pointer; margin: 0">test</td>
+          <td class="gmail:hidden" style="height: 4px; color: red; cursor: pointer; margin: 0">test</td>
         </tr>
       </table>`))
   })
@@ -72,11 +76,12 @@ describe.concurrent('Inline CSS', () => {
       @media (max-width: 600px) {
         .sm\\:text-center {text-align: center}
       }
+      u + .body .gmail\\:hidden { display: none; }
     </style>
       <p class="bar" style="cursor: pointer; margin: 0">test</p>
       <table class="w-1 h-1 sm:text-center bg-custom" style="width: 4px; height: 4px; background-image: url('https://picsum.photos/600/400')">
         <tr>
-          <td class="foo bar h-1" style="height: 4px; color: red; cursor: pointer; margin: 0">test</td>
+          <td class="foo bar h-1 gmail:hidden" style="height: 4px; color: red; cursor: pointer; margin: 0">test</td>
         </tr>
       </table>`))
   })
@@ -144,11 +149,12 @@ describe.concurrent('Inline CSS', () => {
         @media (max-width: 600px) {
           .sm-text-center {text-align: center}
         }
+        u + .body .gmail-hidden { display: none; }
       </style>
       <p style="cursor: pointer">test</p>
       <table class="sm-text-center" style="width: 4px; height: 4px; background-image: url('https://picsum.photos/600/400')">
         <tr>
-          <td style="height: 4px; color: red; cursor: pointer">test</td>
+          <td class="gmail-hidden" style="height: 4px; color: red; cursor: pointer">test</td>
         </tr>
       </table>`))
   })

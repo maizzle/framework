@@ -194,3 +194,13 @@ export function parseCSSRule(rule) {
 
   return { property, value }
 }
+
+/**
+ * Normalize a string by removing extra whitespace.
+ *
+ * @param {String} str The string to clean
+ * @returns {String} The cleaned string
+ */
+export function cleanString(str) {
+  return str.replace(/\s+/g, ' ').trim()
+}

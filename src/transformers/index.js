@@ -124,16 +124,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 8. Purge CSS
-   *
-   * Remove unused CSS, uglify classes etc.
-   */
-  if (get(config, 'css.purge')) {
-    posthtmlPlugins.push(comb(config.css.purge))
-  }
-
-  /**
-   * 9. Remove attributes
+   * 8. Remove attributes
    *
    * Remove attributes from HTML tags
    * If `undefined`, removes empty `style` and `class` attributes
@@ -148,7 +139,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 10. Shorthand CSS
+   * 9. Shorthand CSS
    *
    * Convert longhand CSS properties to shorthand in `style` attributes.
    */
@@ -159,7 +150,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 11. Add attributes
+   * 10. Add attributes
    *
    * Add attributes to HTML tags.
    */
@@ -170,7 +161,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 12. Base URL
+   * 11. Base URL
    *
    * Add a base URL to relative paths.
    */
@@ -181,7 +172,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 13. URL parameters
+   * 12. URL parameters
    *
    * Add parameters to URLs.
    */
@@ -192,7 +183,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 14. Six-digit HEX
+   * 13. Six-digit HEX
    *
    * Enabled by default, converts three-digit HEX colors to six-digit.
    */
@@ -203,7 +194,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 15. PostHTML MSO
+   * 14. PostHTML MSO
    *
    * Enabled by default, simplifies writing MSO conditionals for Outlook.
    */
@@ -214,7 +205,23 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 16. Prettify
+   * 15. Purge CSS
+   *
+   * Remove unused CSS, uglify classes etc.
+   */
+  if (get(config, 'css.purge')) {
+    posthtmlPlugins.push(comb(config.css.purge))
+  }
+
+  /**
+   * 16. <template> tags
+   *
+   * Replace <template> tags with their content.
+   */
+  posthtmlPlugins.push(templateTag())
+
+  /**
+   * 17. Prettify
    *
    * Pretty-print HTML using js-beautify.
    */
@@ -225,7 +232,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 17. Minify
+   * 18. Minify
    *
    * Minify HTML using html-crush.
    */
@@ -234,13 +241,6 @@ export async function run(html = '', config = {}) {
       minify(get(config, 'minify', {}))
     )
   }
-
-  /**
-   * 18. <template> tags
-   *
-   * Replace <template> tags with their content.
-   */
-  posthtmlPlugins.push(templateTag())
 
   /**
    * 19. Replace strings

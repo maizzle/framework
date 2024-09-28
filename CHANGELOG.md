@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0-beta.26] - 2024-09-28
+
+### Fixed
+
+- fix: preserve email client target selectors when inlining  24a1a9b
+- fix: using style[data-embed]  c735364
+- test: generates plaintext file  e9fb327
+
+### Changed
+
+- build(deps): update dependencies  1d6a684
+- refactor: transformers tests  a21172a
+- refactor: transformer order  4a24a9b
+
 ## [5.0.0-beta.25] - 2024-09-10
 
 ### Added

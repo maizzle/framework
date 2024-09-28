@@ -106,7 +106,31 @@ export async function inline(html = '', options = {}) {
         }
       )
 
-    const preservedClasses = new Set()
+    const preservedClasses = new Set([
+      '.body', // Gmail
+      '.gmail', // Gmail
+      '.apple', // Apple Mail
+      '.ios', // Mail on iOS
+      '.ox-', // Open-Xchange
+      '.outlook', // Outlook.com
+      '[data-ogs', // Outlook.com
+      '.bloop_container', // Airmail
+      '.Singleton', // Apple Mail 10
+      '.unused', // Notes 8
+      '.moz-text-html', // Thunderbird
+      '.mail-detail-content', // Comcast, Libero webmail
+      'edo', // Edison (all)
+      '#msgBody', // Freenet uses #msgBody
+      '.lang' // Fenced code blocks
+    ])
+
+    // Precompile a single regex to match any substring from the preservedClasses set
+    const combinedPattern = Array.from(preservedClasses)
+      .map(pattern => pattern.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'))  // Escape special regex chars
+      .join('|')  // Combine all patterns into a single regex pattern with 'OR' (|)
+
+    const combinedRegex = new RegExp(combinedPattern)
+
     const selectors = new Set()
 
     // Preserve selectors in at rules
@@ -166,7 +190,7 @@ export async function inline(html = '', options = {}) {
 
       if (options.removeInlinedSelectors) {
         // Remove the rule in the <style> tag as long as it's not a preserved class
-        if (!preservedClasses.has(selector)) {
+        if (!preservedClasses.has(selector) && !combinedRegex.test(selector)) {
           rule.remove()
         }
 

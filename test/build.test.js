@@ -173,11 +173,11 @@ describe.concurrent('Build', () => {
     expect(ctx.files).toContain(`${ctx.folder}/test/fixtures/build/image.png`)
   })
 
-  test.skip('Generates plaintext file', async ctx => {
-    ctx.files = await build(
+  test('Generates plaintext file', async ctx => {
+    const { files } = await build(
       {
         build: {
-          content: ['test/fixtures/**/beforeCreate.html'],
+          content: ['test/fixtures/build/beforeCreate.html'],
           output: {
             path: ctx.folder
           },
@@ -189,9 +189,9 @@ describe.concurrent('Build', () => {
           }
         },
       }
-    ).then(({ files }) => files)
+    )
 
-    expect(ctx.files).toContain(`${ctx.folder}/build/beforeCreate.txt`)
+    expect(files).toContain(`${ctx.folder}/test/fixtures/build/${ctx.folder}/beforeCreate.txt`)
   })
 
   test('Expands <link> tags', async ctx => {

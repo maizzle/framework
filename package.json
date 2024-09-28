@@ -56,10 +56,10 @@
     "color-shorthand-hex-to-six-digit": "^5.0.16",
     "defu": "^6.1.4",
     "email-comb": "^7.0.21",
-    "express": "^4.19.2",
+    "express": "^4.21.0",
     "fast-glob": "^3.3.2",
     "gray-matter": "^4.0.3",
-    "html-crush": "^6.0.18",
+    "html-crush": "^6.0.19",
     "is-url-superb": "^6.1.0",
     "istextorbinary": "^9.5.0",
     "juice": "^11.0.0",
@@ -67,7 +67,7 @@
     "morphdom": "^2.7.4",
     "ora": "^8.1.0",
     "pathe": "^1.1.2",
-    "postcss": "^8.4.39",
+    "postcss": "^8.4.47",
     "postcss-custom-properties": "^14.0.1",
     "postcss-import": "^16.1.0",
     "postcss-safe-parser": "^7.0.0",
@@ -81,7 +81,7 @@
     "posthtml-fetch": "^4.0.0",
     "posthtml-markdownit": "^3.1.0",
     "posthtml-mso": "^3.1.0",
-    "posthtml-parser": "^0.12.0",
+    "posthtml-parser": "^0.12.1",
     "posthtml-postcss": "^1.0.2",
     "posthtml-postcss-merge-longhand": "^3.1.2",
     "posthtml-render": "^3.0.0",
@@ -90,16 +90,16 @@
     "pretty": "^2.0.0",
     "string-remove-widows": "^4.0.22",
     "string-strip-html": "^13.4.8",
-    "tailwindcss": "^3.4.10",
-    "ws": "^8.17.0"
+    "tailwindcss": "^3.4.13",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.8.3",
+    "@biomejs/biome": "1.9.2",
     "@types/js-beautify": "^1.14.3",
-    "@types/markdown-it": "^14.1.1",
-    "@vitest/coverage-v8": "^2.0.1",
+    "@types/markdown-it": "^14.1.2",
+    "@vitest/coverage-v8": "^2.1.1",
     "supertest": "^7.0.0",
-    "vitest": "^2.0.1"
+    "vitest": "^2.1.1"
   },
   "engines": {
     "node": ">=18.20"

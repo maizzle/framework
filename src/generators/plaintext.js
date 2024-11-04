@@ -3,8 +3,8 @@ import posthtml from 'posthtml'
 import get from 'lodash-es/get.js'
 import { defu as merge } from 'defu'
 import { stripHtml } from 'string-strip-html'
-import defaultConfig from '../posthtml/defaultConfig.js'
 import { writeFile, lstat, mkdir } from 'node:fs/promises'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 /**
  * Removes HTML tags from a given HTML string based on
@@ -46,7 +46,7 @@ const removeTags = ({ tag = 'not-plaintext', html = '', config = {} }) => {
     return tree.walk(process)
   }
 
-  const posthtmlOptions = merge(defaultConfig, config)
+  const posthtmlOptions = merge(config, getPosthtmlOptions())
 
   return posthtml([posthtmlPlugin()]).process(html, { ...posthtmlOptions }).then(res => res.html)
 }
@@ -95,7 +95,7 @@ export async function handlePlaintextTags(html = '', config = {}) {
     return tree.walk(process)
   }
 
-  const posthtmlOptions = merge(defaultConfig, config)
+  const posthtmlOptions = merge(config, getPosthtmlOptions())
 
   return posthtml([posthtmlPlugin()]).process(html, { ...posthtmlOptions }).then(res => res.html)
 }

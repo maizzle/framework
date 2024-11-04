@@ -1,13 +1,14 @@
 import posthtml from 'posthtml'
 import isUrl from 'is-url-superb'
 import get from 'lodash-es/get.js'
-import { defu as merge } from 'defu'
 import baseUrl from 'posthtml-base-url'
 import { render } from 'posthtml-render'
 import isEmpty from 'lodash-es/isEmpty.js'
 import isObject from 'lodash-es/isObject.js'
 import { parser as parse } from 'posthtml-parser'
-import posthtmlConfig from '../posthtml/defaultConfig.js'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
+
+const posthtmlOptions = getPosthtmlOptions()
 
 const posthtmlPlugin = url => tree => {
   // Handle `baseURL` as a string
@@ -19,7 +20,7 @@ const posthtmlPlugin = url => tree => {
       allTags: true,
       styleTag: true,
       inlineCss: true
-    })(parse(html, posthtmlConfig))
+    })(parse(html, posthtmlOptions))
   }
 
   // Handle `baseURL` as an object
@@ -31,7 +32,6 @@ const posthtmlPlugin = url => tree => {
       allTags,
       tags,
       url: baseURL,
-      ...posthtmlOptions
     } = url
 
     return baseUrl({
@@ -40,7 +40,7 @@ const posthtmlPlugin = url => tree => {
       allTags,
       tags,
       url: baseURL,
-    })(parse(html, merge(posthtmlConfig, posthtmlOptions)))
+    })(parse(html, posthtmlOptions))
   }
 
   return tree
@@ -52,7 +52,7 @@ export async function addBaseUrl(html = '', options = {}, posthtmlOptions = {}) 
   return posthtml([
     posthtmlPlugin(options)
   ])
-    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .process(html, getPosthtmlOptions())
     .then(result => result.html)
 }
 

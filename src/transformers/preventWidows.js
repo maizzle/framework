@@ -1,7 +1,6 @@
 import posthtml from 'posthtml'
 import { defu as merge } from 'defu'
 import { removeWidows } from 'string-remove-widows'
-import posthtmlConfig from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = (options = {}) => tree => {
   options = merge(options, {
@@ -78,7 +77,7 @@ export async function preventWidows(html = '', options = {}, posthtmlOptions = {
     return posthtml([
       posthtmlPlugin(options)
     ])
-      .process(html, merge(posthtmlOptions, posthtmlConfig))
+      .process(html, posthtmlOptions)
       .then(result => result.html)
   }
 

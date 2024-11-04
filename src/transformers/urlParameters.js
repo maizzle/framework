@@ -1,8 +1,6 @@
 import posthtml from 'posthtml'
 import get from 'lodash-es/get.js'
-import { defu as merge } from 'defu'
 import urlParameters from 'posthtml-url-parameters'
-import posthtmlConfig from '../posthtml/defaultConfig.js'
 
 export default function posthtmlPlugin(options = {}) {
   const { _options, ...parameters } = options
@@ -17,6 +15,6 @@ export async function addURLParams(html = '', options = {}, posthtmlOptions = {}
   return posthtml([
     posthtmlPlugin(options)
   ])
-    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .process(html, posthtmlOptions)
     .then(result => result.html)
 }

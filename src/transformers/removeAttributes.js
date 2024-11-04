@@ -1,7 +1,6 @@
 import posthtml from 'posthtml'
 import get from 'lodash-es/get.js'
-import { defu as merge } from 'defu'
-import posthtmlConfig from '../posthtml/defaultConfig.js'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 /**
  * Remove empty attributes with PostHTML
@@ -49,8 +48,8 @@ export default posthtmlPlugin
 
 export async function removeAttributes(html = '', attributes = [], posthtmlOptions = {}) {
   return posthtml([
-    posthtmlPlugin(attributes, merge(posthtmlOptions, posthtmlConfig))
+    posthtmlPlugin(attributes, getPosthtmlOptions(posthtmlOptions))
   ])
-    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .process(html, getPosthtmlOptions())
     .then(result => result.html)
 }

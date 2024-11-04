@@ -1,10 +1,8 @@
 import posthtml from 'posthtml'
-import { defu as merge } from 'defu'
 import { render } from 'posthtml-render'
 import isEmpty from 'lodash-es/isEmpty.js'
 import { parser as parse } from 'posthtml-parser'
-import posthtmlConfig from '../posthtml/defaultConfig.js'
-import defaultPostHTMLConfig from '../posthtml/defaultConfig.js'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = (replacements = {}) => tree => {
   if (!isEmpty(replacements)) {
@@ -21,7 +19,7 @@ const posthtmlPlugin = (replacements = {}) => tree => {
 
         return matched
       }),
-      defaultPostHTMLConfig
+      getPosthtmlOptions()
     )
   }
 
@@ -34,6 +32,6 @@ export async function replaceStrings(html = '', replacements = {}, posthtmlOptio
   return posthtml([
     posthtmlPlugin(replacements)
   ])
-    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .process(html, posthtmlOptions)
     .then(result => result.html)
 }

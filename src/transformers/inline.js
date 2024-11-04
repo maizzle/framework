@@ -12,10 +12,10 @@ import isObject from 'lodash-es/isObject.js'
 import { parser as parse } from 'posthtml-parser'
 import { parseCSSRule } from '../utils/string.js'
 import { useAttributeSizes } from './useAttributeSizes.js'
-import defaultPostHTMLConfig from '../posthtml/defaultConfig.js'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = (options = {}) => tree => {
-  return inline(render(tree), options).then(html => parse(html, defaultPostHTMLConfig))
+  return inline(render(tree), options).then(html => parse(html, getPosthtmlOptions()))
 }
 
 export default posthtmlPlugin
@@ -150,7 +150,7 @@ export async function inline(html = '', options = {}) {
       rule.walkDecls(decl => {
         // Resolve calc() values to static values
         if (options.resolveCalc) {
-          decl.value = decl.value.includes('calc(') ? calc(decl.value, {precision: 2}) : decl.value
+          decl.value = decl.value.includes('calc(') ? calc(decl.value, { precision: 2 }) : decl.value
         }
 
         declarations.add(decl)
@@ -164,10 +164,10 @@ export async function inline(html = '', options = {}) {
        */
       if (options.resolveCSSVariables) {
         Array.from(declarations)
-        /**
-         * Consider only declarations with a value that includes any of the other declarations' property
-         * So a decl like color(var(--text-color)) will be removed if there's a decl with a property of --text-color
-         *  */
+          /**
+           * Consider only declarations with a value that includes any of the other declarations' property
+           * So a decl like color(var(--text-color)) will be removed if there's a decl with a property of --text-color
+           *  */
           .filter(decl =>
             Array.from(declarations).some(otherDecl => decl.value.includes(otherDecl.prop))
             || decl.prop.startsWith('--')
@@ -216,7 +216,7 @@ export async function inline(html = '', options = {}) {
               let { property, value } = parseCSSRule(i)
 
               if (value && options.resolveCalc) {
-                value = value.includes('calc') ? calc(value, {precision: 2}) : value
+                value = value.includes('calc') ? calc(value, { precision: 2 }) : value
               }
 
               if (value && options.preferUnitlessValues) {

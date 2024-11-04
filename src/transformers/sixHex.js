@@ -1,7 +1,5 @@
 import posthtml from 'posthtml'
-import { defu as merge } from 'defu'
 import { conv } from 'color-shorthand-hex-to-six-digit'
-import posthtmlConfig from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = () => tree => {
   const targets = new Set(['bgcolor', 'color'])
@@ -27,6 +25,6 @@ export async function sixHEX(html = '', posthtmlOptions = {}) {
   return posthtml([
     posthtmlPlugin()
   ])
-    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .process(html, posthtmlOptions)
     .then(result => result.html)
 }

@@ -1,7 +1,5 @@
 import posthtml from 'posthtml'
-import { defu as merge } from 'defu'
 import md from 'posthtml-markdownit'
-import posthtmlConfig from '../posthtml/defaultConfig.js'
 
 export async function markdown(input = '', options = {}, posthtmlOptions = {}) {
   /**
@@ -23,6 +21,6 @@ export async function markdown(input = '', options = {}, posthtmlOptions = {}) {
   return posthtml([
     md(options)
   ])
-    .process(input, merge(posthtmlOptions, posthtmlConfig))
+    .process(input, posthtmlOptions)
     .then(result => result.html)
 }

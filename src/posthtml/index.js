@@ -7,9 +7,9 @@ import posthtmlFetch from 'posthtml-fetch'
 import envTags from './plugins/envTags.js'
 import components from 'posthtml-component'
 import posthtmlPostcss from 'posthtml-postcss'
-import defaultPosthtmlConfig from './defaultConfig.js'
 import expandLinkTag from './plugins/expandLinkTag.js'
 import envAttributes from './plugins/envAttributes.js'
+import { getPosthtmlOptions } from './defaultConfig.js'
 
 // PostCSS
 import tailwindcss from 'tailwindcss'
@@ -36,7 +36,7 @@ export async function process(html = '', config = {}) {
     )
   )
 
-  const posthtmlOptions = merge(get(config, 'posthtml.options', {}), defaultPosthtmlConfig)
+  const posthtmlOptions = getPosthtmlOptions(get(config, 'posthtml.options', {}))
 
   const componentsUserOptions = get(config, 'components', {})
 

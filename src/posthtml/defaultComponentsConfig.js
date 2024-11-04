@@ -8,9 +8,4 @@ export default {
     missingLocal: '{local}',
     strictMode: false,
   },
-  parserOptions: {
-    directives: [
-      { name: '?php', start: '<', end: '>' },
-    ]
-  },
 }

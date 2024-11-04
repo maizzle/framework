@@ -22,7 +22,7 @@ import replaceStrings from './replaceStrings.js'
 import attributeToStyle from './attributeToStyle.js'
 import removeAttributes from './removeAttributes.js'
 
-import defaultPosthtmlConfig from '../posthtml/defaultConfig.js'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 /**
  * Use Maizzle Transformers on an HTML string.
@@ -37,10 +37,7 @@ import defaultPosthtmlConfig from '../posthtml/defaultConfig.js'
 export async function run(html = '', config = {}) {
   const posthtmlPlugins = []
 
-  const posthtmlConfig = merge(
-    get(config, 'posthtml.options', {}),
-    defaultPosthtmlConfig
-  )
+  const posthtmlConfig = getPosthtmlOptions(get(config, 'posthtml.options', {}))
 
   /**
    * 1. Core transformers

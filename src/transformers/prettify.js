@@ -3,7 +3,7 @@ import posthtml from 'posthtml'
 import { defu as merge } from 'defu'
 import { render } from 'posthtml-render'
 import { parser as parse } from 'posthtml-parser'
-import posthtmlConfig from '../posthtml/defaultConfig.js'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = (options = {}) => tree => {
   const defaultConfig = {
@@ -15,7 +15,7 @@ const posthtmlPlugin = (options = {}) => tree => {
 
   const config = merge(options, defaultConfig)
 
-  return parse(pretty(render(tree), config), posthtmlConfig)
+  return parse(pretty(render(tree), config), getPosthtmlOptions())
 }
 
 export default posthtmlPlugin
@@ -24,6 +24,6 @@ export async function prettify(html = '', options = {}, posthtmlOptions = {}) {
   return posthtml([
     posthtmlPlugin(options)
   ])
-    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .process(html, posthtmlOptions)
     .then(result => result.html)
 }

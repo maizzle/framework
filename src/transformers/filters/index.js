@@ -1,7 +1,6 @@
 import posthtml from 'posthtml'
 import { defu as merge } from 'defu'
 import posthtmlContent from 'posthtml-content'
-import posthtmlConfig from '../../posthtml/defaultConfig.js'
 import { filters as defaultFilters } from './defaultFilters.js'
 
 export default function posthtmlPlugin(filters = {}) {
@@ -14,6 +13,6 @@ export async function filters(html = '', filters = {}, posthtmlOptions = {}) {
   return posthtml([
     posthtmlPlugin(filters)
   ])
-    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .process(html, posthtmlOptions)
     .then(result => result.html)
 }

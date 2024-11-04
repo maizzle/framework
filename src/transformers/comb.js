@@ -4,7 +4,7 @@ import { defu as merge } from 'defu'
 import { render } from 'posthtml-render'
 import { comb as emailComb } from 'email-comb'
 import { parser as parse } from 'posthtml-parser'
-import posthtmlConfig from '../posthtml/defaultConfig.js'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = options => tree => {
   const defaultSafelist = [
@@ -35,6 +35,7 @@ const posthtmlPlugin = options => tree => {
 
   options = merge(options, defaultOptions)
 
+  const posthtmlConfig = getPosthtmlOptions()
   const { result: html } = emailComb(render(tree), options)
 
   return parse(html, posthtmlConfig)
@@ -42,10 +43,10 @@ const posthtmlPlugin = options => tree => {
 
 export default posthtmlPlugin
 
-export async function comb(html = '', options = {}, posthtmlOptions = {}) {
+export async function comb(html = '', pluginOptions = {}, posthtmlOptions = {}) {
   return posthtml([
-    posthtmlPlugin(options)
+    posthtmlPlugin(pluginOptions)
   ])
-    .process(html, merge(posthtmlOptions, posthtmlConfig))
+    .process(html, posthtmlOptions)
     .then(result => result.html)
 }

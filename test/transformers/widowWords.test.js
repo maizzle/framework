@@ -9,7 +9,7 @@ describe.concurrent('Widow words', () => {
   })
 
   test('Ignores strings inside expressions', async () => {
-    const result = await preventWidows('<div prevent-widows>{{{ one two three }}}</div>', {
+    const result = await preventWidows('<div no-widows>{{{ one two three }}}</div>', {
       ignore: [
         { heads: '{{{', tails: '}}}' }
       ],
@@ -19,9 +19,9 @@ describe.concurrent('Widow words', () => {
     expect(result).toBe('<div>{{{ one two three }}}</div>')
   })
 
-  test('Applies only to tags with the `prevent-widows` attribute', async () => {
-    const result = await preventWidows('<div prevent-widows>one two three</div>', { withAttributes: true })
+  test('Applies only to tags with the `no-widows` attribute', async () => {
+    const result = await preventWidows('<p no-widows>one two three</p><p>4 5 6</p>', { withAttributes: true })
 
-    expect(result).toBe('<div>one two&nbsp;three</div>')
+    expect(result).toBe('<p>one two&nbsp;three</p><p>4 5 6</p>')
   })
 })

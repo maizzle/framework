@@ -5,7 +5,7 @@ import { removeWidows } from 'string-remove-widows'
 const posthtmlPlugin = (options = {}) => tree => {
   options = merge(options, {
     minWordCount: 3,
-    attrName: 'prevent-widows'
+    attrName: 'no-widows'
   })
 
   // Ignore defaults

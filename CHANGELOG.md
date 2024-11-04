@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0-beta.27] - 2024-11-04
+
+### Fixed
+
+- fix: default posthtml options  6a5249b
+
+### Changed
+
+- refactor: widow words default attribute name  01623cc
+
 ## [5.0.0-beta.26] - 2024-09-28
 
 ### Fixed

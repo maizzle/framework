@@ -1,86 +1,37 @@
 import posthtml from 'posthtml'
+import posthtmlWidows from 'posthtml-widows'
 import { defu as merge } from 'defu'
-import { removeWidows } from 'string-remove-widows'
 
-const posthtmlPlugin = (options = {}) => tree => {
+export default function posthtmlPlugin(options = {}) {
   options = merge(options, {
-    minWordCount: 3,
-    attrName: 'no-widows'
+    minWords: 3
   })
 
-  // Ignore defaults
+  // Custom ignores
   const mappings = [
-    // Jinja-like
-    {
-      heads: '{{',
-      tails: '}}'
-    },
-    {
-      heads: ['{% if', '{%- if'],
-      tails: ['{% endif', '{%- endif']
-    },
-    {
-      heads: ['{% for', '{%- for'],
-      tails: ['{% endfor', '{%- endfor']
-    },
-    {
-      heads: ['{%', '{%-'],
-      tails: ['%}', '-%}']
-    },
-    {
-      heads: '{#',
-      tails: '#}'
-    },
-    // ASP/Hexo-like
-    {
-      heads: ['<%', '<%=', '<%-'],
-      tails: ['%>', '=%>', '-%>']
-    },
     // MSO comments
     {
-      heads: '<!--[',
-      tails: ']>'
+      start: '<!--[',
+      end: ']>'
     },
     // <![endif]-->
     {
-      heads: '<![',
-      tails: ']--><'
+      start: '<![',
+      end: ']--><'
     }
   ]
 
   if (Array.isArray(options.ignore)) {
-    options.ignore.forEach(pair => mappings.push(pair))
+    options.ignore = options.ignore.concat(mappings)
   }
 
-  if (typeof options.ignore !== 'string') {
-    options.ignore = mappings
-  }
-
-  const process = node => {
-    if (node.attrs && Object.keys(node.attrs).includes(options.attrName)) {
-      const widowsRemovedString = removeWidows(tree.render(node.content), options).res
-      node.content = tree.render(tree.parser(widowsRemovedString))
-      delete node.attrs[options.attrName]
-    }
-
-    return node
-  }
-
-  return tree.walk(process)
+  return posthtmlWidows(options)
 }
 
-export default posthtmlPlugin
-
 export async function preventWidows(html = '', options = {}, posthtmlOptions = {}) {
-  // Apply only to elements that contain the `prevent-widows` attribute
-  if (options.withAttributes) {
-    return posthtml([
-      posthtmlPlugin(options)
-    ])
-      .process(html, posthtmlOptions)
-      .then(result => result.html)
-  }
-
-  // Apply to all elements
-  return removeWidows(html, options).res
+  return posthtml([
+    posthtmlPlugin(options)
+  ])
+    .process(html, posthtmlOptions)
+    .then(result => result.html)
 }

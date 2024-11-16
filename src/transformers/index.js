@@ -218,7 +218,18 @@ export async function run(html = '', config = {}) {
   posthtmlPlugins.push(templateTag())
 
   /**
-   * 17. Prettify
+   * 17. Replace strings
+   *
+   * Replace strings through regular expressions.
+   */
+  if (get(config, 'replaceStrings')) {
+    posthtmlPlugins.push(
+      replaceStrings(get(config, 'replaceStrings', {}))
+    )
+  }
+
+  /**
+   * 18. Prettify
    *
    * Pretty-print HTML using js-beautify.
    */
@@ -229,24 +240,13 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 18. Minify
+   * 19. Minify
    *
    * Minify HTML using html-crush.
    */
   if (get(config, 'minify')) {
     posthtmlPlugins.push(
       minify(get(config, 'minify', {}))
-    )
-  }
-
-  /**
-   * 19. Replace strings
-   *
-   * Replace strings through regular expressions.
-   */
-  if (get(config, 'replaceStrings')) {
-    posthtmlPlugins.push(
-      replaceStrings(get(config, 'replaceStrings', {}))
     )
   }
 

@@ -159,11 +159,11 @@ export default async (config = {}) => {
           relativePath = path.relative('.', file)
         }
 
-        const targetPath = path.join(config.build.output.path, relativePath)
+        const targetPath = path.join(buildOutputPath, relativePath)
         await copyFileAsync(file, targetPath)
       }
     } catch (error) {
-      console.error(`Error while processing pattern ${pattern}: `, err);
+      console.error('Error while processing pattern:', error)
     }
 
     /**

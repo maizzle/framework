@@ -181,7 +181,9 @@ export default async (config = {}) => {
     /**
      * Create a list of templates to compile
      */
-    const extensions = outputExtensions.size > 1 ? `{${[...outputExtensions].join(',')}}` : 'html'
+    const extensions = outputExtensions.size > 1
+      ? `{${[...outputExtensions].join(',')}}`
+      : [...outputExtensions][0] || 'html'
 
     const templatesToCompile = await fg.glob(
       path.join(

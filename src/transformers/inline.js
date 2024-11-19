@@ -34,8 +34,8 @@ export async function inline(html = '', options = {}) {
   options.removeInlinedSelectors = get(options, 'removeInlinedSelectors', true)
   options.resolveCalc = get(options, 'resolveCalc', true)
   options.preferUnitlessValues = get(options, 'preferUnitlessValues', true)
-  options.preservedSelectors = new Set([
-    ...get(options, 'preservedSelectors', []),
+  options.safelist = new Set([
+    ...get(options, 'safelist', []),
     ...[
       '.body', // Gmail
       '.gmail', // Gmail
@@ -128,7 +128,7 @@ export async function inline(html = '', options = {}) {
       )
 
     // Precompile a single regex to match any substring from the preservedClasses set
-    const combinedPattern = Array.from(options.preservedSelectors)
+    const combinedPattern = Array.from(options.safelist)
       .map(pattern => pattern.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'))  // Escape special regex chars
       .join('|')  // Combine all patterns into a single regex pattern with 'OR' (|)
 
@@ -140,7 +140,7 @@ export async function inline(html = '', options = {}) {
     root.walkAtRules(rule => {
       if (['media', 'supports'].includes(rule.name)) {
         rule.walkRules(rule => {
-          options.preservedSelectors.add(rule.selector)
+          options.safelist.add(rule.selector)
         })
       }
     })
@@ -188,12 +188,12 @@ export async function inline(html = '', options = {}) {
       // Preserve pseudo selectors
       // TODO: revisit pseudos list
       if ([':hover', ':active', ':focus', ':visited', ':link', ':before', ':after'].some(i => selector.includes(i))) {
-        options.preservedSelectors.add(selector)
+        options.safelist.add(selector)
       }
 
       if (options.removeInlinedSelectors) {
         // Remove the rule in the <style> tag as long as it's not a preserved class
-        if (!options.preservedSelectors.has(selector) && !combinedRegex.test(selector)) {
+        if (!options.safelist.has(selector) && !combinedRegex.test(selector)) {
           rule.remove()
         }
 
@@ -252,7 +252,7 @@ export async function inline(html = '', options = {}) {
             // If the class has been inlined in the style attribute...
             if (has(inlineStyles, prop)) {
               // Try to remove the classes that have been inlined
-              if (![...options.preservedSelectors].some(item => item.includes(name))) {
+              if (![...options.safelist].some(item => item.includes(name))) {
                 remove(classList, classToRemove => name.includes(classToRemove))
               }
 

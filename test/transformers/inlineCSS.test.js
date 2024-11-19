@@ -70,7 +70,7 @@ describe.concurrent('Inline CSS', () => {
       <span class="variant:foo"></span>`,
       {
         removeInlinedSelectors: true,
-        preservedSelectors: ['foo', '.bar'],
+        safelist: ['foo', '.bar'],
       })
 
     expect(cleanString(result)).toBe(cleanString(`

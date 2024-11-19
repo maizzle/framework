@@ -97,9 +97,9 @@
     "@biomejs/biome": "1.9.2",
     "@types/js-beautify": "^1.14.3",
     "@types/markdown-it": "^14.1.2",
-    "@vitest/coverage-v8": "^2.1.1",
+    "@vitest/coverage-v8": "^2.1.5",
     "supertest": "^7.0.0",
-    "vitest": "^2.1.1"
+    "vitest": "^2.1.5"
   },
   "engines": {
     "node": ">=18.20"

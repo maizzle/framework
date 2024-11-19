@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0-beta.30] - 2024-11-19
+
+### Added
+
+- feat: `preservedSelectors` option for inliner  3598cf7
+
+### Changed
+
+- refactor: rename comb option to `safelist`  89d7051
+- refactor: rename `preservedSelectors` to `safelist` 58f2e9c
+- build(deps): update vitest  2917c80
+
+## [5.0.0-beta.29] - 2024-11-17
+
+### Fixed
+
+- fix: list of templates to compile  9688ff9
+- fix: copy source files to destination  0b4caab
+
 ## [5.0.0-beta.28] - 2024-11-16
 
 ### Changed

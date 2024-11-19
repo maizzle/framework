@@ -30,7 +30,7 @@ const posthtmlPlugin = options => tree => {
       { heads: '{{', tails: '}}' },
       { heads: '{%', tails: '%}' },
     ],
-    whitelist: [...defaultSafelist, ...get(options, 'whitelist', [])]
+    whitelist: [...defaultSafelist, ...get(options, 'safelist', [])]
   }
 
   options = merge(options, defaultOptions)

@@ -14,7 +14,7 @@ describe.concurrent('Purge CSS', () => {
           }
           .foo {color: red}
           .foo:hover {color: blue}
-          .bar-baz {color: blue}
+          .should-keep {color: blue}
           .should-remove {color: white}
         </style>
       </head>
@@ -27,7 +27,7 @@ describe.concurrent('Purge CSS', () => {
     backend: [
       { heads: '{{', tails: '}}' }
     ],
-    whitelist: ['.bar*']
+    safelist: ['*keep*']
   }
 
   const expected = `<!DOCTYPE html>
@@ -36,7 +36,7 @@ describe.concurrent('Purge CSS', () => {
         <style>
           .foo {color: red}
           .foo:hover {color: blue}
-          .bar-baz {color: blue}
+          .should-keep {color: blue}
         </style>
       </head>
       <body>

@@ -60,6 +60,29 @@ describe.concurrent('Inline CSS', () => {
       </table>`))
   })
 
+  test('Preserves user-defined selectors', async () => {
+    const result = await inlineCSS(`
+      <style>
+        .bar {margin: 0}
+        .variant\\:foo {color: blue}
+      </style>
+      <p class="bar">test</p>
+      <span class="variant:foo"></span>`,
+      {
+        removeInlinedSelectors: true,
+        preservedSelectors: ['foo', '.bar'],
+      })
+
+    expect(cleanString(result)).toBe(cleanString(`
+      <style>
+        .bar {margin: 0}
+        .variant\\:foo {color: blue}
+        </style>
+        <p class="bar" style="margin: 0">test</p>
+        <span class="variant:foo" style="color: blue"></span>`
+    ))
+  })
+
   test('Preserves inlined selectors', async () => {
     const result = await inlineCSS(html, {
       removeInlinedSelectors: false,

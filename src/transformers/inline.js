@@ -2,6 +2,7 @@ import juice from 'juice'
 import postcss from 'postcss'
 import get from 'lodash-es/get.js'
 import has from 'lodash-es/has.js'
+import { defu as merge } from 'defu'
 import * as cheerio from 'cheerio/slim'
 import remove from 'lodash-es/remove.js'
 import { render } from 'posthtml-render'
@@ -33,6 +34,26 @@ export async function inline(html = '', options = {}) {
   options.removeInlinedSelectors = get(options, 'removeInlinedSelectors', true)
   options.resolveCalc = get(options, 'resolveCalc', true)
   options.preferUnitlessValues = get(options, 'preferUnitlessValues', true)
+  options.preservedSelectors = new Set([
+    ...get(options, 'preservedSelectors', []),
+    ...[
+      '.body', // Gmail
+      '.gmail', // Gmail
+      '.apple', // Apple Mail
+      '.ios', // Mail on iOS
+      '.ox-', // Open-Xchange
+      '.outlook', // Outlook.com
+      '[data-ogs', // Outlook.com
+      '.bloop_container', // Airmail
+      '.Singleton', // Apple Mail 10
+      '.unused', // Notes 8
+      '.moz-text-html', // Thunderbird
+      '.mail-detail-content', // Comcast, Libero webmail
+      'edo', // Edison (all)
+      '#msgBody', // Freenet uses #msgBody
+      '.lang' // Fenced code blocks
+    ],
+  ])
 
   juice.styleToAttribute = get(options, 'styleToAttribute', {})
   juice.applyWidthAttributes = get(options, 'applyWidthAttributes', true)
@@ -106,26 +127,8 @@ export async function inline(html = '', options = {}) {
         }
       )
 
-    const preservedClasses = new Set([
-      '.body', // Gmail
-      '.gmail', // Gmail
-      '.apple', // Apple Mail
-      '.ios', // Mail on iOS
-      '.ox-', // Open-Xchange
-      '.outlook', // Outlook.com
-      '[data-ogs', // Outlook.com
-      '.bloop_container', // Airmail
-      '.Singleton', // Apple Mail 10
-      '.unused', // Notes 8
-      '.moz-text-html', // Thunderbird
-      '.mail-detail-content', // Comcast, Libero webmail
-      'edo', // Edison (all)
-      '#msgBody', // Freenet uses #msgBody
-      '.lang' // Fenced code blocks
-    ])
-
     // Precompile a single regex to match any substring from the preservedClasses set
-    const combinedPattern = Array.from(preservedClasses)
+    const combinedPattern = Array.from(options.preservedSelectors)
       .map(pattern => pattern.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'))  // Escape special regex chars
       .join('|')  // Combine all patterns into a single regex pattern with 'OR' (|)
 
@@ -137,7 +140,7 @@ export async function inline(html = '', options = {}) {
     root.walkAtRules(rule => {
       if (['media', 'supports'].includes(rule.name)) {
         rule.walkRules(rule => {
-          preservedClasses.add(rule.selector)
+          options.preservedSelectors.add(rule.selector)
         })
       }
     })
@@ -185,12 +188,12 @@ export async function inline(html = '', options = {}) {
       // Preserve pseudo selectors
       // TODO: revisit pseudos list
       if ([':hover', ':active', ':focus', ':visited', ':link', ':before', ':after'].some(i => selector.includes(i))) {
-        preservedClasses.add(selector)
+        options.preservedSelectors.add(selector)
       }
 
       if (options.removeInlinedSelectors) {
         // Remove the rule in the <style> tag as long as it's not a preserved class
-        if (!preservedClasses.has(selector) && !combinedRegex.test(selector)) {
+        if (!options.preservedSelectors.has(selector) && !combinedRegex.test(selector)) {
           rule.remove()
         }
 
@@ -249,7 +252,7 @@ export async function inline(html = '', options = {}) {
             // If the class has been inlined in the style attribute...
             if (has(inlineStyles, prop)) {
               // Try to remove the classes that have been inlined
-              if (![...preservedClasses].some(item => item.endsWith(name) || item.startsWith(name))) {
+              if (![...options.preservedSelectors].some(item => item.includes(name))) {
                 remove(classList, classToRemove => name.includes(classToRemove))
               }
 

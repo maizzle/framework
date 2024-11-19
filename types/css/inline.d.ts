@@ -233,4 +233,22 @@ export default interface InlineCSSConfig {
    * ```
    */
   preferUnitlessValues?: boolean;
+
+  /**
+   * Array of CSS selectors that should be preserved after inlining.
+   *
+   * @default [] // array of email-client targeting selectors
+   *
+   * @example
+   * ```
+   * export default {
+   *   css: {
+   *     inline: {
+   *       safelist: ['.line', '.bg-red-200']
+   *     }
+   *   }
+   * }
+   * ```
+  */
+  safelist?: string[];
 }

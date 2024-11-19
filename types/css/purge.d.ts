@@ -11,13 +11,13 @@ export default interface PurgeCSSConfig {
    * export default {
    *   css: {
    *     purge: {
-   *       whitelist: ['.some-class', '.Mso*', '#*'],
+   *       safelist: ['.some-class', '.Mso*', '#*'],
    *     }
    *   }
    * }
    * ```
   */
-  whitelist?: Opts['whitelist'];
+  safelist?: Opts['whitelist'];
 
   /**
    * Start and end delimiters for computed classes that you don't want removed.

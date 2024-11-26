@@ -61,11 +61,6 @@ async function renderUpdatedFile(file, config) {
     const startTime = Date.now()
     spinner.start('Building...')
 
-    // beforeCreate event
-    if (typeof config.beforeCreate === 'function') {
-      await config.beforeCreate({ config })
-    }
-
     /**
      * Add the current template path to the config
      *

@@ -66,6 +66,16 @@ async function renderUpdatedFile(file, config) {
       await config.beforeCreate({ config })
     }
 
+    /**
+     * Add the current template path to the config
+     *
+     * Can be used in events like `beforeRender` to determine
+     * which template file is being rendered.
+     */
+    config.build.current = {
+      path: path.parse(file),
+    }
+
     // Read the file
     const fileContent = await fs.readFile(file, 'utf8')
 

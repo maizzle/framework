@@ -2,7 +2,6 @@ import juice from 'juice'
 import postcss from 'postcss'
 import get from 'lodash-es/get.js'
 import has from 'lodash-es/has.js'
-import { defu as merge } from 'defu'
 import * as cheerio from 'cheerio/slim'
 import remove from 'lodash-es/remove.js'
 import { render } from 'posthtml-render'
@@ -30,10 +29,9 @@ export async function inline(html = '', options = {}) {
   const removeStyleTags = get(options, 'removeStyleTags', false)
   const css = get(options, 'customCSS', false)
 
-  options.resolveCSSVariables = get(options, 'resolveCSSVariables', true)
   options.removeInlinedSelectors = get(options, 'removeInlinedSelectors', true)
-  options.resolveCalc = get(options, 'resolveCalc', true)
   options.preferUnitlessValues = get(options, 'preferUnitlessValues', true)
+  options.resolveCalc = get(options, 'resolveCalc', true)
   options.safelist = new Set([
     ...get(options, 'safelist', []),
     ...[
@@ -159,25 +157,6 @@ export async function inline(html = '', options = {}) {
         declarations.add(decl)
       })
 
-      /**
-       * Remove duplicate declarations
-       *
-       * Only do so if the `resolveCSSVariables` option is enabled,
-       * otherwise we'll end up removing all declarations that use CSS variables
-       */
-      if (options.resolveCSSVariables) {
-        Array.from(declarations)
-          /**
-           * Consider only declarations with a value that includes any of the other declarations' property
-           * So a decl like color(var(--text-color)) will be removed if there's a decl with a property of --text-color
-           *  */
-          .filter(decl =>
-            Array.from(declarations).some(otherDecl => decl.value.includes(otherDecl.prop))
-            || decl.prop.startsWith('--')
-          )
-          .map(decl => decl.remove())
-      }
-
       const { selector } = rule
 
       selectors.add({
@@ -186,7 +165,6 @@ export async function inline(html = '', options = {}) {
       })
 
       // Preserve pseudo selectors
-      // TODO: revisit pseudos list
       if ([':hover', ':active', ':focus', ':visited', ':link', ':before', ':after'].some(i => selector.includes(i))) {
         options.safelist.add(selector)
       }

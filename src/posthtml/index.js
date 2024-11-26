@@ -14,17 +14,19 @@ import { getPosthtmlOptions } from './defaultConfig.js'
 // PostCSS
 import tailwindcss from 'tailwindcss'
 import postcssImport from 'postcss-import'
+import cssVariables from 'postcss-css-variables'
 import postcssSafeParser from 'postcss-safe-parser'
-import customProperties from 'postcss-custom-properties'
 
 import defaultComponentsConfig from './defaultComponentsConfig.js'
 
 export async function process(html = '', config = {}) {
+  const resolveCSSProps = get(config, 'css.resolveProps')
+
   const postcssPlugin = posthtmlPostcss(
     [
       postcssImport(),
       tailwindcss(get(config, 'css.tailwind', {})),
-      get(config, 'css.inline.resolveCSSVariables', true) && customProperties(),
+      resolveCSSProps !== false && cssVariables(resolveCSSProps),
       ...get(config, 'postcss.plugins', []),
     ],
     merge(

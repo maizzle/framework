@@ -4,8 +4,9 @@ import { process as posthtml } from '../src/posthtml/index.js'
 const cleanString = (str) => str.replace(/\s+/g, ' ').trim()
 
 describe.concurrent('PostCSS', () => {
-  test('Resolves CSS variables by default', async () => {
-    const html = `
+  test('resolveProps', async () => {
+    // Default: resolves CSS variables
+    posthtml(`
       <style>
         :root {
           --color: red;
@@ -15,50 +16,19 @@ describe.concurrent('PostCSS', () => {
         }
       </style>
       <p class="foo">test</p>
-    `
-
-    const { html: result } = await posthtml(html)
-
-    expect(cleanString(result)).toBe(`<style> .foo { color: red; } </style> <p class="foo">test</p>`)
-  })
-
-  test('Does not resolve CSS variables', async () => {
-    const html = `
-      <style>
-        :root {
-          --color: red;
-        }
-        .foo {
-          color: var(--color);
-        }
-      </style>
-      <p class="foo">test</p>
-    `
-
-    const { html: result } = await posthtml(html, {
-      css: {
-        resolveProps: false,
-      }
+    `).then(({ html }) => {
+      expect(cleanString(html)).toBe(`<style> .foo { color: red; } </style> <p class="foo">test</p>`)
     })
 
-    expect(cleanString(result)).toBe(`<style> :root { --color: red; } .foo { color: var(--color); } </style> <p class="foo">test</p>`)
-  })
-
-  test('Resolves CSS variables (with options)', async () => {
-    const html = `
+    // Passing options
+    posthtml(`
       <style>
-        :root {
-          --color: red;
-        }
         .foo {
-          color: var(--color);
           font-weight: var(--font-weight);
         }
       </style>
       <p class="foo">test</p>
-    `
-
-    const { html: result } = await posthtml(html, {
+    `, {
       css: {
         resolveProps: {
           variables: {
@@ -66,8 +36,52 @@ describe.concurrent('PostCSS', () => {
           }
         },
       }
+    }).then(({ html }) => {
+      expect(cleanString(html)).toBe(`<style>.foo { font-weight: bold; } </style> <p class="foo">test</p>`)
     })
 
-    expect(cleanString(result)).toBe(`<style>.foo { color: red; font-weight: bold; } </style> <p class="foo">test</p>`)
+    // Disabling `resolveProps`
+    posthtml(`
+      <style>
+        :root {
+          --color: red;
+        }
+        .foo {
+          color: var(--color);
+        }
+      </style>
+      <p class="foo">test</p>
+    `, {
+      css: {
+        resolveProps: false,
+      }
+    }).then(({ html }) => {
+      expect(cleanString(html)).toBe(`<style> :root { --color: red; } .foo { color: var(--color); } </style> <p class="foo">test</p>`)
+    })
+  })
+
+  test('resolveCalc', async () => {
+    const html = `
+      <style>
+        .foo {
+          width: calc(16px * 1.5569);
+        }
+      </style>
+    `
+
+    posthtml(html)
+      .then(({ html }) => {
+        expect(cleanString(html)).toBe('<style> .foo { width: 24.91px; } </style>')
+      })
+
+    posthtml(html, {
+      css: {
+        resolveCalc: {
+          precision: 1,
+        },
+      }
+    }).then(({ html }) => {
+      expect(cleanString(html)).toBe('<style> .foo { width: 24.9px; } </style>')
+    })
   })
 })

@@ -7,7 +7,7 @@ const css = `
   .w-1 {width: 4px}
   .h-1 {height: 4px}
   .foo {color: red}
-  .bar {cursor: pointer; margin: calc(4px * 0)}
+  .bar {cursor: pointer}
   .hover\\:foo:hover {color: blue}
   .bg-custom {background-image: url('https://picsum.photos/600/400') !important}
   @media (max-width: 600px) {
@@ -52,10 +52,10 @@ describe.concurrent('Inline CSS', () => {
         }
         u + .body .gmail\\:hidden { display: none; }
       </style>
-      <p style="cursor: pointer; margin: 0">test</p>
+      <p style="cursor: pointer">test</p>
       <table class="sm:text-center" style="width: 4px; height: 4px; background-image: url('https://picsum.photos/600/400')">
         <tr>
-          <td class="gmail:hidden" style="height: 4px; color: red; cursor: pointer; margin: 0">test</td>
+          <td class="gmail:hidden" style="height: 4px; color: red; cursor: pointer">test</td>
         </tr>
       </table>`))
   })
@@ -93,7 +93,7 @@ describe.concurrent('Inline CSS', () => {
       .w-1 {width: 4px}
       .h-1 {height: 4px}
       .foo {color: red}
-      .bar {cursor: pointer; margin: calc(4px * 0)}
+      .bar {cursor: pointer}
       .hover\\:foo:hover {color: blue}
       .bg-custom {background-image: url('https://picsum.photos/600/400') !important}
       @media (max-width: 600px) {
@@ -101,10 +101,10 @@ describe.concurrent('Inline CSS', () => {
       }
       u + .body .gmail\\:hidden { display: none; }
     </style>
-      <p class="bar" style="cursor: pointer; margin: 0">test</p>
+      <p class="bar" style="cursor: pointer">test</p>
       <table class="w-1 h-1 sm:text-center bg-custom" style="width: 4px; height: 4px; background-image: url('https://picsum.photos/600/400')">
         <tr>
-          <td class="foo bar h-1 gmail:hidden" style="height: 4px; color: red; cursor: pointer; margin: 0">test</td>
+          <td class="foo bar h-1 gmail:hidden" style="height: 4px; color: red; cursor: pointer">test</td>
         </tr>
       </table>`))
   })

@@ -5,7 +5,6 @@ import has from 'lodash-es/has.js'
 import * as cheerio from 'cheerio/slim'
 import remove from 'lodash-es/remove.js'
 import { render } from 'posthtml-render'
-import { calc } from '@csstools/css-calc'
 import isEmpty from 'lodash-es/isEmpty.js'
 import safeParser from 'postcss-safe-parser'
 import isObject from 'lodash-es/isObject.js'
@@ -31,7 +30,6 @@ export async function inline(html = '', options = {}) {
 
   options.removeInlinedSelectors = get(options, 'removeInlinedSelectors', true)
   options.preferUnitlessValues = get(options, 'preferUnitlessValues', true)
-  options.resolveCalc = get(options, 'resolveCalc', true)
   options.safelist = new Set([
     ...get(options, 'safelist', []),
     ...[
@@ -145,18 +143,6 @@ export async function inline(html = '', options = {}) {
 
     // For each rule in the CSS block we're parsing
     root.walkRules(rule => {
-      // Keep track of declarations in the rule
-      const declarations = new Set()
-
-      rule.walkDecls(decl => {
-        // Resolve calc() values to static values
-        if (options.resolveCalc) {
-          decl.value = decl.value.includes('calc(') ? calc(decl.value, { precision: 2 }) : decl.value
-        }
-
-        declarations.add(decl)
-      })
-
       const { selector } = rule
 
       selectors.add({
@@ -195,10 +181,6 @@ export async function inline(html = '', options = {}) {
           if (styleAttr) {
             inlineStyles = styleAttr.split(';').reduce((acc, i) => {
               let { property, value } = parseCSSRule(i)
-
-              if (value && options.resolveCalc) {
-                value = value.includes('calc') ? calc(value, { precision: 2 }) : value
-              }
 
               if (value && options.preferUnitlessValues) {
                 value = value.replace(

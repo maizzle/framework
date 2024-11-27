@@ -62,7 +62,7 @@ async function renderUpdatedFile(file, config) {
     spinner.start('Building...')
 
     /**
-     * Add the current template path to the config
+     * Add current template path info to the config
      *
      * Can be used in events like `beforeRender` to determine
      * which template file is being rendered.
@@ -177,6 +177,11 @@ export default async (config = {}) => {
 
         // Set the file being viewed
         viewing = filePath
+
+        // Add current template path info to the config
+        config.build.current = {
+          path: path.parse(filePath),
+        }
 
         // Read the file
         const fileContent = await fs.readFile(filePath, 'utf8')

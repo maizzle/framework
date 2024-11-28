@@ -12,6 +12,7 @@ import type WidowWordsConfig from './widowWords';
 import type { CoreBeautifyOptions } from 'js-beautify';
 import type { BaseURLConfig } from 'posthtml-base-url';
 import type URLParametersConfig from './urlParameters';
+import type { PostCssCalcOptions } from 'postcss-calc';
 import type { PostHTMLFetchConfig } from 'posthtml-fetch';
 import type { Config as TailwindConfig } from 'tailwindcss';
 import type { PostHTMLComponents } from 'posthtml-component';
@@ -41,7 +42,7 @@ export default interface Config {
      * }
      * ```
      */
-    add?: Record<string, Record<string, string|number>>;
+    add?: Record<string, Record<string, string | number>>;
 
     /**
      * Remove attributes from elements.
@@ -111,6 +112,52 @@ export default interface Config {
     purge?: PurgeCSSConfig;
 
     /**
+     * Resolve CSS `calc()` expressions to their static values.
+     */
+    resolveCalc?: boolean | PostCssCalcOptions;
+
+    /**
+     * Resolve CSS custom properties to their static values.
+     */
+    resolveProps?: boolean | {
+      /**
+       * Whether to preserve custom properties in the output.
+       *
+       * @default false
+       */
+      preserve?: boolean | 'computed';
+      /**
+       * Define CSS variables that will be added to :root.
+       *
+       * @default {}
+       */
+      variables?: {
+        [key: string]: string | {
+          /**
+           * The value of the CSS variable.
+           */
+          value: string;
+          /**
+           * Whether the variable is !important.
+           */
+          isImportant?: boolean;
+        };
+      };
+      /**
+       * Whether to preserve variables injected via JS with the `variables` option.
+       *
+       * @default true
+       */
+      preserveInjectedVariables?: boolean;
+      /**
+       * Whether to preserve `@media` rules order.
+       *
+       * @default false
+       */
+      preserveAtRulesOrder?: boolean;
+    };
+
+    /**
      * Normalize escaped character class names like `\:` or `\/` by replacing them
      * with email-safe alternatives.
      *
@@ -127,22 +174,6 @@ export default interface Config {
      * ```
      */
     safe?: boolean | Record<string, string>;
-
-    /**
-     * Ensure that all your HEX colors inside `bgcolor` and `color` attributes are defined with six digits.
-     *
-     * @default true
-     *
-     * @example
-     * ```
-     * export default {
-     *   css: {
-     *     sixHex: false,
-     *   }
-     * }
-     * ```
-     */
-    sixHex?: boolean;
 
     /**
      * Rewrite longhand CSS inside style attributes with shorthand syntax.
@@ -163,6 +194,22 @@ export default interface Config {
      * ```
      */
     shorthand?: boolean | Record<string, string[]>;
+
+    /**
+     * Ensure that all your HEX colors inside `bgcolor` and `color` attributes are defined with six digits.
+     *
+     * @default true
+     *
+     * @example
+     * ```
+     * export default {
+     *   css: {
+     *     sixHex: false,
+     *   }
+     * }
+     * ```
+     */
+    sixHex?: boolean;
 
     /**
      * Use a custom Tailwind CSS configuration object.

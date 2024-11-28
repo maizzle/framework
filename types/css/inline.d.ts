@@ -164,24 +164,6 @@ export default interface InlineCSSConfig {
   customCSS?: string | false;
 
   /**
-   * Resolve CSS variables and replace them with their values.
-   *
-   * @default true
-   *
-   * @example
-   * ```
-   * export default {
-   *   css: {
-   *     inline: {
-   *       resolveVariables: true
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  resolveVariables?: boolean;
-
-  /**
    * Remove inlined CSS selectors from the `<style>` tag.
    *
    * @default true
@@ -197,24 +179,6 @@ export default interface InlineCSSConfig {
    * ```
    */
   removeInlinedSelectors?: boolean;
-
-  /**
-   * Resolve calc() expressions in CSS to their computed values.
-   *
-   * @default true
-   *
-   * @example
-   * ```
-   * export default {
-   *   css: {
-   *     inline: {
-   *       resolveCalc: true
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  resolveCalc?: boolean;
 
   /**
    * Prefer unitless CSS values

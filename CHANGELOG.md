@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0-beta.35] - 2024-11-28
+
+### Fixed
+
+- fix: css type declarations  e234e76
+- chore: add `build.current` to server routes  a9160e2
+
+### Changed
+
+- build: update dependencies  596f4b2
+
+## [5.0.0-beta.34] - 2024-11-26
+
+### Added
+
+- feat: add `css.resolveCalc` option  cde20d4
+
+### Changed
+
+- chore: remove duplicate declaration removal  619ef35
+
+## [5.0.0-beta.33] - 2024-11-26
+
+### Added
+
+- feat: add `css.resolveProps` option  097e8d4
+
+### Fixed
+
+- fix: add back build.current in `maizzle serve`  9b53fcb
+
+### Changed
+
+- refactor: remove `beforeCreate` event in `maizzle serve`  653ec48
+
+## [5.0.0-beta.32] - 2024-11-20
+
+### Added
+
+- feat: scan additional components folders  38e0ed4
+
 ## [5.0.0-beta.31] - 2024-11-19
 
 ### Added

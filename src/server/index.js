@@ -41,6 +41,7 @@ app.use(hmrRoute)
 let viewing = ''
 const spinner = ora()
 let templatePaths = []
+const serverStartTime = Date.now()
 
 function getTemplateFolders(config) {
   return Array.isArray(get(config, 'build.content'))
@@ -395,7 +396,6 @@ export default async (config = {}) => {
   const maxRetries = get(config, 'server.maxRetries', 10)
 
   function startServer(port) {
-    const serverStartTime = Date.now()
     const server = createServer(app)
 
     /**
@@ -416,7 +416,7 @@ export default async (config = {}) => {
       )
 
       spinner.stopAndPersist({
-        text: `${pico.bgBlue(` Maizzle v${version} `)} ready in ${pico.bold(Date.now() - serverStartTime)} ms`
+        text: `\n${pico.bgBlue(` Maizzle v${version} `)} ready in ${pico.bold(Date.now() - serverStartTime)} ms`
           + '\n\n'
           + `  → Local:   http://localhost:${port}`
           + '\n'

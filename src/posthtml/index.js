@@ -82,6 +82,24 @@ export async function process(html = '', config = {}) {
     )
   )
 
+  const componentsConfig = merge(
+    {
+      expressions: merge(
+        { locals },
+        expressionsOptions,
+      )
+    },
+    componentsUserOptions,
+    defaultComponentsConfig
+  )
+
+  // Ensure `fileExtension` is array and  has no duplicates
+  componentsConfig.fileExtension = [...new Set(
+    Array.isArray(componentsConfig.fileExtension)
+      ? componentsConfig.fileExtension
+      : [componentsConfig.fileExtension]
+  )]
+
   return posthtml([
     ...get(config, 'posthtml.plugins.before', []),
     envTags(config.env),
@@ -89,18 +107,7 @@ export async function process(html = '', config = {}) {
     expandLinkTag,
     postcssPlugin,
     fetchPlugin,
-    components(
-      merge(
-        {
-          expressions: merge(
-            { locals },
-            expressionsOptions,
-          )
-        },
-        componentsUserOptions,
-        defaultComponentsConfig
-      )
-    ),
+    components(componentsConfig),
     expandLinkTag,
     postcssPlugin,
     envTags(config.env),

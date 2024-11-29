@@ -1,7 +1,7 @@
 export default {
   root: './',
   tag: 'component',
-  fileExtension: 'html',
+  fileExtension: ['html'],
   folders: [
     'layouts',
     'emails',

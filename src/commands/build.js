@@ -210,7 +210,25 @@ export default async (config = {}) => {
 
       const html = await readFile(templatePath, 'utf8')
 
-      const rendered = await render(html, config)
+      /**
+       * Render the markup.
+       *
+       * Merging a custom `components` object to make sure that file extensions from both
+       * `build.content` * and * `components.fileExtension` are used for components.
+       */
+      const userComponentFileExtensions = get(config, 'components.fileExtension', ['html'])
+
+      const rendered = await render(html, merge(
+        {
+          components: {
+            fileExtension: [
+              ...outputExtensions,
+              ...(new Set([].concat(userComponentFileExtensions))),
+            ],
+          }
+        },
+        config
+      ))
 
       /**
        * Generate plaintext

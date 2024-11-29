@@ -175,7 +175,7 @@ export default async (config = {}) => {
     const outputExtensions = new Set()
 
     for (const pattern of contentPaths) {
-      outputExtensions.add(...getFileExtensionsFromPattern(pattern))
+      getFileExtensionsFromPattern(pattern).map(ext => outputExtensions.add(ext))
     }
 
     /**

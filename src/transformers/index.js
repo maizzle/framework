@@ -162,9 +162,10 @@ export async function run(html = '', config = {}) {
    *
    * Add a base URL to relative paths.
    */
-  if (get(config, 'baseURL', get(config, 'baseUrl'))) {
+  const baseConfig = get(config, 'baseURL', get(config, 'baseUrl'))
+  if (baseConfig) {
     posthtmlPlugins.push(
-      baseUrl(get(config, 'baseURL', get(config, 'baseUrl', {})))
+      baseUrl(baseConfig)
     )
   }
 

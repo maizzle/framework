@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0-beta.38] - 2024-11-30
+
+### Fixed
+
+- fix: `attributes.remove` type  d10dc05
+- fix: include user-defined `components.fileExtension` in list of component file extensions to scan for  005e2ee
+
+### Changed
+
+- refactor: access `baseURL` config only once  d42f405
+
 ## [5.0.0-beta.37] - 2024-11-29
 
 ### Fixed

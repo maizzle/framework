@@ -53,12 +53,17 @@ export default interface Config {
      * ```
      * export default {
      *   attributes: {
-     *     remove: ['width', 'height'],
+     *     remove: [
+     *      {
+     *        name: 'width',
+     *        value: '100', // or RegExp: /\d/
+     *      },
+     *     ], // or as array: ['width', 'height']
      *   }
      * }
      * ```
      */
-    remove?: Record<string, string[]>;
+    remove?: Array<string | { name: string; value: string | RegExp }>;
   }
 
   /**

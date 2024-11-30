@@ -214,7 +214,8 @@ export default async (config = {}) => {
        * Render the markup.
        *
        * Merging a custom `components` object to make sure that file extensions from both
-       * `build.content` * and * `components.fileExtension` are used for components.
+       * `build.content` * and * `components.fileExtension` are used when scanning for
+       * component files.
        */
       const userComponentFileExtensions = get(config, 'components.fileExtension', ['html'])
 

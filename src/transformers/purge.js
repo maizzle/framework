@@ -1,8 +1,8 @@
 import posthtml from 'posthtml'
+import { comb } from 'email-comb'
 import get from 'lodash-es/get.js'
 import { defu as merge } from 'defu'
 import { render } from 'posthtml-render'
-import { comb as emailComb } from 'email-comb'
 import { parser as parse } from 'posthtml-parser'
 import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
@@ -36,14 +36,14 @@ const posthtmlPlugin = options => tree => {
   options = merge(options, defaultOptions)
 
   const posthtmlConfig = getPosthtmlOptions()
-  const { result: html } = emailComb(render(tree), options)
+  const { result: html } = comb(render(tree), options)
 
   return parse(html, posthtmlConfig)
 }
 
 export default posthtmlPlugin
 
-export async function comb(html = '', pluginOptions = {}, posthtmlOptions = {}) {
+export async function purge(html = '', pluginOptions = {}, posthtmlOptions = {}) {
   return posthtml([
     posthtmlPlugin(pluginOptions)
   ])

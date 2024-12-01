@@ -3,7 +3,7 @@ import get from 'lodash-es/get.js'
 import { defu as merge } from 'defu'
 
 import core from './core.js'
-import comb from './comb.js'
+import purge from './purge.js'
 import sixHex from './sixHex.js'
 import minify from './minify.js'
 import baseUrl from './baseUrl.js'
@@ -208,7 +208,7 @@ export async function run(html = '', config = {}) {
    * Remove unused CSS, uglify classes etc.
    */
   if (get(config, 'css.purge')) {
-    posthtmlPlugins.push(comb(config.css.purge))
+    posthtmlPlugins.push(purge(config.css.purge))
   }
 
   /**

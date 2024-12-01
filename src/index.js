@@ -5,7 +5,7 @@ import { render } from './generators/render.js'
 import { addAttributes } from './transformers/addAttributes.js'
 import { attributeToStyle } from './transformers/attributeToStyle.js'
 import { addBaseUrl } from './transformers/baseUrl.js'
-import { comb } from './transformers/comb.js'
+import { purge } from './transformers/purge.js'
 import { filters } from './transformers/filters/index.js'
 import { inline } from './transformers/inline.js'
 import { markdown } from './transformers/markdown.js'
@@ -29,8 +29,8 @@ export {
   addAttributes,
   attributeToStyle,
   addBaseUrl,
-  comb as removeUnusedCSS,
-  comb as purgeCSS,
+  purge as removeUnusedCSS,
+  purge as purgeCSS,
   filters,
   inline as inlineCSS,
   markdown,

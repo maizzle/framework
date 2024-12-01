@@ -416,7 +416,7 @@ export default async (config = {}) => {
       )
 
       spinner.stopAndPersist({
-        text: `\n${pico.bgBlue(` Maizzle v${version} `)} ready in ${pico.bold(Date.now() - serverStartTime)} ms`
+        text: `\n${pico.bgBlue(` Maizzle v${version} `)} ready in ${pico.bold(formatTime(Date.now() - serverStartTime))}`
           + '\n\n'
           + `  → Local:   http://localhost:${port}`
           + '\n'

@@ -94,11 +94,9 @@ export async function process(html = '', config = {}) {
   )
 
   // Ensure `fileExtension` is array and  has no duplicates
-  componentsConfig.fileExtension = [...new Set(
-    Array.isArray(componentsConfig.fileExtension)
-      ? componentsConfig.fileExtension
-      : [componentsConfig.fileExtension]
-  )]
+  componentsConfig.fileExtension = Array.from(new Set(
+    [].concat(componentsConfig.fileExtension)
+  ))
 
   return posthtml([
     ...get(config, 'posthtml.plugins.before', []),

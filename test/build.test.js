@@ -87,9 +87,11 @@ describe.concurrent('Build', () => {
           output: {
             path: ctx.folder,
             extension: 'php'
-          }
+          },
+          spinner: false,
         },
         css: {
+          resolveCalc: false,
           tailwind: {
             content: ['test/fixtures/build/**/*.html']
           }
@@ -105,6 +107,10 @@ describe.concurrent('Build', () => {
             path: path.join(ctx.folder, 'str'),
             from: 'test/fixtures',
           }
+        },
+        components: {
+          fileExtension: 'html',
+          test: true,
         },
         css: {
           tailwind: {

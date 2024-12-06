@@ -245,10 +245,9 @@ export default async (config = {}) => {
         await writePlaintextFile(
           await generatePlaintext(rendered.html, merge(plaintextConfig, posthtmlOptions)),
           rendered.config
-        )
-          .catch(error => {
-            throw new Error(`Error writing plaintext file: ${error}`)
-          })
+        ).catch(error => {
+          throw new Error(`Error writing plaintext file: ${error}`)
+        })
 
         rendered.html = await handlePlaintextTags(rendered.html, posthtmlOptions)
       }

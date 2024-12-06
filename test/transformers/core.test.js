@@ -11,19 +11,18 @@ describe.concurrent('Core transformers', () => {
     expect(html).toBe('keep')
   })
 
-  test('Uses `no-inline` attribute to prevent inlining CSS from <style> tags', async () => {
+  test('Uses custom attributes to prevent inlining CSS from <style> tags', async () => {
     const { html } = await useTransformers(
-      '<style no-inline>keep</style>',
+      `
+        <style no-inline>keep</style>
+        <style embed>this too</style>
+        <style no-inline data-embed>also this</style>
+      `,
       { _dev: true }
     )
 
-    expect(html).toBe('<style data-embed>keep</style>')
-
-    const withNoInlineAndDataEmbedAttr = await useTransformers(
-      '<style no-inline data-embed>keep</style>',
-      { _dev: true }
-    )
-
-    expect(withNoInlineAndDataEmbedAttr.html).toBe('<style data-embed>keep</style>')
+    expect(html).toContain('<style data-embed>keep</style>')
+    expect(html).toContain('<style data-embed>this too</style>')
+    expect(html).toContain('<style data-embed>also this</style>')
   })
 })

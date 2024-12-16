@@ -1,3 +1,4 @@
 export default {
-  local: true
+  local: true,
+  content: ['local'],
 }

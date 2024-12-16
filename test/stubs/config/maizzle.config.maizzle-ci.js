@@ -1,3 +1,4 @@
 export default {
-  foo: 'bar'
+  foo: 'bar',
+  content: ['maizzle-ci'],
 }

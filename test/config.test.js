@@ -36,4 +36,13 @@ describe.concurrent('Config', () => {
       .toHaveProperty('local', true)
       .toHaveProperty('foo', 'bar')
   })
+
+  test('Overrides `content` in base config', async () => {
+    const config = await readFileConfig({ env: 'maizzle-ci', content: 'foo' })
+
+    expect(config)
+      .toHaveProperty('env', 'maizzle-ci')
+      .toHaveProperty('local', true)
+      .toHaveProperty('content', ['maizzle-ci'])
+  })
 })

@@ -117,6 +117,16 @@ export async function readFileConfig(config) {
       }
     }
 
+    /**
+     * Override the `content` key in `baseConfig` with the one in `envConfig`.
+     *
+     * This is done so that each build uses its own `content` paths, in
+     * order to avoid compiling unnecessary files.
+     */
+    if (Array.isArray(envConfig.content)) {
+      baseConfig.content = []
+    }
+
     return merge(envConfig, baseConfig)
   } catch (error) {
     throw new Error('Could not compute config')

@@ -1,20 +1,26 @@
-const posthtml = require('posthtml')
-const {get, merge} = require('lodash')
-const markdown = require('posthtml-markdownit')
-const defaultConfig = require('../generators/posthtml/defaultConfig')
+import posthtml from 'posthtml'
+import md from 'posthtml-markdownit'
 
-module.exports = async (html, config = {}, direct = false) => {
-  if (get(config, 'markdown') === false) {
-    return html
+export async function markdown(input = '', options = {}, posthtmlOptions = {}) {
+  /**
+   * If no input is provided, return an empty string.
+   */
+  if (!input) {
+    return ''
   }
 
-  const userMarkdownOptions = direct ? config : get(config, 'markdown', {})
-  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
-  const markdownOptions = merge({markdownit: {html: true}}, userMarkdownOptions)
+  /**
+   * Automatically wrap in <md> tag, unless manual mode is enabled.
+   *
+   * With manual mode, user must wrap the input in a <md> tag.
+   *
+   * https://github.com/posthtml/posthtml-markdownit#usage
+   */
+  input = options.manual ? input : `<md>${input}</md>`
 
   return posthtml([
-    markdown({...markdownOptions})
+    md(options)
   ])
-    .process(html, posthtmlOptions)
+    .process(input, posthtmlOptions)
     .then(result => result.html)
 }

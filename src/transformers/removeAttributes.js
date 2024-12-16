@@ -1,19 +1,6 @@
-const posthtml = require('posthtml')
-const {get, merge} = require('lodash')
-const defaultConfig = require('../generators/posthtml/defaultConfig')
-
-module.exports = async (html, config = {}, direct = false) => {
-  const attributes = direct ? (Array.isArray(config) ? [...config] : []) : get(config, 'removeAttributes', [])
-  const posthtmlOptions = merge(defaultConfig, get(config, 'build.posthtml.options', {}))
-
-  attributes.push('style', 'class')
-
-  html = await posthtml([
-    removeAttributes(attributes, posthtmlOptions)
-  ]).process(html, posthtmlOptions).then(result => result.html)
-
-  return html
-}
+import posthtml from 'posthtml'
+import get from 'lodash-es/get.js'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 /**
  * Remove empty attributes with PostHTML
@@ -26,7 +13,9 @@ module.exports = async (html, config = {}, direct = false) => {
  *
  * Condition 3: same as 2, but for regular expressions
  */
-const removeAttributes = (attributes = {}, posthtmlOptions = {}) => tree => {
+const posthtmlPlugin = (attributes = [], posthtmlOptions = {}) => tree => {
+  attributes.push('style', 'class')
+
   const process = node => {
     const normalizedAttrs = attributes.map(attribute => {
       return {
@@ -36,7 +25,7 @@ const removeAttributes = (attributes = {}, posthtmlOptions = {}) => tree => {
     })
 
     if (node.attrs) {
-      for (const attr of normalizedAttrs) {
+      normalizedAttrs.forEach(attr => {
         const targetAttrValue = get(node.attrs, attr.name)
 
         if (
@@ -46,11 +35,21 @@ const removeAttributes = (attributes = {}, posthtmlOptions = {}) => tree => {
         ) {
           node.attrs[attr.name] = false
         }
-      }
+      })
     }
 
     return node
   }
 
   return tree.walk(process)
+}
+
+export default posthtmlPlugin
+
+export async function removeAttributes(html = '', attributes = [], posthtmlOptions = {}) {
+  return posthtml([
+    posthtmlPlugin(attributes, getPosthtmlOptions(posthtmlOptions))
+  ])
+    .process(html, getPosthtmlOptions())
+    .then(result => result.html)
 }

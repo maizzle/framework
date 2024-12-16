@@ -1,8 +1,11 @@
-/* eslint-disable camelcase */
-const pretty = require('pretty')
-const {get, merge, isEmpty, isObject} = require('lodash')
+import pretty from 'pretty'
+import posthtml from 'posthtml'
+import { defu as merge } from 'defu'
+import { render } from 'posthtml-render'
+import { parser as parse } from 'posthtml-parser'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
-module.exports = async (html, config = {}, direct = false) => {
+const posthtmlPlugin = (options = {}) => tree => {
   const defaultConfig = {
     space_around_combinator: true, // Preserve space around CSS selector combinators
     newline_between_rules: false, // Remove empty lines between CSS rules
@@ -10,18 +13,17 @@ module.exports = async (html, config = {}, direct = false) => {
     extra_liners: [] // Don't add extra new line before any tag
   }
 
-  config = direct ? config : get(config, 'prettify')
+  const config = merge(options, defaultConfig)
 
-  // Don't prettify if not explicitly enabled in config
-  if (!config || (isObject(config) && isEmpty(config))) {
-    return html
-  }
+  return parse(pretty(render(tree), config), getPosthtmlOptions())
+}
 
-  if (typeof config === 'boolean' && config) {
-    return pretty(html, defaultConfig)
-  }
+export default posthtmlPlugin
 
-  config = merge(defaultConfig, config)
-
-  return pretty(html, config)
+export async function prettify(html = '', options = {}, posthtmlOptions = {}) {
+  return posthtml([
+    posthtmlPlugin(options)
+  ])
+    .process(html, posthtmlOptions)
+    .then(result => result.html)
 }

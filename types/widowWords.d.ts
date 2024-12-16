@@ -2,9 +2,9 @@ export default interface WidowWordsConfig {
   /**
   The attribute name to use.
 
-  @default 'prevent-widows'
+  @default ['prevent-widows', 'no-widows']
   */
-  attrName?: string;
+  attributes?: Array<string>;
 
   /**
   Replace all widow word `nbsp;` instances with a single space.
@@ -12,45 +12,27 @@ export default interface WidowWordsConfig {
 
   @default false
   */
-  removeWindowPreventionMeasures?: boolean;
-
-  /**
-  Convert the space entity to the `targetLanguage`.
-
-  @default true
-  */
-  convertEntities?: boolean;
-
-  /**
-  Language to encode non-breaking spaces in.
-
-  @default 'html'
-  */
-  targetLanguage?: 'html' | 'css' | 'js';
-
-  /**
-  Should whitespace in front of dashes (-), n-dashes (–) or m-dashes (—) be replaced with a `&nbsp;`.
-
-  @default true
-  */
-  hyphens?: boolean;
+  createWidows?: Boolean;
 
   /**
   The minimum amount of words in a target string, in order to trigger the transformer.
 
   @default 3
   */
-  minWordCount?: number;
-
-  /**
-  The minimum amount non-whitespace characters in a target string, in order to trigger the transformer.
-
-  @default 20
-  */
-  minCharCount?: number;
+  minWords?: Number;
 
   /**
   Start/end pairs of strings that will prevent the transformer from removing widow words inside them.
+
+  @default [
+    { start: '{{', end: '}}' },  // Handlebars, Liquid, Nunjucks, Twig, Jinja2, Mustache
+    { start: '{%', end: '%}' },  // Liquid, Nunjucks, Twig, Jinja2
+    { start: '<%=', end: '%>' }, // EJS, ERB
+    { start: '<%', end: '%>' },  // EJS, ERB
+    { start: '{$', end: '}' },   // Smarty
+    { start: '<\\?', end: '\\?>' }, // PHP
+    { start: '#{', end: '}' }    // Pug
+  ]
   */
-  ignore?: string | string[];
+  ignore?: Array<{ start: string; end: string }>;
 }

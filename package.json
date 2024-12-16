@@ -48,7 +48,7 @@
     "html-emails"
   ],
   "dependencies": {
-    "@maizzle/cli": "next",
+    "@maizzle/cli": "^2.0.0",
     "cheerio": "^1.0.0",
     "chokidar": "^3.6.0",
     "cli-table3": "^0.6.5",

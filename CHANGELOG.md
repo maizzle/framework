@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.1] - 2025-02-24
+
+### Fixed
+
+- fixed an issue with HMR in workspaces and pnpm projects
+- fixed an issue preventing `<fetch>` from working
+
+### Changed
+
+- updated dependencies (see compare link below)
+
+https://github.com/maizzle/framework/compare/v5.0.0...v5.0.1
+
+## [5.0.0] - 2024-12-16
+
+## Maizzle 5
+
+Maizzle 5 comes with awesome new features like:
+
+- New dev server with HMR*
+- 10x faster local dev
+- Streamlined configs
+- Streamlined Tailwind CSS
+- `npx create-maizzle`
+- Revamped CLI
+- Content source globs
+- Updated template
+- Better modern CSS support (vars, calc)
+- Improved type definitions
+- New tags (`<env:?>`, `<template>`)
+- Enhanced events/hooks
+
+Maizzle 5 requires Node.js 18.20+
+
+\* Hot Markup Replacement&trade;
+
+Upgrade guide: https://maizzle.com/docs/upgrade-guide
+
 ## [5.0.0-beta.38] - 2024-11-30
 
 ### Fixed

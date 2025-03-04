@@ -107,7 +107,7 @@ export default async (config = {}) => {
     /**
      * Check that templates to be built, actually exist
      */
-    const contentPaths = get(config, 'build.content', ['src/templates/**/*.html'])
+    const contentPaths = get(config, 'build.content', ['emails/**/*.html'])
 
     const templateFolders = Array.isArray(contentPaths) ? contentPaths : [contentPaths]
     const templatePaths = await fg.glob([...new Set(templateFolders)])
@@ -122,7 +122,7 @@ export default async (config = {}) => {
      *
      * Copies each `build.content` path to the `build.output.path` directory.
      */
-    let from = get(config, 'build.output.from', ['src/templates', 'src'])
+    let from = get(config, 'build.output.from', ['emails'])
 
     const globPathsToCopy = contentPaths.map(glob => {
       // Keep negated paths as they are

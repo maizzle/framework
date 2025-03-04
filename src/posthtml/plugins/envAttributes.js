@@ -5,7 +5,7 @@ const plugin = (env => tree => {
       return node
     }
 
-    if (node.attrs) {
+    if (node?.attrs) {
       for (const attr in node.attrs) {
         const suffix = `-${env}`
 

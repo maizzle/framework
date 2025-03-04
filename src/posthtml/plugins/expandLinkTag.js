@@ -8,7 +8,7 @@ const plugin = (() => tree => {
     /**
      * Don't expand link tags that are not explicitly marked as such
      */
-    if (node.attrs && ![...targets].some(attr => attr in node.attrs)) {
+    if (node?.attrs && ![...targets].some(attr => attr in node.attrs)) {
       for (const attr of targets) {
         node.attrs[attr] = false
       }
@@ -17,7 +17,8 @@ const plugin = (() => tree => {
     }
 
     if (
-      node.tag === 'link'
+      node
+      && node.tag === 'link'
       && node.attrs
       && node.attrs.href
       && node.attrs.rel === 'stylesheet'

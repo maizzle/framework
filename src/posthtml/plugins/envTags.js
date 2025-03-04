@@ -3,7 +3,7 @@ const plugin = (env => tree => {
     env = env || 'local'
 
     // Return the original node if it doesn't have a tag
-    if (!node.tag) {
+    if (!node?.tag) {
       return node
     }
 

@@ -9,6 +9,7 @@ import type CSSInlineConfig from './css/inline';
 import type WidowWordsConfig from './widowWords';
 import type { BaseURLConfig } from 'posthtml-base-url';
 import type { HTMLBeautifyOptions } from 'js-beautify'
+import type { Opts as PlaintextOptions } from 'string-strip-html';
 import type { URLParametersConfig } from 'posthtml-url-parameters';
 import type { AttributeToStyleSupportedAttributes } from './css/inline';
 
@@ -188,11 +189,22 @@ declare namespace MaizzleFramework {
   /**
    * Generate a plaintext version of an HTML string.
    * @param {string} html - The HTML string to convert to plaintext.
-   * @param {PlaintextConfig} [options] - A configuration object for the plaintext generator.
-   * @returns {Promise<string>} The plaintext version of the HTML string.
+   * @param {Object} [config={}] - Configuration object.
+   * @param {PostHTMLConfig} [config.posthtml] - PostHTML options.
+   * @param {PlaintextOptions} [config.strip] - Options for `string-strip-html`.
+   * @returns {Promise<string>} A string representing the HTML converted to plaintext.
    * @see https://maizzle.com/docs/plaintext
    */
-  function plaintext(html: string, options?: PlaintextConfig): Promise<string>;
+  function generatePlaintext(
+    html: string,
+    config?: {
+      /**
+       * Configure PostHTML options.
+       */
+      posthtml?: PostHTMLConfig
+    }
+      & PlaintextOptions,
+  ): Promise<string>;
 
   export {
     Config,
@@ -213,7 +225,7 @@ declare namespace MaizzleFramework {
     sixHEX,
     minify,
     replaceStrings,
-    plaintext,
+    generatePlaintext,
   }
 }
 

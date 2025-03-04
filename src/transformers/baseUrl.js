@@ -1,12 +1,12 @@
 import posthtml from 'posthtml'
 import isUrl from 'is-url-superb'
 import get from 'lodash-es/get.js'
-import baseUrl from 'posthtml-base-url'
 import { render } from 'posthtml-render'
 import isEmpty from 'lodash-es/isEmpty.js'
 import isObject from 'lodash-es/isObject.js'
 import { parser as parse } from 'posthtml-parser'
 import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
+import baseUrl, { parseSrcset, stringifySrcset, defaultTags } from 'posthtml-base-url'
 
 const posthtmlOptions = getPosthtmlOptions()
 
@@ -48,11 +48,11 @@ const posthtmlPlugin = url => tree => {
 
 export default posthtmlPlugin
 
-export async function addBaseUrl(html = '', options = {}, posthtmlOptions = {}) {
+export async function addBaseUrl(html = '', options = {}, posthtmlOpts = {}) {
   return posthtml([
     posthtmlPlugin(options)
   ])
-    .process(html, getPosthtmlOptions())
+    .process(html, getPosthtmlOptions(posthtmlOpts))
     .then(result => result.html)
 }
 
@@ -99,5 +99,52 @@ const rewriteVMLs = (html, url) => {
     })
   }
 
+  /**
+   * Handle other sources inside MSO comments
+   */
+
+  // Make a | pipe-separated list of all the default tags and use it to create a regex
+  const uniqueSourceAttributes = [
+    ...new Set(Object.values(defaultTags).flatMap(Object.keys))
+  ].join('|')
+
+  const sourceAttrRegex = new RegExp(`\\b(${uniqueSourceAttributes})="([^"]+)"`, 'g')
+
+  // Replace all the source attributes inside MSO comments
+  html = html.replace(/<!--\[if [^\]]+\]>[\s\S]*?<!\[endif\]-->/g, (msoBlock) => {
+    return msoBlock.replace(sourceAttrRegex, (match, attr, value) => {
+      if (isUrl(value)) {
+        return match
+      }
+
+      const updatedValue = attr === 'srcset'
+        ? processSrcset(value, url)
+        : url + value
+
+      return `${attr}="${updatedValue}"`
+    })
+  })
+
   return html
+}
+
+/**
+ * Add the base URL to the srcset URLs
+ *
+ * @param {*} srcsetValue The value of the srcset attribute
+ * @param {*} url The base URL
+ * @returns {string} The updated srcset attribute value
+ */
+function processSrcset(srcsetValue, url) {
+  const parsed = parseSrcset(srcsetValue)
+
+  parsed.map(p => {
+    if (!isUrl(p.url)) {
+      p.url = url + p.url
+    }
+
+    return p
+  })
+
+  return stringifySrcset(parsed)
 }

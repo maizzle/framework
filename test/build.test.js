@@ -197,7 +197,7 @@ describe.concurrent('Build', () => {
       }
     )
 
-    expect(files).toContain(`${ctx.folder}/test/fixtures/build/${ctx.folder}/beforeCreate.txt`)
+    expect(files).toContain(`${ctx.folder}/test/fixtures/build/beforeCreate.txt`)
   })
 
   test('Expands <link> tags', async ctx => {

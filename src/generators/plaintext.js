@@ -150,7 +150,7 @@ export async function writePlaintextFile(plaintext = '', config = {}) {
    * `config.build.output.path`
    */
   const plaintextConfig = get(config, 'plaintext')
-  let plaintextOutputPath = get(plaintextConfig, 'output.path', get(config, 'build.output.path'))
+  let plaintextOutputPath = get(plaintextConfig, 'output.path', '')
   const plaintextExtension = get(plaintextConfig, 'output.extension', 'txt')
 
   /**
@@ -158,7 +158,7 @@ export async function writePlaintextFile(plaintext = '', config = {}) {
    * output plaintext file in the same location as the HTML file.
    */
   if (plaintextConfig === true) {
-    plaintextOutputPath = get(config, 'build.output.path')
+    plaintextOutputPath = ''
   }
 
   /**

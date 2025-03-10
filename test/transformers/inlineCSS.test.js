@@ -122,6 +122,22 @@ describe.concurrent('Inline CSS', () => {
     ).toBe('<p class="bar" style="display: flex; color: red;"></p>')
   })
 
+  test('Works with `preferUnitlessValues` option disabled', async () => {
+    const result = cleanString(
+      await inlineCSS(`
+        <style>.m-0 {margin: 0px}</style>
+        <p class="m-0">test</p>`,
+        {
+          preferUnitlessValues: false, // default is true
+        }
+      )
+    )
+
+    expect(result).toBe(cleanString(`
+      <style></style>
+      <p style="margin: 0px">test</p>`))
+  })
+
   test('Works with `excludedProperties` option', async () => {
     expect(
       cleanString(
@@ -182,19 +198,20 @@ describe.concurrent('Inline CSS', () => {
       </table>`))
   })
 
-  test('Works with `preferUnitlessValues` option disabled', async () => {
+  test('Works with base64-encoded CSS values', async () => {
     expect(
       cleanString(
         await inlineCSS(`
-          <style>.m-0 {margin: 0px}</style>
-          <p class="m-0">test</p>`,
-          {
-            preferUnitlessValues: false, // default is true
-          }
+          <style>
+            .base64 {
+              background-image: url("data:image/gif;base64,R0lGODdhAQABAPAAAP8AAAAAACwAAAAAAQABAAACAkQBADs=");
+            }
+          </style>
+          <p class="base64">test</p>`,
         )
       )
     ).toBe(cleanString(`
-      <style></style>
-      <p style="margin: 0px">test</p>`))
+      <style> </style>
+      <p style="background-image: url('data:image/gif;base64,R0lGODdhAQABAPAAAP8AAAAAACwAAAAAAQABAAACAkQBADs=')">test</p>`))
   })
 })

@@ -9,7 +9,6 @@ import isEmpty from 'lodash-es/isEmpty.js'
 import safeParser from 'postcss-safe-parser'
 import isObject from 'lodash-es/isObject.js'
 import { parser as parse } from 'posthtml-parser'
-import { parseCSSRule } from '../utils/string.js'
 import { useAttributeSizes } from './useAttributeSizes.js'
 import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
@@ -166,6 +165,13 @@ export async function inline(html = '', options = {}) {
       }
     })
 
+    /**
+     * CSS optimizations
+     *
+     * 1. `preferUnitlessValues` - Replace unit values with `0` where possible
+     * 2. `removeInlinedSelectors` - Remove inlined selectors from the HTML
+     */
+
     // Loop over selectors that we found in the <style> tags
     selectors.forEach(({ name, prop }) => {
       const elements = $(name).get()
@@ -176,11 +182,16 @@ export async function inline(html = '', options = {}) {
         elements.forEach((el) => {
           // Get a `property|value` list from the inline style attribute
           const styleAttr = $(el).attr('style')
-          let inlineStyles = {}
+          const inlineStyles = {}
 
+          // 1. `preferUnitlessValues`
           if (styleAttr) {
-            inlineStyles = styleAttr.split(';').reduce((acc, i) => {
-              let { property, value } = parseCSSRule(i)
+            // Parse the inline styles using postcss
+            const root = postcss.parse(`* { ${styleAttr} }`)
+
+            root.first.each((decl) => {
+              const property = decl.prop
+              let value = decl.value
 
               if (value && options.preferUnitlessValues) {
                 value = value.replace(
@@ -190,11 +201,9 @@ export async function inline(html = '', options = {}) {
               }
 
               if (property) {
-                acc[property] = value
+                inlineStyles[property] = value
               }
-
-              return acc
-            }, {})
+            })
 
             // Update the element's style attribute with the new value
             $(el).attr(
@@ -206,6 +215,7 @@ export async function inline(html = '', options = {}) {
           // Get the classes from the element's class attribute
           const classes = $(el).attr('class')
 
+          // 2. `removeInlinedSelectors`
           if (options.removeInlinedSelectors && classes) {
             const classList = classes.split(' ')
 

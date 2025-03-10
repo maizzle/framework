@@ -174,27 +174,6 @@ export function getFileExtensionsFromPattern(pattern) {
   return ['html'] // No recognizable extension pattern, default to 'html'
 }
 
-export function parseCSSRule(rule) {
-  // Step 1: Trim the input string
-  rule = rule.trim()
-
-  // Step 2: Find the index of the first colon
-  const colonIndex = rule.indexOf(':')
-
-  // Step 3: Extract property and value parts
-  if (colonIndex === -1) {
-    return {
-      property: '',
-      value: ''
-    }
-  }
-
-  const property = rule.slice(0, colonIndex).trim()
-  const value = rule.slice(colonIndex + 1).trim()
-
-  return { property, value }
-}
-
 /**
  * Normalize a string by removing extra whitespace.
  *

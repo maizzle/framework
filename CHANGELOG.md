@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.3] - 2025-03-10
+
+### Fixed
+
+- fix: handling of base64 encoded css values in `preferUnitlessValues`  2e0b456
+
+https://github.com/maizzle/framework/compare/v5.0.2...v5.0.3
+
+## [5.0.2] - 2025-03-04
+
+### Fixed
+
+- fix: handle baseUrl inside mso comments for non-vml tags  935d4fb
+- build(deps): bump posthtml-base-url from 3.1.6 to 3.1.7  35306ff
+- fix: export correct generatePlaintext type definition  0dc868a
+- fix: plaintext files output path  9fba8f7
+- fix: output files at root of output.path  bdc66b6
+- fix: ensure node exists  85c4685
+
+https://github.com/maizzle/framework/compare/v5.0.1...v5.0.2
+
 ## [5.0.1] - 2025-02-24
 
 ### Fixed

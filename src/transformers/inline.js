@@ -142,15 +142,18 @@ export async function inline(html = '', options = {}) {
 
     // For each rule in the CSS block we're parsing
     root.walkRules(rule => {
+      // Create a set of selectors
       const { selector } = rule
 
-      selectors.add({
-        name: selector,
-        prop: get(rule.nodes[0], 'prop')
-      })
-
+      // Add the selector to the set as long as it's not a pseudo selector
+      if (!/(^|[^\\])::?[\w-]+/.test(selector)) {
+        selectors.add({
+          name: selector,
+          prop: get(rule.nodes[0], 'prop')
+        })
+      }
       // Preserve pseudo selectors
-      if ([':hover', ':active', ':focus', ':visited', ':link', ':before', ':after'].some(i => selector.includes(i))) {
+      else {
         options.safelist.add(selector)
       }
 

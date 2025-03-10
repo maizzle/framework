@@ -214,4 +214,29 @@ describe.concurrent('Inline CSS', () => {
       <style> </style>
       <p style="background-image: url('data:image/gif;base64,R0lGODdhAQABAPAAAP8AAAAAACwAAAAAAQABAAACAkQBADs=')">test</p>`))
   })
+
+  test('Works with pseudo-classes', async () => {
+    expect(
+      cleanString(
+        await inlineCSS(`
+          <style>
+            li::marker {color: blue}
+
+            ul > li {
+              color: red;
+            }
+          </style>
+          <ul>
+            <li>test</li>
+          </ul>`,
+        )
+      )
+    ).toBe(cleanString(`
+      <style>
+        li::marker {color: blue}
+      </style>
+      <ul>
+        <li style="color: red">test</li>
+      </ul>`))
+  })
 })

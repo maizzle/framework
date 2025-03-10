@@ -181,4 +181,20 @@ describe.concurrent('Inline CSS', () => {
         </tr>
       </table>`))
   })
+
+  test('Works with `preferUnitlessValues` option disabled', async () => {
+    expect(
+      cleanString(
+        await inlineCSS(`
+          <style>.m-0 {margin: 0px}</style>
+          <p class="m-0">test</p>`,
+          {
+            preferUnitlessValues: false, // default is true
+          }
+        )
+      )
+    ).toBe(cleanString(`
+      <style></style>
+      <p style="margin: 0px">test</p>`))
+  })
 })

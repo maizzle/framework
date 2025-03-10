@@ -146,7 +146,7 @@ export async function inline(html = '', options = {}) {
       const { selector } = rule
 
       // Add the selector to the set as long as it's not a pseudo selector
-      if (!/(^|[^\\])::?[\w-]+/.test(selector)) {
+      if (!/.+[^\\\s]::?\w+/.test(selector)) {
         selectors.add({
           name: selector,
           prop: get(rule.nodes[0], 'prop')

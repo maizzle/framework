@@ -103,12 +103,16 @@ const rewriteVMLs = (html, url) => {
    * Handle other sources inside MSO comments
    */
 
-  // Make a | pipe-separated list of all the default tags and use it to create a regex
+  // Make a pipe-separated list of all the default tags and use it to create a regex
   const uniqueSourceAttributes = [
     ...new Set(Object.values(defaultTags).flatMap(Object.keys))
   ].join('|')
 
-  const sourceAttrRegex = new RegExp(`\\b(${uniqueSourceAttributes})="([^"]+)"`, 'g')
+  /**
+   * This regex uses a negative lookbehind to avoid matching VML elements
+   * like <v:image> and <v:fill>, which are already handled above.
+   */
+  const sourceAttrRegex = new RegExp(`(?<!<v:image|fill[^>]*]*)\\b(${uniqueSourceAttributes})="([^"]+)"`, 'g')
 
   // Replace all the source attributes inside MSO comments
   html = html.replace(/<!--\[if [^\]]+\]>[\s\S]*?<!\[endif\]-->/g, (msoBlock) => {

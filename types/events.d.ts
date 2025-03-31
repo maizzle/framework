@@ -33,7 +33,7 @@ export default interface Events {
   * @example
   * ```
   * export default {
-  *   beforeRender: async ({html, matter, config, posthtml}) => {
+  *   beforeRender: async ({html, matter, config}) => {
   *     // do something...
   *     return html;
   *   }
@@ -67,7 +67,7 @@ export default interface Events {
   * @example
   * ```
   * export default {
-  *   afterRender: async async ({html, matter, config, posthtml}) => {
+  *   afterRender: async async ({html, matter, config}) => {
   *     // do something...
   *     return html;
   *   }
@@ -101,7 +101,7 @@ export default interface Events {
   * @example
   * ```
   * export default {
-  *   afterTransformers: async ({html, matter, config, posthtml}) => {
+  *   afterTransformers: async ({html, matter, config}) => {
   *     // do something...
   *     return html;
   *   }

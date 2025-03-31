@@ -142,7 +142,7 @@ export default interface BuildConfig {
    * ```
    * {
       path: {
-        root: 'build_production',
+        root: '',
         dir: 'build_production',
         base: 'transactional.html',
         ext: '.html',
@@ -151,7 +151,7 @@ export default interface BuildConfig {
     }
     * ```
    */
-  current?: {
+  readonly current?: {
     path?: {
       root: string;
       dir: string;

@@ -16,7 +16,9 @@
   "files": [
     "bin",
     "src",
-    "types"
+    "types",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "publishConfig": {
     "access": "public"

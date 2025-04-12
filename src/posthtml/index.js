@@ -98,8 +98,10 @@ export async function process(html = '', config = {}) {
     [].concat(componentsConfig.fileExtension)
   ))
 
+  const beforePlugins = get(config, 'posthtml.plugins.before', [])
+
   return posthtml([
-    ...get(config, 'posthtml.plugins.before', []),
+    ...beforePlugins,
     envTags(config.env),
     envAttributes(config.env),
     expandLinkTag,
@@ -110,7 +112,13 @@ export async function process(html = '', config = {}) {
     postcssPlugin,
     envTags(config.env),
     envAttributes(config.env),
-    ...get(config, 'posthtml.plugins.after', get(config, 'posthtml.plugins', []))
+    ...get(
+      config,
+      'posthtml.plugins.after',
+      beforePlugins.length > 0
+        ? []
+        : get(config, 'posthtml.plugins', [])
+    ),
   ])
     .process(html, posthtmlOptions)
     .then(result => ({

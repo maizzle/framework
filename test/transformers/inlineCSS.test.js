@@ -239,4 +239,25 @@ describe.concurrent('Inline CSS', () => {
         <li style="color: red">test</li>
       </ul>`))
   })
+
+  test('Runs callback function', async () => {
+    expect(
+      cleanString(
+        await inlineCSS(`
+          <style>
+            p {color: red}
+          </style>
+          <p>test</p>`,
+          {
+            done({html: result, config}) {
+              expect(result).toBeTypeOf('string')
+              expect(config).toBeTypeOf('object')
+
+              return result.replace(/test/g, 'done')
+            },
+          }
+        )
+      )
+    ).toBe(cleanString(`<style> </style> <p style="color: red">done</p>`))
+  })
 })

@@ -116,7 +116,8 @@ export async function run(html = '', config = {}) {
         {
           removeInlinedSelectors: true,
         }
-      )
+      ),
+      config
     ))
   }
 

@@ -12,13 +12,13 @@ import { parser as parse } from 'posthtml-parser'
 import { useAttributeSizes } from './useAttributeSizes.js'
 import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
-const posthtmlPlugin = (options = {}) => tree => {
-  return inline(render(tree), options).then(html => parse(html, getPosthtmlOptions()))
+const posthtmlPlugin = (options = {}, maizzleConfig = {}) => tree => {
+  return inline(render(tree), options, maizzleConfig).then(html => parse(html, getPosthtmlOptions()))
 }
 
 export default posthtmlPlugin
 
-export async function inline(html = '', options = {}) {
+export async function inline(html = '', options = {}, maizzleConfig = {}) {
   // Exit early if no HTML is passed
   if (typeof html !== 'string' || html === '') {
     return html
@@ -246,5 +246,15 @@ export async function inline(html = '', options = {}) {
     $(el).removeAttr('embed')
   })
 
-  return $.html()
+  html = $.html()
+
+  /**
+   * Run callback function
+   */
+
+  if (options.done && typeof options.done === 'function') {
+    html = await options.done({ html, config: maizzleConfig }) ?? html
+  }
+
+  return html
 }

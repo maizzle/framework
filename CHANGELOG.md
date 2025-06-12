@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.9] - 2025-06-12
+
+This release fixes an issue where builds failed because `preferUnitlessValues` (which is on by default) was throwing an error when encountering invalid inline CSS.
+
+- fix: skip parsing invalid css in `preferUnitlessValues` e891c14
+
 ## [5.0.8] - 2025-04-15
 
 This release fixes an issue that prevented the use of `posthtml.plugins.before` and `posthtml.plugins.after` simultaneously.

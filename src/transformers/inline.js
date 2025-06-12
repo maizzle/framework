@@ -189,30 +189,31 @@ export async function inline(html = '', options = {}) {
 
           // 1. `preferUnitlessValues`
           if (styleAttr) {
-            // Parse the inline styles using postcss
-            const root = postcss.parse(`* { ${styleAttr} }`)
+            try {
+              const root = postcss.parse(`* { ${styleAttr} }`)
 
-            root.first.each((decl) => {
-              const property = decl.prop
-              let value = decl.value
+              root.first.each((decl) => {
+                const property = decl.prop
+                let value = decl.value
 
-              if (value && options.preferUnitlessValues) {
-                value = value.replace(
-                  /\b0(px|rem|em|%|vh|vw|vmin|vmax|in|cm|mm|pt|pc|ex|ch)\b/g,
-                  '0'
-                )
-              }
+                if (value && options.preferUnitlessValues) {
+                  value = value.replace(
+                    /\b0(px|rem|em|%|vh|vw|vmin|vmax|in|cm|mm|pt|pc|ex|ch)\b/g,
+                    '0'
+                  )
+                }
 
-              if (property) {
-                inlineStyles[property] = value
-              }
-            })
+                if (property) {
+                  inlineStyles[property] = value
+                }
+              })
 
-            // Update the element's style attribute with the new value
-            $(el).attr(
-              'style',
-              Object.entries(inlineStyles).map(([property, value]) => `${property}: ${value}`).join('; ')
-            )
+              // Update the element's style attribute with the new value
+              $(el).attr(
+                'style',
+                Object.entries(inlineStyles).map(([property, value]) => `${property}: ${value}`).join('; ')
+              )
+            } catch {}
           }
 
           // Get the classes from the element's class attribute

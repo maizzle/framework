@@ -138,6 +138,19 @@ describe.concurrent('Inline CSS', () => {
       <p style="margin: 0px">test</p>`))
   })
 
+  test('`preferUnitlessValues` skips invalid inline CSS', async () => {
+    const result = cleanString(
+      await inlineCSS(`
+        <style>.m-0 {margin: 0px}</style>
+        <p class="m-0" style="color: #{{ $foo->theme }}">test</p>`
+      )
+    )
+
+    expect(result).toBe(cleanString(`
+      <style></style>
+      <p class="m-0" style="margin: 0px; color: #{{ $foo->theme }};">test</p>`))
+  })
+
   test('Works with `excludedProperties` option', async () => {
     expect(
       cleanString(

@@ -70,6 +70,7 @@
     "pathe": "^2.0.0",
     "postcss": "^8.4.49",
     "postcss-calc": "^10.0.2",
+    "postcss-color-functional-notation": "^7.0.10",
     "postcss-css-variables": "^0.19.0",
     "postcss-import": "^16.1.0",
     "postcss-safe-parser": "^7.0.0",

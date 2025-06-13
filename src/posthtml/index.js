@@ -17,6 +17,7 @@ import postcssCalc from 'postcss-calc'
 import postcssImport from 'postcss-import'
 import cssVariables from 'postcss-css-variables'
 import postcssSafeParser from 'postcss-safe-parser'
+import postcssColorFunctionalNotation from 'postcss-color-functional-notation'
 
 import defaultComponentsConfig from './defaultComponentsConfig.js'
 
@@ -36,6 +37,7 @@ export async function process(html = '', config = {}) {
       tailwindcss(get(config, 'css.tailwind', {})),
       resolveCSSProps !== false && cssVariables(resolveCSSProps),
       resolveCalc !== false && postcssCalc(resolveCalc),
+      postcssColorFunctionalNotation(),
       ...get(config, 'postcss.plugins', []),
     ],
     merge(

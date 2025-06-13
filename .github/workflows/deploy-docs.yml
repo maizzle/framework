@@ -1,0 +1,15 @@
+name: Rebuild docs
+
+on:
+  push:
+    tags:
+      - 'v*' # matches v1.0.0, v2.3.4, etc.
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Deploy Hook
+        run: curl -X POST "$CF_DEPLOY_HOOK_URL"
+        env:
+          CF_DEPLOY_HOOK_URL: ${{ secrets.CF_DEPLOY_HOOK_URL }}

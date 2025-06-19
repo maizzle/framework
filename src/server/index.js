@@ -252,6 +252,14 @@ export default async (config = {}) => {
       }
     })
 
+  let staticFiles = get(config, 'build.static', [])
+
+  if (!Array.isArray(staticFiles)) {
+    staticFiles = [staticFiles]
+  }
+
+  const staticFilesSourcePaths = staticFiles.flatMap((definition) => definition.source)
+
   /**
    * Global watcher
    *
@@ -263,7 +271,7 @@ export default async (config = {}) => {
     'maizzle.config*.{js,cjs,ts}',
     'tailwind*.config.{js,ts}',
     '**/*.css',
-    ...get(config, 'build.static.source', []),
+    ...staticFilesSourcePaths,
     ...get(config, 'server.watch', []),
   ])
 
@@ -365,7 +373,7 @@ export default async (config = {}) => {
   const srcFoldersList = await fg.glob(
     [
       '**/*/',
-      ...get(config, 'build.static.source', [])
+      ...staticFilesSourcePaths,
     ], {
     onlyFiles: false,
     ignore: [

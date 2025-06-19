@@ -298,14 +298,19 @@ export default async (config = {}) => {
 
     /**
      * Copy static files
-     *
-     * TODO: support an array of objects with source and destination,
-     * i.e. static: [{ source: 'src/assets', destination: 'assets' }, ...]
      */
-    const staticSourcePaths = getRootDirectories([...new Set(get(config, 'build.static.source', []))])
+    let staticFiles = get(config, 'build.static', [])
 
-    for await (const rootDir of staticSourcePaths) {
-      await cp(rootDir, path.join(buildOutputPath, get(config, 'build.static.destination')), { recursive: true })
+    if (!Array.isArray(staticFiles)) {
+        staticFiles = [staticFiles]
+    }
+
+    for (const definition of staticFiles) {
+      const staticSourcePaths = getRootDirectories([...new Set(definition.source)])
+
+      for await (const rootDir of staticSourcePaths) {
+        await cp(rootDir, path.join(buildOutputPath, definition.destination), { recursive: true })
+      }
     }
 
     const allOutputFiles = await fg.glob(path.join(buildOutputPath, '**/*'))

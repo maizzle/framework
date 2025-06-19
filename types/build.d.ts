@@ -99,7 +99,10 @@ export default interface BuildConfig {
      * @default undefined
      */
     destination?: string;
-  };
+  } | Array<{
+    source?: string[];
+    destination?: string;
+  }>
 
   /**
    * Type of spinner to show in the console.

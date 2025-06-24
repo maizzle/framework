@@ -73,7 +73,7 @@ export async function readFileConfig(config) {
           baseConfig = merge(baseConfigFile, baseConfig)
           break
         }
-      } catch (error) {
+      } catch (_error) {
         break
       }
 
@@ -107,7 +107,7 @@ export async function readFileConfig(config) {
             loaded = true
             break
           }
-        } catch (error) {
+        } catch (_error) {
           break
         }
       }
@@ -128,7 +128,7 @@ export async function readFileConfig(config) {
     }
 
     return merge(envConfig, baseConfig)
-  } catch (error) {
+  } catch (_error) {
     throw new Error('Could not compute config')
   }
 }

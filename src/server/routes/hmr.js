@@ -8,7 +8,7 @@ const router = express.Router()
 const require = createRequire(import.meta.url)
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-router.get('/hmr.js', async (req, res) => {
+router.get('/hmr.js', async (_req, res) => {
   try {
     const morphdomPath = require.resolve('morphdom/dist/morphdom-umd.js')
     const morphdomScript = await fs.readFile(morphdomPath, 'utf8')

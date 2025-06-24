@@ -53,7 +53,7 @@ async function getTemplatePaths(templateFolders) {
   return await fg.glob([...new Set(templateFolders)])
 }
 
-async function getUpdatedRoutes(app, config) {
+async function getUpdatedRoutes(_app, config) {
   return getTemplatePaths(getTemplateFolders(config))
 }
 

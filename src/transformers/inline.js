@@ -71,10 +71,10 @@ export async function inline(html = '', options = {}) {
   })
 
   // Add a `data-embed` attribute to style tags that have the embed attribute
-  $('style[embed]:not([data-embed])').each((i, el) => {
+  $('style[embed]:not([data-embed])').each((_i, el) => {
     $(el).attr('data-embed', '')
   })
-  $('style[data-embed]:not([embed])').each((i, el) => {
+  $('style[data-embed]:not([embed])').each((_i, el) => {
     $(el).attr('embed', '')
   })
 
@@ -111,7 +111,7 @@ export async function inline(html = '', options = {}) {
    * Remove inlined selectors from the HTML
    */
   // For each style tag
-  $('style:not([embed])').each((i, el) => {
+  $('style:not([embed])').each((_i, el) => {
     // Parse the CSS
     const { root } = postcss()
       .process(
@@ -243,7 +243,7 @@ export async function inline(html = '', options = {}) {
     })
   })
 
-  $('style[embed]').each((i, el) => {
+  $('style[embed]').each((_i, el) => {
     $(el).removeAttr('embed')
   })
 

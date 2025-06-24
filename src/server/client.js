@@ -138,7 +138,7 @@ function connectWebSocket() {
           if (styleAttribute) {
             const urlPattern = /(url\(["']?)(.*?)(["']?\))/g
             // Replace URLs in style attribute with cache-busting parameter
-            const updatedStyleAttribute = styleAttribute.replace(urlPattern, (match, p1, p2, p3) => {
+            const updatedStyleAttribute = styleAttribute.replace(urlPattern, (_match, p1, p2, p3) => {
               // Update the value of 'v' parameter if it already exists
               if (p2.includes('?')) {
                   return `${p1}${p2.replace(/([?&])v=[^&]*/, `$1v=${randomNumber}`)}${p3}`
@@ -172,7 +172,7 @@ function connectWebSocket() {
   })
 
   // Handle connection opened
-  socket.addEventListener('open', event => {
+  socket.addEventListener('open', _event => {
     console.log('WebSocket connection opened')
   })
 

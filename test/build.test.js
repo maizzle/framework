@@ -163,9 +163,15 @@ describe.concurrent('Build', () => {
           output: {
             path: ctx.folder
           },
-          static: {
-            source: ['test/stubs/static/**/*'],
-          }
+          static: [
+            {
+              source: ['test/stubs/static/**/*'],
+            },
+            {
+              source: ['test/stubs/components/**/*'],
+              destination: 'build/components',
+            },
+          ],
         },
         css: {
           tailwind: {
@@ -175,8 +181,10 @@ describe.concurrent('Build', () => {
       }
     ).then(({ files }) => files)
 
-    expect(ctx.files.length).toBe(5)
+    expect(ctx.files.length).toBe(6)
     expect(ctx.files).toContain(`${ctx.folder}/test/fixtures/build/image.png`)
+    expect(ctx.files).toContain(`${ctx.folder}/plain.txt`)
+    expect(ctx.files).toContain(`${ctx.folder}/build/components/list.html`)
   })
 
   test('Generates plaintext file', async ctx => {

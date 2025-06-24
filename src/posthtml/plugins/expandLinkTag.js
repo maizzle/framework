@@ -1,37 +1,59 @@
-import fs from 'node:fs'
-
 const targets = new Set(['expand', 'inline'])
 
-// TODO: refactor to a Promise so we can use async readFile
-const plugin = (() => tree => {
-  const process = node => {
-    /**
-     * Don't expand link tags that are not explicitly marked as such
-     */
-    if (node?.attrs && ![...targets].some(attr => attr in node.attrs)) {
-      for (const attr of targets) {
-        node.attrs[attr] = false
+const expandLinkPlugin = () => tree => {
+  return new Promise((resolve, reject) => {
+    const isNode = typeof process !== 'undefined' && process.versions?.node
+
+    const loadFile = async href => {
+      if (isNode) {
+        const { readFile } = await import('node:fs/promises')
+        return await readFile(href, 'utf8')
       }
 
-      return node
+      const res = await fetch(href)
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch ${href}: ${res.statusText}`)
+      }
+
+      return await res.text()
     }
 
-    if (
-      node
-      && node.tag === 'link'
-      && node.attrs
-      && node.attrs.href
-      && node.attrs.rel === 'stylesheet'
-    ) {
-      node.content = [fs.readFileSync(node.attrs.href, 'utf8')]
-      node.tag = 'style'
-      node.attrs = {}
+    const promises = []
+
+    try {
+      tree.walk(node => {
+        if (node?.attrs && ![...targets].some(attr => attr in node.attrs)) {
+          for (const attr of targets) {
+            node.attrs[attr] = false
+          }
+          return node
+        }
+
+        if (
+          node?.tag === 'link' &&
+          node.attrs?.href &&
+          node.attrs.rel === 'stylesheet'
+        ) {
+          const promise = loadFile(node.attrs.href).then(content => {
+            node.tag = 'style'
+            node.attrs = {}
+            node.content = [content]
+          })
+
+          promises.push(promise)
+        }
+
+        return node
+      })
+
+      Promise.all(promises)
+        .then(() => resolve(tree))
+        .catch(reject)
+    } catch (err) {
+      reject(err)
     }
+  })
+}
 
-    return node
-  }
-
-  return tree.walk(process)
-})()
-
-export default plugin
+export default expandLinkPlugin

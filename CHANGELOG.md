@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.2.0] - 2025-06-24
+
+This release adds support for configuring multiple static asset folders, allowing you to specify multiple directories from which static assets will be copied to the build output.
+
+### Added
+
+- feature: support an array of objects with source and destination  13d4379
+
+### Fixed
+
+- fix: ignoring production folders as static files sources for server  a3e4044
+
 ## [5.1.0] - 2025-06-13
 
 This release adds support for using Tailwind CSS color opacity modifiers in Gmail by automatically converting modern rgb/a syntax to the legacy, comma-separated syntax.

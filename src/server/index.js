@@ -378,7 +378,7 @@ export default async (config = {}) => {
     onlyFiles: false,
     ignore: [
       'node_modules',
-      get(config, 'build.output.path', 'build_*'),
+      `${get(config, 'build.output.path', 'build_*')}/**`,
     ]
   })
 

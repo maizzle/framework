@@ -12,6 +12,7 @@ function groupFilesByDirectories(globs, files) {
   let current = {}
 
   globs.forEach(glob => {
+    // biome-ignore lint: needs to be escaped
     const rootPath = glob.split(/[\*\!\{\}]/)[0].replace(/\/+$/, '')
 
     files.forEach(file => {

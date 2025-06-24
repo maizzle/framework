@@ -153,6 +153,7 @@ export function getRootDirectories(patterns = []) {
  * @returns
  */
 export function getFileExtensionsFromPattern(pattern) {
+  // biome-ignore lint: needs to be escaped
   const starExtPattern = /\.([^\*\{\}]+)$/ // Matches .ext but not .* or .{ext}
   const bracePattern = /\.{([^}]+)}$/ // Matches .{ext} or .{ext,ext}
   const wildcardPattern = /\.\*$/ // Matches .*

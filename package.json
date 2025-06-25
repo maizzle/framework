@@ -76,7 +76,7 @@
     "postcss-safe-parser": "^7.0.0",
     "posthtml": "^0.16.6",
     "posthtml-attrs-parser": "^1.1.1",
-    "posthtml-base-url": "^3.1.7",
+    "posthtml-base-url": "^3.1.8",
     "posthtml-component": "^2.1.0",
     "posthtml-content": "^2.1.0",
     "posthtml-expressions": "^1.11.4",

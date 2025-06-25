@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.2.1] - 2025-06-25
+
+This is just a maintenance release to update dependencies.
+
+- build(deps): bump posthtml-base-url from 3.1.7 to 3.1.8  9144f5d
+- fix: specify correct posthtml-base-url minimum version  f2f8434
+- build(deps): bump posthtml-url-parameters from 3.1.2 to 3.1.3  03a33ea
+- build(deps): bump posthtml-markdownit from 3.1.1 to 3.1.2  142002c
+- build(deps): bump posthtml-fetch from 4.0.2 to 4.0.3  ebbdfd7
+- build(deps): bump posthtml-extra-attributes from 3.1.3 to 3.1.4  fc578ec
+- build(deps): bump posthtml-postcss-merge-longhand from 3.1.3 to 3.1.4  3b10c6f
+
 ## [5.2.0] - 2025-06-24
 
 This release adds support for configuring multiple static asset folders, allowing you to specify multiple directories from which static assets will be copied to the build output.

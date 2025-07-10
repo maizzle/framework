@@ -17,7 +17,7 @@ describe.concurrent('PostCSS', () => {
       </style>
       <p class="foo">test</p>
     `).then(({ html }) => {
-      expect(cleanString(html)).toBe(`<style> .foo { color: red; } </style> <p class="foo">test</p>`)
+      expect(cleanString(html)).toBe(`<style>.foo { color: red; } </style> <p class="foo">test</p>`)
     })
 
     // Passing options
@@ -56,7 +56,7 @@ describe.concurrent('PostCSS', () => {
         resolveProps: false,
       }
     }).then(({ html }) => {
-      expect(cleanString(html)).toBe(`<style> :root { --color: red; } .foo { color: var(--color); } </style> <p class="foo">test</p>`)
+      expect(cleanString(html)).toBe(`<style>:root { --color: red; } .foo { color: var(--color); } </style> <p class="foo">test</p>`)
     })
   })
 
@@ -71,7 +71,7 @@ describe.concurrent('PostCSS', () => {
 
     posthtml(html)
       .then(({ html }) => {
-        expect(cleanString(html)).toBe('<style> .foo { width: 24.91px; } </style>')
+        expect(cleanString(html)).toBe('<style>.foo { width: 24.91px; } </style>')
       })
 
     posthtml(html, {
@@ -81,17 +81,17 @@ describe.concurrent('PostCSS', () => {
         },
       }
     }).then(({ html }) => {
-      expect(cleanString(html)).toBe('<style> .foo { width: 24.9px; } </style>')
+      expect(cleanString(html)).toBe('<style>.foo { width: 24.9px; } </style>')
     })
   })
 
   test('functional color notation', async () => {
     const html = `
       <style>
-        .bg-black\/80 {
+        .bg-black\\/80 {
           background-color: rgb(0 0 1 / 0.8);
         }
-        .text-white\/20 {
+        .text-white\\/20 {
           color: rgb(255 255 254 / 0.2);
         }
       </style>
@@ -102,9 +102,8 @@ describe.concurrent('PostCSS', () => {
         expect(cleanString(html))
           .toBe(
             cleanString(`
-              <style>
-                .bg-black/80 { background-color: rgba(0, 0, 1, 0.8); }
-                .text-white/20 { color: rgba(255, 255, 254, 0.2); }
+              <style>.bg-black\\/80 { background-color: rgba(0, 0, 1, .8); }
+                .text-white\\/20 { color: rgba(255, 255, 254, .2); }
               </style>`
             )
           )

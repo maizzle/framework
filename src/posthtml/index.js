@@ -10,14 +10,14 @@ import posthtmlPostcss from 'posthtml-postcss'
 import expandLinkTag from './plugins/expandLinkTag.js'
 import envAttributes from './plugins/envAttributes.js'
 import { getPosthtmlOptions } from './defaultConfig.js'
+import combineMediaQueries from './plugins/combineMediaQueries.js'
 
 // PostCSS
-import tailwindcss from 'tailwindcss'
+import tailwindcss from '@tailwindcss/postcss'
 import postcssCalc from 'postcss-calc'
-import postcssImport from 'postcss-import'
 import cssVariables from 'postcss-css-variables'
 import postcssSafeParser from 'postcss-safe-parser'
-import postcssColorFunctionalNotation from 'postcss-color-functional-notation'
+import postcssLightningCss from 'postcss-lightningcss'
 
 import defaultComponentsConfig from './defaultComponentsConfig.js'
 
@@ -33,11 +33,18 @@ export async function process(html = '', config = {}) {
 
   const postcssPlugin = posthtmlPostcss(
     [
-      postcssImport(),
       tailwindcss(get(config, 'css.tailwind', {})),
       resolveCSSProps !== false && cssVariables(resolveCSSProps),
       resolveCalc !== false && postcssCalc(resolveCalc),
-      postcssColorFunctionalNotation(),
+      postcssLightningCss({
+        lightningcssOptions: {
+          errorRecovery: true,
+          minify: false,
+          targets: {
+            ie: 1,
+          }
+        }
+      }),
       ...get(config, 'postcss.plugins', []),
     ],
     merge(
@@ -114,6 +121,7 @@ export async function process(html = '', config = {}) {
     postcssPlugin,
     envTags(config.env),
     envAttributes(config.env),
+    combineMediaQueries(get(config, 'css.combineMediaQueries', { sort: 'mobile-first' })),
     ...get(
       config,
       'posthtml.plugins.after',

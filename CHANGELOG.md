@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- fixed an issue with duplicate CSS selectors for utilities that cannot be disabled in Tailwind CSS v4, like `text-decoration`
 - fixed an issue where some Tailwind directives like `@layer` or `@property` were still present in the final build, even though they were not used
 
 ## [6.0.0-1] - 2025-07-11

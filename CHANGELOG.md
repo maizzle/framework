@@ -4,6 +4,74 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.0-1] - 2025-07-11
+
+### Added
+
+- types for `css.combineMediaQueries` and `css.lightningcss` options in the config
+
+### Changed
+
+- made `combineMediaQueries` configurable through the `css.combineMediaQueries` option, which can be set to an object with options for `postcss-sort-media-queries` or to `false` to disable it
+- made `lightningcss` configurable through the `css.lightningcss` option
+
+### Fixed
+
+- fixed an issue with CSS syntax lowering, we now use `lightningcss` directly instead of `postcss-lightningcss` which was it to trip on CSS inside `style=""` attributes
+
+## [6.0.0-0] - 2025-07-10
+
+This release adds initial support for Tailwind CSS v4 in Maizzle.
+
+To jump right in, simply use the `next` branch of the Starter:
+
+```sh
+git clone -b next https://github.com/maizzle/maizzle.git
+```
+
+Or, if you have a project:
+
+1. Update `package.json`:
+
+  ```json
+  {
+    "private": true,
+    "type": "module",
+    "scripts": {
+      "dev": "maizzle serve",
+      "build": "maizzle build"
+    },
+    "dependencies": {
+      "@maizzle/framework": "next",
+      "@maizzle/tailwindcss": "latest"
+    }
+  }
+  ```
+
+2. Update the `style` tag in `layouts/main.html`:
+
+  ```html
+  <style>
+    @import "@maizzle/tailwindcss";
+
+    img {
+      @apply max-w-full align-middle;
+    }
+  </style>
+  ```
+
+There are still things missign and/or broken:
+
+- inline CSS like the `line-height` on spacers is broken/missing
+- `tailwindcss-email-variants` and `tailwindcss-mso` are not ported yet
+- some CSS duplication and artifacts still present in the final build
+
+---
+
+- feat: add tailwindcss v4 support  8b5596e
+
+https://github.com/maizzle/framework/compare/v5.2.1...v6.0.0-0
+
 ## [5.2.1] - 2025-06-25
 
 This is just a maintenance release to update dependencies.

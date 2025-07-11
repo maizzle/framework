@@ -125,4 +125,29 @@ describe.concurrent('PostCSS', () => {
         expect(cleanString(html)).toBe('<style>.bar { color: #ff0; } .foo { color: #0f0; } .bar2 { color: #ff1; } </style>')
       })
   })
+
+  test('cleans up tailwind artifacts', async () => {
+    const html = `
+      <style>
+        :root {
+          --tw-color: red;
+        }
+        @layer properties;
+        @property --tw-font-weight { syntax: '*'; inherits: false; }
+        .used { color: var(--tw-color); }
+      </style>
+    `
+
+    posthtml(html, {
+      css: {
+        cleanup: {
+          removeEmptyLayers: true,
+          removeUnusedTwProperties: true,
+          preserveCustomProperties: ['--tw-color'],
+        },
+      }
+    }).then(({ html }) => {
+      expect(cleanString(html)).toBe('<style>.used { color: red; } </style>')
+    })
+  })
 })

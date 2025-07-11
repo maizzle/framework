@@ -19,6 +19,7 @@ import postcssCalc from 'postcss-calc'
 import cssVariables from 'postcss-css-variables'
 import postcssSafeParser from 'postcss-safe-parser'
 import removeDuplicateSelectors from './plugins/postcss/removeDuplicateSelectors.js'
+import cleanupTailwindArtifacts from './plugins/postcss/cleanupTailwindArtifacts.js'
 
 import defaultComponentsConfig from './defaultComponentsConfig.js'
 
@@ -38,6 +39,7 @@ export async function process(html = '', config = {}) {
       resolveCSSProps !== false && cssVariables(resolveCSSProps),
       resolveCalc !== false && postcssCalc(resolveCalc),
       removeDuplicateSelectors(),
+      cleanupTailwindArtifacts(get(config, 'css.cleanup', {})),
       ...get(config, 'postcss.plugins', []),
     ],
     merge(

@@ -109,4 +109,20 @@ describe.concurrent('PostCSS', () => {
           )
       })
   })
+
+  test('removes duplicate selectors', async () => {
+    const html = `
+      <style>
+        .foo { color: red; }
+        .bar { color: #ff0; }
+        .foo { color: #0f0; }
+        .bar2 { color: #ff1; }
+        </style>
+    `
+
+    posthtml(html)
+      .then(({ html }) => {
+        expect(cleanString(html)).toBe('<style>.bar { color: #ff0; } .foo { color: #0f0; } .bar2 { color: #ff1; } </style>')
+      })
+  })
 })

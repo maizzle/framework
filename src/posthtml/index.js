@@ -18,6 +18,7 @@ import tailwindcss from '@tailwindcss/postcss'
 import postcssCalc from 'postcss-calc'
 import cssVariables from 'postcss-css-variables'
 import postcssSafeParser from 'postcss-safe-parser'
+import removeDuplicateSelectors from './plugins/postcss/removeDuplicateSelectors.js'
 
 import defaultComponentsConfig from './defaultComponentsConfig.js'
 
@@ -36,6 +37,7 @@ export async function process(html = '', config = {}) {
       tailwindcss(get(config, 'css.tailwind', {})),
       resolveCSSProps !== false && cssVariables(resolveCSSProps),
       resolveCalc !== false && postcssCalc(resolveCalc),
+      removeDuplicateSelectors(),
       ...get(config, 'postcss.plugins', []),
     ],
     merge(

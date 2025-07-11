@@ -113,7 +113,7 @@ export async function process(html = '', config = {}) {
     envTags(config.env),
     envAttributes(config.env),
     lowerCssSyntax(get(config, 'css.lightningcss', {})),
-    combineMediaQueries(get(config, 'css.combineMediaQueries', { sort: 'mobile-first' })),
+    get(config, 'css.combineMediaQueries') !== false && combineMediaQueries(get(config, 'css.combineMediaQueries', { sort: 'mobile-first' })),
     ...get(
       config,
       'posthtml.plugins.after',
@@ -121,7 +121,7 @@ export async function process(html = '', config = {}) {
         ? []
         : get(config, 'posthtml.plugins', [])
     ),
-  ])
+  ].filter(Boolean))
     .process(html, posthtmlOptions)
     .then(result => ({
       config: merge(config, { page: config }),

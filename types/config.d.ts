@@ -17,6 +17,7 @@ import type { PostHTMLFetchConfig } from 'posthtml-fetch';
 import type { PostHTMLComponents } from 'posthtml-component';
 import type { PostHTMLExpressions } from 'posthtml-expressions';
 import type { TransformOptions, CustomAtRules } from 'lightningcss';
+import type { PostCSSSortMediaQueriesOptions } from './css/combineMediaQueries';
 
 export default interface Config {
   /**
@@ -222,6 +223,25 @@ export default interface Config {
      * This is used mainly for lowering CSS syntax to be more compatible with email clients.
      */
     lightningcss?: TransformOptions<CustomAtRules>;
+
+    /**
+     * Combine media queries in your CSS.
+     *
+     * @default { sort: 'mobile-first' }
+     *
+     * @example
+     * ```
+     * export default {
+     *   css: {
+     *     combineMediaQueries: {
+     *       sort: 'desktop-first',
+     *       onlyTopLevel: true,
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    combineMediaQueries?: PostCSSSortMediaQueriesOptions;
   }
 
   /**

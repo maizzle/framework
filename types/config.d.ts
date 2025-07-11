@@ -14,9 +14,9 @@ import type { BaseURLConfig } from 'posthtml-base-url';
 import type URLParametersConfig from './urlParameters';
 import type { PostCssCalcOptions } from 'postcss-calc';
 import type { PostHTMLFetchConfig } from 'posthtml-fetch';
-import type { Config as TailwindConfig } from 'tailwindcss';
 import type { PostHTMLComponents } from 'posthtml-component';
 import type { PostHTMLExpressions } from 'posthtml-expressions';
+import type { TransformOptions, CustomAtRules } from 'lightningcss';
 
 export default interface Config {
   /**
@@ -217,9 +217,11 @@ export default interface Config {
     sixHex?: boolean;
 
     /**
-     * Use a custom Tailwind CSS configuration object.
+     * Configure Lightning CSS.
+     *
+     * This is used mainly for lowering CSS syntax to be more compatible with email clients.
      */
-    tailwind?: TailwindConfig;
+    lightningcss?: TransformOptions<CustomAtRules>;
   }
 
   /**

@@ -10,6 +10,7 @@ import posthtmlPostcss from 'posthtml-postcss'
 import expandLinkTag from './plugins/expandLinkTag.js'
 import envAttributes from './plugins/envAttributes.js'
 import { getPosthtmlOptions } from './defaultConfig.js'
+import lowerCssSyntax from './plugins/lowerCssSyntax.js'
 import combineMediaQueries from './plugins/combineMediaQueries.js'
 
 // PostCSS
@@ -17,7 +18,6 @@ import tailwindcss from '@tailwindcss/postcss'
 import postcssCalc from 'postcss-calc'
 import cssVariables from 'postcss-css-variables'
 import postcssSafeParser from 'postcss-safe-parser'
-import postcssLightningCss from 'postcss-lightningcss'
 
 import defaultComponentsConfig from './defaultComponentsConfig.js'
 
@@ -36,15 +36,6 @@ export async function process(html = '', config = {}) {
       tailwindcss(get(config, 'css.tailwind', {})),
       resolveCSSProps !== false && cssVariables(resolveCSSProps),
       resolveCalc !== false && postcssCalc(resolveCalc),
-      postcssLightningCss({
-        lightningcssOptions: {
-          errorRecovery: true,
-          minify: false,
-          targets: {
-            ie: 1,
-          }
-        }
-      }),
       ...get(config, 'postcss.plugins', []),
     ],
     merge(
@@ -121,6 +112,7 @@ export async function process(html = '', config = {}) {
     postcssPlugin,
     envTags(config.env),
     envAttributes(config.env),
+    lowerCssSyntax(get(config, 'css.lightningcss', {})),
     combineMediaQueries(get(config, 'css.combineMediaQueries', { sort: 'mobile-first' })),
     ...get(
       config,

@@ -177,69 +177,71 @@ export async function inline(html = '', options = {}) {
 
     // Loop over selectors that we found in the <style> tags
     selectors.forEach(({ name, prop }) => {
-      const elements = $(name).get()
+      try {
+        const elements = $(name).get()
 
-      // If the property is excluded from inlining, skip
-      if (!juice.excludedProperties.includes(prop)) {
-        // Find the selector in the HTML
-        elements.forEach((el) => {
-          // Get a `property|value` list from the inline style attribute
-          const styleAttr = $(el).attr('style')
-          const inlineStyles = {}
+        // If the property is excluded from inlining, skip
+        if (!juice.excludedProperties.includes(prop)) {
+          // Find the selector in the HTML
+          elements.forEach((el) => {
+            // Get a `property|value` list from the inline style attribute
+            const styleAttr = $(el).attr('style')
+            const inlineStyles = {}
 
-          // 1. `preferUnitlessValues`
-          if (styleAttr) {
-            try {
-              const root = postcss.parse(`* { ${styleAttr} }`)
+            // 1. `preferUnitlessValues`
+            if (styleAttr) {
+              try {
+                const root = postcss.parse(`* { ${styleAttr} }`)
 
-              root.first.each((decl) => {
-                const property = decl.prop
-                let value = decl.value
+                root.first.each((decl) => {
+                  const property = decl.prop
+                  let value = decl.value
 
-                if (value && options.preferUnitlessValues) {
-                  value = value.replace(
-                    /\b0(px|rem|em|%|vh|vw|vmin|vmax|in|cm|mm|pt|pc|ex|ch)\b/g,
-                    '0'
-                  )
+                  if (value && options.preferUnitlessValues) {
+                    value = value.replace(
+                      /\b0(px|rem|em|%|vh|vw|vmin|vmax|in|cm|mm|pt|pc|ex|ch)\b/g,
+                      '0'
+                    )
+                  }
+
+                  if (property) {
+                    inlineStyles[property] = value
+                  }
+                })
+
+                // Update the element's style attribute with the new value
+                $(el).attr(
+                  'style',
+                  Object.entries(inlineStyles).map(([property, value]) => `${property}: ${value}`).join('; ')
+                )
+              } catch {}
+            }
+
+            // Get the classes from the element's class attribute
+            const classes = $(el).attr('class')
+
+            // 2. `removeInlinedSelectors`
+            if (options.removeInlinedSelectors && classes) {
+              const classList = classes.split(' ')
+
+              // If the class has been inlined in the style attribute...
+              if (has(inlineStyles, prop)) {
+                // Try to remove the classes that have been inlined
+                if (![...options.safelist].some(item => item.includes(name))) {
+                  remove(classList, classToRemove => name.includes(classToRemove))
                 }
 
-                if (property) {
-                  inlineStyles[property] = value
+                // Update the class list on the element with the new classes
+                if (classList.length > 0) {
+                  $(el).attr('class', classList.join(' '))
+                } else {
+                  $(el).removeAttr('class')
                 }
-              })
-
-              // Update the element's style attribute with the new value
-              $(el).attr(
-                'style',
-                Object.entries(inlineStyles).map(([property, value]) => `${property}: ${value}`).join('; ')
-              )
-            } catch {}
-          }
-
-          // Get the classes from the element's class attribute
-          const classes = $(el).attr('class')
-
-          // 2. `removeInlinedSelectors`
-          if (options.removeInlinedSelectors && classes) {
-            const classList = classes.split(' ')
-
-            // If the class has been inlined in the style attribute...
-            if (has(inlineStyles, prop)) {
-              // Try to remove the classes that have been inlined
-              if (![...options.safelist].some(item => item.includes(name))) {
-                remove(classList, classToRemove => name.includes(classToRemove))
-              }
-
-              // Update the class list on the element with the new classes
-              if (classList.length > 0) {
-                $(el).attr('class', classList.join(' '))
-              } else {
-                $(el).removeAttr('class')
               }
             }
-          }
-        })
-      }
+          })
+        }
+      } catch {}
     })
   })
 

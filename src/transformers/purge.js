@@ -13,7 +13,7 @@ const posthtmlPlugin = options => tree => {
     '.apple*', // Apple Mail
     '.ios*', // Mail on iOS
     '.ox-*', // Open-Xchange
-    '.outlook*', // Outlook.com
+    '*outlook*', // Outlook Mac and Android
     '[data-ogs*', // Outlook.com
     '.bloop_container', // Airmail
     '.Singleton', // Apple Mail 10

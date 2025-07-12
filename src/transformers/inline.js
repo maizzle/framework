@@ -38,7 +38,7 @@ export async function inline(html = '', options = {}) {
       '.ios', // Mail on iOS
       '.ox-', // Open-Xchange
       '.yahoo', // Yahoo! Mail
-      '.outlook', // Outlook.com
+      'outlook', // Outlook Mac and Android
       '[data-ogs', // Outlook.com
       '.bloop_container', // Airmail
       '.Singleton', // Apple Mail 10

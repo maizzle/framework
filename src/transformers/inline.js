@@ -37,6 +37,7 @@ export async function inline(html = '', options = {}) {
       '.apple', // Apple Mail
       '.ios', // Mail on iOS
       '.ox-', // Open-Xchange
+      '.yahoo', // Yahoo! Mail
       '.outlook', // Outlook.com
       '[data-ogs', // Outlook.com
       '.bloop_container', // Airmail
@@ -46,7 +47,7 @@ export async function inline(html = '', options = {}) {
       '.mail-detail-content', // Comcast, Libero webmail
       'edo', // Edison (all)
       '#msgBody', // Freenet uses #msgBody
-      '.lang' // Fenced code blocks
+      '.lang', // Fenced code blocks
     ],
   ])
 

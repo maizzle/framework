@@ -12,7 +12,8 @@ export default function posthtmlPlugin(options = {}) {
   options = merge({
     replacements: {
       '{': '{',
-      '}': '}'
+      '}': '}',
+      '&': '&',
     }
   }, options)
 

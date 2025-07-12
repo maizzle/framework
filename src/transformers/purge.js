@@ -20,6 +20,7 @@ const posthtmlPlugin = options => tree => {
     '.unused', // Notes 8
     '.moz-text-html', // Thunderbird
     '*mail-detail-content*', // Comcast, Libero webmail
+    '*mail-content-*', // Notion
     '*edo*', // Edison (all)
     '#*', // Freenet uses #msgBody
     '.lang*' // Fenced code blocks

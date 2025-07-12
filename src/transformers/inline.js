@@ -45,6 +45,7 @@ export async function inline(html = '', options = {}) {
       '.unused', // Notes 8
       '.moz-text-html', // Thunderbird
       '.mail-detail-content', // Comcast, Libero webmail
+      'mail-content', // Notion
       'edo', // Edison (all)
       '#msgBody', // Freenet uses #msgBody
       '.lang', // Fenced code blocks

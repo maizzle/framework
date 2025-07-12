@@ -50,6 +50,7 @@ export async function inline(html = '', options = {}) {
       '#msgBody', // Freenet uses #msgBody
       'lang', // Fenced code blocks
       'ShadowHTML', // Superhuman
+      'spark', // Spark
     ],
   ])
 

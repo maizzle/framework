@@ -25,6 +25,7 @@ const posthtmlPlugin = options => tree => {
     '#*', // Freenet uses #msgBody
     '.lang*', // Fenced code blocks
     '*ShadowHTML*', // Superhuman
+    '*spark*', // Spark
   ]
 
   const defaultOptions = {

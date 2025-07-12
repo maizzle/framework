@@ -19,7 +19,7 @@ const posthtmlPlugin = options => tree => {
     '.Singleton', // Apple Mail 10
     '.unused', // Notes 8
     '.moz-text-html', // Thunderbird
-    '.mail-detail-content', // Comcast, Libero webmail
+    '*mail-detail-content*', // Comcast, Libero webmail
     '*edo*', // Edison (all)
     '#*', // Freenet uses #msgBody
     '.lang*' // Fenced code blocks

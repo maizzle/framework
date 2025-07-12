@@ -9,21 +9,21 @@ import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 const posthtmlPlugin = options => tree => {
   const defaultSafelist = [
     '*body*', // Gmail
-    '.gmail*', // Gmail
-    '.apple*', // Apple Mail
-    '.ios*', // Mail on iOS
-    '.ox-*', // Open-Xchange
+    '*gmail*', // Gmail
+    '*apple*', // Apple Mail
+    '*ios*', // Mail on iOS
+    '*ox-*', // Open-Xchange
     '*outlook*', // Outlook.com
     '[data-ogs*', // Outlook.com
-    '.bloop_container', // Airmail
-    '.Singleton', // Apple Mail 10
-    '.unused', // Notes 8
+    '*bloop_container*', // Airmail
+    '*Singleton*', // Apple Mail 10
+    '*unused', // Notes 8
     '*moz-text-html*', // Thunderbird
     '*mail-detail-content*', // Comcast, Libero webmail
     '*mail-content-*', // Notion
     '*edo*', // Edison (all)
     '#*', // Freenet uses #msgBody
-    '.lang*', // Fenced code blocks
+    '*lang*', // Fenced code blocks
     '*ShadowHTML*', // Superhuman
     '*spark*', // Spark
   ]

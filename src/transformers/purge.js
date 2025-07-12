@@ -13,17 +13,17 @@ const posthtmlPlugin = options => tree => {
     '.apple*', // Apple Mail
     '.ios*', // Mail on iOS
     '.ox-*', // Open-Xchange
-    '*outlook*', // Outlook Mac and Android
+    '*outlook*', // Outlook.com
     '[data-ogs*', // Outlook.com
     '.bloop_container', // Airmail
     '.Singleton', // Apple Mail 10
     '.unused', // Notes 8
-    '.moz-text-html', // Thunderbird
+    '*moz-text-html*', // Thunderbird
     '*mail-detail-content*', // Comcast, Libero webmail
     '*mail-content-*', // Notion
     '*edo*', // Edison (all)
     '#*', // Freenet uses #msgBody
-    '.lang*' // Fenced code blocks
+    '.lang*', // Fenced code blocks
   ]
 
   const defaultOptions = {

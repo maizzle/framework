@@ -32,23 +32,23 @@ export async function inline(html = '', options = {}) {
   options.safelist = new Set([
     ...get(options, 'safelist', []),
     ...[
-      '.body', // Gmail
-      '.gmail', // Gmail
-      '.apple', // Apple Mail
-      '.ios', // Mail on iOS
-      '.ox-', // Open-Xchange
-      '.yahoo', // Yahoo! Mail
+      'body', // Gmail
+      'gmail', // Gmail
+      'apple', // Apple Mail
+      'ios', // Mail on iOS
+      'ox-', // Open-Xchange
+      'yahoo', // Yahoo! Mail
       'outlook', // Outlook Mac and Android
       '[data-ogs', // Outlook.com
-      '.bloop_container', // Airmail
-      '.Singleton', // Apple Mail 10
-      '.unused', // Notes 8
-      '.moz-text-html', // Thunderbird
-      '.mail-detail-content', // Comcast, Libero webmail
+      'bloop_container', // Airmail
+      'Singleton', // Apple Mail 10
+      'unused', // Notes 8
+      'moz-text-html', // Thunderbird
+      'mail-detail-content', // Comcast, Libero webmail
       'mail-content', // Notion
       'edo', // Edison (all)
       '#msgBody', // Freenet uses #msgBody
-      '.lang', // Fenced code blocks
+      'lang', // Fenced code blocks
     ],
   ])
 

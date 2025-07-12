@@ -49,6 +49,7 @@ export async function inline(html = '', options = {}) {
       'edo', // Edison (all)
       '#msgBody', // Freenet uses #msgBody
       'lang', // Fenced code blocks
+      'ShadowHTML', // Superhuman
     ],
   ])
 

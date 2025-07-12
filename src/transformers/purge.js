@@ -24,6 +24,7 @@ const posthtmlPlugin = options => tree => {
     '*edo*', // Edison (all)
     '#*', // Freenet uses #msgBody
     '.lang*', // Fenced code blocks
+    '*ShadowHTML*', // Superhuman
   ]
 
   const defaultOptions = {

@@ -1,4 +1,4 @@
-import { validAttributeNames } from "./postcss/compileCss"
+import { validAttributeNames } from './postcss/compileCss.js'
 
 const plugin = () => tree => {
   const process = node => {

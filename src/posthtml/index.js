@@ -11,9 +11,10 @@ import envAttributes from './plugins/envAttributes.js'
 import { getPosthtmlOptions } from './defaultConfig.js'
 import combineMediaQueries from './plugins/combineMediaQueries.js'
 import defaultComponentsConfig from './defaultComponentsConfig.js'
+import removeRawStyleAttributes from './plugins/removeRawStyleAttributes.js'
 
 // PostCSS
-import compileCss from './plugins/postcss/compileCss.js'
+import { compileCss } from './plugins/postcss/compileCss.js'
 
 export async function process(html = '', config = {}) {
   /**
@@ -71,6 +72,7 @@ export async function process(html = '', config = {}) {
 
   return posthtml([
     ...beforePlugins,
+    compileCss(config),
     fetchPlugin,
     components(componentsConfig),
     fetchPlugin,
@@ -80,6 +82,7 @@ export async function process(html = '', config = {}) {
     compileCss(config),
     get(config, 'css.combineMediaQueries') !== false
       && combineMediaQueries(get(config, 'css.combineMediaQueries', { sort: 'mobile-first' })),
+    removeRawStyleAttributes(),
     ...get(
       config,
       'posthtml.plugins.after',

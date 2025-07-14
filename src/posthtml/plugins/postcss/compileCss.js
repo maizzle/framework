@@ -9,13 +9,16 @@ import postcssSafeParser from 'postcss-safe-parser'
 import removeDuplicateSelectors from './removeDuplicateSelectors.js'
 import cleanupTailwindArtifacts from './cleanupTailwindArtifacts.js'
 
-const validAttributeNames = new Set([
+const attributes = new Set([
   'raw',
   'plain',
   'as-is',
   'uncompiled',
   'unprocessed',
 ])
+
+// export attributes
+export const validAttributeNames = attributes
 
 /**
  * PostHTML plugin to process Tailwind CSS within style tags.
@@ -24,21 +27,14 @@ const validAttributeNames = new Set([
  * compiles it with PostCSS. `<style>` tags marked as
  * `no-process` will be skipped.
  */
-export default function compile(config = {}) {
+export function compileCss(config = {}) {
   return tree => {
     return new Promise((resolve, reject) => {
       const stylePromises = []
 
       tree.walk(node => {
         if (node.tag === 'style' && node.content) {
-          if (node.attrs && Object.keys(node.attrs).some(attr => validAttributeNames.has(attr))) {
-            // Remove the attribute
-            for (const attr of Object.keys(node.attrs)) {
-              if (validAttributeNames.has(attr)) {
-                delete node.attrs[attr]
-              }
-            }
-
+          if (node.attrs && Object.keys(node.attrs).some(attr => attributes.has(attr))) {
             return node
           }
 

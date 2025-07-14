@@ -150,4 +150,19 @@ describe.concurrent('PostCSS', () => {
       expect(cleanString(html)).toBe('<style>.used { color: red; } </style>')
     })
   })
+
+  test('skips processing marked style tags', async () => {
+    const html = `
+      <style raw>
+        .foo {
+          @apply block;
+        }
+      </style>
+    `
+
+    posthtml(html)
+      .then(({ html }) => {
+        expect(cleanString(html)).toBe('<style> .foo { @apply block; } </style>')
+      })
+  })
 })

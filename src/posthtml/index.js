@@ -6,51 +6,16 @@ import posthtml from 'posthtml'
 import posthtmlFetch from 'posthtml-fetch'
 import envTags from './plugins/envTags.js'
 import components from 'posthtml-component'
-import posthtmlPostcss from 'posthtml-postcss'
 import expandLinkTag from './plugins/expandLinkTag.js'
 import envAttributes from './plugins/envAttributes.js'
 import { getPosthtmlOptions } from './defaultConfig.js'
-import lowerCssSyntax from './plugins/lowerCssSyntax.js'
 import combineMediaQueries from './plugins/combineMediaQueries.js'
-
-// PostCSS
-import tailwindcss from '@tailwindcss/postcss'
-import postcssCalc from 'postcss-calc'
-import cssVariables from 'postcss-css-variables'
-import postcssSafeParser from 'postcss-safe-parser'
-import removeDuplicateSelectors from './plugins/postcss/removeDuplicateSelectors.js'
-import cleanupTailwindArtifacts from './plugins/postcss/cleanupTailwindArtifacts.js'
-
 import defaultComponentsConfig from './defaultComponentsConfig.js'
 
+// PostCSS
+import compileCss from './plugins/postcss/compileCss.js'
+
 export async function process(html = '', config = {}) {
-  /**
-   * Configure PostCSS pipeline. Plugins defined and added here
-   * will apply to all `<style>` tags in the HTML.
-   */
-  const resolveCSSProps = get(config, 'css.resolveProps')
-  const resolveCalc = get(config, 'css.resolveCalc') !== false
-    ? get(config, 'css.resolveCalc', { precision: 2 }) // it's true by default, use default precision 2
-    : false
-
-  const postcssPlugin = posthtmlPostcss(
-    [
-      tailwindcss(get(config, 'css.tailwind', {})),
-      resolveCSSProps !== false && cssVariables(resolveCSSProps),
-      resolveCalc !== false && postcssCalc(resolveCalc),
-      removeDuplicateSelectors(),
-      cleanupTailwindArtifacts(get(config, 'css.cleanup', {})),
-      ...get(config, 'postcss.plugins', []),
-    ],
-    merge(
-      get(config, 'postcss.options', {}),
-      {
-        from: config.cwd || './',
-        parser: postcssSafeParser
-      }
-    )
-  )
-
   /**
    * Define PostHTML options by merging user-provided ones
    * on top of a default configuration.
@@ -106,18 +71,15 @@ export async function process(html = '', config = {}) {
 
   return posthtml([
     ...beforePlugins,
-    envTags(config.env),
-    envAttributes(config.env),
-    expandLinkTag(),
-    postcssPlugin,
     fetchPlugin,
     components(componentsConfig),
+    fetchPlugin,
     expandLinkTag(),
-    postcssPlugin,
     envTags(config.env),
     envAttributes(config.env),
-    lowerCssSyntax(get(config, 'css.lightningcss', {})),
-    get(config, 'css.combineMediaQueries') !== false && combineMediaQueries(get(config, 'css.combineMediaQueries', { sort: 'mobile-first' })),
+    compileCss(config),
+    get(config, 'css.combineMediaQueries') !== false
+      && combineMediaQueries(get(config, 'css.combineMediaQueries', { sort: 'mobile-first' })),
     ...get(
       config,
       'posthtml.plugins.after',

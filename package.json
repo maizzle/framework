@@ -86,7 +86,6 @@
     "posthtml-markdownit": "^3.1.0",
     "posthtml-mso": "^3.1.0",
     "posthtml-parser": "^0.12.1",
-    "posthtml-postcss": "^1.0.2",
     "posthtml-postcss-merge-longhand": "^3.1.2",
     "posthtml-render": "^3.0.0",
     "posthtml-safe-class-names": "^4.1.0",

@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [6.0.0-3] - 2025-07-14
+## [6.0.0-5] - 2025-07-14
+
+### Changed
+
+- run css compilation before components too 272bbdb
+
+## [6.0.0-4] - 2025-07-14
 
 ### Added
 
@@ -17,6 +23,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Removed
 
 - removed `posthtml-postcss` dependency
+
+## [6.0.0-3] - 2025-07-14
+
+### Added
+
+- safelist spark targeting selectors f29efb8
+- safelist targeting for superhuman beb6b41
+- safelist notion mail targeting 5cfd68f
+
+### Changed
+
+- safelisting outlook targeting b8b21f3
+- safelisting selectors acb7b80
+
+### Fixed
+
+- safelist class names for container queries b828c44
+- purge safelisting patterns d6b9c48
+- safelisting comcast targeting selector 9677421
+- preserve yahoo mail targeting selectors 2f3429f
 
 ## [6.0.0-2] - 2025-07-11
 

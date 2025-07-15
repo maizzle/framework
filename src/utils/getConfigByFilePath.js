@@ -118,16 +118,25 @@ export async function readFileConfig(config) {
     }
 
     /**
-     * Override the `content` key in `baseConfig` with the one in `envConfig`.
-     *
-     * This is done so that each build uses its own `content` paths, in
-     * order to avoid compiling unnecessary files.
+     * Override the `build.content` key in `baseConfig` with the one in `envConfig`
+     * if present. We do this so that each build uses its own `content` paths,
+     * in order to avoid compiling unnecessary files.
      */
-    if (Array.isArray(envConfig.content)) {
-      baseConfig.content = []
+    if (envConfig.build && Array.isArray(envConfig.build.content)) {
+      baseConfig.build = baseConfig.build || {}
+      baseConfig.build.content = envConfig.build.content
+      // Remove build.content from envConfig to prevent merging duplicates
+      envConfig = { ...envConfig, build: { ...envConfig.build, content: undefined } }
     }
 
-    return merge(envConfig, baseConfig)
+    // Merge envConfig and baseConfig, but ensure build.content is not duplicated
+    const merged = merge(envConfig, baseConfig)
+
+    if (baseConfig.build && Array.isArray(baseConfig.build.content)) {
+      merged.build.content = baseConfig.build.content
+    }
+
+    return merged
   } catch (_error) {
     throw new Error('Could not compute config')
   }

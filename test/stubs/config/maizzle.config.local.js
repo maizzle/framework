@@ -1,4 +1,6 @@
 export default {
   local: true,
-  content: ['local'],
+  build: {
+    content: ['local'],
+  }
 }

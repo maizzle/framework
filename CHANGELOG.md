@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.0-7] - 2025-07-15
+
+This release integrates the `v5.2.2` patch release, which fixes an issue where both local and production `build.content` paths were used when building for production. When specified in a `config.{env}.js` file, build.content must not be merged with the one in the base `config.js`.
+
+### Fixed
+
+- fix: ensure content paths are unique to each build environment 46c292b
+
 ## [6.0.0-6] - 2025-07-14
 
 ### Fixed

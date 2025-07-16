@@ -1,11 +1,10 @@
 import postcss from 'postcss'
 import get from 'lodash-es/get.js'
 import { defu as merge } from 'defu'
-import postcssCalc from 'postcss-calc'
 import { transform } from 'lightningcss'
 import tailwindcss from '@tailwindcss/postcss'
-import cssVariables from 'postcss-css-variables'
 import postcssSafeParser from 'postcss-safe-parser'
+import customProperties from 'postcss-custom-properties'
 
 const attributes = new Set([
   'raw',
@@ -31,7 +30,7 @@ export function compileCss(config = {}) {
       const stylePromises = []
 
       tree.walk(node => {
-        if (node.tag === 'style' && node.content) {
+        if (node && node.tag === 'style' && node.content) {
           if (node.attrs && Object.keys(node.attrs).some(attr => attributes.has(attr))) {
             return node
           }
@@ -67,29 +66,26 @@ async function processCss(css, config) {
    * will apply to all `<style>` tags in the HTML,
    * unless marked to be excluded.
    */
-  const resolveCSSProps = get(config, 'css.resolveProps')
-  const resolveCalc = get(config, 'css.resolveCalc') !== false
-    ? get(config, 'css.resolveCalc', { precision: 2 })
-    : false
+  const resolveCSSProps = merge(get(config, 'css.resolveProps', {}), {preseve: false})
 
-  const lightningCssOptions = merge(
-    get(config, 'css.lightning', {}),
-    {
-      targets: {
-        ie: 1,
-      },
-    }
-  )
+  let lightningCssOptions = get(config, 'css.lightning')
+  if (lightningCssOptions !== false) {
+    lightningCssOptions = merge(
+      lightningCssOptions,
+      {
+        targets: {
+          ie: 1,
+        },
+      }
+    )
+  }
 
   try {
-    const processor = postcss([
+    const result = await postcss([
       tailwindcss(get(config, 'css.tailwind', {})),
-      resolveCSSProps !== false && cssVariables(resolveCSSProps),
-      resolveCalc !== false && postcssCalc(resolveCalc),
+      customProperties(resolveCSSProps),
       ...get(config, 'postcss.plugins', []),
-    ].filter(Boolean))
-
-    const result = await processor.process(css, merge(
+    ]).process(css, merge(
       get(config, 'postcss.options', {}),
       {
         from: config.cwd || './',
@@ -104,7 +100,7 @@ async function processCss(css, config) {
      * to be more email-friendly.
      */
 
-    if (result.css?.trim()) {
+    if (result.css?.trim() && lightningCssOptions !== false) {
       try {
         const { code } = transform(
           merge(

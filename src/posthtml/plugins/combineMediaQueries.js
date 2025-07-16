@@ -4,7 +4,7 @@ import sortMediaQueries from 'postcss-sort-media-queries'
 const plugin = (options = {}) => tree => {
   const process = node => {
     // Check if this is a style tag with content
-    if (node.tag === 'style' && node.content && Array.isArray(node.content)) {
+    if (node && node.tag === 'style' && node.content && Array.isArray(node.content)) {
       // Get the CSS content from the style tag
       const cssContent = node.content.join('')
 

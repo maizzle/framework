@@ -5,58 +5,34 @@ const cleanString = (str) => str.replace(/\s+/g, ' ').trim()
 
 describe.concurrent('PostCSS', () => {
   test('resolveProps', async () => {
-    // Default: resolves CSS variables
-    posthtml(`
+    const input = `
       <style>
         :root {
           --color: red;
         }
+
         .foo {
           color: var(--color);
         }
       </style>
-      <p class="foo">test</p>
-    `).then(({ html }) => {
-      expect(cleanString(html)).toBe(`<style>.foo { color: red; } </style> <p class="foo">test</p>`)
-    })
+    `
 
-    // Passing options
-    posthtml(`
-      <style>
-        .foo {
-          font-weight: var(--font-weight);
-        }
-      </style>
-      <p class="foo">test</p>
-    `, {
+    // Default: resolves CSS variables
+    posthtml(input, {
       css: {
-        resolveProps: {
-          variables: {
-            '--font-weight': 'bold',
-          }
-        },
+        lightning: false,
       }
     }).then(({ html }) => {
-      expect(cleanString(html)).toBe(`<style>.foo { font-weight: bold; } </style> <p class="foo">test</p>`)
+      expect(cleanString(html)).toBe(`<style> :root { --color: red; } .foo { color: red; color: var(--color); } </style>`)
     })
 
     // Disabling `resolveProps`
-    posthtml(`
-      <style>
-        :root {
-          --color: red;
-        }
-        .foo {
-          color: var(--color);
-        }
-      </style>
-      <p class="foo">test</p>
-    `, {
+    posthtml(input, {
       css: {
         resolveProps: false,
       }
     }).then(({ html }) => {
-      expect(cleanString(html)).toBe(`<style>:root { --color: red; } .foo { color: var(--color); } </style> <p class="foo">test</p>`)
+      expect(cleanString(html)).toBe(`<style>:root { --color: red; } .foo { color: var(--color); } </style>`)
     })
   })
 
@@ -71,18 +47,8 @@ describe.concurrent('PostCSS', () => {
 
     posthtml(html)
       .then(({ html }) => {
-        expect(cleanString(html)).toBe('<style>.foo { width: 24.91px; } </style>')
+        expect(cleanString(html)).toBe('<style>.foo { width: 24.9104px; } </style>')
       })
-
-    posthtml(html, {
-      css: {
-        resolveCalc: {
-          precision: 1,
-        },
-      }
-    }).then(({ html }) => {
-      expect(cleanString(html)).toBe('<style>.foo { width: 24.9px; } </style>')
-    })
   })
 
   test('functional color notation', async () => {

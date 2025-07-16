@@ -86,8 +86,6 @@ async function processCss(css, config) {
       tailwindcss(get(config, 'css.tailwind', {})),
       resolveCSSProps !== false && cssVariables(resolveCSSProps),
       resolveCalc !== false && postcssCalc(resolveCalc),
-      // removeDuplicateSelectors(),
-      // cleanupTailwindArtifacts(get(config, 'css.cleanup', {})),
       ...get(config, 'postcss.plugins', []),
     ].filter(Boolean))
 

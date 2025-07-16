@@ -66,7 +66,10 @@ async function processCss(css, config) {
    * will apply to all `<style>` tags in the HTML,
    * unless marked to be excluded.
    */
-  const resolveCSSProps = merge(get(config, 'css.resolveProps', {}), { preserve: false })
+  let resolveCSSProps = get(config, 'css.resolveProps')
+  if (resolveCSSProps !== false) {
+    resolveCSSProps = merge(resolveCSSProps, { preserve: false })
+  }
 
   let lightningCssOptions = get(config, 'css.lightning')
   if (lightningCssOptions !== false) {
@@ -83,9 +86,9 @@ async function processCss(css, config) {
   try {
     const result = await postcss([
       tailwindcss(get(config, 'css.tailwind', {})),
-      customProperties(resolveCSSProps),
+      resolveCSSProps && customProperties(resolveCSSProps),
       ...get(config, 'postcss.plugins', []),
-    ]).process(css, merge(
+    ].filter(Boolean)).process(css, merge(
       get(config, 'postcss.options', {}),
       {
         from: config.cwd || './',

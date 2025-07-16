@@ -23,7 +23,7 @@ describe.concurrent('PostCSS', () => {
         lightning: false,
       }
     }).then(({ html }) => {
-      expect(cleanString(html)).toBe(`<style> :root { --color: red; } .foo { color: red; color: var(--color); } </style>`)
+      expect(cleanString(html)).toBe(`<style> :root { --color: red; } .foo { color: red; } </style>`)
     })
 
     // Disabling `resolveProps`

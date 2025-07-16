@@ -26,7 +26,7 @@ const posthtmlPlugin = options => tree => {
     '*lang*', // Fenced code blocks
     '*ShadowHTML*', // Superhuman
     '*spark*', // Spark
-    '*at-*', // Safe class names for container queries
+    '.at-*', // Safe class names for container queries
   ]
 
   const defaultOptions = {

@@ -184,7 +184,7 @@ describe.concurrent('Inline CSS', () => {
     ).then(({ html }) =>
       expect(cleanString(html)).toBe(cleanString(`
         <style></style>
-        <img style="width: 10px; height: 10px" width="10" height="10">`)
+        <img style="width: 10px; height: 10px" width="10" height="10" alt>`)
       )
     )
   })

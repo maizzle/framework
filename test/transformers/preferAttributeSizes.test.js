@@ -35,6 +35,6 @@ describe.concurrent('Prefer attribute sizes', () => {
           }
         })
         .then(({ html }) => html)
-    ).toBe('<img src="image.jpg" width="100" height="auto">')
+    ).toBe('<img src="image.jpg" width="100" height="auto" alt>')
   })
 })

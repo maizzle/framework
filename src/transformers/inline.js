@@ -19,7 +19,7 @@ import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
  * @returns {Function} PostHTML tree
  */
 export default (options = {}) => tree => {
-  return inline(render(tree), options)
+  return inline(render(tree), options).then(html => parse(html, getPosthtmlOptions()))
 }
 
 /**

@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- fix: @​container class safelisting b4d02f1
+
 ## [6.0.0-11] - 2025-07-16
 
 ### Fixed

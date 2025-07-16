@@ -1,5 +1,13 @@
 import { validAttributeNames } from './postcss/compileCss.js'
 
+/**
+ * Remove specific attributes from `<style>` tags in PostHTML.
+ *
+ * Use to clean up <style> tag attributes after proccessing
+ * has taken place. A "raw" attribute is used to indicate
+ * that the content should not be compiled.
+ * @returns {Function} PostHTML plugin
+ */
 const plugin = () => tree => {
   const process = node => {
     if (node.tag === 'style') {

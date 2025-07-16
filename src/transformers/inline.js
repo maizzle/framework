@@ -6,18 +6,29 @@ import * as cheerio from 'cheerio/slim'
 import remove from 'lodash-es/remove.js'
 import { render } from 'posthtml-render'
 import isEmpty from 'lodash-es/isEmpty.js'
+import { match } from 'posthtml/lib/api.js'
 import safeParser from 'postcss-safe-parser'
 import isObject from 'lodash-es/isObject.js'
 import { parser as parse } from 'posthtml-parser'
 import { useAttributeSizes } from './useAttributeSizes.js'
 import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
-const posthtmlPlugin = (options = {}) => tree => {
-  return inline(render(tree), options).then(html => parse(html, getPosthtmlOptions()))
+/**
+ * PostHTML plugin to inline CSS
+ * @param {*} options `css.inline` object from config
+ * @returns {Function} PostHTML tree
+ */
+export default (options = {}) => tree => {
+  return inline(render(tree), options)
 }
 
-export default posthtmlPlugin
-
+/**
+ * Function to inline CSS styles with Posthtml and Juice.
+ *
+ * @param {*} html  HTML string to process
+ * @param {*} options Options for Juice
+ * @returns {string} HTML with inlined styles
+ */
 export async function inline(html = '', options = {}) {
   // Exit early if no HTML is passed
   if (typeof html !== 'string' || html === '') {
@@ -68,32 +79,34 @@ export async function inline(html = '', options = {}) {
     })
   }
 
-  const $ = cheerio.load(html, {
-    xml: {
-      decodeEntities: false,
-      xmlMode: false,
-    }
-  })
-
-  // Add a `data-embed` attribute to style tags that have the embed attribute
-  $('style[embed]:not([data-embed])').each((_i, el) => {
-    $(el).attr('data-embed', '')
-  })
-  $('style[data-embed]:not([embed])').each((_i, el) => {
-    $(el).attr('embed', '')
-  })
-
   /**
    * Inline the CSS
    *
    * If customCSS is passed, inline that CSS specifically
    * Otherwise, use Juice's default inlining
    */
-  $.root().html(
-    css
-      ? juice.inlineContent($.html(), css, { removeStyleTags, ...options })
-      : juice($.html(), { removeStyleTags, ...options })
-  )
+  const tree = parse(html, getPosthtmlOptions())
+  tree.match = match
+
+  /**
+   * Add a `data-embed` attribute to style tags that have the `embed`
+   * attribute, so that Juice can skip them.
+   */
+  tree.match({ tag: 'style' }, (node) => {
+    if (node.attrs && node.attrs.embed !== undefined) {
+      node.attrs['data-embed'] = true
+    }
+
+    if (node.attrs && node.attrs['data-embed'] !== undefined) {
+      node.attrs.embed = true
+    }
+
+    return node
+  })
+
+  let inlined_html = css
+    ? juice.inlineContent(render(tree), css, { removeStyleTags, ...options })
+    : juice(render(tree), { removeStyleTags, ...options })
 
   /**
    * Prefer attribute sizes
@@ -104,23 +117,34 @@ export async function inline(html = '', options = {}) {
    * natural size.
    */
   if (options.useAttributeSizes) {
-    $.root().html(
-      await useAttributeSizes(html, {
-        width: juice.widthElements,
-        height: juice.heightElements,
-      })
-    )
+    inlined_html = await useAttributeSizes(inlined_html, {
+      width: juice.widthElements,
+      height: juice.heightElements,
+    }, getPosthtmlOptions())
   }
 
   /**
-   * Remove inlined selectors from the HTML
-   */
-  // For each style tag
-  $('style:not([embed])').each((_i, el) => {
+  * Remove inlined selectors from the HTML
+ *
+ */
+  const inlined_tree = parse(inlined_html, getPosthtmlOptions())
+  inlined_tree.match = match
+
+  const preservedAtRules = get(options, 'preservedAtRules', ['media'])
+  const selectors = new Set()
+
+  inlined_tree.match({ tag: 'style' }, node => {
+    // If this is an embedded style tag, exit early
+    if (node.attrs && ('data-embed' in node.attrs || 'embed' in node.attrs)) {
+      return node
+    }
+
     // Parse the CSS
     const { root } = postcss()
       .process(
-        $(el).html(),
+        Array.isArray(node.content)
+          ? node.content.join('')
+          : node.content,
         {
           from: undefined,
           parser: safeParser
@@ -134,14 +158,15 @@ export async function inline(html = '', options = {}) {
 
     const combinedRegex = new RegExp(combinedPattern)
 
-    const selectors = new Set()
-
-    // Preserve selectors in at rules
+    // Preserve selectors in predefined at-rules
     root.walkAtRules(rule => {
-      if (['media', 'supports'].includes(rule.name)) {
+      if (preservedAtRules.includes(rule.name)) {
         rule.walkRules(rule => {
           options.safelist.add(rule.selector)
         })
+      } else {
+        // Remove the at rule if it's not predefined
+        rule.remove()
       }
     })
 
@@ -157,10 +182,11 @@ export async function inline(html = '', options = {}) {
           prop: get(rule.nodes[0], 'prop')
         })
       }
-      // Preserve pseudo selectors
       else {
+        // Preserve pseudo selectors
         options.safelist.add(selector)
       }
+
 
       if (options.removeInlinedSelectors) {
         // Remove the rule in the <style> tag as long as it's not a preserved class
@@ -169,90 +195,112 @@ export async function inline(html = '', options = {}) {
         }
 
         // Update the <style> tag contents
-        $(el).html(root.toString())
+        node.content = root.toString()
       }
     })
 
-    /**
-     * CSS optimizations
-     *
-     * 1. `preferUnitlessValues` - Replace unit values with `0` where possible
-     * 2. `removeInlinedSelectors` - Remove inlined selectors from the HTML
-     */
+    // This is inlined_tree
+    return node
+  })
 
-    // Loop over selectors that we found in the <style> tags
-    selectors.forEach(({ name, prop }) => {
-      try {
-        const elements = $(name).get()
+  /**
+   * CSS optimizations
+   *
+   * `preferUnitlessValues` - Replace unit values with `0` where possible
+   * `removeInlinedSelectors` - Remove inlined selectors from the HTML
+   */
 
-        // If the property is excluded from inlining, skip
-        if (!juice.excludedProperties.includes(prop)) {
-          // Find the selector in the HTML
-          elements.forEach((el) => {
-            // Get a `property|value` list from the inline style attribute
-            const styleAttr = $(el).attr('style')
-            const inlineStyles = {}
+  const $ = cheerio.load(render(inlined_tree), {
+    xml: {
+      decodeEntities: false,
+      xmlMode: false,
+    }
+  })
 
-            // 1. `preferUnitlessValues`
-            if (styleAttr) {
-              try {
-                const root = postcss.parse(`* { ${styleAttr} }`)
+  // Loop over selectors that we found in the <style> tags
+  selectors.forEach(({ name, prop }) => {
+    try {
+      const elements = $(name).get()
+      // If the property is excluded from inlining, skip
+      if (!juice.excludedProperties.includes(prop)) {
+        // Find the selector in the HTML
+        elements.forEach((el) => {
+          // Get a `property|value` list from the inline style attribute
+          const styleAttr = $(el).attr('style')
+          // Store the element's inline styles
+          const inlineStyles = {}
 
-                root.first.each((decl) => {
-                  const property = decl.prop
-                  let value = decl.value
+          // `preferUnitlessValues`
+          if (styleAttr) {
+            try {
+              const root = postcss.parse(`* { ${styleAttr} }`)
 
-                  if (value && options.preferUnitlessValues) {
-                    value = value.replace(
-                      /\b0(px|rem|em|%|vh|vw|vmin|vmax|in|cm|mm|pt|pc|ex|ch)\b/g,
-                      '0'
-                    )
-                  }
+              root.first.each((decl) => {
+                const property = decl.prop
+                let value = decl.value
 
-                  if (property) {
-                    inlineStyles[property] = value
-                  }
-                })
-
-                // Update the element's style attribute with the new value
-                $(el).attr(
-                  'style',
-                  Object.entries(inlineStyles).map(([property, value]) => `${property}: ${value}`).join('; ')
-                )
-              } catch {}
-            }
-
-            // Get the classes from the element's class attribute
-            const classes = $(el).attr('class')
-
-            // 2. `removeInlinedSelectors`
-            if (options.removeInlinedSelectors && classes) {
-              const classList = classes.split(' ')
-
-              // If the class has been inlined in the style attribute...
-              if (has(inlineStyles, prop)) {
-                // Try to remove the classes that have been inlined
-                if (![...options.safelist].some(item => item.includes(name))) {
-                  remove(classList, classToRemove => name.includes(classToRemove))
+                if (value && options.preferUnitlessValues) {
+                  value = value.replace(
+                    /\b0(px|rem|em|%|vh|vw|vmin|vmax|in|cm|mm|pt|pc|ex|ch)\b/g,
+                    '0'
+                  )
                 }
 
-                // Update the class list on the element with the new classes
-                if (classList.length > 0) {
-                  $(el).attr('class', classList.join(' '))
-                } else {
-                  $(el).removeAttr('class')
+                if (property) {
+                  inlineStyles[property] = value
                 }
+              })
+
+              // Update the element's style attribute with the new value
+              $(el).attr(
+                'style',
+                Object.entries(inlineStyles).map(([property, value]) => `${property}: ${value}`).join('; ')
+              )
+            } catch { }
+          }
+
+          // Get the classes from the element's class attribute
+          const classes = $(el).attr('class')
+
+          // `removeInlinedSelectors`
+          if (options.removeInlinedSelectors && classes) {
+            const classList = classes.split(' ')
+
+            // If the class has been inlined in the style attribute...
+            if (has(inlineStyles, prop)) {
+              // Try to remove the classes that have been inlined
+              if (![...options.safelist].some(item => item.includes(name))) {
+                remove(classList, classToRemove => name.includes(classToRemove))
+              }
+
+              // Update the class list on the element with the new classes
+              if (classList.length > 0) {
+                $(el).attr('class', classList.join(' '))
+              } else {
+                $(el).removeAttr('class')
               }
             }
-          })
-        }
-      } catch {}
-    })
+          }
+        })
+      }
+    } catch { }
   })
 
-  $('style[embed]').each((_i, el) => {
-    $(el).removeAttr('embed')
+  const optimized_tree = parse($.html(), getPosthtmlOptions())
+  optimized_tree.match = match
+
+  /**
+   * Remove the `embed` attribute from style tags
+   */
+  optimized_tree.match({ tag: 'style' }, (node) => {
+    // If this is an embedded style tag, exit early
+    if (node.attrs && node.attrs.embed !== undefined) {
+      delete node.attrs.embed
+    }
+
+    return node
   })
 
-  return $.html()
+  // Finally, return the inlined html
+  return render(optimized_tree)
 }

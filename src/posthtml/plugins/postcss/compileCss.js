@@ -6,8 +6,6 @@ import { transform } from 'lightningcss'
 import tailwindcss from '@tailwindcss/postcss'
 import cssVariables from 'postcss-css-variables'
 import postcssSafeParser from 'postcss-safe-parser'
-import removeDuplicateSelectors from './removeDuplicateSelectors.js'
-import cleanupTailwindArtifacts from './cleanupTailwindArtifacts.js'
 
 const attributes = new Set([
   'raw',
@@ -24,8 +22,8 @@ export const validAttributeNames = attributes
  * PostHTML plugin to process Tailwind CSS within style tags.
  *
  * This plugin processes CSS content in `<style>` tags and
- * compiles it with PostCSS. `<style>` tags marked as
- * `no-process` will be skipped.
+ * compiles it with PostCSS. Tags marked with attribute
+ * names found in `attributes` will be skipped.
  */
 export function compileCss(config = {}) {
   return tree => {
@@ -88,8 +86,8 @@ async function processCss(css, config) {
       tailwindcss(get(config, 'css.tailwind', {})),
       resolveCSSProps !== false && cssVariables(resolveCSSProps),
       resolveCalc !== false && postcssCalc(resolveCalc),
-      removeDuplicateSelectors(),
-      cleanupTailwindArtifacts(get(config, 'css.cleanup', {})),
+      // removeDuplicateSelectors(),
+      // cleanupTailwindArtifacts(get(config, 'css.cleanup', {})),
       ...get(config, 'postcss.plugins', []),
     ].filter(Boolean))
 

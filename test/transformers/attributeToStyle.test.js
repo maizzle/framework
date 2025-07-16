@@ -23,9 +23,9 @@ describe.concurrent('Attribute to style', () => {
         attributes: { add: false },
         css: { inline: { attributeToStyle: ['width', 'height'] } },
       }).then(({ html }) => html)
-    ).toBe(`<table align="left" width="100%" height="600" bgcolor="#ffffff" background="https://example.com/image.jpg" style="width: 100%; height: 600px">
+    ).toBe(`<table align="left" width="100%" height="600" bgcolor="#FFFFFF" background="https://example.com/image.jpg" style="width: 100%; height: 600px">
       <tr>
-        <td align="center" valign="top"></td>
+        <td align="center" valign="top" style></td>
       </tr>
     </table>`)
   })

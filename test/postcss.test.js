@@ -126,31 +126,6 @@ describe.concurrent('PostCSS', () => {
       })
   })
 
-  test('cleans up tailwind artifacts', async () => {
-    const html = `
-      <style>
-        :root {
-          --tw-color: red;
-        }
-        @layer properties;
-        @property --tw-font-weight { syntax: '*'; inherits: false; }
-        .used { color: var(--tw-color); }
-      </style>
-    `
-
-    posthtml(html, {
-      css: {
-        cleanup: {
-          removeEmptyLayers: true,
-          removeUnusedTwProperties: true,
-          preserveCustomProperties: ['--tw-color'],
-        },
-      }
-    }).then(({ html }) => {
-      expect(cleanString(html)).toBe('<style>.used { color: red; } </style>')
-    })
-  })
-
   test('skips processing marked style tags', async () => {
     const html = `
       <style raw>

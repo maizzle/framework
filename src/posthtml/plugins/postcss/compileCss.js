@@ -66,7 +66,7 @@ async function processCss(css, config) {
    * will apply to all `<style>` tags in the HTML,
    * unless marked to be excluded.
    */
-  const resolveCSSProps = merge(get(config, 'css.resolveProps', {}), {preseve: false})
+  const resolveCSSProps = merge(get(config, 'css.resolveProps', {}), { preserve: false })
 
   let lightningCssOptions = get(config, 'css.lightning')
   if (lightningCssOptions !== false) {

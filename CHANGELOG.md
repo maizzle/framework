@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [6.0.0-12] - 2025-07-16
+## [6.0.0-13] - 2025-07-17
+
+### Added
+
+- feat: replace css properties transformer 8e9b6af
+
+### Fixed
+
+- fix: default posthtml options for the prettify transformer a5916ec
+- fix: ensure user posthtml options are used by all transformers 2fa7e1c
+
+### Changed
+
+- refactor: cache posthtml options in inliner 173aa3f
+
+## [6.0.0-12] - 2025-07-17
 
 ### Fixed
 

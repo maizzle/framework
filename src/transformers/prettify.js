@@ -21,6 +21,8 @@ const posthtmlPlugin = (options = {}) => tree => {
 export default posthtmlPlugin
 
 export async function prettify(html = '', options = {}, posthtmlOptions = {}) {
+  posthtmlOptions = merge(posthtmlOptions, getPosthtmlOptions())
+
   return posthtml([
     posthtmlPlugin(options)
   ])

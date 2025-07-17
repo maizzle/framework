@@ -35,6 +35,8 @@ export async function inline(html = '', options = {}) {
     return html
   }
 
+  const posthtmlOptions = getPosthtmlOptions()
+
   const removeStyleTags = get(options, 'removeStyleTags', false)
   const css = get(options, 'customCSS', false)
 
@@ -85,7 +87,7 @@ export async function inline(html = '', options = {}) {
    * If customCSS is passed, inline that CSS specifically
    * Otherwise, use Juice's default inlining
    */
-  const tree = parse(html, getPosthtmlOptions())
+  const tree = parse(html, posthtmlOptions)
   tree.match = match
 
   /**
@@ -127,7 +129,7 @@ export async function inline(html = '', options = {}) {
   * Remove inlined selectors from the HTML
  *
  */
-  const inlined_tree = parse(inlined_html, getPosthtmlOptions())
+  const inlined_tree = parse(inlined_html, posthtmlOptions)
   inlined_tree.match = match
 
   const preservedAtRules = get(options, 'preservedAtRules', ['media'])
@@ -286,7 +288,7 @@ export async function inline(html = '', options = {}) {
     } catch { }
   })
 
-  const optimized_tree = parse($.html(), getPosthtmlOptions())
+  const optimized_tree = parse($.html(), posthtmlOptions)
   optimized_tree.match = match
 
   /**

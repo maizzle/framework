@@ -11,10 +11,6 @@ export default (maizzleConfig => tree => {
 
     const replacements = get(maizzleConfig, 'css.replaceProperties', {})
 
-    if (Object.keys(replacements).length === 0) {
-      return node
-    }
-
     const css = Array.isArray(node.content) ? node.content.join('') : node.content
 
     postcss([

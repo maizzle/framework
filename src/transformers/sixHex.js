@@ -1,5 +1,6 @@
 import posthtml from 'posthtml'
 import { conv } from 'color-shorthand-hex-to-six-digit'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = () => tree => {
   const targets = new Set(['bgcolor', 'color'])
@@ -25,6 +26,6 @@ export async function sixHEX(html = '', posthtmlOptions = {}) {
   return posthtml([
     posthtmlPlugin()
   ])
-    .process(html, posthtmlOptions)
+    .process(html, getPosthtmlOptions(posthtmlOptions))
     .then(result => result.html)
 }

@@ -37,7 +37,7 @@ import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 export async function run(html = '', config = {}) {
   const posthtmlPlugins = []
 
-  const posthtmlConfig = getPosthtmlOptions(get(config, 'posthtml.options', {}))
+  const posthtmlOptions = getPosthtmlOptions(get(config, 'posthtml.options', {}))
 
   /**
    * 1. Core transformers
@@ -110,14 +110,15 @@ export async function run(html = '', config = {}) {
    * Inline CSS into HTML.
    */
   if (get(config, 'css.inline')) {
-    posthtmlPlugins.push(inlineCSS(
-      merge(
-        get(config, 'css.inline', {}),
-        {
-          removeInlinedSelectors: true,
-        }
+    posthtmlPlugins.push(
+      inlineCSS(
+        merge(
+          get(config, 'css.inline', {}),
+          { removeInlinedSelectors: true },
+        ),
+        posthtmlOptions
       )
-    ))
+    )
   }
 
   /**
@@ -130,7 +131,7 @@ export async function run(html = '', config = {}) {
     posthtmlPlugins.push(
       removeAttributes(
         get(config, 'attributes.remove', []),
-        posthtmlConfig
+        posthtmlOptions
       )
     )
   }
@@ -165,7 +166,7 @@ export async function run(html = '', config = {}) {
   const baseConfig = get(config, 'baseURL', get(config, 'baseUrl'))
   if (baseConfig) {
     posthtmlPlugins.push(
-      baseUrl(baseConfig)
+      baseUrl(baseConfig, posthtmlOptions)
     )
   }
 
@@ -208,7 +209,9 @@ export async function run(html = '', config = {}) {
    * Remove unused CSS, uglify classes etc.
    */
   if (get(config, 'css.purge')) {
-    posthtmlPlugins.push(purge(config.css.purge))
+    posthtmlPlugins.push(
+      purge(config.css.purge, posthtmlOptions)
+    )
   }
 
   /**
@@ -236,7 +239,7 @@ export async function run(html = '', config = {}) {
    */
   if (get(config, 'prettify')) {
     posthtmlPlugins.push(
-      prettify(get(config, 'prettify', {}))
+      prettify(get(config, 'prettify', {}), posthtmlOptions)
     )
   }
 
@@ -247,12 +250,12 @@ export async function run(html = '', config = {}) {
    */
   if (get(config, 'minify')) {
     posthtmlPlugins.push(
-      minify(get(config, 'minify', {}))
+      minify(get(config, 'minify', {}), posthtmlOptions)
     )
   }
 
   return posthtml(posthtmlPlugins)
-    .process(html, posthtmlConfig)
+    .process(html, posthtmlOptions)
     .then(result => ({
       html: result.html,
     }))

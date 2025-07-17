@@ -6,7 +6,7 @@ import { render } from 'posthtml-render'
 import { parser as parse } from 'posthtml-parser'
 import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
-const posthtmlPlugin = options => tree => {
+const posthtmlPlugin = (options = {}, posthtmlOptions = {}) => tree => {
   const defaultSafelist = [
     '*body*', // Gmail
     '*gmail*', // Gmail
@@ -39,17 +39,18 @@ const posthtmlPlugin = options => tree => {
 
   options = merge(options, defaultOptions)
 
-  const posthtmlConfig = getPosthtmlOptions()
   const { result: html } = comb(render(tree), options)
 
-  return parse(html, posthtmlConfig)
+  return parse(html, posthtmlOptions)
 }
 
 export default posthtmlPlugin
 
 export async function purge(html = '', pluginOptions = {}, posthtmlOptions = {}) {
+  posthtmlOptions = getPosthtmlOptions(posthtmlOptions)
+
   return posthtml([
-    posthtmlPlugin(pluginOptions)
+    posthtmlPlugin(pluginOptions, posthtmlOptions)
   ])
     .process(html, posthtmlOptions)
     .then(result => result.html)

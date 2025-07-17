@@ -4,6 +4,7 @@ import keys from 'lodash-es/keys.js'
 import forEach from 'lodash-es/forEach.js'
 import parseAttrs from 'posthtml-attrs-parser'
 import intersection from 'lodash-es/intersection.js'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = (attributes = []) => tree => {
   if (!Array.isArray(attributes)) {
@@ -85,6 +86,6 @@ export async function attributeToStyle(html = '', attributes = [], posthtmlOptio
   return posthtml([
     posthtmlPlugin(attributes)
   ])
-    .process(html, posthtmlOptions)
+    .process(html, getPosthtmlOptions(posthtmlOptions))
     .then(result => result.html)
 }

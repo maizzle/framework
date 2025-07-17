@@ -18,8 +18,8 @@ import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
  * @param {*} options `css.inline` object from config
  * @returns {Function} PostHTML tree
  */
-export default (options = {}) => tree => {
-  return inline(render(tree), options).then(html => parse(html, getPosthtmlOptions()))
+export default (options = {}, posthtmlOptions = {}) => tree => {
+  return inline(render(tree), options).then(html => parse(html, posthtmlOptions))
 }
 
 /**

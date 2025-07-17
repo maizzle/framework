@@ -8,9 +8,7 @@ import { parser as parse } from 'posthtml-parser'
 import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 import baseUrl, { parseSrcset, stringifySrcset, defaultTags } from 'posthtml-base-url'
 
-const posthtmlOptions = getPosthtmlOptions()
-
-const posthtmlPlugin = url => tree => {
+const posthtmlPlugin = (url, posthtmlOptions = {}) => tree => {
   // Handle `baseURL` as a string
   if (typeof url === 'string' && url.length > 0) {
     const html = rewriteVMLs(render(tree), url)
@@ -48,11 +46,13 @@ const posthtmlPlugin = url => tree => {
 
 export default posthtmlPlugin
 
-export async function addBaseUrl(html = '', options = {}, posthtmlOpts = {}) {
+export async function addBaseUrl(html = '', options = {}, posthtmlOptions = {}) {
+  posthtmlOptions = getPosthtmlOptions(posthtmlOptions)
+
   return posthtml([
-    posthtmlPlugin(options)
+    posthtmlPlugin(options, posthtmlOptions)
   ])
-    .process(html, getPosthtmlOptions(posthtmlOpts))
+    .process(html, posthtmlOptions)
     .then(result => result.html)
 }
 

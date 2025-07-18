@@ -2,6 +2,7 @@ import juice from 'juice'
 import postcss from 'postcss'
 import get from 'lodash-es/get.js'
 import has from 'lodash-es/has.js'
+import postcssCalc from 'postcss-calc'
 import * as cheerio from 'cheerio/slim'
 import remove from 'lodash-es/remove.js'
 import { render } from 'posthtml-render'
@@ -10,6 +11,7 @@ import { match } from 'posthtml/lib/api.js'
 import safeParser from 'postcss-safe-parser'
 import isObject from 'lodash-es/isObject.js'
 import { parser as parse } from 'posthtml-parser'
+import customProperties from 'postcss-custom-properties'
 import { useAttributeSizes } from './useAttributeSizes.js'
 import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
@@ -134,6 +136,7 @@ export async function inline(html = '', options = {}) {
 
   const preservedAtRules = get(options, 'preservedAtRules', ['media'])
   const selectors = new Set()
+  const rootSelectorCss = new Set()
 
   inlined_tree.match({ tag: 'style' }, node => {
     // If this is an embedded style tag, exit early
@@ -177,6 +180,10 @@ export async function inline(html = '', options = {}) {
       // Create a set of selectors
       const { selector } = rule
 
+      if (selector.includes(':root')) {
+        rootSelectorCss.add(rule.toString())
+      }
+
       // Add the selector to the set as long as it's not a pseudo selector
       if (!/.+[^\\\s]::?\w+/.test(selector)) {
         selectors.add({
@@ -188,7 +195,6 @@ export async function inline(html = '', options = {}) {
         // Preserve pseudo selectors
         options.safelist.add(selector)
       }
-
 
       if (options.removeInlinedSelectors) {
         // Remove the rule in the <style> tag as long as it's not a preserved class
@@ -287,6 +293,46 @@ export async function inline(html = '', options = {}) {
       }
     } catch { }
   })
+
+  /**
+   * Find all elements with non-empty `style` attributes and
+   * process their values with PostCSS.
+   *
+   * We do this in order to compile CSS variables and calc()
+   * functions that may have been inlined by Juice.
+   */
+  for (const el of $('[style]')) {
+    const styleAttr = $(el).attr('style')
+    if (!styleAttr || styleAttr.trim() === '') {
+      continue
+    }
+
+    const processedCss = postcss([
+      customProperties({ preserve: false }),
+      postcssCalc(),
+      {
+        postcssPlugin: 'remove-root-selectors',
+        Rule(rule) {
+          // Split comma-separated selectors and filter out :root
+          const selectors = rule.selector.split(',').map(s => s.trim());
+          const filteredSelectors = selectors.filter(s => !s.startsWith(':root'));
+
+          if (filteredSelectors.length === 0) {
+            // Remove the entire rule if all selectors were :root
+            rule.remove();
+          } else if (filteredSelectors.length < selectors.length) {
+            // Update the selector if some (but not all) were :root
+            rule.selector = filteredSelectors.join(', ');
+          }
+        }
+      }
+    ]).process(`${[...rootSelectorCss].join('\n')} ${styleAttr}`, {
+      from: undefined,
+      parser: safeParser,
+    }).css
+
+    $(el).attr('style', processedCss.trim())
+  }
 
   const optimized_tree = parse($.html(), posthtmlOptions)
   optimized_tree.match = match

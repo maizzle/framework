@@ -60,6 +60,24 @@ describe.concurrent('Inline CSS', () => {
       </table>`))
   })
 
+  test('Resolves inline CSS variables and calc()', async () => {
+    expect(
+      cleanString(
+        await inlineCSS(`
+        <style>
+          :root {
+            --color: red;
+            --tw-space-y-reverse: 0;
+          }
+        </style>
+        <p style="color: var(--color); margin: calc(calc(4px * 4) * calc(1 - var(--tw-space-y-reverse)))">test</p>`
+        )
+      )
+    ).toBe(cleanString(`
+      <style> </style>
+      <p style="color: red; margin: 16px">test</p>`))
+  })
+
   test('Preserves user-defined selectors', async () => {
     const result = await inlineCSS(`
       <style>

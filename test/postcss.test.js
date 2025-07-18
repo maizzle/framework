@@ -5,58 +5,34 @@ const cleanString = (str) => str.replace(/\s+/g, ' ').trim()
 
 describe.concurrent('PostCSS', () => {
   test('resolveProps', async () => {
-    // Default: resolves CSS variables
-    posthtml(`
+    const input = `
       <style>
         :root {
           --color: red;
         }
+
         .foo {
           color: var(--color);
         }
       </style>
-      <p class="foo">test</p>
-    `).then(({ html }) => {
-      expect(cleanString(html)).toBe(`<style> .foo { color: red; } </style> <p class="foo">test</p>`)
-    })
+    `
 
-    // Passing options
-    posthtml(`
-      <style>
-        .foo {
-          font-weight: var(--font-weight);
-        }
-      </style>
-      <p class="foo">test</p>
-    `, {
+    // Default: resolves CSS variables
+    posthtml(input, {
       css: {
-        resolveProps: {
-          variables: {
-            '--font-weight': 'bold',
-          }
-        },
+        lightning: false,
       }
     }).then(({ html }) => {
-      expect(cleanString(html)).toBe(`<style>.foo { font-weight: bold; } </style> <p class="foo">test</p>`)
+      expect(cleanString(html)).toBe(`<style> :root { --color: red; } .foo { color: red; } </style>`)
     })
 
     // Disabling `resolveProps`
-    posthtml(`
-      <style>
-        :root {
-          --color: red;
-        }
-        .foo {
-          color: var(--color);
-        }
-      </style>
-      <p class="foo">test</p>
-    `, {
+    posthtml(input, {
       css: {
         resolveProps: false,
       }
     }).then(({ html }) => {
-      expect(cleanString(html)).toBe(`<style> :root { --color: red; } .foo { color: var(--color); } </style> <p class="foo">test</p>`)
+      expect(cleanString(html)).toBe(`<style>:root { --color: red; } .foo { color: var(--color); } </style>`)
     })
   })
 
@@ -71,27 +47,17 @@ describe.concurrent('PostCSS', () => {
 
     posthtml(html)
       .then(({ html }) => {
-        expect(cleanString(html)).toBe('<style> .foo { width: 24.91px; } </style>')
+        expect(cleanString(html)).toBe('<style>.foo { width: 24.9104px; } </style>')
       })
-
-    posthtml(html, {
-      css: {
-        resolveCalc: {
-          precision: 1,
-        },
-      }
-    }).then(({ html }) => {
-      expect(cleanString(html)).toBe('<style> .foo { width: 24.9px; } </style>')
-    })
   })
 
   test('functional color notation', async () => {
     const html = `
       <style>
-        .bg-black\/80 {
+        .bg-black\\/80 {
           background-color: rgb(0 0 1 / 0.8);
         }
-        .text-white\/20 {
+        .text-white\\/20 {
           color: rgb(255 255 254 / 0.2);
         }
       </style>
@@ -102,12 +68,42 @@ describe.concurrent('PostCSS', () => {
         expect(cleanString(html))
           .toBe(
             cleanString(`
-              <style>
-                .bg-black/80 { background-color: rgba(0, 0, 1, 0.8); }
-                .text-white/20 { color: rgba(255, 255, 254, 0.2); }
+              <style>.bg-black\\/80 { background-color: rgba(0, 0, 1, .8); }
+                .text-white\\/20 { color: rgba(255, 255, 254, .2); }
               </style>`
             )
           )
+      })
+  })
+
+  test('removes duplicate selectors', async () => {
+    const html = `
+      <style>
+        .foo { color: red; }
+        .bar { color: #ff0; }
+        .foo { color: #0f0; }
+        .bar2 { color: #ff1; }
+        </style>
+    `
+
+    posthtml(html)
+      .then(({ html }) => {
+        expect(cleanString(html)).toBe('<style>.bar { color: #ff0; } .foo { color: #0f0; } .bar2 { color: #ff1; } </style>')
+      })
+  })
+
+  test('skips processing marked style tags', async () => {
+    const html = `
+      <style raw>
+        .foo {
+          @apply block;
+        }
+      </style>
+    `
+
+    posthtml(html)
+      .then(({ html }) => {
+        expect(cleanString(html)).toBe('<style> .foo { @apply block; } </style>')
       })
   })
 })

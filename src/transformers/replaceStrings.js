@@ -32,6 +32,6 @@ export async function replaceStrings(html = '', replacements = {}, posthtmlOptio
   return posthtml([
     posthtmlPlugin(replacements)
   ])
-    .process(html, posthtmlOptions)
+    .process(html, getPosthtmlOptions(posthtmlOptions))
     .then(result => result.html)
 }

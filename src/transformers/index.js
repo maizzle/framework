@@ -21,6 +21,7 @@ import safeClassNames from './safeClassNames.js'
 import replaceStrings from './replaceStrings.js'
 import attributeToStyle from './attributeToStyle.js'
 import removeAttributes from './removeAttributes.js'
+import replaceCssProperties from './replaceCssProperties.js'
 
 import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
@@ -37,7 +38,7 @@ import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 export async function run(html = '', config = {}) {
   const posthtmlPlugins = []
 
-  const posthtmlConfig = getPosthtmlOptions(get(config, 'posthtml.options', {}))
+  const posthtmlOptions = getPosthtmlOptions(get(config, 'posthtml.options', {}))
 
   /**
    * 1. Core transformers
@@ -60,7 +61,16 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 3. Filters
+   * 3. Replace CSS properties
+   *
+   * Replaces CSS properties based on a custom mapping.
+   */
+  if (get(config, 'css.replaceProperties') !== false) {
+    posthtmlPlugins.push(replaceCssProperties(config))
+  }
+
+  /**
+   * 4. Filters
    *
    * Filters are always applied, unless explicitly disabled.
    */
@@ -71,7 +81,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 4. Markdown
+   * 5. Markdown
    *
    * Convert Markdown to HTML with markdown-it, unless explicitly disabled.
    */
@@ -82,7 +92,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 5. Prevent widow words
+   * 6. Prevent widow words
    *
    * Enabled by default, will prevent widow words in elements
    * wrapped with a `prevent-widows` attribute.
@@ -94,7 +104,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 6. Attribute to `style`
+   * 7. Attribute to `style`
    *
    * Duplicate HTML attributes to inline CSS.
    */
@@ -105,23 +115,24 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 7. Inline CSS
+   * 8. Inline CSS
    *
    * Inline CSS into HTML.
    */
   if (get(config, 'css.inline')) {
-    posthtmlPlugins.push(inlineCSS(
-      merge(
-        get(config, 'css.inline', {}),
-        {
-          removeInlinedSelectors: true,
-        }
+    posthtmlPlugins.push(
+      inlineCSS(
+        merge(
+          get(config, 'css.inline', {}),
+          { removeInlinedSelectors: true },
+        ),
+        posthtmlOptions
       )
-    ))
+    )
   }
 
   /**
-   * 8. Remove attributes
+   * 9. Remove attributes
    *
    * Remove attributes from HTML tags
    * If `undefined`, removes empty `style` and `class` attributes
@@ -130,13 +141,13 @@ export async function run(html = '', config = {}) {
     posthtmlPlugins.push(
       removeAttributes(
         get(config, 'attributes.remove', []),
-        posthtmlConfig
+        posthtmlOptions
       )
     )
   }
 
   /**
-   * 9. Shorthand CSS
+   * 10. Shorthand CSS
    *
    * Convert longhand CSS properties to shorthand in `style` attributes.
    */
@@ -147,7 +158,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 10. Add attributes
+   * 11. Add attributes
    *
    * Add attributes to HTML tags.
    */
@@ -158,19 +169,19 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 11. Base URL
+   * 12. Base URL
    *
    * Add a base URL to relative paths.
    */
   const baseConfig = get(config, 'baseURL', get(config, 'baseUrl'))
   if (baseConfig) {
     posthtmlPlugins.push(
-      baseUrl(baseConfig)
+      baseUrl(baseConfig, posthtmlOptions)
     )
   }
 
   /**
-   * 12. URL parameters
+   * 13. URL parameters
    *
    * Add parameters to URLs.
    */
@@ -181,7 +192,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 13. Six-digit HEX
+   * 14. Six-digit HEX
    *
    * Enabled by default, converts three-digit HEX colors to six-digit.
    */
@@ -192,7 +203,7 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 14. PostHTML MSO
+   * 15. PostHTML MSO
    *
    * Enabled by default, simplifies writing MSO conditionals for Outlook.
    */
@@ -203,23 +214,25 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 15. Purge CSS
+   * 16. Purge CSS
    *
    * Remove unused CSS, uglify classes etc.
    */
   if (get(config, 'css.purge')) {
-    posthtmlPlugins.push(purge(config.css.purge))
+    posthtmlPlugins.push(
+      purge(config.css.purge, posthtmlOptions)
+    )
   }
 
   /**
-   * 16. <template> tags
+   * 17. <template> tags
    *
    * Replace <template> tags with their content.
    */
   posthtmlPlugins.push(templateTag())
 
   /**
-   * 17. Replace strings
+   * 18. Replace strings
    *
    * Replace strings through regular expressions.
    */
@@ -230,29 +243,29 @@ export async function run(html = '', config = {}) {
   }
 
   /**
-   * 18. Prettify
+   * 19. Prettify
    *
    * Pretty-print HTML using js-beautify.
    */
   if (get(config, 'prettify')) {
     posthtmlPlugins.push(
-      prettify(get(config, 'prettify', {}))
+      prettify(get(config, 'prettify', {}), posthtmlOptions)
     )
   }
 
   /**
-   * 19. Minify
+   * 20. Minify
    *
    * Minify HTML using html-crush.
    */
   if (get(config, 'minify')) {
     posthtmlPlugins.push(
-      minify(get(config, 'minify', {}))
+      minify(get(config, 'minify', {}), posthtmlOptions)
     )
   }
 
   return posthtml(posthtmlPlugins)
-    .process(html, posthtmlConfig)
+    .process(html, posthtmlOptions)
     .then(result => ({
       html: result.html,
     }))

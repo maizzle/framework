@@ -215,4 +215,22 @@ export default interface InlineCSSConfig {
    * ```
   */
   safelist?: string[];
+
+  /**
+   * Preserved CSS at-rules.
+   *
+   * These will not be removed as part of the CSS inlining process.
+   *
+   * @default ['media']
+   *
+   * @example
+   * ```
+   * export default {
+   *   css: {
+   *     preservedAtRules: ['media', 'supports'],
+   *   }
+   * }
+   * ```
+   */
+  preservedAtRules?: string[];
 }

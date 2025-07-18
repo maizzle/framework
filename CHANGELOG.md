@@ -4,6 +4,186 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.0-14] - 2025-07-17
+
+### Fixed
+
+- fix: replace css properties 9f37941
+
+## [6.0.0-13] - 2025-07-17
+
+### Added
+
+- feat: replace css properties transformer 8e9b6af
+
+### Fixed
+
+- fix: default posthtml options for the prettify transformer a5916ec
+- fix: ensure user posthtml options are used by all transformers 2fa7e1c
+
+### Changed
+
+- refactor: cache posthtml options in inliner 173aa3f
+
+## [6.0.0-12] - 2025-07-17
+
+### Fixed
+
+- fix: @​container class safelisting b4d02f1
+
+## [6.0.0-11] - 2025-07-16
+
+### Fixed
+
+- fix: return posthtml tree from inliner 5d78370
+
+## [6.0.0-10] - 2025-07-16
+
+### Fixed
+
+- fix: resolve props default options typo 8673a1e
+
+## [6.0.0-9] - 2025-07-16
+
+### Changed
+
+- refactor: resolving css props acacc14
+
+## [6.0.0-8] - 2025-07-16
+
+### Changed
+
+- refactor: css inlining  d443c31
+
+## [6.0.0-7] - 2025-07-15
+
+This release integrates the `v5.2.2` patch release, which fixes an issue where both local and production `build.content` paths were used when building for production. When specified in a `config.{env}.js` file, build.content must not be merged with the one in the base `config.js`.
+
+### Fixed
+
+- fix: ensure content paths are unique to each build environment 46c292b
+
+## [6.0.0-6] - 2025-07-14
+
+### Fixed
+
+- use extension when importing file 99835d3
+
+## [6.0.0-5] - 2025-07-14
+
+### Changed
+
+- run css compilation before components too 272bbdb
+
+## [6.0.0-4] - 2025-07-14
+
+### Added
+
+- added support for skipping CSS compilation on individual `<style>` tags by adding any of the following attributes: `raw`, `plain`, `as-is`, `uncompiled`, `unprocessed`
+
+### Changed
+
+- refactored CSS compilation into a custom PostHTML plugin
+
+### Removed
+
+- removed `posthtml-postcss` dependency
+
+## [6.0.0-3] - 2025-07-14
+
+### Added
+
+- safelist spark targeting selectors f29efb8
+- safelist targeting for superhuman beb6b41
+- safelist notion mail targeting 5cfd68f
+
+### Changed
+
+- safelisting outlook targeting b8b21f3
+- safelisting selectors acb7b80
+
+### Fixed
+
+- safelist class names for container queries b828c44
+- purge safelisting patterns d6b9c48
+- safelisting comcast targeting selector 9677421
+- preserve yahoo mail targeting selectors 2f3429f
+
+## [6.0.0-2] - 2025-07-11
+
+### Fixed
+
+- fixed an issue with duplicate CSS selectors for utilities that cannot be disabled in Tailwind CSS v4, like `text-decoration`
+- fixed an issue where some Tailwind directives like `@layer` or `@property` were still present in the final build, even though they were not used
+
+## [6.0.0-1] - 2025-07-11
+
+### Added
+
+- types for `css.combineMediaQueries` and `css.lightningcss` options in the config
+
+### Changed
+
+- made `combineMediaQueries` configurable through the `css.combineMediaQueries` option, which can be set to an object with options for `postcss-sort-media-queries` or to `false` to disable it
+- made `lightningcss` configurable through the `css.lightningcss` option
+
+### Fixed
+
+- fixed an issue with CSS syntax lowering, we now use `lightningcss` directly instead of `postcss-lightningcss` which was it to trip on CSS inside `style=""` attributes
+
+## [6.0.0-0] - 2025-07-10
+
+This release adds initial support for Tailwind CSS v4 in Maizzle.
+
+To jump right in, simply use the `next` branch of the Starter:
+
+```sh
+git clone -b next https://github.com/maizzle/maizzle.git
+```
+
+Or, if you have a project:
+
+1. Update `package.json`:
+
+  ```json
+  {
+    "private": true,
+    "type": "module",
+    "scripts": {
+      "dev": "maizzle serve",
+      "build": "maizzle build"
+    },
+    "dependencies": {
+      "@maizzle/framework": "next",
+      "@maizzle/tailwindcss": "latest"
+    }
+  }
+  ```
+
+2. Update the `style` tag in `layouts/main.html`:
+
+  ```html
+  <style>
+    @import "@maizzle/tailwindcss";
+
+    img {
+      @apply max-w-full align-middle;
+    }
+  </style>
+  ```
+
+There are still things missign and/or broken:
+
+- inline CSS like the `line-height` on spacers is broken/missing
+- `tailwindcss-email-variants` and `tailwindcss-mso` are not ported yet
+- some CSS duplication and artifacts still present in the final build
+
+---
+
+- feat: add tailwindcss v4 support  8b5596e
+
+https://github.com/maizzle/framework/compare/v5.2.1...v6.0.0-0
+
 ## [5.2.1] - 2025-06-25
 
 This is just a maintenance release to update dependencies.

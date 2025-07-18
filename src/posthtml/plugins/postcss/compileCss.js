@@ -111,10 +111,10 @@ async function processCss(css, config) {
       try {
         const { code } = transform(
           merge(
-            lightningCssOptions,
             {
               code: Buffer.from(result.css)
-            }
+            },
+            lightningCssOptions,
           )
         )
 

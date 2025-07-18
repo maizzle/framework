@@ -65,6 +65,10 @@ async function processCss(css, config) {
    * PostCSS pipeline. Plugins defined and added here
    * will apply to all `<style>` tags in the HTML,
    * unless marked to be excluded.
+   *
+   * @param {string} css CSS content to process
+   * @param {Object} config Maizzle configuration object
+   * @returns {Promise<string>} Processed CSS string
    */
   let resolveCSSProps = get(config, 'css.resolveProps')
   if (resolveCSSProps !== false) {
@@ -91,7 +95,7 @@ async function processCss(css, config) {
     ].filter(Boolean)).process(css, merge(
       get(config, 'postcss.options', {}),
       {
-        from: config.cwd || './',
+        from: get(config, 'cwd', './'),
         parser: postcssSafeParser
       }
     ))

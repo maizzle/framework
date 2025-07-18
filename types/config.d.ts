@@ -242,6 +242,24 @@ export default interface Config {
      * ```
      */
     combineMediaQueries?: PostCSSSortMediaQueriesOptions;
+
+    /**
+     * `replaceCssProperties` Transformer.
+     *
+     * Define a mapping object of which CSS properties to replace with what strings.
+     *
+     * @default {'text-decoration-line': 'text-decoration'}
+     *
+     * @example
+     * ```
+     * export default {
+     *   css: {
+     *     replaceCssProperties: {
+     *       'text-decoration-line': 'text-decoration',
+     *       'margin': 'Margin',
+     *     }
+     */
+    replaceCssProperties?: Record<string, string>;
   }
 
   /**

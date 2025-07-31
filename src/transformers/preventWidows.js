@@ -1,6 +1,7 @@
 import posthtml from 'posthtml'
-import posthtmlWidows from 'posthtml-widows'
 import { defu as merge } from 'defu'
+import posthtmlWidows from 'posthtml-widows'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 export default function posthtmlPlugin(options = {}) {
   options = merge(options, {
@@ -32,6 +33,6 @@ export async function preventWidows(html = '', options = {}, posthtmlOptions = {
   return posthtml([
     posthtmlPlugin(options)
   ])
-    .process(html, posthtmlOptions)
+    .process(html, getPosthtmlOptions(posthtmlOptions))
     .then(result => result.html)
 }

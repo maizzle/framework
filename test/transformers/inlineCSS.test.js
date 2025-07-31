@@ -60,6 +60,24 @@ describe.concurrent('Inline CSS', () => {
       </table>`))
   })
 
+  test('Resolves inline CSS variables and calc()', async () => {
+    expect(
+      cleanString(
+        await inlineCSS(`
+        <style>
+          :root {
+            --color: red;
+            --tw-space-y-reverse: 0;
+          }
+        </style>
+        <p style="color: var(--color); margin: calc(calc(4px * 4) * calc(1 - var(--tw-space-y-reverse)))">test</p>`
+        )
+      )
+    ).toBe(cleanString(`
+      <style> </style>
+      <p style="color: red; margin: 16px">test</p>`))
+  })
+
   test('Preserves user-defined selectors', async () => {
     const result = await inlineCSS(`
       <style>
@@ -156,10 +174,12 @@ describe.concurrent('Inline CSS', () => {
       cleanString(
         await inlineCSS(`
           <style>.bar {cursor: pointer; margin: 0}</style>
-          <p class="bar">test</p>`, {
-          removeInlinedSelectors: true,
-          excludedProperties: ['margin']
-        })
+          <p class="bar">test</p>`,
+          {
+            removeInlinedSelectors: true,
+            excludedProperties: ['margin']
+          }
+        )
       )
     ).toBe(cleanString(`
       <style></style>
@@ -167,11 +187,24 @@ describe.concurrent('Inline CSS', () => {
   })
 
   test('Uses `applyWidthAttributes` and `applyHeightAttributes` by default', async () => {
-    expect(
-      await useTransformers('<style>.size-10px {width: 10px; height: 10px}</style><img class="size-10px">', {
-        css: { inline: { removeInlinedSelectors: true } },
-      }).then(({ html }) => html)
-    ).toBe('<style></style><img style="width: 10px; height: 10px" width="10" height="10" alt>')
+    await useTransformers(
+      `
+        <style>.size-10px {width: 10px; height: 10px}</style>
+        <img class="size-10px">
+      `,
+      {
+        css: {
+          inline: {
+            removeInlinedSelectors: true
+          }
+        },
+      }
+    ).then(({ html }) =>
+      expect(cleanString(html)).toBe(cleanString(`
+        <style></style>
+        <img style="width: 10px; height: 10px" width="10" height="10" alt>`)
+      )
+    )
   })
 
   test('Does not inline <style> tags marked as "embedded"', async () => {
@@ -221,6 +254,9 @@ describe.concurrent('Inline CSS', () => {
             }
           </style>
           <p class="base64">test</p>`,
+          {
+            removeInlinedSelectors: true,
+          }
         )
       )
     ).toBe(cleanString(`

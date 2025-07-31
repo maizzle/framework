@@ -14,9 +14,10 @@ import type { BaseURLConfig } from 'posthtml-base-url';
 import type URLParametersConfig from './urlParameters';
 import type { PostCssCalcOptions } from 'postcss-calc';
 import type { PostHTMLFetchConfig } from 'posthtml-fetch';
-import type { Config as TailwindConfig } from 'tailwindcss';
 import type { PostHTMLComponents } from 'posthtml-component';
 import type { PostHTMLExpressions } from 'posthtml-expressions';
+import type { TransformOptions, CustomAtRules } from 'lightningcss';
+import type { PostCSSSortMediaQueriesOptions } from './css/combineMediaQueries';
 
 export default interface Config {
   /**
@@ -217,9 +218,48 @@ export default interface Config {
     sixHex?: boolean;
 
     /**
-     * Use a custom Tailwind CSS configuration object.
+     * Configure Lightning CSS.
+     *
+     * This is used mainly for lowering CSS syntax to be more compatible with email clients.
      */
-    tailwind?: TailwindConfig;
+    lightningcss?: TransformOptions<CustomAtRules>;
+
+    /**
+     * Combine media queries in your CSS.
+     *
+     * @default { sort: 'mobile-first' }
+     *
+     * @example
+     * ```
+     * export default {
+     *   css: {
+     *     combineMediaQueries: {
+     *       sort: 'desktop-first',
+     *       onlyTopLevel: true,
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    combineMediaQueries?: PostCSSSortMediaQueriesOptions;
+
+    /**
+     * `replaceCssProperties` Transformer.
+     *
+     * Define a mapping object of which CSS properties to replace with what strings.
+     *
+     * @default {'text-decoration-line': 'text-decoration'}
+     *
+     * @example
+     * ```
+     * export default {
+     *   css: {
+     *     replaceCssProperties: {
+     *       'text-decoration-line': 'text-decoration',
+     *       'margin': 'Margin',
+     *     }
+     */
+    replaceCssProperties?: Record<string, string>;
   }
 
   /**

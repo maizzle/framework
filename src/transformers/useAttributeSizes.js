@@ -1,6 +1,7 @@
 import postcss from 'postcss'
 import posthtml from 'posthtml'
 import get from 'lodash-es/get.js'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 const posthtmlPlugin = (mappings = {}) => tree => {
   if (!Object.keys(mappings).length) {
@@ -58,6 +59,6 @@ export async function useAttributeSizes(html = '', mappings = {}, posthtmlOption
   return posthtml([
     posthtmlPlugin(mappings)
   ])
-    .process(html, posthtmlOptions)
+    .process(html, getPosthtmlOptions(posthtmlOptions))
     .then(result => result.html)
 }

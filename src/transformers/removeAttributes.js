@@ -47,9 +47,11 @@ const posthtmlPlugin = (attributes = [], posthtmlOptions = {}) => tree => {
 export default posthtmlPlugin
 
 export async function removeAttributes(html = '', attributes = [], posthtmlOptions = {}) {
+  posthtmlOptions = getPosthtmlOptions(posthtmlOptions)
+
   return posthtml([
-    posthtmlPlugin(attributes, getPosthtmlOptions(posthtmlOptions))
+    posthtmlPlugin(attributes, posthtmlOptions)
   ])
-    .process(html, getPosthtmlOptions())
+    .process(html, posthtmlOptions)
     .then(result => result.html)
 }

@@ -1,6 +1,7 @@
 import posthtml from 'posthtml'
 import get from 'lodash-es/get.js'
 import urlParameters from 'posthtml-url-parameters'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 export default function posthtmlPlugin(options = {}) {
   const { _options, ...parameters } = options
@@ -15,6 +16,6 @@ export async function addURLParams(html = '', options = {}, posthtmlOptions = {}
   return posthtml([
     posthtmlPlugin(options)
   ])
-    .process(html, posthtmlOptions)
+    .process(html, getPosthtmlOptions(posthtmlOptions))
     .then(result => result.html)
 }

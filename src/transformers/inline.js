@@ -2,27 +2,42 @@ import juice from 'juice'
 import postcss from 'postcss'
 import get from 'lodash-es/get.js'
 import has from 'lodash-es/has.js'
+import postcssCalc from 'postcss-calc'
 import * as cheerio from 'cheerio/slim'
 import remove from 'lodash-es/remove.js'
 import { render } from 'posthtml-render'
 import isEmpty from 'lodash-es/isEmpty.js'
+import { match } from 'posthtml/lib/api.js'
 import safeParser from 'postcss-safe-parser'
 import isObject from 'lodash-es/isObject.js'
 import { parser as parse } from 'posthtml-parser'
+import customProperties from 'postcss-custom-properties'
 import { useAttributeSizes } from './useAttributeSizes.js'
 import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
-const posthtmlPlugin = (options = {}) => tree => {
-  return inline(render(tree), options).then(html => parse(html, getPosthtmlOptions()))
+/**
+ * PostHTML plugin to inline CSS
+ * @param {*} options `css.inline` object from config
+ * @returns {Function} PostHTML tree
+ */
+export default (options = {}, posthtmlOptions = {}) => tree => {
+  return inline(render(tree), options).then(html => parse(html, posthtmlOptions))
 }
 
-export default posthtmlPlugin
-
+/**
+ * Function to inline CSS styles with Posthtml and Juice.
+ *
+ * @param {*} html  HTML string to process
+ * @param {*} options Options for Juice
+ * @returns {string} HTML with inlined styles
+ */
 export async function inline(html = '', options = {}) {
   // Exit early if no HTML is passed
   if (typeof html !== 'string' || html === '') {
     return html
   }
+
+  const posthtmlOptions = getPosthtmlOptions()
 
   const removeStyleTags = get(options, 'removeStyleTags', false)
   const css = get(options, 'customCSS', false)
@@ -32,21 +47,26 @@ export async function inline(html = '', options = {}) {
   options.safelist = new Set([
     ...get(options, 'safelist', []),
     ...[
-      '.body', // Gmail
-      '.gmail', // Gmail
-      '.apple', // Apple Mail
-      '.ios', // Mail on iOS
-      '.ox-', // Open-Xchange
-      '.outlook', // Outlook.com
+      'body', // Gmail
+      'gmail', // Gmail
+      'apple', // Apple Mail
+      'ios', // Mail on iOS
+      'ox-', // Open-Xchange
+      'yahoo', // Yahoo! Mail
+      'outlook', // Outlook Mac and Android
       '[data-ogs', // Outlook.com
-      '.bloop_container', // Airmail
-      '.Singleton', // Apple Mail 10
-      '.unused', // Notes 8
-      '.moz-text-html', // Thunderbird
-      '.mail-detail-content', // Comcast, Libero webmail
+      'bloop_container', // Airmail
+      'Singleton', // Apple Mail 10
+      'unused', // Notes 8
+      'moz-text-html', // Thunderbird
+      'mail-detail-content', // Comcast, Libero webmail
+      'mail-content', // Notion
       'edo', // Edison (all)
       '#msgBody', // Freenet uses #msgBody
-      '.lang' // Fenced code blocks
+      'lang', // Fenced code blocks
+      'ShadowHTML', // Superhuman
+      'spark', // Spark
+      '.at-', // Safe class names for container queries
     ],
   ])
 
@@ -63,32 +83,34 @@ export async function inline(html = '', options = {}) {
     })
   }
 
-  const $ = cheerio.load(html, {
-    xml: {
-      decodeEntities: false,
-      xmlMode: false,
-    }
-  })
-
-  // Add a `data-embed` attribute to style tags that have the embed attribute
-  $('style[embed]:not([data-embed])').each((_i, el) => {
-    $(el).attr('data-embed', '')
-  })
-  $('style[data-embed]:not([embed])').each((_i, el) => {
-    $(el).attr('embed', '')
-  })
-
   /**
    * Inline the CSS
    *
    * If customCSS is passed, inline that CSS specifically
    * Otherwise, use Juice's default inlining
    */
-  $.root().html(
-    css
-      ? juice.inlineContent($.html(), css, { removeStyleTags, ...options })
-      : juice($.html(), { removeStyleTags, ...options })
-  )
+  const tree = parse(html, posthtmlOptions)
+  tree.match = match
+
+  /**
+   * Add a `data-embed` attribute to style tags that have the `embed`
+   * attribute, so that Juice can skip them.
+   */
+  tree.match({ tag: 'style' }, (node) => {
+    if (node.attrs && node.attrs.embed !== undefined) {
+      node.attrs['data-embed'] = true
+    }
+
+    if (node.attrs && node.attrs['data-embed'] !== undefined) {
+      node.attrs.embed = true
+    }
+
+    return node
+  })
+
+  let inlined_html = css
+    ? juice.inlineContent(render(tree), css, { removeStyleTags, ...options })
+    : juice(render(tree), { removeStyleTags, ...options })
 
   /**
    * Prefer attribute sizes
@@ -99,23 +121,35 @@ export async function inline(html = '', options = {}) {
    * natural size.
    */
   if (options.useAttributeSizes) {
-    $.root().html(
-      await useAttributeSizes(html, {
-        width: juice.widthElements,
-        height: juice.heightElements,
-      })
-    )
+    inlined_html = await useAttributeSizes(inlined_html, {
+      width: juice.widthElements,
+      height: juice.heightElements,
+    }, getPosthtmlOptions())
   }
 
   /**
-   * Remove inlined selectors from the HTML
-   */
-  // For each style tag
-  $('style:not([embed])').each((_i, el) => {
+  * Remove inlined selectors from the HTML
+ *
+ */
+  const inlined_tree = parse(inlined_html, posthtmlOptions)
+  inlined_tree.match = match
+
+  const preservedAtRules = get(options, 'preservedAtRules', ['media'])
+  const selectors = new Set()
+  const rootSelectorCss = new Set()
+
+  inlined_tree.match({ tag: 'style' }, node => {
+    // If this is an embedded style tag, exit early
+    if (node.attrs && ('data-embed' in node.attrs || 'embed' in node.attrs)) {
+      return node
+    }
+
     // Parse the CSS
     const { root } = postcss()
       .process(
-        $(el).html(),
+        Array.isArray(node.content)
+          ? node.content.join('')
+          : node.content,
         {
           from: undefined,
           parser: safeParser
@@ -129,14 +163,15 @@ export async function inline(html = '', options = {}) {
 
     const combinedRegex = new RegExp(combinedPattern)
 
-    const selectors = new Set()
-
-    // Preserve selectors in at rules
+    // Preserve selectors in predefined at-rules
     root.walkAtRules(rule => {
-      if (['media', 'supports'].includes(rule.name)) {
+      if (preservedAtRules.includes(rule.name)) {
         rule.walkRules(rule => {
           options.safelist.add(rule.selector)
         })
+      } else {
+        // Remove the at rule if it's not predefined
+        rule.remove()
       }
     })
 
@@ -145,6 +180,10 @@ export async function inline(html = '', options = {}) {
       // Create a set of selectors
       const { selector } = rule
 
+      if (selector.includes(':root')) {
+        rootSelectorCss.add(rule.toString())
+      }
+
       // Add the selector to the set as long as it's not a pseudo selector
       if (!/.+[^\\\s]::?\w+/.test(selector)) {
         selectors.add({
@@ -152,8 +191,8 @@ export async function inline(html = '', options = {}) {
           prop: get(rule.nodes[0], 'prop')
         })
       }
-      // Preserve pseudo selectors
       else {
+        // Preserve pseudo selectors
         options.safelist.add(selector)
       }
 
@@ -164,30 +203,42 @@ export async function inline(html = '', options = {}) {
         }
 
         // Update the <style> tag contents
-        $(el).html(root.toString())
+        node.content = root.toString()
       }
     })
 
-    /**
-     * CSS optimizations
-     *
-     * 1. `preferUnitlessValues` - Replace unit values with `0` where possible
-     * 2. `removeInlinedSelectors` - Remove inlined selectors from the HTML
-     */
+    // This is inlined_tree
+    return node
+  })
 
-    // Loop over selectors that we found in the <style> tags
-    selectors.forEach(({ name, prop }) => {
+  /**
+   * CSS optimizations
+   *
+   * `preferUnitlessValues` - Replace unit values with `0` where possible
+   * `removeInlinedSelectors` - Remove inlined selectors from the HTML
+   */
+
+  const $ = cheerio.load(render(inlined_tree), {
+    xml: {
+      decodeEntities: false,
+      xmlMode: false,
+    }
+  })
+
+  // Loop over selectors that we found in the <style> tags
+  selectors.forEach(({ name, prop }) => {
+    try {
       const elements = $(name).get()
-
       // If the property is excluded from inlining, skip
       if (!juice.excludedProperties.includes(prop)) {
         // Find the selector in the HTML
         elements.forEach((el) => {
           // Get a `property|value` list from the inline style attribute
           const styleAttr = $(el).attr('style')
+          // Store the element's inline styles
           const inlineStyles = {}
 
-          // 1. `preferUnitlessValues`
+          // `preferUnitlessValues`
           if (styleAttr) {
             try {
               const root = postcss.parse(`* { ${styleAttr} }`)
@@ -213,13 +264,13 @@ export async function inline(html = '', options = {}) {
                 'style',
                 Object.entries(inlineStyles).map(([property, value]) => `${property}: ${value}`).join('; ')
               )
-            } catch {}
+            } catch { }
           }
 
           // Get the classes from the element's class attribute
           const classes = $(el).attr('class')
 
-          // 2. `removeInlinedSelectors`
+          // `removeInlinedSelectors`
           if (options.removeInlinedSelectors && classes) {
             const classList = classes.split(' ')
 
@@ -240,12 +291,64 @@ export async function inline(html = '', options = {}) {
           }
         })
       }
-    })
+    } catch { }
   })
 
-  $('style[embed]').each((_i, el) => {
-    $(el).removeAttr('embed')
+  /**
+   * Find all elements with non-empty `style` attributes and
+   * process their values with PostCSS.
+   *
+   * We do this in order to compile CSS variables and calc()
+   * functions that may have been inlined by Juice.
+   */
+  for (const el of $('[style]')) {
+    const styleAttr = $(el).attr('style')
+    if (!styleAttr || styleAttr.trim() === '') {
+      continue
+    }
+
+    const processedCss = postcss([
+      customProperties({ preserve: false }),
+      postcssCalc(),
+      {
+        postcssPlugin: 'remove-root-selectors',
+        Rule(rule) {
+          // Split comma-separated selectors and filter out :root
+          const selectors = rule.selector.split(',').map(s => s.trim());
+          const filteredSelectors = selectors.filter(s => !s.startsWith(':root'));
+
+          if (filteredSelectors.length === 0) {
+            // Remove the entire rule if all selectors were :root
+            rule.remove();
+          } else if (filteredSelectors.length < selectors.length) {
+            // Update the selector if some (but not all) were :root
+            rule.selector = filteredSelectors.join(', ');
+          }
+        }
+      }
+    ]).process(`${[...rootSelectorCss].join('\n')} ${styleAttr}`, {
+      from: undefined,
+      parser: safeParser,
+    }).css
+
+    $(el).attr('style', processedCss.trim())
+  }
+
+  const optimized_tree = parse($.html(), posthtmlOptions)
+  optimized_tree.match = match
+
+  /**
+   * Remove the `embed` attribute from style tags
+   */
+  optimized_tree.match({ tag: 'style' }, (node) => {
+    // If this is an embedded style tag, exit early
+    if (node.attrs && node.attrs.embed !== undefined) {
+      delete node.attrs.embed
+    }
+
+    return node
   })
 
-  return $.html()
+  // Finally, return the inlined html
+  return render(optimized_tree)
 }

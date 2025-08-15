@@ -1,6 +1,7 @@
 import posthtml from 'posthtml'
 import { defu as merge } from 'defu'
 import addAttributesPlugin from 'posthtml-extra-attributes'
+import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
 export default function posthtmlPlugin(attributes = {}) {
   const defaultAttributes = {
@@ -24,6 +25,6 @@ export async function addAttributes(html = '', attributes = {}, posthtmlOptions 
   return posthtml([
     posthtmlPlugin(attributes)
   ])
-    .process(html, posthtmlOptions)
+    .process(html, getPosthtmlOptions(posthtmlOptions))
     .then(result => result.html)
 }

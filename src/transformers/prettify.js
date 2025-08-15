@@ -5,7 +5,7 @@ import { render } from 'posthtml-render'
 import { parser as parse } from 'posthtml-parser'
 import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
-const posthtmlPlugin = (options = {}) => tree => {
+const posthtmlPlugin = (options = {}, posthtmlOptions = {}) => tree => {
   const defaultConfig = {
     space_around_combinator: true, // Preserve space around CSS selector combinators
     newline_between_rules: false, // Remove empty lines between CSS rules
@@ -15,14 +15,16 @@ const posthtmlPlugin = (options = {}) => tree => {
 
   const config = merge(options, defaultConfig)
 
-  return parse(pretty(render(tree), config), getPosthtmlOptions())
+  return parse(pretty(render(tree), config), posthtmlOptions)
 }
 
 export default posthtmlPlugin
 
 export async function prettify(html = '', options = {}, posthtmlOptions = {}) {
+  posthtmlOptions = getPosthtmlOptions(posthtmlOptions)
+
   return posthtml([
-    posthtmlPlugin(options)
+    posthtmlPlugin(options, posthtmlOptions)
   ])
     .process(html, posthtmlOptions)
     .then(result => result.html)

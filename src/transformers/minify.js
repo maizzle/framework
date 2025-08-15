@@ -5,22 +5,23 @@ import { render } from 'posthtml-render'
 import { parser as parse } from 'posthtml-parser'
 import { getPosthtmlOptions } from '../posthtml/defaultConfig.js'
 
-const posthtmlPlugin = (options = {}) => tree => {
+const posthtmlPlugin = (options = {}, posthtmlOptions = {}) => tree => {
   options = merge(options, {
     removeLineBreaks: true,
   })
 
-  const posthtmlConfig = getPosthtmlOptions()
   const { result: html } = crush(render(tree), options)
 
-  return parse(html, posthtmlConfig)
+  return parse(html, posthtmlOptions)
 }
 
 export default posthtmlPlugin
 
 export async function minify(html = '', options = {}, posthtmlOptions = {}) {
+  posthtmlOptions = getPosthtmlOptions(posthtmlOptions)
+
   return posthtml([
-    posthtmlPlugin(options)
+    posthtmlPlugin(options, posthtmlOptions),
   ])
     .process(html, posthtmlOptions)
     .then(result => result.html)

@@ -2,7 +2,7 @@ const targets = new Set(['expand', 'inline'])
 
 const expandLinkPlugin = () => tree => {
   return new Promise((resolve, reject) => {
-    const isNode = typeof process !== 'undefined' && process.versions?.node
+    const isNode = process?.versions?.node
 
     const loadFile = async href => {
       if (isNode) {

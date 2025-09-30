@@ -88,10 +88,10 @@ describe.concurrent('PostCSS', () => {
   test('functional color notation', async () => {
     const html = `
       <style>
-        .bg-black\/80 {
+        .bg-black/80 {
           background-color: rgb(0 0 1 / 0.8);
         }
-        .text-white\/20 {
+        .text-white/20 {
           color: rgb(255 255 254 / 0.2);
         }
       </style>

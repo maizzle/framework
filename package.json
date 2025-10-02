@@ -1,6 +1,6 @@
 {
   "name": "@maizzle/framework",
-  "version": "5.2.6",
+  "version": "5.2.7",
   "description": "Maizzle is a framework that helps you quickly build HTML emails with Tailwind CSS.",
   "license": "MIT",
   "type": "module",
@@ -63,7 +63,7 @@
     "html-crush": "^6.0.19",
     "is-url-superb": "^6.1.0",
     "istextorbinary": "^9.5.0",
-    "juice": "^11.0.3",
+    "juice": "^10.0.1",
     "lodash-es": "^4.17.21",
     "morphdom": "^2.7.4",
     "ora": "^8.1.0",

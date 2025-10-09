@@ -146,4 +146,18 @@ describe.concurrent('Render', () => {
 
     expect(cleanString(html)).toBe('<h1>Hello John</h1>')
   })
+
+  test("whitespace", async () => {
+    const { html } = await render(`
+      <h1>Hello <x-span>John</x-span>, nice to meet you!</h1>
+    `,
+      {
+        components: {
+          folders: ["test/stubs/components"],
+        }
+      }
+    )
+
+    expect(cleanString(html)).toBe("<h1>Hello <span>John</span>, nice to meet you!</h1>");
+  })
 })

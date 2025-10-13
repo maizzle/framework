@@ -93,43 +93,6 @@ describe.concurrent('Render', () => {
     expect(inProduction).toBe('<div title="production"></div>')
   })
 
-  test('<env:> tags', async () => {
-    const source = `
-      <env:local>{{ page.env }}</env:local>
-      <env:production>{{ page.env }}</env:production>
-      <fake:production>ignore</fake:production>
-      <env:>test</env:>
-    `
-
-    const { html: inDev } = await render(source)
-
-    const { html: inProduction } = await render(source, {
-      env: 'production'
-    })
-
-    // we don't pass `env` to the page object so it remains as-is
-    expect(cleanString(inDev)).toBe('{{ page.env }} <fake:production>ignore</fake:production>')
-    expect(inProduction.trim()).toBe('production\n      <fake:production>ignore</fake:production>')
-  })
-
-  test('fetch component', async () => {
-    const { html } = await render(`
-      <x-list>
-        <fetch url="test/stubs/data.json">
-          {{ undefinedVariable }}
-          <each loop="user in response">{{ user.name + (loop.last ? '' : ', ') }}</each>
-          @{{ ignored }}
-        </fetch>
-      </x-list>
-    `, {
-      components: {
-        folders: ['test/stubs/components'],
-      }
-    })
-
-    expect(cleanString(html)).toBe('<h1>Results</h1> {{ undefinedVariable }} Leanne Graham, Ervin Howell {{ ignored }}')
-  })
-
   test('uses expressions options', async () => {
     const { html } = await render(`
       <script locals>

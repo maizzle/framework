@@ -102,7 +102,7 @@
     "@types/markdown-it": "^14.1.2",
     "@vitest/coverage-v8": "^3.0.4",
     "supertest": "^7.0.0",
-    "vitest": "^3.0.3"
+    "vitest": "^4.0.1"
   },
   "engines": {
     "node": ">=18.20"

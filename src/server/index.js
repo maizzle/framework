@@ -258,7 +258,9 @@ export default async (config = {}) => {
     staticFiles = [staticFiles]
   }
 
-  const staticFilesSourcePaths = staticFiles.flatMap((definition) => definition.source)
+  const staticFilesSourcePaths = staticFiles
+    .flatMap((definition) => definition.source)
+    .filter(p => typeof p === 'string')
 
   /**
    * Global watcher
@@ -273,7 +275,7 @@ export default async (config = {}) => {
     '**/*.css',
     ...staticFilesSourcePaths,
     ...get(config, 'server.watch', []),
-  ])
+  ].filter(p => typeof p === 'string'))
 
   async function globalPathsHandler(file, eventType) {
     // Update express.static to serve new files

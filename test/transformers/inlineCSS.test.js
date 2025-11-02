@@ -45,17 +45,15 @@ describe.concurrent('Inline CSS', () => {
     })
 
     expect(cleanString(result)).toBe(cleanString(`
-      <style>
-        .hover\\:foo:hover {color: blue}
+      <style>.hover\\:foo:hover { color: blue; }
         @media (max-width: 600px) {
-          .sm\\:text-center {text-align: center}
+          .sm\\:text-center { text-align: center; }
         }
-        u + .body .gmail\\:hidden { display: none; }
-      </style>
-      <p style="cursor: pointer">test</p>
-      <table class="sm:text-center" style="width: 4px; height: 4px; background-image: url('https://picsum.photos/600/400')">
+        u + .body .gmail\\:hidden { display: none; }</style>
+      <p class="bar" style="cursor: pointer;">test</p>
+      <table class="w-1 h-1 sm:text-center bg-custom" style="width: 4px; height: 4px; background-image: url('https://picsum.photos/600/400')">
         <tr>
-          <td class="gmail:hidden" style="height: 4px; color: red; cursor: pointer">test</td>
+          <td class="foo bar h-1 gmail:hidden" style="height: 4px; color: red; cursor: pointer;">test</td>
         </tr>
       </table>`))
   })
@@ -74,12 +72,9 @@ describe.concurrent('Inline CSS', () => {
       })
 
     expect(cleanString(result)).toBe(cleanString(`
-      <style>
-        .bar {margin: 0}
-        .variant\\:foo {color: blue}
-        </style>
-        <p class="bar" style="margin: 0">test</p>
-        <span class="variant:foo" style="color: blue"></span>`
+      <style>.bar { margin: 0; } .variant\\:foo { color: blue; }</style>
+      <p class="bar" style="margin: 0">test</p>
+      <span class="variant:foo" style="color: blue"></span>`
     ))
   })
 
@@ -133,9 +128,7 @@ describe.concurrent('Inline CSS', () => {
       )
     )
 
-    expect(result).toBe(cleanString(`
-      <style></style>
-      <p style="margin: 0px">test</p>`))
+    expect(result).toBe(`<p class="m-0" style="margin: 0px;">test</p>`)
   })
 
   test('`preferUnitlessValues` skips invalid inline CSS', async () => {
@@ -146,9 +139,7 @@ describe.concurrent('Inline CSS', () => {
       )
     )
 
-    expect(result).toBe(cleanString(`
-      <style></style>
-      <p class="m-0" style="margin: 0px; color: #{{ $foo->theme }};">test</p>`))
+    expect(result).toBe(`<p class="m-0" style="margin: 0px; color: #{{ $foo->theme }};">test</p>`)
   })
 
   test('Works with `excludedProperties` option', async () => {
@@ -161,29 +152,32 @@ describe.concurrent('Inline CSS', () => {
           excludedProperties: ['margin']
         })
       )
-    ).toBe(cleanString(`
-      <style></style>
-      <p style="cursor: pointer">test</p>`))
+    ).toBe(`<p class="bar" style="cursor: pointer;">test</p>`)
   })
 
   test('Uses `applyWidthAttributes` and `applyHeightAttributes` by default', async () => {
     expect(
-      await useTransformers('<style>.size-10px {width: 10px; height: 10px}</style><img class="size-10px">', {
-        css: { inline: { removeInlinedSelectors: true } },
-      }).then(({ html }) => html)
-    ).toBe('<style></style><img style="width: 10px; height: 10px" width="10" height="10" alt>')
+      cleanString(
+        await useTransformers('<style>.size-10px {width: 10px; height: 10px}</style><img class="size-10px">', {
+          css: { inline: { removeInlinedSelectors: true } },
+        }).then(({ html }) => html)
+      )
+    ).toBe('<img class="size-10px" style="width: 10px; height: 10px;" width="10" height="10" alt>')
   })
 
   test('Does not inline <style> tags marked as "embedded"', async () => {
     expect(
-      await inlineCSS(`
-        <style embed>.foo {color: red}</style>
-        <style data-embed>.foo {display: flex}</style>
+      cleanString(
+        await inlineCSS(`
+          <style embed>.foo { color: red; }</style>
+          <style data-embed>.foo { display: flex ;}</style>
+          <p class="foo">test</p>`)
+      )
+    ).toBe(
+      cleanString(`
+        <style>.foo { color: red; }</style>
+        <style>.foo { display: flex; }</style>
         <p class="foo">test</p>`)
-    ).toBe(`
-        <style>.foo {color: red}</style>
-        <style>.foo {display: flex}</style>
-        <p class="foo">test</p>`
     )
   })
 
@@ -196,17 +190,15 @@ describe.concurrent('Inline CSS', () => {
         }).then(({ html }) => html)
       )
     ).toBe(cleanString(`
-      <style>
-        .hover-foo:hover {color: blue}
+      <style>.hover-foo:hover { color: blue; }
         @media (max-width: 600px) {
-          .sm-text-center {text-align: center}
+          .sm-text-center { text-align: center; }
         }
-        u + .body .gmail-hidden { display: none; }
-      </style>
-      <p style="cursor: pointer">test</p>
-      <table class="sm-text-center" style="width: 4px; height: 4px; background-image: url('https://picsum.photos/600/400')">
+        u + .body .gmail-hidden { display: none; }</style>
+      <p class="bar" style="cursor: pointer;">test</p>
+      <table class="w-1 h-1 sm-text-center bg-custom" style="width: 4px; height: 4px; background-image: url('https://picsum.photos/600/400')">
         <tr>
-          <td class="gmail-hidden" style="height: 4px; color: red; cursor: pointer">test</td>
+          <td class="foo bar h-1 gmail-hidden" style="height: 4px; color: red; cursor: pointer;">test</td>
         </tr>
       </table>`))
   })
@@ -224,8 +216,7 @@ describe.concurrent('Inline CSS', () => {
         )
       )
     ).toBe(cleanString(`
-      <style> </style>
-      <p style="background-image: url('data:image/gif;base64,R0lGODdhAQABAPAAAP8AAAAAACwAAAAAAQABAAACAkQBADs=')">test</p>`))
+      <p class="base64" style="background-image: url('data:image/gif;base64,R0lGODdhAQABAPAAAP8AAAAAACwAAAAAAQABAAACAkQBADs=');">test</p>`))
   })
 
   test('Works with pseudo-classes', async () => {
@@ -245,11 +236,9 @@ describe.concurrent('Inline CSS', () => {
         )
       )
     ).toBe(cleanString(`
-      <style>
-        li::marker {color: blue}
-      </style>
+      <style>li::marker { color: blue; }</style>
       <ul>
-        <li style="color: red">test</li>
+        <li style="color: red;">test</li>
       </ul>`))
   })
 })

@@ -1,9 +1,7 @@
 import juice from 'juice'
 import postcss from 'postcss'
 import get from 'lodash-es/get.js'
-import has from 'lodash-es/has.js'
 import * as cheerio from 'cheerio/slim'
-import remove from 'lodash-es/remove.js'
 import { render } from 'posthtml-render'
 import isEmpty from 'lodash-es/isEmpty.js'
 import safeParser from 'postcss-safe-parser'
@@ -29,26 +27,7 @@ export async function inline(html = '', options = {}) {
 
   options.removeInlinedSelectors = get(options, 'removeInlinedSelectors', true)
   options.preferUnitlessValues = get(options, 'preferUnitlessValues', true)
-  options.safelist = new Set([
-    ...get(options, 'safelist', []),
-    ...[
-      '.body', // Gmail
-      '.gmail', // Gmail
-      '.apple', // Apple Mail
-      '.ios', // Mail on iOS
-      '.ox-', // Open-Xchange
-      '.outlook', // Outlook.com
-      '[data-ogs', // Outlook.com
-      '.bloop_container', // Airmail
-      '.Singleton', // Apple Mail 10
-      '.unused', // Notes 8
-      '.moz-text-html', // Thunderbird
-      '.mail-detail-content', // Comcast, Libero webmail
-      'edo', // Edison (all)
-      '#msgBody', // Freenet uses #msgBody
-      '.lang' // Fenced code blocks
-    ],
-  ])
+  options.preservedSelectors = get(options, 'safelist', [])
 
   juice.styleToAttribute = get(options, 'styleToAttribute', {})
   juice.applyWidthAttributes = get(options, 'applyWidthAttributes', true)
@@ -86,7 +65,7 @@ export async function inline(html = '', options = {}) {
    */
   $.root().html(
     css
-      ? juice.inlineContent($.html(), css, { removeStyleTags, ...options })
+      ? juice($.html(), { extraCss: css, removeStyleTags, ...options })
       : juice($.html(), { removeStyleTags, ...options })
   )
 
@@ -110,9 +89,7 @@ export async function inline(html = '', options = {}) {
   /**
    * Remove inlined selectors from the HTML
    */
-  // For each style tag
   $('style:not([embed])').each((_i, el) => {
-    // Parse the CSS
     const { root } = postcss()
       .process(
         $(el).html(),
@@ -122,27 +99,9 @@ export async function inline(html = '', options = {}) {
         }
       )
 
-    // Precompile a single regex to match any substring from the preservedClasses set
-    const combinedPattern = Array.from(options.safelist)
-      .map(pattern => pattern.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'))  // Escape special regex chars
-      .join('|')  // Combine all patterns into a single regex pattern with 'OR' (|)
-
-    const combinedRegex = new RegExp(combinedPattern)
-
     const selectors = new Set()
 
-    // Preserve selectors in at rules
-    root.walkAtRules(rule => {
-      if (['media', 'supports'].includes(rule.name)) {
-        rule.walkRules(rule => {
-          options.safelist.add(rule.selector)
-        })
-      }
-    })
-
-    // For each rule in the CSS block we're parsing
     root.walkRules(rule => {
-      // Create a set of selectors
       const { selector } = rule
 
       // Add the selector to the set as long as it's not a pseudo selector
@@ -152,30 +111,11 @@ export async function inline(html = '', options = {}) {
           prop: get(rule.nodes[0], 'prop')
         })
       }
-      // Preserve pseudo selectors
-      else {
-        options.safelist.add(selector)
-      }
-
-      if (options.removeInlinedSelectors) {
-        // Remove the rule in the <style> tag as long as it's not a preserved class
-        if (!options.safelist.has(selector) && !combinedRegex.test(selector)) {
-          rule.remove()
-        }
-
-        // Update the <style> tag contents
-        $(el).html(root.toString())
-      }
     })
 
     /**
-     * CSS optimizations
-     *
-     * 1. `preferUnitlessValues` - Replace unit values with `0` where possible
-     * 2. `removeInlinedSelectors` - Remove inlined selectors from the HTML
+     * `preferUnitlessValues` - replace unit values with `0` where possible
      */
-
-    // Loop over selectors that we found in the <style> tags
     selectors.forEach(({ name, prop }) => {
       const elements = $(name).get()
 
@@ -187,7 +127,6 @@ export async function inline(html = '', options = {}) {
           const styleAttr = $(el).attr('style')
           const inlineStyles = {}
 
-          // 1. `preferUnitlessValues`
           if (styleAttr) {
             try {
               const root = postcss.parse(`* { ${styleAttr} }`)
@@ -214,29 +153,6 @@ export async function inline(html = '', options = {}) {
                 Object.entries(inlineStyles).map(([property, value]) => `${property}: ${value}`).join('; ')
               )
             } catch {}
-          }
-
-          // Get the classes from the element's class attribute
-          const classes = $(el).attr('class')
-
-          // 2. `removeInlinedSelectors`
-          if (options.removeInlinedSelectors && classes) {
-            const classList = classes.split(' ')
-
-            // If the class has been inlined in the style attribute...
-            if (has(inlineStyles, prop)) {
-              // Try to remove the classes that have been inlined
-              if (![...options.safelist].some(item => item.includes(name))) {
-                remove(classList, classToRemove => name.includes(classToRemove))
-              }
-
-              // Update the class list on the element with the new classes
-              if (classList.length > 0) {
-                $(el).attr('class', classList.join(' '))
-              } else {
-                $(el).removeAttr('class')
-              }
-            }
           }
         })
       }

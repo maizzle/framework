@@ -69,4 +69,25 @@ describe.concurrent('Tags', () => {
     expect(cleanString(inDev)).toBe('{{ page.env }} <fake:production>ignore</fake:production>')
     expect(cleanString(inProduction)).toBe('production <fake:production>ignore</fake:production>')
   })
+
+  test('<env> tags do not produce whitespace', async () => {
+    const source = `Hi, <x-name name="John"></x-name>!`
+
+    const { html: inTest } = await render(source, {
+      env: 'test',
+      components: {
+        folders: ['test/stubs/components'],
+      },
+    })
+
+    const { html: inProduction } = await render(source, {
+      env: 'production',
+      components: {
+        folders: ['test/stubs/components'],
+      },
+    })
+
+    expect(inTest).toBe('Hi, John Test!')
+    expect(inProduction).toBe('Hi, John!')
+  })
 })

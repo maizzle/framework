@@ -30,7 +30,7 @@ const modulo = (content, attribute) => Number.parseFloat(content) % Number.parse
 
 const multiply = (content, attribute) => Number.parseFloat(content) * Number.parseFloat(attribute)
 
-const newlineToBr = content => content.replace(/\n/g, '<br>')
+const newlineToBr = content => content.replace(/\r?\n/g, '<br>')
 
 const plus = (content, attribute) => Number.parseFloat(content) + Number.parseFloat(attribute)
 
@@ -76,7 +76,7 @@ const slice = (content, attribute) => {
   return content.slice(start, end)
 }
 
-const stripNewlines = content => content.replace(/\n/g, '')
+const stripNewlines = content => content.replace(/\r?\n/g, '')
 
 const trim = content => content.trim()
 

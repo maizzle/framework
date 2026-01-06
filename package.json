@@ -57,7 +57,7 @@
     "color-shorthand-hex-to-six-digit": "^5.0.16",
     "defu": "^6.1.4",
     "email-comb": "^7.0.21",
-    "express": "^4.21.0",
+    "express": "^5.2.1",
     "fast-glob": "^3.3.2",
     "gray-matter": "^4.0.3",
     "html-crush": "^6.0.19",

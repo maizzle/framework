@@ -27,7 +27,7 @@ export async function process(html = '', config = {}) {
    * Configure PostCSS pipeline. Plugins defined and added here
    * will apply to all `<style>` tags in the HTML.
    */
-  const resolveCSSProps = get(config, 'css.resolveProps')
+  const resolveCSSProps = get(config, 'css.resolveProps', true)
   const sortMediaQueries = get(config, 'css.sortMediaQueries')
   const resolveCalc = get(config, 'css.resolveCalc') !== false
     ? get(config, 'css.resolveCalc', { precision: 2 }) // enabled by default, use default precision 2
@@ -37,10 +37,10 @@ export async function process(html = '', config = {}) {
     [
       postcssImport(),
       tailwindcss(get(config, 'css.tailwind', {})),
-      resolveCSSProps !== false && cssVariables(resolveCSSProps),
+      resolveCSSProps && cssVariables(resolveCSSProps),
       resolveCalc !== false && postcssCalc(resolveCalc),
       postcssColorFunctionalNotation(),
-      sortMediaQueries !== false && postcssSortMediaQueries(sortMediaQueries),
+      sortMediaQueries && postcssSortMediaQueries(sortMediaQueries),
       ...get(config, 'postcss.plugins', []),
     ],
     merge(

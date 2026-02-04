@@ -17,6 +17,7 @@ import postcssCalc from 'postcss-calc'
 import postcssImport from 'postcss-import'
 import cssVariables from 'postcss-css-variables'
 import postcssSafeParser from 'postcss-safe-parser'
+import postcssSortMediaQueries from 'postcss-sort-media-queries'
 import postcssColorFunctionalNotation from 'postcss-color-functional-notation'
 
 import defaultComponentsConfig from './defaultComponentsConfig.js'
@@ -27,8 +28,9 @@ export async function process(html = '', config = {}) {
    * will apply to all `<style>` tags in the HTML.
    */
   const resolveCSSProps = get(config, 'css.resolveProps')
+  const sortMediaQueries = get(config, 'css.sortMediaQueries')
   const resolveCalc = get(config, 'css.resolveCalc') !== false
-    ? get(config, 'css.resolveCalc', { precision: 2 }) // it's true by default, use default precision 2
+    ? get(config, 'css.resolveCalc', { precision: 2 }) // enabled by default, use default precision 2
     : false
 
   const postcssPlugin = posthtmlPostcss(
@@ -38,6 +40,7 @@ export async function process(html = '', config = {}) {
       resolveCSSProps !== false && cssVariables(resolveCSSProps),
       resolveCalc !== false && postcssCalc(resolveCalc),
       postcssColorFunctionalNotation(),
+      sortMediaQueries !== false && postcssSortMediaQueries(sortMediaQueries),
       ...get(config, 'postcss.plugins', []),
     ],
     merge(

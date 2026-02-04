@@ -169,15 +169,16 @@ describe.concurrent('Inline CSS', () => {
     expect(
       cleanString(
         await inlineCSS(`
+          <style>.foo { font-size: 16px; }</style>
           <style embed>.foo { color: red; }</style>
-          <style data-embed>.foo { display: flex ;}</style>
+          <style data-embed>.foo { display: flex; }</style>
           <p class="foo">test</p>`)
       )
     ).toBe(
       cleanString(`
         <style>.foo { color: red; }</style>
         <style>.foo { display: flex; }</style>
-        <p class="foo">test</p>`)
+        <p class="foo" style="font-size: 16px;">test</p>`)
     )
   })
 

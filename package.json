@@ -74,6 +74,7 @@
     "postcss-css-variables": "^0.19.0",
     "postcss-import": "^16.1.0",
     "postcss-safe-parser": "^7.0.0",
+    "postcss-sort-media-queries": "^5.2.0",
     "posthtml": "^0.16.6",
     "posthtml-attrs-parser": "^1.1.1",
     "posthtml-base-url": "^3.1.8",

@@ -110,4 +110,105 @@ describe.concurrent('PostCSS', () => {
           )
       })
   })
+
+  test('css.sortMediaQueries', async () => {
+    const html = `
+      <style>
+        @tailwind components;
+        @tailwind utilities;
+
+        .custom {
+          @apply sm:w-[100px];
+        }
+      </style>
+    <div class="custom sm:flex hover:invisible"></div>
+    `
+
+    /**
+     * When using `@apply` and the source content has pseudos like `hover:`,
+     * the utilities generated with `@apply` will be separated in their own
+     * media query blocks.
+     *
+     * This does not happen if the source content does not use things like `hover:` 🤷‍♂️
+     */
+    posthtml(html, {
+      css: {
+        tailwind: {
+          content: [{ raw: html }],
+          theme: {
+            screens: {
+              sm: { max: '600px' },
+              xs: { max: '430px' },
+            },
+          },
+        }
+      }
+    })
+      .then(({ html }) => {
+        expect(cleanString(html))
+          .toBe(
+            cleanString(`
+            <style>
+              @media (max-width: 600px) {
+                .custom {
+                  width: 100px
+                }
+              }
+              .hover\\:invisible:hover {
+                visibility: hidden
+              }
+              @media (max-width: 600px) {
+                .sm\\:flex {
+                  display: flex
+                }
+                .sm\\:w-\\[100px\\] {
+                  width: 100px
+                }
+              }
+            </style>
+            <div class="custom sm:flex hover:invisible"></div>`
+            )
+          )
+      })
+
+    // plugin enabled
+    posthtml(html, {
+      css: {
+        sortMediaQueries: true,
+        tailwind: {
+          content: [{ raw: html }],
+          theme: {
+            screens: {
+              sm: { max: '600px' },
+              xs: { max: '430px' },
+            },
+          },
+        }
+      }
+    })
+      .then(({ html }) => {
+        expect(cleanString(html))
+          .toBe(
+            cleanString(`
+            <style>
+            .hover\\:invisible:hover {
+              visibility: hidden
+              }
+              @media (max-width: 600px) {
+                .custom {
+                  width: 100px
+                }
+                .sm\\:flex {
+                  display: flex
+                }
+                .sm\\:w-\\[100px\\] {
+                  width: 100px
+                }
+              }
+            </style>
+            <div class="custom sm:flex hover:invisible"></div>`
+            )
+          )
+      })
+  })
 })

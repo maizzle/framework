@@ -174,7 +174,9 @@ describe.concurrent('PostCSS', () => {
     // plugin enabled
     posthtml(html, {
       css: {
-        media: true,
+        media: {
+          merge: true,
+        },
         tailwind: {
           content: [{ raw: html }],
           theme: {

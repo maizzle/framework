@@ -111,7 +111,7 @@ describe.concurrent('PostCSS', () => {
       })
   })
 
-  test('css.sortMediaQueries', async () => {
+  test('css.media', async () => {
     const html = `
       <style>
         @tailwind components;
@@ -174,7 +174,7 @@ describe.concurrent('PostCSS', () => {
     // plugin enabled
     posthtml(html, {
       css: {
-        sortMediaQueries: true,
+        media: true,
         tailwind: {
           content: [{ raw: html }],
           theme: {

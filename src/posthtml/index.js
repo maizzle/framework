@@ -28,7 +28,7 @@ export async function process(html = '', config = {}) {
    * will apply to all `<style>` tags in the HTML.
    */
   const resolveCSSProps = get(config, 'css.resolveProps', true)
-  const sortMediaQueries = get(config, 'css.sortMediaQueries')
+  const mediaConfig = get(config, 'css.media')
   const resolveCalc = get(config, 'css.resolveCalc') !== false
     ? get(config, 'css.resolveCalc', { precision: 2 }) // enabled by default, use default precision 2
     : false
@@ -40,7 +40,7 @@ export async function process(html = '', config = {}) {
       resolveCSSProps && cssVariables(resolveCSSProps),
       resolveCalc !== false && postcssCalc(resolveCalc),
       postcssColorFunctionalNotation(),
-      sortMediaQueries && postcssSortMediaQueries(sortMediaQueries),
+      mediaConfig && postcssSortMediaQueries(mediaConfig === true ? {} : mediaConfig),
       ...get(config, 'postcss.plugins', []),
     ],
     merge(

@@ -17,6 +17,7 @@ import postcssCalc from 'postcss-calc'
 import postcssImport from 'postcss-import'
 import cssVariables from 'postcss-css-variables'
 import postcssSafeParser from 'postcss-safe-parser'
+import postcssSortMediaQueries from 'postcss-sort-media-queries'
 import postcssColorFunctionalNotation from 'postcss-color-functional-notation'
 
 import defaultComponentsConfig from './defaultComponentsConfig.js'
@@ -26,18 +27,20 @@ export async function process(html = '', config = {}) {
    * Configure PostCSS pipeline. Plugins defined and added here
    * will apply to all `<style>` tags in the HTML.
    */
-  const resolveCSSProps = get(config, 'css.resolveProps')
+  const resolveCSSProps = get(config, 'css.resolveProps', true)
+  const mediaConfig = get(config, 'css.media')
   const resolveCalc = get(config, 'css.resolveCalc') !== false
-    ? get(config, 'css.resolveCalc', { precision: 2 }) // it's true by default, use default precision 2
+    ? get(config, 'css.resolveCalc', { precision: 2 }) // enabled by default, use default precision 2
     : false
 
   const postcssPlugin = posthtmlPostcss(
     [
       postcssImport(),
       tailwindcss(get(config, 'css.tailwind', {})),
-      resolveCSSProps !== false && cssVariables(resolveCSSProps),
+      resolveCSSProps && cssVariables(resolveCSSProps),
       resolveCalc !== false && postcssCalc(resolveCalc),
       postcssColorFunctionalNotation(),
+      mediaConfig && postcssSortMediaQueries(mediaConfig === true ? {} : mediaConfig),
       ...get(config, 'postcss.plugins', []),
     ],
     merge(

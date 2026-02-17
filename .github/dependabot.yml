@@ -5,3 +5,7 @@ updates:
   schedule:
     interval: "daily"
   target-branch: "master"
+  ignore:
+      - dependency-name: "@biomejs/biome"
+      - dependency-name: "@vitest/coverage-v8"
+      - dependency-name: "vitest"

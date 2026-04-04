@@ -32,7 +32,7 @@
     "@maizzle/cli"
   ],
   "dependencies": {
-    "@maizzle/cli": "file:../cli/maizzle-cli-3.0.0.tgz",
+    "@maizzle/cli": "@maizzle/cli@next",
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/vite": "^4.1.18",
     "@unhead/vue": "^2.1.4",

@@ -26,7 +26,8 @@
     "lint": "oxlint",
     "test": "vitest run --coverage",
     "pretest": "npm run lint",
-    "release": "npx np"
+    "prepublishOnly": "npm run build",
+    "release": "npm run build && npx np"
   },
   "bundleDependencies": [
     "@maizzle/cli"

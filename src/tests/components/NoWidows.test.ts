@@ -1,0 +1,172 @@
+import { describe, it, expect } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { h } from 'vue'
+import NoWidows from '../../components/NoWidows.vue'
+
+describe('NoWidows', () => {
+  describe('basic widow prevention', () => {
+    it('replaces space before last word with non-breaking space for text with >= 4 words', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: 'This is a test sentence'
+        }
+      })
+      expect(wrapper.html()).toContain('This is a test&nbsp;sentence')
+    })
+
+    it('does not modify text with fewer than minWords words', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: 'Hello world'
+        }
+      })
+      expect(wrapper.html()).toContain('Hello world')
+    })
+
+    it('handles text with exactly minWords words', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: 'One two three four'
+        }
+      })
+      expect(wrapper.html()).toContain('One two three&nbsp;four')
+    })
+  })
+
+  describe('minWords prop', () => {
+    it('respects custom minWords value (string)', () => {
+      const wrapper = mount(NoWidows, {
+        props: {
+          minWords: '3'
+        },
+        slots: {
+          default: 'Hello world there'
+        }
+      })
+      expect(wrapper.html()).toContain('Hello world&nbsp;there')
+    })
+
+    it('respects custom minWords value (number)', () => {
+      const wrapper = mount(NoWidows, {
+        props: {
+          minWords: 3
+        },
+        slots: {
+          default: 'Hello world there'
+        }
+      })
+      expect(wrapper.html()).toContain('Hello world&nbsp;there')
+    })
+
+    it('uses default minWords of 4 when not specified', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: 'One two three'
+        }
+      })
+      expect(wrapper.html()).toContain('One two three')
+    })
+  })
+
+  describe('template expression handling', () => {
+    it('skips known ignored templating delimiters', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: '{% Hello world there test %}'
+        }
+      })
+      expect(wrapper.html()).toContain('{% Hello world there test %}')
+    })
+
+    it('processes text inside HTML elements', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: '<p>This is a test paragraph</p>'
+        }
+      })
+      expect(wrapper.html()).toContain('<p>This is a test&nbsp;paragraph</p>')
+    })
+  })
+
+  describe('nested elements', () => {
+    it('processes text in nested elements', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: '<div><span>This is a nested sentence</span></div>'
+        }
+      })
+      expect(wrapper.html()).toContain('<div><span>This is a nested&nbsp;sentence</span></div>')
+    })
+
+    it('handles multiple elements', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: '<p>First paragraph text here</p><p>Second paragraph text here</p>'
+        }
+      })
+      const html = wrapper.html()
+      expect(html).toContain('<p>First paragraph text&nbsp;here</p>')
+      expect(html).toContain('<p>Second paragraph text&nbsp;here</p>')
+    })
+  })
+
+  describe('edge cases', () => {
+    it('handles empty slots', () => {
+      const wrapper = mount(NoWidows)
+      expect(wrapper.html()).toBe('')
+    })
+
+    it('handles text with trailing whitespace', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: 'This is a test sentence   '
+        }
+      })
+      expect(wrapper.html()).toContain('This is a test&nbsp;sentence')
+    })
+
+    it('handles multiple spaces between words', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: 'This   is a test  sentence'
+        }
+      })
+      expect(wrapper.html()).toContain('This is a test&nbsp;sentence')
+    })
+
+    it('handles single word', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: 'Hello'
+        }
+      })
+      expect(wrapper.html()).toContain('Hello')
+    })
+
+    it('handles text with newlines', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: `This is a test\nsentence`
+        }
+      })
+      expect(wrapper.html()).toContain('This is a test&nbsp;sentence')
+    })
+  })
+
+  describe('component preservation', () => {
+    it('does not modify component vnodes', () => {
+      const TestComponent = {
+        name: 'TestComponent',
+        template: '<span>Component text here</span>'
+      }
+
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: () => [h(TestComponent)]
+        }
+      })
+
+      expect(wrapper.findComponent(TestComponent).exists()).toBe(true)
+    })
+  })
+})

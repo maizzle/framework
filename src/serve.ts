@@ -1,0 +1,528 @@
+import { readFileSync } from 'node:fs'
+import { dirname, resolve, basename } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { createRequire } from 'node:module'
+import { createServer, createLogger, type ViteDevServer } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import tailwindcss from '@tailwindcss/vite'
+import { glob } from 'tinyglobby'
+import { createHighlighter, type Highlighter } from 'shiki'
+import { createPlaintext } from './plaintext.ts'
+import { resolveConfig } from './config/index.ts'
+import { runTransformers } from './transformers/index.ts'
+import { createRenderer, type Renderer } from './render/createRenderer.ts'
+import { serveCompatibility } from './server/compatibility.ts'
+import { serveLint } from './server/linter.ts'
+import type { MaizzleConfig } from './types/index.ts'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const devUIDir = resolve(__dirname, 'server/ui')
+
+const require = createRequire(import.meta.url)
+const frameworkNodeModules = resolve(dirname(require.resolve('vue/package.json')), '..')
+const vuePkgDir = dirname(require.resolve('vue/package.json'))
+
+export interface ServeOptions {
+  config?: Partial<MaizzleConfig> | string
+  /** Expose the server on the network (e.g. --host) */
+  host?: boolean | string
+  /** When true, suppresses the banner/URL output (used by the Vite plugin, which prints its own) */
+  silent?: boolean
+}
+
+/**
+ * Start the Maizzle dev server.
+ *
+ * Creates two things:
+ * 1. A Vite dev server for the dev UI (sidebar + preview, with Vue + Tailwind for the UI itself)
+ * 2. A Renderer instance for SSR rendering email templates
+ *
+ * Template rendering goes through the Renderer, not the Vite dev server.
+ */
+export async function serve(options: ServeOptions = {}) {
+  const start = performance.now()
+
+  let config = await resolveConfig(options.config)
+  const port = config.server?.port ?? 3000
+
+  // Create a renderer for SSR rendering email templates (with dts for dev)
+  const renderer = await createRenderer({ dts: true, markdown: config.markdown })
+
+  const server = await createServer({
+    configFile: false,
+    plugins: [
+      // Vue and Tailwind are only for the dev UI SPA, not for email templates
+      vue(),
+      tailwindcss(),
+      maizzleDevPlugin(config, renderer, options.config),
+    ],
+    resolve: {
+      dedupe: ['vue'],
+      alias: [
+        { find: '@', replacement: devUIDir },
+        { find: 'vue', replacement: resolve(vuePkgDir, 'dist/vue.runtime.esm-bundler.js') },
+        { find: 'vue-router', replacement: resolve(frameworkNodeModules, 'vue-router') },
+        { find: 'reka-ui', replacement: resolve(frameworkNodeModules, 'reka-ui') },
+        { find: '@vueuse/core', replacement: resolve(frameworkNodeModules, '@vueuse/core') },
+        { find: '@vueuse/shared', replacement: resolve(frameworkNodeModules, '@vueuse/shared') },
+        { find: 'lucide-vue-next', replacement: resolve(frameworkNodeModules, 'lucide-vue-next') },
+        { find: 'class-variance-authority', replacement: resolve(frameworkNodeModules, 'class-variance-authority') },
+        { find: 'clsx', replacement: resolve(frameworkNodeModules, 'clsx') },
+        { find: 'tailwind-merge', replacement: resolve(frameworkNodeModules, 'tailwind-merge') },
+      ],
+    },
+    cacheDir: resolve(devUIDir, '.vite'),
+    optimizeDeps: {
+      noDiscovery: true,
+      include: [
+        'vue',
+        'vue-router',
+        'lucide-vue-next',
+        '@vueuse/core',
+        '@vueuse/shared',
+        'reka-ui',
+        'class-variance-authority',
+        'clsx',
+        'tailwind-merge',
+      ],
+    },
+    server: {
+      port,
+      host: options.host,
+      fs: {
+        allow: [process.cwd(), devUIDir, frameworkNodeModules],
+      },
+    },
+    customLogger: customLogger(),
+  })
+
+  // Store renderer ref on server for cleanup
+  const originalClose = server.close.bind(server)
+  server.close = async () => {
+    await renderer.close()
+    return originalClose()
+  }
+
+  await server.listen()
+
+  const startupTime = Math.round(performance.now() - start)
+
+  if (!options.silent) {
+    printBanner(server, startupTime)
+  }
+
+  // Expose startup time so the plugin can print it later
+  ; (server as any)._maizzleStartupTime = startupTime
+
+  return server
+}
+
+/**
+ * Internal Vite plugin that adds Maizzle middleware and file watching to the dev UI server.
+ */
+function maizzleDevPlugin(
+  config: MaizzleConfig,
+  renderer: Renderer,
+  configInput: Partial<MaizzleConfig> | string | undefined,
+) {
+  return {
+    name: 'maizzle:dev',
+    enforce: 'pre' as const,
+
+    hotUpdate: {
+      order: 'pre' as const,
+      handler({ file }: { file: string }) {
+        // Prevent Tailwind/Vue from triggering a full reload for email template files.
+        // Maizzle handles these via custom HMR events in the watcher below.
+        if (isTemplateFile(file)) {
+          return []
+        }
+      },
+    },
+
+    configureServer(server: ViteDevServer) {
+      // File watching
+      const defaultWatchPaths = [
+        'maizzle.config.js',
+        'maizzle.config.ts',
+        'tailwind.config.js',
+        'tailwind.config.ts',
+      ]
+
+      const userWatchPaths = config.server?.watch ?? []
+      const watchPaths = [...defaultWatchPaths, ...userWatchPaths]
+
+      for (const watchPath of watchPaths) {
+        server.watcher.add(watchPath)
+      }
+
+      server.watcher.on('add', (file) => {
+        if (isTemplateFile(file)) {
+          server.ws.send({ type: 'custom', event: 'maizzle:templates-changed' })
+        }
+      })
+
+      server.watcher.on('unlink', (file) => {
+        if (isTemplateFile(file)) {
+          server.ws.send({ type: 'custom', event: 'maizzle:templates-changed' })
+        }
+      })
+
+      server.watcher.on('change', async (file) => {
+        if (watchPaths.some(p => file.endsWith(p))) {
+          config = await resolveConfig(configInput)
+        }
+
+        if (
+          isTemplateFile(file)
+          || watchPaths.some(p => file.endsWith(p))
+        ) {
+          server.ws.send({ type: 'custom', event: 'maizzle:template-updated', data: { file } })
+        }
+      })
+
+      // API middleware (before Vite's middleware)
+      server.middlewares.use(async (req: any, res: any, next: any) => {
+        const url = req.url || '/'
+
+        if (url === '/__maizzle/templates') {
+          return serveTemplateList(config, res)
+        }
+
+        if (url.startsWith('/__maizzle/render/')) {
+          return await serveRenderedTemplate(url, config, renderer, res)
+        }
+
+        if (url.startsWith('/__maizzle/source/')) {
+          return await serveHighlightedSource(url, config, renderer, res)
+        }
+
+        if (url.startsWith('/__maizzle/compatibility/')) {
+          return await serveCompatibility(url, config, res)
+        }
+
+        if (url.startsWith('/__maizzle/lint/')) {
+          return await serveLint(url, config, res)
+        }
+
+        if (url.startsWith('/__maizzle/vue-source/')) {
+          return await serveVueSource(url, config, res)
+        }
+
+        if (url.startsWith('/__maizzle/plaintext/')) {
+          return await servePlaintext(url, config, renderer, res)
+        }
+
+        if (url.startsWith('/__maizzle/stats/')) {
+          return await serveStats(url, config, renderer, res)
+        }
+
+        next()
+      })
+
+      // Dev UI fallback (after Vite's middleware)
+      return () => {
+        server.middlewares.use(async (req: any, res: any, next: any) => {
+          if (isNavigationRequest(req)) {
+            return await serveDevUI(server, res, req.url || '/')
+          }
+
+          next()
+        })
+      }
+    },
+  }
+}
+
+function isTemplateFile(file: string): boolean {
+  return (file.endsWith('.vue') || file.endsWith('.md')) && !file.includes('server/ui')
+}
+
+function isNavigationRequest(req: any): boolean {
+  const accept = req.headers?.accept || ''
+  return req.method === 'GET' && accept.includes('text/html')
+}
+
+async function serveDevUI(server: ViteDevServer, res: any, url: string) {
+  let indexHtml = readFileSync(resolve(devUIDir, 'index.html'), 'utf-8')
+
+  indexHtml = indexHtml.replace('./main.ts', `/@fs/${resolve(devUIDir, 'main.ts')}`)
+  indexHtml = indexHtml.replace('./favicon.svg', `/@fs/${resolve(devUIDir, 'favicon.svg')}`)
+
+  const transformed = await server.transformIndexHtml(url, indexHtml)
+
+  res.setHeader('Content-Type', 'text/html')
+  res.end(transformed)
+}
+
+async function serveTemplateList(config: MaizzleConfig, res: any) {
+  const contentPatterns = config.content ?? ['emails/**/*.vue']
+  const templates = await glob(contentPatterns)
+
+  const data = templates.map(t => ({
+    name: basename(t).replace(/\.(vue|md)$/, ''),
+    path: t,
+    href: '/' + t.replace(/\.(vue|md)$/, ''),
+  }))
+
+  res.setHeader('Content-Type', 'application/json')
+  res.end(JSON.stringify(data))
+}
+
+/**
+ * SSR render a .vue template using the Renderer (not the dev UI server).
+ */
+async function serveRenderedTemplate(url: string, config: MaizzleConfig, renderer: Renderer, res: any) {
+  const templateSlug = url.replace('/__maizzle/render/', '').replace(/\?.*$/, '')
+
+  const contentPatterns = config.content ?? ['emails/**/*.vue']
+  const templates = await glob(contentPatterns)
+  const match = templates.find(t => t.replace(/\.(vue|md)$/, '') === templateSlug)
+
+  if (!match) {
+    res.statusCode = 404
+    res.end('Template not found')
+    return
+  }
+
+  try {
+    const absolutePath = resolve(match)
+
+    // Invalidate the module so changes are picked up
+    await renderer.invalidate(absolutePath)
+
+    const rendered = await renderer.render(absolutePath, config)
+    let html = rendered.html
+
+    const templateConfig = rendered.templateConfig
+
+    html = await runTransformers(html, templateConfig, absolutePath)
+
+    const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
+    html = `${doctype}\n${html}`
+
+    res.setHeader('Content-Type', 'text/html')
+    res.end(html)
+  } catch (error: any) {
+    res.statusCode = 500
+    res.end(`<pre>${error.stack || error.message}</pre>`)
+  }
+}
+
+let highlighter: Highlighter | null = null
+
+async function getHighlighter() {
+  if (!highlighter) {
+    highlighter = await createHighlighter({
+      themes: ['laserwave'],
+      langs: ['html', 'vue'],
+    })
+  }
+  return highlighter
+}
+
+async function serveHighlightedSource(url: string, config: MaizzleConfig, renderer: Renderer, res: any) {
+  const templateSlug = url.replace('/__maizzle/source/', '').replace(/\?.*$/, '')
+
+  const contentPatterns = config.content ?? ['emails/**/*.vue']
+  const templates = await glob(contentPatterns)
+  const match = templates.find(t => t.replace(/\.(vue|md)$/, '') === templateSlug)
+
+  if (!match) {
+    res.statusCode = 404
+    res.end('Template not found')
+    return
+  }
+
+  try {
+    const absolutePath = resolve(match)
+
+    await renderer.invalidate(absolutePath)
+
+    const rendered = await renderer.render(absolutePath, config)
+    let html = rendered.html
+
+    const templateConfig = rendered.templateConfig
+    html = await runTransformers(html, templateConfig, absolutePath)
+
+    const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
+    html = `${doctype}\n${html}`
+
+    const hl = await getHighlighter()
+    const highlighted = hl.codeToHtml(html, {
+      lang: 'html',
+      theme: 'laserwave',
+      transformers: [{
+        line(node, line) {
+          node.properties['data-line'] = line
+        },
+      }],
+    })
+
+    res.setHeader('Content-Type', 'text/html')
+    res.end(highlighted)
+  } catch (error: any) {
+    res.statusCode = 500
+    res.end(`<pre>${error.stack || error.message}</pre>`)
+  }
+}
+
+async function serveVueSource(url: string, config: MaizzleConfig, res: any) {
+  const templateSlug = url.replace('/__maizzle/vue-source/', '').replace(/\?.*$/, '')
+
+  const contentPatterns = config.content ?? ['emails/**/*.vue']
+  const templates = await glob(contentPatterns)
+  const match = templates.find(t => t.replace(/\.(vue|md)$/, '') === templateSlug)
+
+  if (!match) {
+    res.statusCode = 404
+    res.end('Template not found')
+    return
+  }
+
+  try {
+    const source = readFileSync(resolve(match), 'utf-8')
+    const lang = match.endsWith('.md') ? 'html' : 'vue'
+
+    const hl = await getHighlighter()
+    const highlighted = hl.codeToHtml(source, {
+      lang,
+      theme: 'laserwave',
+      transformers: [{
+        line(node, line) {
+          node.properties['data-line'] = line
+        },
+      }],
+    })
+
+    res.setHeader('Content-Type', 'text/html')
+    res.end(highlighted)
+  } catch (error: any) {
+    res.statusCode = 500
+    res.end(`<pre>${error.stack || error.message}</pre>`)
+  }
+}
+
+async function servePlaintext(url: string, config: MaizzleConfig, renderer: Renderer, res: any) {
+  const templateSlug = url.replace('/__maizzle/plaintext/', '').replace(/\?.*$/, '')
+
+  const contentPatterns = config.content ?? ['emails/**/*.vue']
+  const templates = await glob(contentPatterns)
+  const match = templates.find(t => t.replace(/\.(vue|md)$/, '') === templateSlug)
+
+  if (!match) {
+    res.statusCode = 404
+    res.end('Template not found')
+    return
+  }
+
+  try {
+    const absolutePath = resolve(match)
+    await renderer.invalidate(absolutePath)
+
+    const rendered = await renderer.render(absolutePath, config)
+    let html = rendered.html
+    const templateConfig = rendered.templateConfig
+    html = await runTransformers(html, templateConfig, absolutePath)
+
+    const plaintext = createPlaintext(html)
+
+    res.setHeader('Content-Type', 'text/plain')
+    res.end(plaintext)
+  } catch (error: any) {
+    res.statusCode = 500
+    res.end(error.message)
+  }
+}
+
+function humanFileSize(bytes: number, si = false, dp = 2) {
+  const threshold = si ? 1000 : 1024
+
+  if (Math.abs(bytes) < threshold) {
+    return bytes + ' B'
+  }
+
+  const units = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+  let u = -1
+  const r = 10 ** dp
+
+  do {
+    bytes /= threshold
+    ++u
+  } while (Math.round(Math.abs(bytes) * r) / r >= threshold && u < units.length - 1)
+
+  return bytes.toFixed(dp) + ' ' + units[u]
+}
+
+async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer, res: any) {
+  const templateSlug = url.replace('/__maizzle/stats/', '').replace(/\?.*$/, '')
+
+  const contentPatterns = config.content ?? ['emails/**/*.vue']
+  const templates = await glob(contentPatterns)
+  const match = templates.find(t => t.replace(/\.(vue|md)$/, '') === templateSlug)
+
+  if (!match) {
+    res.statusCode = 404
+    res.end(JSON.stringify({ error: 'Template not found' }))
+    return
+  }
+
+  try {
+    const absolutePath = resolve(match)
+    await renderer.invalidate(absolutePath)
+
+    const rendered = await renderer.render(absolutePath, config)
+    let html = rendered.html
+    const templateConfig = rendered.templateConfig
+    html = await runTransformers(html, templateConfig, absolutePath)
+
+    const sizeBytes = Buffer.byteLength(html, 'utf-8')
+
+    // Count images: <img> tags and CSS background images
+    const imgTags = (html.match(/<img\b[^>]*>/gi) || []).length
+    const bgImages = (html.match(/url\s*\([^)]+\)/gi) || []).length
+    const totalImages = imgTags + bgImages
+
+    // Count links
+    const links = (html.match(/<a\b[^>]*href\s*=/gi) || []).length
+
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify({
+      size: {
+        bytes: sizeBytes,
+        formatted: humanFileSize(sizeBytes),
+      },
+      images: totalImages,
+      links,
+    }))
+  } catch (error: any) {
+    res.statusCode = 500
+    res.end(JSON.stringify({ error: error.message }))
+  }
+}
+
+export function printBanner(server: ViteDevServer, startupTime?: number) {
+  const info = server.config.logger.info
+  const time = startupTime ?? (server as any)._maizzleStartupTime
+
+  info('')
+  info(`  \x1b[32m\x1b[1mMAIZZLE\x1b[0m\x1b[32m v6.0.0\x1b[0m  \x1b[2mready in\x1b[0m \x1b[1m${time}\x1b[0m ms`)
+  info('')
+  server.printUrls()
+  info('')
+}
+
+function customLogger() {
+  const logger = createLogger('info')
+  const warn = logger.warn
+
+  logger.warn = (message, options) => {
+    if (typeof message === 'string' && message.includes('<tr> cannot be child of <table>')) {
+      return
+    }
+
+    warn(message, options)
+  }
+
+  return logger
+}

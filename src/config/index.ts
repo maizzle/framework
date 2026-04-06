@@ -41,7 +41,36 @@ export async function resolveConfig(
   // Programmatic config (object) overrides file config, which overrides defaults
   const programmaticConfig = typeof config === 'object' && config !== null ? config : {}
 
-  return merge(programmaticConfig, fileConfig, defaults) as MaizzleConfig
+  const merged = merge(programmaticConfig, fileConfig, defaults) as MaizzleConfig
+
+  // Resolve root to an absolute path (defaults to cwd)
+  const root = resolve(cwd, merged.root ?? '.')
+  merged.root = root
+
+  // Resolve content patterns relative to root
+  if (merged.content) {
+    merged.content = merged.content.map(p => {
+      // Skip already-absolute or negated patterns
+      if (p.startsWith('/') || p.startsWith('!')) return p
+      return resolve(root, p).replace(/\\/g, '/')
+    })
+  }
+
+  // Resolve static source patterns relative to root
+  if (merged.static?.source) {
+    merged.static.source = merged.static.source.map(p => {
+      if (p.startsWith('/') || p.startsWith('!')) return p
+      return resolve(root, p).replace(/\\/g, '/')
+    })
+  }
+
+  // Default css.base to root so Tailwind resolves @source from the right directory
+  if (!merged.css) merged.css = {}
+  if (!merged.css.base) {
+    merged.css.base = root
+  }
+
+  return merged
 }
 
 async function loadConfig(

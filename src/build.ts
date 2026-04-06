@@ -38,6 +38,7 @@ export async function build(options: BuildOptions = {}): Promise<BuildResult> {
   const outputExtension = config.output?.extension ?? 'html'
 
   const contentPatterns = config.content ?? ['emails/**/*.vue']
+  const contentBase = computeContentBase(contentPatterns)
   const templateFiles = await glob(contentPatterns)
 
   if (templateFiles.length === 0) {
@@ -50,7 +51,7 @@ export async function build(options: BuildOptions = {}): Promise<BuildResult> {
     rmSync(outputPath, { recursive: true, force: true })
   }
 
-  const renderer = await createRenderer({ markdown: config.markdown })
+  const renderer = await createRenderer({ markdown: config.markdown, root: config.root })
   const outputFiles: string[] = []
 
   try {
@@ -77,7 +78,7 @@ export async function build(options: BuildOptions = {}): Promise<BuildResult> {
       const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
       html = `${doctype}\n${html}`
 
-      const outputFilePath = resolveOutputPath(templatePath, outputPath, outputExtension)
+      const outputFilePath = resolveOutputPath(templatePath, outputPath, outputExtension, contentBase)
       mkdirSync(dirname(outputFilePath), { recursive: true })
       writeFileSync(outputFilePath, html)
       outputFiles.push(outputFilePath)
@@ -97,9 +98,9 @@ export async function build(options: BuildOptions = {}): Promise<BuildResult> {
           const name = basename(templatePath).replace(/\.(vue|md)$/, '')
           ptOutputPath = join(resolve(sfcPlaintext.destination), `${name}.${ptExtension}`)
         } else if (typeof globalPlaintext === 'string') {
-          ptOutputPath = resolveOutputPath(templatePath, resolve(globalPlaintext), ptExtension)
+          ptOutputPath = resolveOutputPath(templatePath, resolve(globalPlaintext), ptExtension, contentBase)
         } else {
-          ptOutputPath = resolveOutputPath(templatePath, outputPath, ptExtension)
+          ptOutputPath = resolveOutputPath(templatePath, outputPath, ptExtension, contentBase)
         }
 
         mkdirSync(dirname(ptOutputPath), { recursive: true })
@@ -130,11 +131,31 @@ export async function build(options: BuildOptions = {}): Promise<BuildResult> {
   return { files: outputFiles, config }
 }
 
-function resolveOutputPath(templatePath: string, outputDir: string, extension: string): string {
-  const name = basename(templatePath).replace(/\.(vue|md)$/, '')
-  const relDir = dirname(templatePath).split('/').slice(1).join('/')
+/**
+ * Extract the static (non-glob) prefix from content patterns.
+ *
+ * For example, `['/abs/path/emails/**\/*.vue']` → `'/abs/path/emails'`
+ *
+ * This is used to strip the content base from template paths
+ * so the output preserves only the subdirectory structure.
+ */
+function computeContentBase(patterns: string[]): string {
+  // Use the first non-negated pattern
+  const pattern = patterns.find(p => !p.startsWith('!')) ?? patterns[0]
 
-  return join(outputDir, relDir, `${name}.${extension}`)
+  // Split on first glob character (* { ? [) and take the directory part
+  const staticPart = pattern.split(/[*{?\[]/)[0]
+
+  // Ensure we have a clean directory path (not a partial segment)
+  return resolve(staticPart.endsWith('/') ? staticPart : dirname(staticPart))
+}
+
+function resolveOutputPath(templatePath: string, outputDir: string, extension: string, contentBase: string): string {
+  const name = basename(templatePath).replace(/\.(vue|md)$/, '')
+  const absTemplate = resolve(templatePath)
+  const rel = relative(contentBase, dirname(absTemplate))
+
+  return join(outputDir, rel, `${name}.${extension}`)
 }
 
 async function copyStatic(config: MaizzleConfig, outputPath: string): Promise<void> {

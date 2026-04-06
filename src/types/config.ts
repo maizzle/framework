@@ -75,6 +75,23 @@ export interface HtmlConfig {
 }
 
 export interface MaizzleConfig {
+  /**
+   * Root directory for the Maizzle email project.
+   *
+   * When set, relative paths for `content`, `static.source`, component
+   * auto-import directories, `.d.ts` output, and `css.base` are all
+   * resolved relative to this directory.
+   *
+   * Defaults to `process.cwd()`.
+   *
+   * @example
+   * // In a Laravel app where emails live under resources/js/emails:
+   * maizzle({
+   *   root: 'resources/js/emails',
+   *   content: ['./**\/*.vue'],
+   * })
+   */
+  root?: string
   markdown?: import('unplugin-vue-markdown/types').Options
   content?: string[]
   output?: {

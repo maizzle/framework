@@ -46,7 +46,7 @@ export async function serve(options: ServeOptions = {}) {
   const port = config.server?.port ?? 3000
 
   // Create a renderer for SSR rendering email templates (with dts for dev)
-  const renderer = await createRenderer({ dts: true, markdown: config.markdown })
+  const renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root })
 
   const server = await createServer({
     configFile: false,
@@ -90,7 +90,7 @@ export async function serve(options: ServeOptions = {}) {
       port,
       host: options.host,
       fs: {
-        allow: [process.cwd(), devUIDir, frameworkNodeModules],
+        allow: [process.cwd(), config.root ?? process.cwd(), devUIDir, frameworkNodeModules],
       },
     },
     customLogger: customLogger(),

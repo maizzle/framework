@@ -43,6 +43,9 @@ export async function resolveConfig(
 
   const merged = merge(programmaticConfig, fileConfig, defaults) as MaizzleConfig
 
+  // Check if root was explicitly provided before resolving
+  const hasExplicitRoot = !!(programmaticConfig.root ?? fileConfig.root)
+
   // Resolve root to an absolute path (defaults to cwd)
   const root = resolve(cwd, merged.root ?? '.')
   merged.root = root
@@ -64,9 +67,12 @@ export async function resolveConfig(
     })
   }
 
-  // Default css.base to root so Tailwind resolves @source from the right directory
-  if (!merged.css) merged.css = {}
-  if (!merged.css.base) {
+  // Default css.base to root when root is explicitly set,
+  // so Tailwind resolves @source from the right directory.
+  // When root is not set, leave css.base undefined so Tailwind
+  // uses its own default (the template file's directory).
+  if (hasExplicitRoot && !merged.css?.base) {
+    if (!merged.css) merged.css = {}
     merged.css.base = root
   }
 

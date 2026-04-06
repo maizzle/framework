@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, symlinkSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { defineComponent, h } from 'vue'
 import { render } from '../render/index.ts'
@@ -102,7 +102,7 @@ describe('render', () => {
         </template>
       `)
 
-      expect(result.config.content).toEqual(['emails/**/*.{vue,md}'])
+      expect(result.config.content).toEqual([resolve(tempDir, 'emails/**/*.{vue,md}').replace(/\\/g, '/')])
       expect(result.config.css?.inline).toBe(undefined)
     })
   })

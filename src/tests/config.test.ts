@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { resolveConfig } from '../config/index.ts'
 import { defaults } from '../config/defaults.ts'
@@ -19,7 +19,7 @@ describe('resolveConfig', () => {
   it('returns defaults when no config file exists', async () => {
     const config = await resolveConfig(undefined, tempDir)
 
-    expect(config.content).toEqual(defaults.content)
+    expect(config.content).toEqual(defaults.content!.map(p => resolve(tempDir, p).replace(/\\/g, '/')))
     expect(config.output?.path).toBe('dist')
     expect(config.output?.extension).toBe('html')
     expect(config.server?.port).toBe(3000)
@@ -37,7 +37,7 @@ describe('resolveConfig', () => {
 
     const config = await resolveConfig(undefined, tempDir)
 
-    expect(config.content).toEqual(['src/**/*.vue'])
+    expect(config.content).toEqual([resolve(tempDir, 'src/**/*.vue').replace(/\\/g, '/')])
     // defaults are still applied for missing keys
     expect(config.output?.path).toBe('dist')
   })
@@ -53,7 +53,7 @@ describe('resolveConfig', () => {
     expect(config.output?.path).toBe('dist')
     expect(config.output?.extension).toBe('htm')
     // defaults for non-overridden keys
-    expect(config.content).toEqual(defaults.content)
+    expect(config.content).toEqual(defaults.content!.map(p => resolve(tempDir, p).replace(/\\/g, '/')))
   })
 
   it('prefers maizzle.config.ts over maizzle.config.js', async () => {
@@ -68,7 +68,7 @@ describe('resolveConfig', () => {
 
     const config = await resolveConfig(undefined, tempDir)
 
-    expect(config.content).toEqual(['from-ts'])
+    expect(config.content).toEqual([resolve(tempDir, 'from-ts').replace(/\\/g, '/')])
   })
 
   it('loads from explicit config path', async () => {
@@ -79,7 +79,7 @@ describe('resolveConfig', () => {
 
     const config = await resolveConfig('custom.config.js', tempDir)
 
-    expect(config.content).toEqual(['custom/**/*.vue'])
+    expect(config.content).toEqual([resolve(tempDir, 'custom/**/*.vue').replace(/\\/g, '/')])
   })
 
   it('throws when explicit config path does not exist', async () => {

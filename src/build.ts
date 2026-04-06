@@ -144,7 +144,7 @@ function computeContentBase(patterns: string[]): string {
   const pattern = patterns.find(p => !p.startsWith('!')) ?? patterns[0]
 
   // Split on first glob character (* { ? [) and take the directory part
-  const staticPart = pattern.split(/[*{?\[]/)[0]
+  const staticPart = pattern.split(/[*{?[]/)[0]
 
   // Ensure we have a clean directory path (not a partial segment)
   return resolve(staticPart.endsWith('/') ? staticPart : dirname(staticPart))

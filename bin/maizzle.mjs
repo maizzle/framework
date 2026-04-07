@@ -4,7 +4,7 @@ import { createJiti } from 'jiti'
 import { fileURLToPath } from 'node:url'
 
 const jiti = createJiti(fileURLToPath(import.meta.url), { interopDefault: true })
-const { default: bootstrap } = await jiti.import('@maizzle/cli')
+const { default: bootstrap } = await jiti.import('maizzle')
 const framework = await jiti.import('../dist/index.mjs')
 
 await bootstrap(framework)

@@ -30,10 +30,10 @@
     "release": "npm run build && npx np"
   },
   "bundleDependencies": [
-    "@maizzle/cli"
+    "maizzle"
   ],
   "dependencies": {
-    "@maizzle/cli": "next",
+    "maizzle": "latest",
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/vite": "^4.1.18",
     "@unhead/vue": "^2.1.4",

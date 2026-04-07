@@ -1,5 +1,6 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { isLaravel } from '../utils/detect.ts'
 import { createServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Markdown from 'unplugin-vue-markdown/vite'
@@ -60,6 +61,10 @@ export async function createRenderer(
 ): Promise<Renderer> {
   const { dts = false, markdown: markdownOptions, root = process.cwd(), componentDirs = [] } = options
 
+  const dtsDir = isLaravel()
+    ? resolve(process.cwd(), 'resources/js/types/maizzle')
+    : resolve(root, '.maizzle')
+
   const VIRTUAL_SFC_ID = 'virtual:maizzle-sfc.vue'
   let virtualSfcSource = ''
 
@@ -91,7 +96,7 @@ export async function createRenderer(
           resolve(__dirname, '../filters'),
         ],
         imports: ['vue', unheadVueComposablesImports],
-        dts: dts ? resolve(root, '.maizzle/auto-imports.d.ts') : false,
+        dts: dts ? resolve(dtsDir, 'auto-imports.d.ts') : false,
       }),
       Components({
         extensions: ['vue', 'md'],
@@ -101,7 +106,7 @@ export async function createRenderer(
           resolve(root, 'components'),
           ...componentDirs,
         ],
-        dts: dts ? resolve(root, '.maizzle/components.d.ts') : false,
+        dts: dts ? resolve(dtsDir, 'components.d.ts') : false,
       }),
     ],
     resolve: {

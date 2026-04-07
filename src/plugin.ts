@@ -1,5 +1,6 @@
 import type { Plugin, ViteDevServer } from 'vite'
 import type { MaizzleConfig } from './types/index.ts'
+import { isLaravel } from './utils/detect.ts'
 
 /**
  * Maizzle Vite plugin for use inside an existing Vite project.
@@ -12,6 +13,22 @@ import type { MaizzleConfig } from './types/index.ts'
  */
 export function maizzle(configInput?: Partial<MaizzleConfig>): Plugin[] {
   let maizzleServer: ViteDevServer | null = null
+
+  // Auto-configure defaults for Laravel projects
+  if (isLaravel()) {
+    const existing = configInput?.components?.source
+    const laravelComponentDir = 'resources/js/components/email'
+
+    if (!existing) {
+      configInput = {
+        ...configInput,
+        components: {
+          ...configInput?.components,
+          source: [laravelComponentDir],
+        },
+      }
+    }
+  }
 
   return [{
     name: 'maizzle',

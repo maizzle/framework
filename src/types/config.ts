@@ -102,6 +102,9 @@ export interface MaizzleConfig {
     source?: string[]
     destination?: string
   }
+  components?: {
+    root?: string | string[]
+  }
   server?: {
     port?: number
     watch?: string[]

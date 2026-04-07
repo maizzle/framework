@@ -67,6 +67,18 @@ export async function resolveConfig(
     })
   }
 
+  // Resolve components.root paths relative to root
+  if (merged.components?.root) {
+    const dirs = Array.isArray(merged.components.root)
+      ? merged.components.root
+      : [merged.components.root]
+
+    merged.components.root = dirs.map(p => {
+      if (p.startsWith('/')) return p
+      return resolve(root, p)
+    })
+  }
+
   // Default css.base to root when root is explicitly set,
   // so Tailwind resolves @source from the right directory.
   // When root is not set, leave css.base undefined so Tailwind

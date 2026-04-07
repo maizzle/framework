@@ -104,6 +104,27 @@ describe('resolveConfig', () => {
     expect(config.server?.watch).toEqual([])
   })
 
+  it('resolves components.root string relative to root', async () => {
+    const config = await resolveConfig({
+      root: 'project',
+      components: { root: 'src/shared' },
+    }, tempDir)
+
+    expect(config.components?.root).toEqual([resolve(tempDir, 'project', 'src/shared')])
+  })
+
+  it('resolves components.root array relative to root', async () => {
+    const config = await resolveConfig({
+      root: 'project',
+      components: { root: ['layouts', 'partials'] },
+    }, tempDir)
+
+    expect(config.components?.root).toEqual([
+      resolve(tempDir, 'project', 'layouts'),
+      resolve(tempDir, 'project', 'partials'),
+    ])
+  })
+
   it('passes through arbitrary user data', async () => {
     writeFileSync(
       join(tempDir, 'maizzle.config.js'),

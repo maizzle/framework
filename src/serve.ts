@@ -46,7 +46,7 @@ export async function serve(options: ServeOptions = {}) {
   const port = config.server?.port ?? 3000
 
   // Create a renderer for SSR rendering email templates (with dts for dev)
-  const renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root })
+  const renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.root ?? []].flat() })
 
   const server = await createServer({
     configFile: false,

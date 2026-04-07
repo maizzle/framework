@@ -407,6 +407,30 @@ describe('render', () => {
     })
   })
 
+  describe('components.root', () => {
+    it('auto-imports components from custom dirs', async () => {
+      writeSfc(tempDir, 'custom-components/MyButton.vue', `
+        <template>
+          <a href="#">Click me</a>
+        </template>
+      `)
+
+      const result = await render(`
+        <template>
+          <div><MyButton /></div>
+        </template>
+      `, {
+        config: {
+          root: tempDir,
+          components: { root: ['custom-components'] },
+        },
+      })
+
+      expect(result.html).toContain('Click me')
+      expect(result.html).toContain('<a href="#">')
+    })
+  })
+
   describe('plaintext', () => {
     it('returns plaintext when config.plaintext is true', async () => {
       const result = await render(`

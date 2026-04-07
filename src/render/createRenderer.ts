@@ -45,6 +45,8 @@ export interface CreateRendererOptions {
   markdown?: MarkdownOptions
   /** Root directory for resolving user component dirs and .d.ts output */
   root?: string
+  /** Additional component directories to register for auto-import */
+  componentDirs?: string[]
 }
 
 /**
@@ -56,7 +58,7 @@ export interface CreateRendererOptions {
 export async function createRenderer(
   options: CreateRendererOptions = {},
 ): Promise<Renderer> {
-  const { dts = false, markdown: markdownOptions, root = process.cwd() } = options
+  const { dts = false, markdown: markdownOptions, root = process.cwd(), componentDirs = [] } = options
 
   const VIRTUAL_SFC_ID = 'virtual:maizzle-sfc.vue'
   let virtualSfcSource = ''
@@ -97,6 +99,7 @@ export async function createRenderer(
         dirs: [
           resolve(__dirname, '../components'),
           resolve(root, 'components'),
+          ...componentDirs,
         ],
         dts: dts ? resolve(root, 'types/components.d.ts') : false,
       }),
@@ -115,7 +118,7 @@ export async function createRenderer(
       hmr: false,
       watch: null,
       fs: {
-        allow: [process.cwd(), root, vuePkgDir, vueServerRendererPkgDir, unheadVuePkgDir, vueRouterPkgDir],
+        allow: [process.cwd(), root, ...componentDirs, vuePkgDir, vueServerRendererPkgDir, unheadVuePkgDir, vueRouterPkgDir],
       },
     },
     appType: 'custom',

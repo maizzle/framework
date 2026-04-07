@@ -407,7 +407,7 @@ describe('render', () => {
     })
   })
 
-  describe('components.root', () => {
+  describe('components.source', () => {
     it('auto-imports components from custom dirs', async () => {
       writeSfc(tempDir, 'custom-components/MyButton.vue', `
         <template>
@@ -422,7 +422,7 @@ describe('render', () => {
       `, {
         config: {
           root: tempDir,
-          components: { root: ['custom-components'] },
+          components: { source: ['custom-components'] },
         },
       })
 

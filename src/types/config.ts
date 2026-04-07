@@ -103,7 +103,7 @@ export interface MaizzleConfig {
     destination?: string
   }
   components?: {
-    root?: string | string[]
+    source?: string | string[]
   }
   server?: {
     port?: number

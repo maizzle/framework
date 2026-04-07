@@ -67,15 +67,16 @@ export async function resolveConfig(
     })
   }
 
-  // Resolve components.root paths relative to root
-  if (merged.components?.root) {
-    const dirs = Array.isArray(merged.components.root)
-      ? merged.components.root
-      : [merged.components.root]
+  // Resolve components.source paths relative to cwd (not root),
+  // since extra component dirs often live outside the root directory
+  if (merged.components?.source) {
+    const dirs = Array.isArray(merged.components.source)
+      ? merged.components.source
+      : [merged.components.source]
 
-    merged.components.root = dirs.map(p => {
+    merged.components.source = dirs.map(p => {
       if (p.startsWith('/')) return p
-      return resolve(root, p)
+      return resolve(cwd, p)
     })
   }
 

@@ -91,7 +91,7 @@ export async function createRenderer(
           resolve(__dirname, '../filters'),
         ],
         imports: ['vue', unheadVueComposablesImports],
-        dts: dts ? resolve(root, 'types/auto-imports.d.ts') : false,
+        dts: dts ? resolve(root, '.maizzle/auto-imports.d.ts') : false,
       }),
       Components({
         extensions: ['vue', 'md'],
@@ -101,7 +101,7 @@ export async function createRenderer(
           resolve(root, 'components'),
           ...componentDirs,
         ],
-        dts: dts ? resolve(root, 'types/components.d.ts') : false,
+        dts: dts ? resolve(root, '.maizzle/components.d.ts') : false,
       }),
     ],
     resolve: {

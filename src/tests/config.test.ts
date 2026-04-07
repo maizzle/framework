@@ -104,24 +104,24 @@ describe('resolveConfig', () => {
     expect(config.server?.watch).toEqual([])
   })
 
-  it('resolves components.root string relative to root', async () => {
+  it('resolves components.source string relative to cwd', async () => {
     const config = await resolveConfig({
       root: 'project',
-      components: { root: 'src/shared' },
+      components: { source: 'src/shared' },
     }, tempDir)
 
-    expect(config.components?.root).toEqual([resolve(tempDir, 'project', 'src/shared')])
+    expect(config.components?.source).toEqual([resolve(tempDir, 'src/shared')])
   })
 
-  it('resolves components.root array relative to root', async () => {
+  it('resolves components.source array relative to cwd', async () => {
     const config = await resolveConfig({
       root: 'project',
-      components: { root: ['layouts', 'partials'] },
+      components: { source: ['layouts', 'partials'] },
     }, tempDir)
 
-    expect(config.components?.root).toEqual([
-      resolve(tempDir, 'project', 'layouts'),
-      resolve(tempDir, 'project', 'partials'),
+    expect(config.components?.source).toEqual([
+      resolve(tempDir, 'layouts'),
+      resolve(tempDir, 'partials'),
     ])
   })
 

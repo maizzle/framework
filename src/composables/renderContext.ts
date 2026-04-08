@@ -5,6 +5,7 @@ import type { UsePlaintextOptions } from './usePlaintext.ts'
 
 export interface RenderContext {
   doctype?: string
+  previewText?: { text: string; fillerCount: number; shyCount: number }
   sfcConfig?: MaizzleConfig
   sfcEventHandlers: Array<{ name: EventName; handler: EventMap[EventName] }>
   plaintext?: UsePlaintextOptions

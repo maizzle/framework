@@ -234,6 +234,15 @@ export async function createRenderer(
         html = serializeDom(dom)
       }
 
+      // Inject preview/preheader text from usePreviewText() composable
+      if (renderContext.previewText) {
+        const { text, fillerCount, shyCount } = renderContext.previewText
+        const filler = '\u2007\u034F '.repeat(fillerCount)
+        const shys = '\u00AD '.repeat(shyCount)
+        const previewHtml = `<div style="display:none">${text}${filler}${shys}\u00A0</div>`
+        html = html.replace(/<body([^>]*)>/, `<body$1>${previewHtml}`)
+      }
+
       return {
         html,
         doctype: renderContext.doctype,

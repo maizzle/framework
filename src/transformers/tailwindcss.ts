@@ -1,6 +1,7 @@
 import postcss from 'postcss'
 import tailwindcssPostcss from '@tailwindcss/postcss'
 import customProperties from 'postcss-custom-properties'
+import postcssCalc from 'postcss-calc'
 import pruneVars from '../plugins/postcss/pruneVars.ts'
 import safeParser from 'postcss-safe-parser'
 import { transform } from 'lightningcss'
@@ -21,6 +22,7 @@ function createProcessor(config: MaizzleConfig) {
     customProperties({
       preserve: false,
     }),
+    postcssCalc({}),
     pruneVars(),
   ])
 }

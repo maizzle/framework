@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue'
+import type { PropType } from 'vue'
 import { twMerge } from 'tailwind-merge'
 import Outlook from './Outlook.vue'
 
@@ -10,42 +11,92 @@ const attrs = useAttrs()
 const props = defineProps({
   /** The URL the button links to. */
   href: String,
-  type: {
-    type: String,
-    default: 'solid'
+  /**
+   * The button style variant.
+   * - `solid` — filled background (default)
+   * - `outline` — transparent background with a border
+   * - `ghost` — transparent background, no border
+   * - `link` — plain anchor with no button chrome
+   * @default 'solid'
+   */
+  variant: {
+    type: String as PropType<'solid' | 'outline' | 'ghost' | 'link'>,
+    default: 'solid' as const
   },
+  /**
+   * Horizontal alignment of the button wrapper.
+   * Accepts `'left'`, `'center'`, or `'right'`.
+   * @default null
+   */
   align: {
-    type: String,
+    type: String as PropType<'left' | 'center' | 'right' | null>,
     default: null
   },
+  /**
+   * Background color for `solid` and `outline` variants.
+   * Also used as the text color for `outline` and `ghost` variants when `color` is not set.
+   * @default '#4338ca'
+   */
   bgColor: {
     type: String,
     default: '#4338ca'
   },
+  /**
+   * Explicit text color. When omitted, `solid` buttons use `#fffffe`
+   * and all other variants fall back to `bgColor`.
+   * @default null
+   */
   color: {
     type: String,
     default: null
   },
+  /**
+   * `mso-text-raise` value applied to the inner `<span>` elements.
+   * Controls vertical text alignment inside the button in old Outlook.
+   * @default '16px'
+   */
   msoPt: {
     type: String,
     default: '16px'
   },
+  /**
+   * `mso-text-raise` value applied to the spacer `<i>` element rendered for Outlook.
+   * Adjusts the bottom spacing that old Outlook uses to simulate padding.
+   * @default '31px'
+   */
   msoPb: {
     type: String,
     default: '31px'
   },
+  /**
+   * URL or path to an icon image displayed alongside the button label.
+   * @default null
+   */
   icon: {
     type: String,
     default: null
   },
+  /**
+   * Width of the icon image in pixels.
+   * @default 12
+   */
   iconWidth: {
     type: [String, Number],
     default: 12
   },
+  /**
+   * Side on which the icon is placed relative to the button label.
+   * Accepts `'left'` or `'right'`.
+   * @default 'right'
+   */
   iconPosition: {
-    type: String,
-    default: 'right'
+    type: String as PropType<'left' | 'right'>,
+    default: 'right' as const
   },
+  /**
+   * Additional CSS classes applied to the icon `<img>` element.
+   * @default ''
+   */
   iconClass: {
     type: String,
     default: ''
@@ -54,20 +105,20 @@ const props = defineProps({
 
 const parsedIconWidth = computed(() => parseInt(String(props.iconWidth), 10))
 
-const alignClass = computed(() => ({
+const alignClass = computed(() => props.align ? ({
   left: 'text-left',
   center: 'text-center',
   right: 'text-right',
-})[props.align] || '')
+})[props.align] || '' : '')
 
 const textColor = computed(() => {
   if (props.color) return props.color
 
-  return props.type === 'solid' ? '#fffffe' : props.bgColor
+  return props.variant === 'solid' ? '#fffffe' : props.bgColor
 })
 
 const styles = computed(() => {
-  if (props.type === 'link') {
+  if (props.variant === 'link') {
     return [
       'text-decoration: none;',
       `color: ${textColor.value};`,
@@ -84,12 +135,12 @@ const styles = computed(() => {
     `color: ${textColor.value};`,
   ]
 
-  if (props.type === 'outline') {
+  if (props.variant === 'outline') {
     base.push(
       'background-color: transparent;',
       `border: 1px solid ${props.bgColor};`,
     )
-  } else if (props.type === 'ghost') {
+  } else if (props.variant === 'ghost') {
     base.push('background-color: transparent;')
   } else {
     base.push(`background-color: ${props.bgColor};`)
@@ -98,10 +149,10 @@ const styles = computed(() => {
   return base.join('')
 })
 
-const isLink = computed(() => props.type === 'link')
+const isLink = computed(() => props.variant === 'link')
 
 const defaultClasses = computed(() => {
-  if (props.type === 'ghost') return 'hover:bg-indigo-50'
+  if (props.variant === 'ghost') return 'hover:bg-indigo-50'
   return ''
 })
 

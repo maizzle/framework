@@ -174,7 +174,8 @@ export async function createRenderer(
       app.provide(configKey, config)
       app.provide(contextKey, renderContext)
 
-      let html: string = await renderToString(app)
+      const ssrContext: Record<string, any> = {}
+      let html: string = await renderToString(app, ssrContext)
 
       const { headTags, bodyTags, bodyTagsOpen, htmlAttrs, bodyAttrs } = await renderSSRHead(head)
 
@@ -193,6 +194,43 @@ export async function createRenderer(
       }
       if (bodyTags) {
         html = html.replace('</body>', `${bodyTags}\n</body>`)
+      }
+
+      // Inject SSR teleport content into their target elements
+      if (ssrContext.teleports) {
+        const { parse: parseDom, serialize: serializeDom, walk } = await import('../utils/ast/index.ts')
+        let dom = parseDom(html)
+
+        for (const [rawTarget, content] of Object.entries(ssrContext.teleports) as [string, string][]) {
+          if (!content) continue
+
+          const prepend = rawTarget.endsWith(':start')
+          const target = prepend ? rawTarget.slice(0, -6) : rawTarget
+          const targetChildren = parseDom(content)
+
+          walk(dom, (node) => {
+            const el = node as import('domhandler').Element
+
+            if (!el.name) return
+
+            const matched
+              = target === el.name
+              || (target.startsWith('#') && el.attribs?.id === target.slice(1))
+              || (target.startsWith('.') && el.attribs?.class?.split(/\s+/).includes(target.slice(1)))
+
+            if (matched) {
+              for (const child of targetChildren) {
+                child.parent = el as any
+              }
+
+              el.children = prepend
+                ? [...targetChildren, ...(el.children || [])] as any
+                : [...(el.children || []), ...targetChildren] as any
+            }
+          })
+        }
+
+        html = serializeDom(dom)
       }
 
       return {

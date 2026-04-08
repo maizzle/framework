@@ -407,6 +407,160 @@ describe('render', () => {
     })
   })
 
+  describe('teleport', () => {
+    it('teleports content to head', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <Teleport to="head">
+                <style>h1 { color: red }</style>
+              </Teleport>
+              <h1>Hello</h1>
+            </body>
+          </html>
+        </template>
+      `)
+
+      // Vue SSR places teleported content in the target with anchor comments,
+      // which are stripped by the transformer pipeline
+      expect(result.html).toContain('color: red')
+      expect(result.html).toContain('<h1>Hello</h1>')
+      // No teleport anchor comments in output
+      expect(result.html).not.toContain('<!--teleport')
+    })
+
+    it('teleports content to body (appends by default)', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <Teleport to="body">
+                <img src="tracking.gif">
+              </Teleport>
+              <h1>Hello</h1>
+            </body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('<h1>Hello</h1>')
+      expect(result.html).toContain('src="tracking.gif"')
+      // Teleported img should be after h1 (appended to body)
+      const bodyContent = result.html.match(/<body>([\s\S]*?)<\/body>/)?.[1] ?? ''
+      expect(bodyContent.indexOf('<h1>')).toBeLessThan(bodyContent.indexOf('tracking.gif'))
+    })
+
+    it('teleports to body:start prepends content', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <Teleport to="body:start">
+                <div class="preheader">Preview text</div>
+              </Teleport>
+              <h1>Hello</h1>
+            </body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('Preview text')
+      // Preheader should come before h1 in body
+      const bodyContent = result.html.match(/<body>([\s\S]*?)<\/body>/)?.[1] ?? ''
+      expect(bodyContent.indexOf('preheader')).toBeLessThan(bodyContent.indexOf('<h1>'))
+    })
+
+    it('teleports to element by id', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <Teleport to="#footer">
+                <p>Footer content</p>
+              </Teleport>
+              <h1>Hello</h1>
+              <div id="footer"></div>
+            </body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('Footer content')
+      expect(result.html).toContain('id="footer"')
+      // Content should be inside the footer div
+      expect(result.html).toMatch(/<div id="footer">.*Footer content.*<\/div>/)
+    })
+
+    it('teleports to element by class', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <Teleport to=".sidebar">
+                <p>Sidebar content</p>
+              </Teleport>
+              <h1>Hello</h1>
+              <div class="sidebar"></div>
+            </body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('Sidebar content')
+      expect(result.html).toMatch(/<div class="sidebar">.*Sidebar content.*<\/div>/)
+    })
+
+    it('supports :start for arbitrary targets', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <Teleport to="#wrapper:start">
+                <div class="preheader">Preview</div>
+              </Teleport>
+              <div id="wrapper">
+                <h1>Hello</h1>
+              </div>
+            </body>
+          </html>
+        </template>
+      `)
+
+      // Preheader should be inside wrapper, before h1
+      const wrapper = result.html.match(/<div id="wrapper">([\s\S]*)<\/div>/)?.[1] ?? ''
+      expect(wrapper).toContain('Preview')
+      expect(wrapper.indexOf('preheader')).toBeLessThan(wrapper.indexOf('<h1>'))
+    })
+
+    it('strips all teleport anchor comments', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <Teleport to="head">
+                <meta name="test" content="value">
+              </Teleport>
+              <h1>Hello</h1>
+            </body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).not.toContain('<!--teleport start anchor-->')
+      expect(result.html).not.toContain('<!--teleport anchor-->')
+      expect(result.html).not.toContain('<!--teleport start-->')
+      expect(result.html).not.toContain('<!--teleport end-->')
+    })
+  })
+
   describe('components.source', () => {
     it('auto-imports components from custom dirs', async () => {
       writeSfc(tempDir, 'custom-components/MyButton.vue', `

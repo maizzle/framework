@@ -100,6 +100,10 @@ export async function runTransformers(
   result = result
     .replaceAll('<!--[-->', '')
     .replaceAll('<!--]-->', '')
+    .replaceAll('<!--teleport start anchor-->', '')
+    .replaceAll('<!--teleport anchor-->', '')
+    .replaceAll('<!--teleport start-->', '')
+    .replaceAll('<!--teleport end-->', '')
 
   // 13. Replace strings
   result = replaceStrings(result, config)

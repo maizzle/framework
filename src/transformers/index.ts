@@ -7,6 +7,7 @@ import { inlineCSS } from './inlineCSS.ts'
 import { removeAttributes } from './removeAttributes.ts'
 import { shorthandCSS } from './shorthandCSS.ts'
 import { addAttributes } from './addAttributes.ts'
+import { filters } from './filters/index.ts'
 import { base } from './base.ts'
 import { entities } from './entities.ts'
 import { urlQuery } from './urlQuery.ts'
@@ -35,14 +36,15 @@ import type { MaizzleConfig } from '../types/config.ts'
  * 5.  Remove attributes
  * 6.  Shorthand CSS
  * 7.  Add attributes
- * 8.  Base URL
- * 9.  URL query
- * 10. Purge CSS (serializes/parses internally around email-comb)
- * 11. Entities
+ * 8.  Filters
+ * 9.  Base URL
+ * 10. URL query
+ * 11. Purge CSS (serializes/parses internally around email-comb)
+ * 12. Entities
  * + Vue-generated comments stripped here (on serialized string)
- * 12. Replace strings
- * 13. Prettify
- * 14. Minify
+ * 13. Replace strings
+ * 14. Prettify
+ * 15. Minify
  */
 export async function runTransformers(
   html: string,
@@ -76,16 +78,19 @@ export async function runTransformers(
   // 7. Add attributes
   dom = addAttributes(dom, config.html?.attributes)
 
-  // 8. Base URL (serializes/parses internally for VML/MSO regex passes)
+  // 8. Filters
+  dom = filters(dom, config.filters)
+
+  // 9. Base URL (serializes/parses internally for VML/MSO regex passes)
   dom = base(dom, config.url)
 
-  // 9. URL query
+  // 10. URL query
   dom = urlQuery(dom, config.url)
 
-  // 10. Purge CSS (serializes/parses internally around email-comb)
+  // 11. Purge CSS (serializes/parses internally around email-comb)
   dom = purgeCSS(dom, config.css)
 
-  // 11. Entities
+  // 12. Entities
   dom = entities(dom, config.html?.decodeEntities)
 
   // Serialize once — remaining transformers operate on the HTML string
@@ -96,13 +101,13 @@ export async function runTransformers(
     .replaceAll('<!--[-->', '')
     .replaceAll('<!--]-->', '')
 
-  // 12. Replace strings
+  // 13. Replace strings
   result = replaceStrings(result, config)
 
-  // 13. Format
+  // 14. Format
   result = await format(result, config)
 
-  // 14. Minify
+  // 15. Minify
   result = minify(result, config)
 
   return result

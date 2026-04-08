@@ -334,6 +334,9 @@ export interface HtmlConfig {
   minify?: boolean | Record<string, unknown>
 }
 
+export type FilterFunction = (str: string, value: string) => string
+export type FiltersConfig = false | Record<string, FilterFunction>
+
 export interface MaizzleConfig {
   /**
    * Root directory for the Maizzle email project.
@@ -457,6 +460,18 @@ export interface MaizzleConfig {
    * }
    */
   replaceStrings?: Record<string, string>
+  /**
+   * Content filters that transform text inside HTML elements using custom attributes.
+   *
+   * Set to `false` to disable all filters. Pass an object to add custom filters
+   * (merged with built-in defaults).
+   *
+   * @example
+   * filters: {
+   *   uppercase: str => str.toUpperCase(),
+   * }
+   */
+  filters?: FiltersConfig
   /** URL transformation settings (base URL, query string appending). */
   url?: UrlConfig
   /** HTML post-processing settings (attributes, formatting, minification). */

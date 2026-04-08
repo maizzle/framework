@@ -27,7 +27,7 @@ export { usePlaintext } from './composables/usePlaintext.ts'
 export { useHead } from '@unhead/vue'
 
 // Types
-export type { MaizzleConfig, HtmlConfig, UrlConfig, UrlQuery, UrlQueryOptions, CssConfig, AttributesConfig, EntitiesConfig } from './types/index.ts'
+export type { MaizzleConfig, HtmlConfig, UrlConfig, UrlQuery, UrlQueryOptions, CssConfig, AttributesConfig, EntitiesConfig, FilterFunction, FiltersConfig } from './types/index.ts'
 
 // Transformers
 export { inlineLink } from './transformers/inlineLink.ts'
@@ -41,6 +41,7 @@ export { shorthandCSS } from './transformers/shorthandCSS.ts'
 export { removeAttributes } from './transformers/removeAttributes.ts'
 export { addAttributes } from './transformers/addAttributes.ts'
 export { purgeCSS as removeUnusedCSS } from './transformers/purgeCSS.ts'
+export { filters } from './transformers/filters/index.ts'
 export { replaceStrings } from './transformers/replaceStrings.ts'
 export { format } from './transformers/format.ts'
 export { minify } from './transformers/minify.ts'

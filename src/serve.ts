@@ -156,14 +156,16 @@ function maizzleDevPlugin(
         server.watcher.add(watchPath)
       }
 
-      server.watcher.on('add', (file) => {
+      server.watcher.on('add', async (file) => {
         if (isTemplateFile(file)) {
+          await renderer.invalidateAll()
           server.ws.send({ type: 'custom', event: 'maizzle:templates-changed' })
         }
       })
 
-      server.watcher.on('unlink', (file) => {
+      server.watcher.on('unlink', async (file) => {
         if (isTemplateFile(file)) {
+          await renderer.invalidateAll()
           server.ws.send({ type: 'custom', event: 'maizzle:templates-changed' })
         }
       })
@@ -172,6 +174,10 @@ function maizzleDevPlugin(
         if (watchPaths.some(p => file.endsWith(p))) {
           config = await resolveConfig(configInput)
         }
+
+        // Invalidate all renderer modules so component and config changes
+        // are picked up on the next render (Tailwind recompiles with fresh content)
+        await renderer.invalidateAll()
 
         if (
           isTemplateFile(file)

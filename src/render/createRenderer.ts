@@ -36,6 +36,7 @@ export interface RenderedTemplate {
 export interface Renderer {
   render(input: string | Component, config: MaizzleConfig): Promise<RenderedTemplate>
   invalidate(filePath: string): Promise<void>
+  invalidateAll(): Promise<void>
   close(): Promise<void>
 }
 
@@ -245,6 +246,12 @@ export async function createRenderer(
     async invalidate(filePath: string): Promise<void> {
       const mod = await server.moduleGraph.getModuleByUrl(filePath)
       if (mod) {
+        server.moduleGraph.invalidateModule(mod)
+      }
+    },
+
+    async invalidateAll(): Promise<void> {
+      for (const mod of server.moduleGraph.idToModuleMap.values()) {
         server.moduleGraph.invalidateModule(mod)
       }
     },

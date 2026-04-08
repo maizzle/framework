@@ -176,7 +176,11 @@ watch(() => route.params.template, () => {
 }, { immediate: true })
 
 watch(viewMode, (mode) => {
-  if (mode === 'source' && !sourceHtml.value) fetchSource()
+  if (mode === 'source') {
+    if (sourceView.value === 'compiled' && !sourceHtml.value) fetchSource()
+    if (sourceView.value === 'vue' && !vueSourceHtml.value) fetchVueSource()
+    if (sourceView.value === 'plaintext' && !plaintextContent.value) fetchPlaintext()
+  }
 })
 
 watch(sourceView, (view) => {
@@ -191,11 +195,13 @@ if ((import.meta as any).hot) {
     fetchCompatibility()
     fetchLint()
     fetchStats()
-    // Clear non-active source views so they re-fetch when switched to
-    if (sourceView.value !== 'compiled') sourceHtml.value = ''
-    if (sourceView.value !== 'vue') vueSourceHtml.value = ''
-    if (sourceView.value !== 'plaintext') plaintextContent.value = ''
 
+    // Always clear all source views so they re-fetch when switched to
+    sourceHtml.value = ''
+    vueSourceHtml.value = ''
+    plaintextContent.value = ''
+
+    // Re-fetch the active source view immediately if currently visible
     if (viewMode.value === 'source') {
       if (sourceView.value === 'compiled') fetchSource()
       if (sourceView.value === 'vue') fetchVueSource()

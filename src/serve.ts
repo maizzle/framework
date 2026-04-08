@@ -294,8 +294,8 @@ async function serveRenderedTemplate(url: string, config: MaizzleConfig, rendere
   try {
     const absolutePath = resolve(match)
 
-    // Invalidate the module so changes are picked up
-    await renderer.invalidate(absolutePath)
+    // Invalidate all modules so template + component changes are picked up
+    await renderer.invalidateAll()
 
     const rendered = await renderer.render(absolutePath, config)
     let html = rendered.html
@@ -342,7 +342,7 @@ async function serveHighlightedSource(url: string, config: MaizzleConfig, render
   try {
     const absolutePath = resolve(match)
 
-    await renderer.invalidate(absolutePath)
+    await renderer.invalidateAll()
 
     const rendered = await renderer.render(absolutePath, config)
     let html = rendered.html
@@ -423,7 +423,7 @@ async function servePlaintext(url: string, config: MaizzleConfig, renderer: Rend
 
   try {
     const absolutePath = resolve(match)
-    await renderer.invalidate(absolutePath)
+    await renderer.invalidateAll()
 
     const rendered = await renderer.render(absolutePath, config)
     let html = rendered.html
@@ -475,7 +475,7 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
 
   try {
     const absolutePath = resolve(match)
-    await renderer.invalidate(absolutePath)
+    await renderer.invalidateAll()
 
     const rendered = await renderer.render(absolutePath, config)
     let html = rendered.html

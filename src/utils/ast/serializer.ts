@@ -1,6 +1,7 @@
 import render from 'dom-serializer'
-import type { ChildNode, DomHandlerOptions } from 'domhandler'
+import type { ChildNode } from 'domhandler'
+import type { DomSerializerOptions } from 'dom-serializer'
 
-export function serialize(dom: ChildNode[], options?: DomHandlerOptions): string {
+export function serialize(dom: ChildNode[], options?: DomSerializerOptions): string {
   return render(dom, { encodeEntities: false, ...options })
 }

@@ -561,6 +561,107 @@ describe('render', () => {
     })
   })
 
+  describe('self-closing tags', () => {
+    it('omits trailing slash for HTML5 doctype (default)', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <br>
+              <img src="test.jpg">
+            </body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('<br>')
+      expect(result.html).not.toContain('<br />')
+      expect(result.html).not.toContain('/>')
+    })
+
+    it('adds trailing slash for XHTML doctype', async () => {
+      const result = await render(`
+        <script setup>
+        useDoctype('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">')
+        </script>
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <br>
+              <img src="test.jpg">
+            </body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('<br />')
+      expect(result.html).toMatch(/<img [^>]*\/>/)
+    })
+
+    it('adds trailing slash for XHTML doctype from config', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <hr>
+            </body>
+          </html>
+        </template>
+      `, {
+        config: {
+          doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">',
+        },
+      })
+
+      expect(result.html).toContain('<hr />')
+    })
+
+    it('preserves trailing slash for XHTML even with format enabled', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <br>
+              <img src="test.jpg">
+            </body>
+          </html>
+        </template>
+      `, {
+        config: {
+          doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
+          html: { format: true },
+        },
+      })
+
+      expect(result.html).toContain('<br />')
+      expect(result.html).toMatch(/<img [^>]*\/>/)
+    })
+
+    it('strips trailing slash for HTML5 even with format enabled', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <br>
+              <img src="test.jpg">
+            </body>
+          </html>
+        </template>
+      `, {
+        config: {
+          html: { format: true },
+        },
+      })
+
+      expect(result.html).not.toContain('/>')
+    })
+  })
+
   describe('components.source', () => {
     it('auto-imports components from custom dirs', async () => {
       writeSfc(tempDir, 'custom-components/MyButton.vue', `

@@ -295,10 +295,9 @@ async function serveRenderedTemplate(url: string, config: MaizzleConfig, rendere
     let html = rendered.html
 
     const templateConfig = rendered.templateConfig
-
-    html = await runTransformers(html, templateConfig, absolutePath)
-
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
+
+    html = await runTransformers(html, templateConfig, absolutePath, doctype)
     html = `${doctype}\n${html}`
 
     res.setHeader('Content-Type', 'text/html')
@@ -343,9 +342,9 @@ async function serveHighlightedSource(url: string, config: MaizzleConfig, render
     let html = rendered.html
 
     const templateConfig = rendered.templateConfig
-    html = await runTransformers(html, templateConfig, absolutePath)
-
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
+    html = await runTransformers(html, templateConfig, absolutePath, doctype)
+
     html = `${doctype}\n${html}`
 
     const hl = await getHighlighter()
@@ -423,7 +422,8 @@ async function servePlaintext(url: string, config: MaizzleConfig, renderer: Rend
     const rendered = await renderer.render(absolutePath, config)
     let html = rendered.html
     const templateConfig = rendered.templateConfig
-    html = await runTransformers(html, templateConfig, absolutePath)
+    const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
+    html = await runTransformers(html, templateConfig, absolutePath, doctype)
 
     const plaintext = createPlaintext(html)
 
@@ -474,7 +474,8 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
     const rendered = await renderer.render(absolutePath, config)
     let html = rendered.html
     const templateConfig = rendered.templateConfig
-    html = await runTransformers(html, templateConfig, absolutePath)
+    const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
+    html = await runTransformers(html, templateConfig, absolutePath, doctype)
 
     const sizeBytes = Buffer.byteLength(html, 'utf-8')
 

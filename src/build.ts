@@ -69,13 +69,13 @@ export async function build(options: BuildOptions = {}): Promise<BuildResult> {
       // template-level overrides like css.safe: false are respected by transformers.
       const templateConfig = rendered.templateConfig
 
+      const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
+
       if (templateConfig.useTransformers !== false) {
-        html = await runTransformers(html, templateConfig, absolutePath)
+        html = await runTransformers(html, templateConfig, absolutePath, doctype)
       }
 
       html = await events.fireAfterTransform({ config, template, html })
-
-      const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
       html = `${doctype}\n${html}`
 
       const outputFilePath = resolveOutputPath(templatePath, outputPath, outputExtension, contentBase)

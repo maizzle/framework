@@ -46,13 +46,13 @@ export async function render(
     const rendered = await renderer.render(isFile ? resolve(template) : template, config)
     let html = rendered.html
 
-    // Run transformers
-    if (rendered.templateConfig.useTransformers !== false) {
-      html = await runTransformers(html, rendered.templateConfig, isFile ? resolve(template) : undefined)
-    }
-
     // Prepend doctype
     const doctype = rendered.doctype ?? rendered.templateConfig.doctype ?? '<!DOCTYPE html>'
+
+    // Run transformers
+    if (rendered.templateConfig.useTransformers !== false) {
+      html = await runTransformers(html, rendered.templateConfig, isFile ? resolve(template) : undefined, doctype)
+    }
     html = `${doctype}\n${html}`
 
     const globalPlaintext = rendered.templateConfig.plaintext

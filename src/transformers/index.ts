@@ -50,6 +50,7 @@ export async function runTransformers(
   html: string,
   config: MaizzleConfig,
   filePath?: string,
+  doctype?: string,
 ): Promise<string> {
   // Parse once — all DOM transformers share this array
   let dom = parse(html)
@@ -94,7 +95,8 @@ export async function runTransformers(
   dom = entities(dom, config.html?.decodeEntities)
 
   // Serialize once — remaining transformers operate on the HTML string
-  let result = serialize(dom)
+  const isXhtml = doctype ? /xhtml/i.test(doctype) : false
+  let result = serialize(dom, { selfClosingTags: isXhtml })
 
   // Remove Vue-generated comments after serializing
   result = result
@@ -113,6 +115,11 @@ export async function runTransformers(
 
   // 15. Minify
   result = minify(result, config)
+
+  // Strip self-closing slashes for HTML5 doctypes
+  if (!isXhtml) {
+    result = result.replace(/ \/>/g, '>')
+  }
 
   return result
 }

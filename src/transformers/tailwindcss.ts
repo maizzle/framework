@@ -137,10 +137,10 @@ function buildSourceDirectives(dom: ChildNode[], config: MaizzleConfig, fromDir:
  * @tailwindcss/postcss, then lowers modern CSS syntax with lightningcss.
  *
  * Configures Tailwind sources to scan:
- * - Rendered class attributes (via @source inline) for all classes from all components
+ * - Rendered class attributes (via `@source inline`) for all classes from all components
  * - User project files (via Tailwind's auto-detection from base/from path)
  *
- * User @source and @source not directives in style tags are preserved.
+ * User `@source` and `@source not directives` in style tags are preserved.
  * Source directives are only added to style tags that import Tailwind.
  *
  * Runs as the first transformer in the pipeline so that subsequent

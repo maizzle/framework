@@ -1,0 +1,40 @@
+<script setup lang="ts">
+import { computed, provide, createStaticVNode, useAttrs } from 'vue'
+import { normalizeToPixels } from './utils.ts'
+
+defineOptions({ inheritAttrs: false })
+
+const attrs = useAttrs()
+
+const props = defineProps({
+  /** Max width of the container. */
+  width: {
+    type: [String, Number],
+    default: '37.5em'
+  }
+})
+
+provide('containerWidth', computed(() => props.width))
+
+const styles = computed(() => {
+  return `max-width: ${normalizeToPixels(props.width)}; margin: 0 auto;`
+})
+
+const MsoBefore = () => createStaticVNode(
+  `<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width:${normalizeToPixels(props.width)}" align="center"><tr><td><![endif]-->`,
+  1
+)
+
+const MsoAfter = () => createStaticVNode(
+  '<!--[if mso]></td></tr></table><![endif]-->',
+  1
+)
+</script>
+
+<template>
+  <MsoBefore />
+  <div v-bind="attrs" :style="styles">
+    <slot />
+  </div>
+  <MsoAfter />
+</template>

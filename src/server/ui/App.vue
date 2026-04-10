@@ -76,6 +76,7 @@ const devicePresets: DevicePreset[] = [
 ]
 
 const selectedDevice = ref<DevicePreset | null>(null)
+const deviceMenuOpen = ref(false)
 const panelWidth = ref(0)
 const panelHeight = ref(0)
 const isDragging = ref(false)
@@ -181,8 +182,18 @@ function isInputFocused() {
   return tag === 'input' || tag === 'textarea' || (el as HTMLElement).isContentEditable
 }
 
-onMounted(() => document.addEventListener('keydown', onKeydown))
-onUnmounted(() => document.removeEventListener('keydown', onKeydown))
+function onWindowBlur() {
+  deviceMenuOpen.value = false
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown)
+  window.addEventListener('blur', onWindowBlur)
+})
+onUnmounted(() => {
+  document.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('blur', onWindowBlur)
+})
 </script>
 
 <template>
@@ -291,7 +302,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
           >
             {{ panelWidth }} &times; {{ panelHeight }}
           </span>
-          <DropdownMenu v-if="isPreviewRoute" :modal="false">
+          <DropdownMenu v-if="isPreviewRoute" v-model:open="deviceMenuOpen" :modal="false">
             <DropdownMenuTrigger as-child>
               <Button variant="outline" size="sm" class="gap-1.5">
                 <Smartphone class="size-4 dark:text-gray-400" />
@@ -299,10 +310,10 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
                 <ChevronDown class="size-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
-              <DropdownMenuItem @click="selectedDevice = null; viewMode = 'preview'; resetKey++">
-                <Check v-if="!selectedDevice" class="size-3.5" />
-                <span :class="!selectedDevice ? '' : 'pl-5.5'">Responsive</span>
+            <DropdownMenuContent align="end" class="min-w-52 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
+              <DropdownMenuItem @click="selectedDevice = null; isFullSize = true; viewMode = 'preview'; resetKey++">
+                <Check v-if="!selectedDevice && isFullSize" class="size-3.5" />
+                <span :class="[!selectedDevice && isFullSize ? '' : 'pl-5.5', 'text-xs font-medium']">Full size</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 v-for="device in devicePresets"
@@ -310,8 +321,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
                 @click="selectDevice(device)"
               >
                 <Check v-if="selectedDevice?.name === device.name" class="size-3.5" />
-                <span :class="selectedDevice?.name === device.name ? '' : 'pl-5.5'">{{ device.name }}</span>
-                <span class="ml-auto text-xs text-gray-500 dark:text-gray-400 tabular-nums">{{ device.width }}&times;{{ device.height }}</span>
+                <span :class="[selectedDevice?.name === device.name ? '' : 'pl-5.5', 'text-xs font-medium']">{{ device.name }}</span>
+                <span class="ml-auto text-[11px] text-gray-400 dark:text-gray-500 tabular-nums tracking-tight">{{ device.width }}&times;{{ device.height }}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -321,7 +332,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
       <!-- Main content -->
       <div class="flex-1 overflow-hidden">
         <RouterView v-slot="{ Component }">
-          <component :is="Component" v-model:view-mode="viewMode" :device="selectedDevice" :reset-key="resetKey" v-model:panel-width="panelWidth" v-model:panel-height="panelHeight" v-model:is-dragging="isDragging" v-model:is-full-size="isFullSize" @clear-device="selectedDevice = null" />
+          <component :is="Component" v-model:view-mode="viewMode" :device="selectedDevice" :reset-key="resetKey" v-model:panel-width="panelWidth" v-model:panel-height="panelHeight" v-model:is-dragging="isDragging" v-model:is-full-size="isFullSize" @clear-device="selectedDevice = null; isFullSize = false" />
         </RouterView>
       </div>
     </SidebarInset>

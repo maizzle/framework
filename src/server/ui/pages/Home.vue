@@ -14,6 +14,10 @@ import markUrl from '@/mark.svg'
 import markGradientUrl from '@/mark-gradient.svg'
 
 const isMac = computed(() => navigator.platform.includes('Mac'))
+
+function openCommandPalette() {
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, ctrlKey: true }))
+}
 </script>
 
 <template>
@@ -29,7 +33,10 @@ const isMac = computed(() => navigator.platform.includes('Mac'))
       </EmptyDescription>
     </EmptyHeader>
     <EmptyContent>
-      <p class="text-gray-500 dark:text-gray-400 text-sm">
+      <p
+        class="text-gray-500 dark:text-gray-400 text-sm cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+        @click="openCommandPalette"
+      >
         Press
         <Kbd>{{ isMac ? '⌘' : 'Ctrl' }}</Kbd> + <Kbd>K</Kbd>
         to open the command palette

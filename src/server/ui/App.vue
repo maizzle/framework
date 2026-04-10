@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
-import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, X } from 'lucide-vue-next'
+import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, X, Search } from 'lucide-vue-next'
 import logoUrl from '@/logo.svg'
 import logoGradientUrl from '@/logo-gradient.svg'
 import { Kbd } from '@/components/ui/kbd'
@@ -198,10 +198,11 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 
       <div class="px-3 pt-3 pb-1">
         <div class="relative flex items-center">
+          <Search class="absolute left-2.5 size-3.5 text-gray-400 pointer-events-none" />
           <SidebarInput
             v-model="search"
             placeholder="Search emails..."
-            class="text-xs! pr-7"
+            class="text-xs! pl-8 pr-14"
             @keydown.esc="search && (search = '')"
           />
           <button
@@ -211,6 +212,10 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
           >
             <X class="size-3.5" />
           </button>
+          <kbd v-else class="absolute right-2 flex items-center gap-0.5 text-[10px] font-sans cursor-pointer" @click="commandOpen = true">
+            <span class="text-gray-400 dark:text-gray-500">{{ typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘' : 'Ctrl' }}</span>
+            <span class="text-gray-300 dark:text-gray-600">K</span>
+          </kbd>
         </div>
       </div>
 

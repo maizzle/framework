@@ -1,28 +1,23 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { glob } from 'tinyglobby'
 import { caniemail, rawData } from 'caniemail'
-import type { MaizzleConfig } from '../types/index.ts'
 
-export async function serveCompatibility(url: string, config: MaizzleConfig, res: any) {
-  const templateSlug = url.replace('/__maizzle/compatibility/', '').replace(/\?.*$/, '')
-
-  const contentPatterns = config.content ?? ['emails/**/*.vue']
-  const templates = await glob(contentPatterns)
-  const match = templates.find(t => t.replace(/\.(vue|md)$/, '') === templateSlug)
-
-  if (!match) {
-    res.statusCode = 404
-    res.end(JSON.stringify({ errors: [], warnings: [] }))
-    return
-  }
-
+export async function serveCompatibility(req: any, res: any) {
   try {
-    const source = readFileSync(resolve(match), 'utf-8')
+    const html = await new Promise<string>((resolve, reject) => {
+      let body = ''
+      req.on('data', (chunk: string) => { body += chunk })
+      req.on('end', () => resolve(body))
+      req.on('error', reject)
+    })
+
+    if (!html) {
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify([]))
+      return
+    }
 
     const result = caniemail({
       clients: ['apple-mail.*', 'gmail.*', 'outlook.*', 'yahoo.*'],
-      html: source,
+      html,
     })
 
     // Build title -> caniemail URL lookup

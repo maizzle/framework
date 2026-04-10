@@ -207,8 +207,8 @@ function maizzleDevPlugin(
           return await serveHighlightedSource(url, config, renderer, res)
         }
 
-        if (url.startsWith('/__maizzle/compatibility/')) {
-          return await serveCompatibility(url, config, res)
+        if (url === '/__maizzle/compatibility' && req.method === 'POST') {
+          return await serveCompatibility(req, res)
         }
 
         if (url.startsWith('/__maizzle/lint/')) {

@@ -35,6 +35,7 @@ const sourceView = ref<'compiled' | 'vue' | 'plaintext'>('compiled')
 const copied = ref(false)
 
 const iframeEl = ref<HTMLIFrameElement>()
+const compiledSourceEl = ref<HTMLElement>()
 const vueSourceEl = ref<HTMLElement>()
 const containerEl = ref<HTMLElement>()
 const wrapperEl = ref<HTMLElement>()
@@ -85,14 +86,17 @@ interface TemplateStats {
 
 const compatibilityIssues = ref<CompatibilityIssue[]>([])
 const compatibilityLoading = ref(false)
+const compatibilityError = ref('')
 const lintIssues = ref<LintIssue[]>([])
 const lintLoading = ref(false)
 const stats = ref<TemplateStats | null>(null)
 const statsLoading = ref(false)
 
+let renderedHtml = ''
+
 async function fetchTemplate() {
   const res = await fetch(`/__maizzle/render/${route.params.template}`)
-  const html = await res.text()
+  renderedHtml = await res.text()
 
   const iframe = iframeEl.value
   const doc = iframe?.contentDocument
@@ -101,11 +105,11 @@ async function fetchTemplate() {
   // which preserves scroll position natively.
   if (doc) {
     doc.open()
-    doc.write(html)
+    doc.write(renderedHtml)
     doc.close()
   } else {
     // Fallback for initial load
-    srcdoc.value = html
+    srcdoc.value = renderedHtml
   }
 }
 
@@ -138,9 +142,19 @@ async function fetchStats() {
 
 async function fetchCompatibility() {
   compatibilityLoading.value = true
+  compatibilityError.value = ''
   try {
-    const res = await fetch(`/__maizzle/compatibility/${route.params.template}`)
-    compatibilityIssues.value = await res.json()
+    const res = await fetch('/__maizzle/compatibility', {
+      method: 'POST',
+      body: renderedHtml,
+    })
+    const data = await res.json()
+    if (data?.error) {
+      compatibilityError.value = data.error
+      compatibilityIssues.value = []
+    } else {
+      compatibilityIssues.value = data
+    }
   } catch {
     compatibilityIssues.value = []
   } finally {
@@ -165,11 +179,11 @@ watch(() => route.params.template, () => {
   vueSourceHtml.value = ''
   plaintextContent.value = ''
   compatibilityIssues.value = []
+  compatibilityError.value = ''
   lintIssues.value = []
   stats.value = null
   sourceView.value = 'compiled'
-  fetchTemplate()
-  fetchCompatibility()
+  fetchTemplate().then(fetchCompatibility)
   fetchLint()
   fetchStats()
   if (viewMode.value === 'source') fetchSource()
@@ -191,8 +205,7 @@ watch(sourceView, (view) => {
 
 if ((import.meta as any).hot) {
   ;(import.meta as any).hot.on('maizzle:template-updated', () => {
-    fetchTemplate()
-    fetchCompatibility()
+    fetchTemplate().then(fetchCompatibility)
     fetchLint()
     fetchStats()
 
@@ -230,6 +243,28 @@ async function goToLine(line: number) {
   el.querySelectorAll('.shiki-highlight-line').forEach(l => l.classList.remove('shiki-highlight-line'))
 
   // Find and highlight the line
+  const lineEl = el.querySelector(`[data-line="${line}"]`)
+  if (lineEl) {
+    lineEl.classList.add('shiki-highlight-line')
+    lineEl.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }
+}
+
+async function goToCompiledLine(line: number) {
+  viewMode.value = 'source'
+  sourceView.value = 'compiled'
+
+  if (!sourceHtml.value) {
+    await fetchSource()
+  }
+
+  await nextTick()
+
+  const el = compiledSourceEl.value
+  if (!el) return
+
+  el.querySelectorAll('.shiki-highlight-line').forEach(l => l.classList.remove('shiki-highlight-line'))
+
   const lineEl = el.querySelector(`[data-line="${line}"]`)
   if (lineEl) {
     lineEl.classList.add('shiki-highlight-line')
@@ -474,6 +509,7 @@ const stripeBg = {
           <svg v-else class="size-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
         </button>
         <div
+          ref="compiledSourceEl"
           v-show="sourceView === 'compiled'"
           class="shiki-line-numbers h-full overflow-auto [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full [&_pre]:overflow-x-auto"
           v-html="sourceHtml"
@@ -541,7 +577,7 @@ const stripeBg = {
       :style="{ height: `${tabsPanelHeight}px` }"
     >
         <div
-          class="relative h-px bg-gray-200 dark:bg-gray-800 cursor-row-resize before:absolute before:-top-2 before:left-0 before:right-0 before:h-5 before:content-['']"
+          class="relative h-px bg-gray-200 dark:bg-gray-800 cursor-row-resize before:absolute before:top-0 before:left-0 before:right-0 before:h-3.25 before:content-['']"
           @mousedown="onTabsDragStart"
         />
         <Tabs :model-value="activeTab" class="flex flex-col min-h-0 h-full">
@@ -565,6 +601,7 @@ const stripeBg = {
           <div class="flex-1 overflow-auto">
             <TabsContent value="compatibility" class="mt-0">
               <p v-if="compatibilityLoading" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">Checking compatibility...</p>
+              <p v-else-if="compatibilityError" class="px-4 py-3 text-xs text-red-500 dark:text-red-400">{{ compatibilityError }}</p>
               <p v-else-if="compatibilityIssues.length === 0" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">No compatibility issues found.</p>
               <ul v-else class="text-xs divide-y">
                 <li
@@ -586,7 +623,7 @@ const stripeBg = {
                         </div>
                       </div>
                     </div>
-                    <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0" @click="goToLine(issue.line!)">L{{ issue.line }}</button>
+                    <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0" @click="goToCompiledLine(issue.line!)">L{{ issue.line }}</button>
                   </div>
                 </li>
               </ul>

@@ -14,8 +14,7 @@ import { createHead, renderSSRHead } from '@unhead/vue/server'
 import { MaizzleConfigKey } from '../composables/useConfig.ts'
 import { RenderContextKey } from '../composables/renderContext.ts'
 import type { Component, InjectionKey } from 'vue'
-import type { MaizzleConfig } from '../types/index.ts'
-import type { Options as MarkdownOptions } from 'unplugin-vue-markdown/types'
+import type { MaizzleConfig, MarkdownConfig } from '../types/index.ts'
 import type { RenderContext } from '../composables/renderContext.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -95,7 +94,7 @@ export interface CreateRendererOptions {
   /** Generate .d.ts files for auto-imports and components (default: false) */
   dts?: boolean
   /** Options passed to unplugin-vue-markdown */
-  markdown?: MarkdownOptions
+  markdown?: MarkdownConfig
   /** Root directory for resolving user component dirs and .d.ts output */
   root?: string
   /** Additional component directories to register for auto-import */
@@ -111,7 +110,8 @@ export interface CreateRendererOptions {
 export async function createRenderer(
   options: CreateRendererOptions = {},
 ): Promise<Renderer> {
-  const { dts = false, markdown: markdownOptions, root = process.cwd(), componentDirs = [] } = options
+  const { dts = false, markdown: markdownOptionsRaw, root = process.cwd(), componentDirs = [] } = options
+  const { shikiTheme = 'github-light', ...markdownOptions } = markdownOptionsRaw ?? {}
 
   const dtsDir = isLaravel()
     ? resolve(process.cwd(), 'resources/js/types/maizzle')
@@ -142,6 +142,12 @@ export async function createRenderer(
       Markdown(merge(markdownOptions ?? {}, {
         headEnabled: true,
         wrapperDiv: false,
+        markdownOptions: {
+          async highlight(code: string, lang: string) {
+            const { codeToHtml } = await import('shiki')
+            return codeToHtml(code, { lang, theme: shikiTheme })
+          },
+        },
       })),
       AutoImport({
         dirs: [

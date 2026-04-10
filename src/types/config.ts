@@ -1,3 +1,5 @@
+import type { Options as MarkdownPluginOptions } from 'unplugin-vue-markdown/types'
+
 export interface UrlQueryOptions {
   /**
    * CSS selectors for elements to process.
@@ -337,6 +339,15 @@ export interface HtmlConfig {
 export type FilterFunction = (str: string, value: string) => string
 export type FiltersConfig = false | Record<string, FilterFunction>
 
+export interface MarkdownConfig extends MarkdownPluginOptions {
+  /**
+   * The shiki theme to use for syntax highlighting in Markdown fenced code blocks.
+   *
+   * @default 'github-light'
+   */
+  shikiTheme?: import('shiki').BundledTheme
+}
+
 export interface MaizzleConfig {
   /**
    * Root directory for the Maizzle email project.
@@ -353,8 +364,8 @@ export interface MaizzleConfig {
    * })
    */
   root?: string
-  /** Options passed to `unplugin-vue-markdown` for Markdown template support. */
-  markdown?: import('unplugin-vue-markdown/types').Options
+  /** Options for Markdown template support, extending `unplugin-vue-markdown`. */
+  markdown?: MarkdownConfig
   /**
    * Glob patterns for email template files to process.
    *

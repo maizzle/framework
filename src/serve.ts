@@ -46,7 +46,7 @@ export async function serve(options: ServeOptions = {}) {
   const port = config.server?.port ?? 3000
 
   // Create a renderer for SSR rendering email templates (with dts for dev)
-  const renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat() })
+  let renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat() })
 
   const server = await createServer({
     configFile: false,
@@ -173,6 +173,10 @@ function maizzleDevPlugin(
       server.watcher.on('change', async (file) => {
         if (watchPaths.some(p => file.endsWith(p))) {
           config = await resolveConfig(configInput)
+
+          // Recreate the renderer so config changes (e.g. markdown.shikiTheme) take effect
+          await renderer.close()
+          renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat() })
         }
 
         // Invalidate all renderer modules so component and config changes

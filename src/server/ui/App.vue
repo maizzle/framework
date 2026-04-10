@@ -276,10 +276,10 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
         <!-- View mode toggles (centered) -->
         <ToggleGroup v-if="isPreviewRoute" v-model="viewMode" type="single" variant="outline" size="sm">
           <ToggleGroupItem value="preview">
-            <Monitor class="size-4" />
+            <Monitor class="size-4 dark:text-gray-400" />
           </ToggleGroupItem>
           <ToggleGroupItem value="source">
-            <CodeXml class="size-4" />
+            <CodeXml class="size-4 dark:text-gray-400" />
           </ToggleGroupItem>
         </ToggleGroup>
         <div v-else />
@@ -294,7 +294,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
           <DropdownMenu v-if="isPreviewRoute" :modal="false">
             <DropdownMenuTrigger as-child>
               <Button variant="outline" size="sm" class="gap-1.5">
-                <Smartphone class="size-4" />
+                <Smartphone class="size-4 dark:text-gray-400" />
                 <span v-if="selectedDevice" class="text-xs">{{ selectedDevice.name }}</span>
                 <ChevronDown class="size-3 opacity-50" />
               </Button>

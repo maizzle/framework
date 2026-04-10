@@ -628,8 +628,8 @@ const stripeBg = {
               </TabsTrigger>
             </TabsList>
             <Button variant="ghost" size="icon" class="h-7 w-7 hover:bg-transparent!" @click="toggleBottomPanel">
-              <ChevronUp v-if="!bottomPanelOpen" class="size-4" />
-              <ChevronDown v-else class="size-4" />
+              <ChevronUp v-if="!bottomPanelOpen" class="size-4 dark:text-gray-400" />
+              <ChevronDown v-else class="size-4 dark:text-gray-400" />
             </Button>
           </div>
           <ScrollArea class="flex-1">

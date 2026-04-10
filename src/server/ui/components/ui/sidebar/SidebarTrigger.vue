@@ -21,8 +21,8 @@ const { open, toggleSidebar } = useSidebar()
     :class="cn('h-7 w-7', props.class)"
     @click="toggleSidebar"
   >
-    <PanelRightOpen v-if="open" />
-    <PanelRightClose v-else />
+    <PanelRightOpen v-if="open" class="dark:text-gray-400" />
+    <PanelRightClose v-else class="dark:text-gray-400" />
     <span class="sr-only">Toggle Sidebar</span>
   </Button>
 </template>

@@ -101,6 +101,9 @@ function updateIframeContentHeight() {
   const doc = iframe?.contentDocument
   if (!iframe || !doc?.documentElement) return
 
+  // Hide iframe body overflow — scrolling is handled by the outer ScrollArea
+  if (doc.body) doc.body.style.overflow = 'hidden'
+
   // Save scroll position of the ScrollArea viewport
   const viewport = wrapperEl.value?.querySelector('[data-slot="scroll-area-viewport"]')
   const scrollTop = viewport?.scrollTop ?? 0
@@ -129,6 +132,8 @@ async function fetchTemplate() {
     doc.open()
     doc.write(renderedHtml)
     doc.close()
+    // Hide iframe body overflow — scrolling is handled by the outer ScrollArea
+    if (doc.body) doc.body.style.overflow = 'hidden'
     await nextTick()
     updateIframeContentHeight()
   } else {
@@ -500,7 +505,7 @@ const stripeBg = {
 
 <template>
   <div class="flex flex-col h-full">
-    <div class="relative flex-1 min-h-0">
+    <div class="relative flex-1 min-h-0 overflow-hidden">
       <!-- Source code view -->
       <div v-show="viewMode === 'source'" class="absolute inset-0 min-w-0 overflow-hidden">
         <div class="absolute top-3 left-6 z-10">
@@ -590,12 +595,12 @@ const stripeBg = {
           </div>
           <!-- Iframe -->
           <div ref="wrapperEl" class="absolute inset-5 border border-gray-200 dark:border-gray-800">
-            <ScrollArea class="h-full w-full">
+            <ScrollArea class="h-full w-full bg-white dark:bg-gray-950">
               <iframe
                 ref="iframeEl"
                 :srcdoc="srcdoc"
                 @load="updateIframeContentHeight"
-                class="w-full border-0 bg-white"
+                class="w-full border-0 bg-white dark:bg-gray-950"
                 :style="{ height: iframeContentHeight ? `${iframeContentHeight}px` : '100%' }"
               />
             </ScrollArea>

@@ -106,7 +106,21 @@ const statsLoading = ref(false)
 
 async function fetchTemplate() {
   const res = await fetch(`/__maizzle/render/${route.params.template}`)
-  srcdoc.value = await res.text()
+  const html = await res.text()
+
+  const iframe = iframeEl.value
+  const doc = iframe?.contentDocument
+
+  // Write directly into the iframe document to avoid a full reload,
+  // which preserves scroll position natively.
+  if (doc) {
+    doc.open()
+    doc.write(html)
+    doc.close()
+  } else {
+    // Fallback for initial load
+    srcdoc.value = html
+  }
 }
 
 async function fetchSource() {

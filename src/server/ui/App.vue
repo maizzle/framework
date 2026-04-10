@@ -291,7 +291,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
           >
             {{ panelWidth }} &times; {{ panelHeight }}
           </span>
-          <DropdownMenu v-if="isPreviewRoute">
+          <DropdownMenu v-if="isPreviewRoute" :modal="false">
             <DropdownMenuTrigger as-child>
               <Button variant="outline" size="sm" class="gap-1.5">
                 <Smartphone class="size-4" />
@@ -299,7 +299,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
                 <ChevronDown class="size-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
               <DropdownMenuItem @click="selectedDevice = null; viewMode = 'preview'; resetKey++">
                 <Check v-if="!selectedDevice" class="size-3.5" />
                 <span :class="!selectedDevice ? '' : 'pl-5.5'">Responsive</span>

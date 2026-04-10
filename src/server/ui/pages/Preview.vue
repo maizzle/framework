@@ -480,7 +480,7 @@ const stripeBg = {
       <div v-show="viewMode === 'source'" class="absolute inset-0 min-w-0 overflow-hidden">
         <div class="absolute top-3 left-6 z-10">
           <DropdownMenu :modal="false">
-            <DropdownMenuTrigger class="inline-flex items-center gap-1 rounded-md bg-white/10 px-2.5 h-7 text-xs font-medium text-gray-300 hover:bg-white/15 transition-colors">
+            <DropdownMenuTrigger class="inline-flex items-center gap-1 rounded-md bg-white/10 backdrop-blur-md px-2.5 h-7 text-xs font-medium text-gray-300 hover:bg-white/15 transition-colors">
               {{ sourceView === 'compiled' ? 'HTML' : sourceView === 'vue' ? 'Source' : 'Plaintext' }}
               <ChevronDown class="size-3 opacity-50" />
             </DropdownMenuTrigger>
@@ -511,18 +511,18 @@ const stripeBg = {
         <div
           ref="compiledSourceEl"
           v-show="sourceView === 'compiled'"
-          class="shiki-line-numbers h-full overflow-auto [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full [&_pre]:overflow-x-auto"
+          class="shiki-line-numbers h-full overflow-auto [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full [&_pre]:overflow-x-auto dark:[&_pre]:bg-gray-950!"
           v-html="sourceHtml"
         />
         <div
           ref="vueSourceEl"
           v-show="sourceView === 'vue'"
-          class="shiki-line-numbers h-full overflow-auto [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full [&_pre]:overflow-x-auto"
+          class="shiki-line-numbers h-full overflow-auto [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full [&_pre]:overflow-x-auto dark:[&_pre]:bg-gray-950!"
           v-html="vueSourceHtml"
         />
         <pre
           v-show="sourceView === 'plaintext'"
-          class="h-full overflow-auto p-6 pt-14 text-sm leading-6 min-h-full text-gray-300 bg-[#27212e] whitespace-pre-wrap break-words"
+          class="h-full overflow-auto p-6 pt-14 text-sm leading-6 min-h-full text-gray-300 bg-[#27212e] dark:bg-gray-950 whitespace-pre-wrap break-words"
         >{{ plaintextContent }}</pre>
       </div>
 
@@ -577,7 +577,7 @@ const stripeBg = {
       :style="{ height: `${tabsPanelHeight}px` }"
     >
         <div
-          class="relative h-px bg-gray-200 dark:bg-gray-800 cursor-row-resize before:absolute before:top-0 before:left-0 before:right-0 before:h-3.25 before:content-['']"
+          class="relative h-px bg-gray-200 dark:bg-gray-800/50 cursor-row-resize before:absolute before:top-0 before:left-0 before:right-0 before:h-3.25 before:content-['']"
           @mousedown="onTabsDragStart"
         />
         <Tabs :model-value="activeTab" class="flex flex-col min-h-0 h-full">
@@ -657,7 +657,7 @@ const stripeBg = {
                   <span class="text-gray-500 dark:text-gray-400">Size</span>
                   <span
                     class="font-medium tabular-nums"
-                    :class="stats.size.bytes > 102400 ? 'text-red-600' : stats.size.bytes > 51200 ? 'text-amber-600' : 'text-gray-900 dark:text-gray-100'"
+                    :class="stats.size.bytes > 102400 ? 'text-red-600' : stats.size.bytes > 51200 ? 'text-amber-600' : 'text-gray-900 dark:text-gray-300'"
                   >{{ stats.size.formatted }}</span>
                 </div>
                 <div class="flex items-center gap-1.5">

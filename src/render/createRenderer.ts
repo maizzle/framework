@@ -54,11 +54,14 @@ function codeBlockExtract() {
           ? stripped.replace(new RegExp(`^[ \\t]{${minIndent}}`, 'gm'), '')
           : stripped
 
-        // Base64-encode so no characters can interfere with Vue's HTML parser.
-        // The component decodes it back via Buffer.
-        const encoded = Buffer.from(dedented).toString('base64')
+        // HTML-escape for safe embedding in a static attribute value.
+        const escaped = dedented
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
 
-        return `<${tag}${attrs} encoded-code="${encoded}" />`
+        return `<${tag}${attrs} code="${escaped}" />`
       })
 
       if (transformed !== code) {

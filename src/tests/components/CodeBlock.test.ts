@@ -26,14 +26,14 @@ describe('CodeBlock', () => {
     })
 
     it('highlights CSS code', async () => {
-      const html = await render({ code: '.button { color: red; }', lang: 'css' })
+      const html = await render({ code: '.button { color: red; }', language: 'css' })
 
       expect(html).toContain('<code>')
       expect(html).toContain('style="color:')
     })
 
     it('highlights JavaScript code', async () => {
-      const html = await render({ code: 'const x = 42', lang: 'javascript' })
+      const html = await render({ code: 'const x = 42', language: 'javascript' })
 
       expect(html).toContain('<code>')
       expect(html).toContain('style="color:')
@@ -63,7 +63,7 @@ describe('CodeBlock', () => {
       const html = await render({ code: '<div>test</div>' })
 
       expect(html).toContain('background-color:#fff')
-      expect(html).toContain('padding:24px')
+      expect(html).toContain('padding:16px')
       expect(html).toContain('overflow:auto')
       expect(html).toContain('white-space:pre')
       expect(html).toContain('word-wrap:normal')
@@ -74,7 +74,7 @@ describe('CodeBlock', () => {
     it('uses default td-class', async () => {
       const html = await render({ code: '<div>test</div>' })
 
-      expect(html).toContain('<td class="max-w-0 mso-padding-alt-6">')
+      expect(html).toContain('<td class="max-w-0 mso-padding-alt-4">')
     })
 
     it('accepts custom td-class', async () => {
@@ -98,34 +98,15 @@ describe('CodeBlock', () => {
     })
   })
 
-  describe('encodedCode prop', () => {
-    it('decodes base64-encoded code', async () => {
-      const code = '<div>hello</div>'
-      const encoded = Buffer.from(code).toString('base64')
-      const html = await render({ 'encoded-code': encoded })
-
-      expect(html).toContain('<code>')
-      expect(html).toContain('style="color:')
-    })
-
-    it('prefers encodedCode over code prop', async () => {
-      const encoded = Buffer.from('.foo { color: red; }').toString('base64')
-      const html = await render({ 'encoded-code': encoded, code: 'ignored', lang: 'css' })
-
-      // Should highlight the CSS from encodedCode, not the 'ignored' string
-      expect(html).toContain('style="color:')
-    })
-  })
-
   describe('themes', () => {
     it('uses github-light theme by default', async () => {
-      const html = await render({ code: '.foo { color: red; }', lang: 'css' })
+      const html = await render({ code: '.foo { color: red; }', language: 'css' })
 
       expect(html).toContain('background-color:#fff')
     })
 
     it('supports dark themes', async () => {
-      const html = await render({ code: '.foo { color: red; }', lang: 'css', theme: 'github-dark' })
+      const html = await render({ code: '.foo { color: red; }', language: 'css', theme: 'github-dark' })
 
       expect(html).toContain('background-color:#24292e')
     })

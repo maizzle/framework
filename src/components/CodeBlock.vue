@@ -1,6 +1,6 @@
 <script lang="ts">
-import { createStaticVNode } from 'vue'
-import { codeToHtml, getSingletonHighlighter } from 'shiki'
+import { createStaticVNode, type PropType } from 'vue'
+import { codeToHtml, getSingletonHighlighter, type BundledLanguage, type BundledTheme } from 'shiki'
 
 export default {
   props: {
@@ -9,33 +9,26 @@ export default {
       type: String,
       default: ''
     },
-    /** Base64-encoded code, set by the Vite transform for slot content. */
-    encodedCode: {
-      type: String,
-      default: ''
-    },
-    /** The language for syntax highlighting. @default 'html' */
-    lang: {
-      type: String,
+/** The language for syntax highlighting. @default 'html' */
+    language: {
+      type: String as PropType<BundledLanguage>,
       default: 'html'
     },
     /** The shiki theme to use. @default 'github-light' */
     theme: {
-      type: String,
+      type: String as PropType<BundledTheme>,
       default: 'github-light'
     },
-    /** CSS class for the wrapping table cell. @default 'max-w-0 mso-padding-alt-6' */
+    /** CSS class for the wrapping table cell. @default 'max-w-0 mso-padding-alt-4' */
     tdClass: {
       type: String,
-      default: 'max-w-0 mso-padding-alt-6'
+      default: 'max-w-0 mso-padding-alt-4'
     }
   },
   inheritAttrs: false,
   async setup(props, { slots, attrs }) {
-    // Prefer encodedCode (from Vite transform) → code prop → slot text
-    let source = props.encodedCode
-      ? Buffer.from(props.encodedCode, 'base64').toString('utf-8')
-      : props.code
+    // Prefer code prop → slot text
+    let source = props.code
 
     if (!source) {
       const slotContent = slots.default?.()
@@ -51,7 +44,7 @@ export default {
     }
 
     const highlighted = await codeToHtml(source, {
-      lang: props.lang,
+      lang: props.language,
       theme: props.theme,
     })
 
@@ -64,7 +57,7 @@ export default {
       .replace(/<\/code><\/pre>$/, '')
 
     const classes = ['font-mono', attrs.class].filter(Boolean).join(' ')
-    const baseStyles = `background-color:${bg};padding:24px;overflow:auto;white-space:pre;word-wrap:normal;word-break:normal;word-spacing:normal`
+    const baseStyles = `background-color:${bg};padding:16px;overflow:auto;white-space:pre;word-wrap:normal;word-break:normal;word-spacing:normal`
     const styles = [baseStyles, attrs.style].filter(Boolean).join(';')
 
     const html = `<table class="w-full"><tr><td class="${props.tdClass}"><pre class="${classes}" style="${styles}"><code>${codeContent}</code></pre></td></tr></table>`

@@ -8,11 +8,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from '@/components/ui/resizable'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 
@@ -42,25 +37,16 @@ const copied = ref(false)
 const iframeEl = ref<HTMLIFrameElement>()
 const vueSourceEl = ref<HTMLElement>()
 const containerEl = ref<HTMLElement>()
-const previewEl = ref<InstanceType<typeof ResizablePanel>>()
-const leftPanel = ref<InstanceType<typeof ResizablePanel>>()
-const rightPanel = ref<InstanceType<typeof ResizablePanel>>()
-const topPanel = ref<InstanceType<typeof ResizablePanel>>()
-const bottomPanel = ref<InstanceType<typeof ResizablePanel>>()
+const wrapperEl = ref<HTMLElement>()
 
 const panelWidth = defineModel<number>('panelWidth', { default: 0 })
 const panelHeight = defineModel<number>('panelHeight', { default: 0 })
 const isDragging = defineModel<boolean>('isDragging', { default: false })
 const isFullSize = defineModel<boolean>('isFullSize', { default: true })
 
-const sideSizes = ref({ left: 0, right: 0, top: 0, bottom: 0 })
-
-function updateFullSize() {
-  isFullSize.value = sideSizes.value.left < 0.5
-    && sideSizes.value.right < 0.5
-    && sideSizes.value.top < 0.5
-    && sideSizes.value.bottom < 0.5
-}
+// Custom resizable: width/height of the iframe wrapper (null = fill container)
+const iframeWidth = ref<number | null>(null)
+const iframeHeight = ref<number | null>(null)
 
 async function copySource() {
   if (sourceView.value === 'compiled') {
@@ -251,74 +237,83 @@ async function goToLine(line: number) {
   }
 }
 
-// Track which axis is being user-dragged so we can sync the opposite panel
-let hDragging = false
-let vDragging = false
-
 const emit = defineEmits<{ 'clear-device': [] }>()
 
-function onHDragStart() { hDragging = true; isDragging.value = true; emit('clear-device') }
-function onHDragEnd() { setTimeout(() => { hDragging = false }, 50); isDragging.value = false }
-function onVDragStart() { vDragging = true; isDragging.value = true; emit('clear-device') }
-function onVDragEnd() { setTimeout(() => { vDragging = false }, 50); isDragging.value = false }
+type Edge = 'left' | 'right' | 'top' | 'bottom'
 
-function onHorizontalLayout(sizes: number[]) {
-  if (!hDragging) return
+function onEdgeDrag(e: MouseEvent, edge: Edge) {
+  e.preventDefault()
+  isDragging.value = true
+  emit('clear-device')
 
-  const [left, , right] = sizes
-  if (Math.abs(left - right) < 0.5) return
+  const container = containerEl.value
+  if (!container) return
 
-  hDragging = false
-  const side = Math.max(left, right)
-  if (left < side) leftPanel.value?.resize(side)
-  if (right < side) rightPanel.value?.resize(side)
+  const startX = e.clientX
+  const startY = e.clientY
+  const rect = container.getBoundingClientRect()
+  const gutter = 40 // 20px padding on each side
+  const maxW = rect.width - gutter
+  const maxH = rect.height - gutter
+  const startW = iframeWidth.value ?? maxW
+  const startH = iframeHeight.value ?? maxH
+
+  const isHorizontal = edge === 'left' || edge === 'right'
+  const sign = (edge === 'left' || edge === 'top') ? -1 : 1
+
+  const onMove = (ev: MouseEvent) => {
+    if (isHorizontal) {
+      // Symmetric: each side moves by the delta, so total change is 2x
+      const delta = (ev.clientX - startX) * sign
+      iframeWidth.value = Math.max(200, Math.min(maxW, startW + delta * 2))
+    } else {
+      const delta = (ev.clientY - startY) * sign
+      iframeHeight.value = Math.max(100, Math.min(maxH, startH + delta * 2))
+    }
+  }
+
+  const onUp = () => {
+    isDragging.value = false
+    updateFullSize()
+    document.removeEventListener('mousemove', onMove)
+    document.removeEventListener('mouseup', onUp)
+  }
+
+  document.addEventListener('mousemove', onMove)
+  document.addEventListener('mouseup', onUp)
 }
 
-function onVerticalLayout(sizes: number[]) {
-  if (!vDragging) return
-
-  const [top, , bottom] = sizes
-  if (Math.abs(top - bottom) < 0.5) return
-
-  vDragging = false
-  const side = Math.max(top, bottom)
-  if (top < side) topPanel.value?.resize(side)
-  if (bottom < side) bottomPanel.value?.resize(side)
+function updateFullSize() {
+  const container = containerEl.value
+  if (!container) return
+  const rect = container.getBoundingClientRect()
+  const gutter = 40
+  isFullSize.value = (iframeWidth.value === null || iframeWidth.value >= rect.width - gutter - 2)
+    && (iframeHeight.value === null || iframeHeight.value >= rect.height - gutter - 2)
 }
 
 function applyDeviceSize(device: Device | null | undefined) {
-  const el = containerEl.value
-  if (!el) return
-
   if (!device) {
-    if (!hDragging && !vDragging) {
-      leftPanel.value?.resize(0)
-      rightPanel.value?.resize(0)
-      topPanel.value?.resize(0)
-      bottomPanel.value?.resize(0)
-    }
+    iframeWidth.value = null
+    iframeHeight.value = null
+    updateFullSize()
     return
   }
 
-  const rect = el.getBoundingClientRect()
-  if (!rect.width || !rect.height) return
+  const container = containerEl.value
+  if (!container) return
+  const rect = container.getBoundingClientRect()
+  const gutter = 40
 
-  const handleSize = 16
-  const hPanelSpace = rect.width - handleSize * 2
-  const vPanelSpace = rect.height - handleSize * 2
-
-  const hSide = Math.max(0, ((hPanelSpace - device.width) / 2) / hPanelSpace * 100)
-  const vSide = Math.max(0, ((vPanelSpace - device.height) / 2) / vPanelSpace * 100)
-
-  leftPanel.value?.resize(hSide)
-  rightPanel.value?.resize(hSide)
-  topPanel.value?.resize(vSide)
-  bottomPanel.value?.resize(vSide)
+  iframeWidth.value = Math.min(device.width, rect.width - gutter)
+  iframeHeight.value = Math.min(device.height, rect.height - gutter)
+  updateFullSize()
 }
 
 watch(() => props.device, (device) => {
   if (viewMode.value === 'source') return
-  applyDeviceSize(device)
+  // Only apply when a device is selected, not when cleared (drag start clears device)
+  if (device) applyDeviceSize(device)
 })
 
 watch(() => props.resetKey, () => {
@@ -353,9 +348,9 @@ function forwardIframeKeys(iframe: HTMLIFrameElement) {
 }
 
 onMounted(() => {
-  const el = iframeEl.value
-  if (el) {
-    const rect = el.getBoundingClientRect()
+  const wrapper = wrapperEl.value
+  if (wrapper) {
+    const rect = wrapper.getBoundingClientRect()
     panelWidth.value = Math.round(rect.width)
     panelHeight.value = Math.round(rect.height)
     observer = new ResizeObserver((entries) => {
@@ -364,7 +359,11 @@ onMounted(() => {
         panelHeight.value = Math.round(entry.contentRect.height)
       }
     })
-    observer.observe(el)
+    observer.observe(wrapper)
+  }
+
+  const el = iframeEl.value
+  if (el) {
     el.addEventListener('load', () => forwardIframeKeys(el))
   }
 })
@@ -496,29 +495,41 @@ const stripeBg = {
         <div class="relative h-full opacity-5" :style="stripeBg" />
       </div>
 
-      <div v-show="viewMode !== 'source'" ref="containerEl" class="absolute inset-0 z-10 flex flex-col">
-        <div class="flex-1 min-h-0">
-          <ResizablePanelGroup direction="vertical" class="h-full" @layout="onVerticalLayout">
-            <ResizablePanel ref="topPanel" :default-size="0" @resize="(s: number) => { sideSizes.top = s; updateFullSize() }" />
-            <ResizableHandle class="h-4! bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 transition-colors after:hidden!" @dragging="(v: boolean) => v ? onVDragStart() : onVDragEnd()" />
-            <ResizablePanel :default-size="100" :min-size="20">
-              <ResizablePanelGroup direction="horizontal" class="h-full" @layout="onHorizontalLayout">
-                <ResizablePanel ref="leftPanel" :default-size="0" @resize="(s: number) => { sideSizes.left = s; updateFullSize() }" />
-                <ResizableHandle class="w-4 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 transition-colors after:hidden!" @dragging="(v: boolean) => v ? onHDragStart() : onHDragEnd()" />
-                <ResizablePanel ref="previewEl" :default-size="100" :min-size="20">
-                  <iframe
-                    ref="iframeEl"
-                    :srcdoc="srcdoc"
-                    class="h-full w-full border-0 bg-white"
-                  />
-                </ResizablePanel>
-                <ResizableHandle class="w-4 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 transition-colors after:hidden!" @dragging="(v: boolean) => v ? onHDragStart() : onHDragEnd()" />
-                <ResizablePanel ref="rightPanel" :default-size="0" @resize="(s: number) => { sideSizes.right = s; updateFullSize() }" />
-              </ResizablePanelGroup>
-            </ResizablePanel>
-            <ResizableHandle class="h-4! bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 transition-colors after:hidden!" @dragging="(v: boolean) => v ? onVDragStart() : onVDragEnd()" />
-            <ResizablePanel ref="bottomPanel" :default-size="0" @resize="(s: number) => { sideSizes.bottom = s; updateFullSize() }" />
-          </ResizablePanelGroup>
+      <div v-show="viewMode !== 'source'" ref="containerEl" class="absolute inset-0 z-10 flex items-center justify-center">
+        <!-- Blocks iframe from stealing pointer events while dragging -->
+        <div v-if="isDragging" class="absolute inset-0 z-20" />
+        <div
+          class="relative"
+          :style="{
+            width: iframeWidth != null ? `${iframeWidth + 40}px` : '100%',
+            height: iframeHeight != null ? `${iframeHeight + 40}px` : '100%',
+            transition: isDragging ? 'none' : 'width 0.2s ease, height 0.2s ease',
+          }"
+        >
+          <!-- Top handle -->
+          <div class="group absolute top-0 left-5 right-5 h-5 flex items-center justify-center cursor-ns-resize" @mousedown="onEdgeDrag($event, 'top')">
+            <div class="h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
+          </div>
+          <!-- Bottom handle -->
+          <div class="group absolute bottom-0 left-5 right-5 h-5 flex items-center justify-center cursor-ns-resize" @mousedown="onEdgeDrag($event, 'bottom')">
+            <div class="h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
+          </div>
+          <!-- Left handle -->
+          <div class="group absolute left-0 top-5 bottom-5 w-5 flex items-center justify-center cursor-ew-resize" @mousedown="onEdgeDrag($event, 'left')">
+            <div class="w-1 h-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
+          </div>
+          <!-- Right handle -->
+          <div class="group absolute right-0 top-5 bottom-5 w-5 flex items-center justify-center cursor-ew-resize" @mousedown="onEdgeDrag($event, 'right')">
+            <div class="w-1 h-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
+          </div>
+          <!-- Iframe -->
+          <div ref="wrapperEl" class="absolute inset-5 border border-gray-200 dark:border-gray-800">
+            <iframe
+              ref="iframeEl"
+              :srcdoc="srcdoc"
+              class="h-full w-full border-0 bg-white"
+            />
+          </div>
         </div>
       </div>
     </div>

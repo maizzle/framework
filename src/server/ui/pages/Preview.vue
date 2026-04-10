@@ -510,22 +510,22 @@ const stripeBg = {
       <div v-show="viewMode === 'source'" class="absolute inset-0 min-w-0 overflow-hidden">
         <div class="absolute top-3 left-6 z-10">
           <DropdownMenu :modal="false">
-            <DropdownMenuTrigger class="inline-flex items-center gap-1 rounded-md bg-white/10 backdrop-blur-md px-2.5 h-7 text-xs font-medium text-gray-300 hover:bg-white/15 transition-colors">
+            <DropdownMenuTrigger class="inline-flex items-center gap-1 rounded-md bg-white/80 dark:bg-white/10 backdrop-blur-md px-2.5 h-7 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-white/15 transition-colors">
               {{ sourceView === 'compiled' ? 'HTML' : sourceView === 'vue' ? 'Source' : 'Plaintext' }}
               <ChevronDown class="size-3 opacity-50" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" class="min-w-0 bg-white/10 backdrop-blur-md border-white/10">
-              <DropdownMenuItem class="text-xs font-medium text-gray-300 hover:text-white focus:bg-white/10 focus:text-white" @click="sourceView = 'vue'">
-                <Check v-if="sourceView === 'vue'" class="size-3.5" />
-                <span :class="sourceView === 'vue' ? '' : 'pl-5.5'">Source</span>
+            <DropdownMenuContent align="start" class="min-w-32 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md dark:border-white/10">
+              <DropdownMenuItem class="text-xs font-medium text-gray-600 dark:text-gray-400 focus:text-gray-900 dark:focus:text-gray-200 dark:focus:bg-white/10" @click="sourceView = 'vue'">
+                <Check v-if="sourceView === 'vue'" class="size-3 text-gray-900 dark:text-gray-200" />
+                <span :class="[sourceView === 'vue' ? 'text-gray-900 dark:text-gray-200' : 'pl-5']">Source</span>
               </DropdownMenuItem>
-              <DropdownMenuItem class="text-xs font-medium text-gray-300 hover:text-white focus:bg-white/10 focus:text-white" @click="sourceView = 'compiled'">
-                <Check v-if="sourceView === 'compiled'" class="size-3.5" />
-                <span :class="sourceView === 'compiled' ? '' : 'pl-5.5'">HTML</span>
+              <DropdownMenuItem class="text-xs font-medium text-gray-600 dark:text-gray-400 focus:text-gray-900 dark:focus:text-gray-200 dark:focus:bg-white/10" @click="sourceView = 'compiled'">
+                <Check v-if="sourceView === 'compiled'" class="size-3 text-gray-900 dark:text-gray-200" />
+                <span :class="[sourceView === 'compiled' ? 'text-gray-900 dark:text-gray-200' : 'pl-5']">HTML</span>
               </DropdownMenuItem>
-              <DropdownMenuItem class="text-xs font-medium text-gray-300 hover:text-white focus:bg-white/10 focus:text-white" @click="sourceView = 'plaintext'">
-                <Check v-if="sourceView === 'plaintext'" class="size-3.5" />
-                <span :class="sourceView === 'plaintext' ? '' : 'pl-5.5'">Plaintext</span>
+              <DropdownMenuItem class="text-xs font-medium text-gray-600 dark:text-gray-400 focus:text-gray-900 dark:focus:text-gray-200 dark:focus:bg-white/10" @click="sourceView = 'plaintext'">
+                <Check v-if="sourceView === 'plaintext'" class="size-3 text-gray-900 dark:text-gray-200" />
+                <span :class="[sourceView === 'plaintext' ? 'text-gray-900 dark:text-gray-200' : 'pl-5']">Plaintext</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

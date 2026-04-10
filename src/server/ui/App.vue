@@ -310,18 +310,19 @@ onUnmounted(() => {
                 <ChevronDown class="size-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" class="min-w-52 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
-              <DropdownMenuItem @click="selectedDevice = null; isFullSize = true; viewMode = 'preview'; resetKey++">
-                <Check v-if="!selectedDevice && isFullSize" class="size-3.5" />
-                <span :class="[!selectedDevice && isFullSize ? '' : 'pl-5.5', 'text-xs font-medium']">Full size</span>
+            <DropdownMenuContent align="end" class="min-w-52 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md dark:border-white/10">
+              <DropdownMenuItem class="text-xs font-medium text-gray-600 dark:text-gray-400 focus:text-gray-900 dark:focus:text-gray-200" @click="selectedDevice = null; isFullSize = true; viewMode = 'preview'; resetKey++">
+                <Check v-if="!selectedDevice && isFullSize" class="size-3 text-gray-900 dark:text-gray-200" />
+                <span :class="[!selectedDevice && isFullSize ? 'text-gray-900 dark:text-gray-200' : 'pl-5']">Full size</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 v-for="device in devicePresets"
                 :key="device.name"
+                class="text-xs font-medium text-gray-600 dark:text-gray-400 focus:text-gray-900 dark:focus:text-gray-200"
                 @click="selectDevice(device)"
               >
-                <Check v-if="selectedDevice?.name === device.name" class="size-3.5" />
-                <span :class="[selectedDevice?.name === device.name ? '' : 'pl-5.5', 'text-xs font-medium']">{{ device.name }}</span>
+                <Check v-if="selectedDevice?.name === device.name" class="size-3 text-gray-900 dark:text-gray-200" />
+                <span :class="[selectedDevice?.name === device.name ? 'text-gray-900 dark:text-gray-200' : 'pl-5']">{{ device.name }}</span>
                 <span class="ml-auto text-[11px] text-gray-400 dark:text-gray-500 tabular-nums tracking-tight">{{ device.width }}&times;{{ device.height }}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>

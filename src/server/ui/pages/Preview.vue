@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 
 import stripesUrl from '../stripes.svg'
 
@@ -48,6 +49,7 @@ const isFullSize = defineModel<boolean>('isFullSize', { default: true })
 // Custom resizable: width/height of the iframe wrapper (null = fill container)
 const iframeWidth = ref<number | null>(null)
 const iframeHeight = ref<number | null>(null)
+const iframeContentHeight = ref<number | null>(null)
 
 async function copySource() {
   if (sourceView.value === 'compiled') {
@@ -94,6 +96,26 @@ const statsLoading = ref(false)
 
 let renderedHtml = ''
 
+function updateIframeContentHeight() {
+  const iframe = iframeEl.value
+  const doc = iframe?.contentDocument
+  if (!iframe || !doc?.documentElement) return
+
+  // Save scroll position of the ScrollArea viewport
+  const viewport = wrapperEl.value?.querySelector('[data-slot="scroll-area-viewport"]')
+  const scrollTop = viewport?.scrollTop ?? 0
+
+  // Temporarily collapse to measure true content height
+  iframe.style.height = '0'
+  iframeContentHeight.value = doc.documentElement.scrollHeight
+  iframe.style.height = `${iframeContentHeight.value}px`
+
+  // Restore scroll position
+  if (viewport) {
+    viewport.scrollTop = scrollTop
+  }
+}
+
 async function fetchTemplate() {
   const res = await fetch(`/__maizzle/render/${route.params.template}`)
   renderedHtml = await res.text()
@@ -107,6 +129,8 @@ async function fetchTemplate() {
     doc.open()
     doc.write(renderedHtml)
     doc.close()
+    await nextTick()
+    updateIframeContentHeight()
   } else {
     // Fallback for initial load
     srcdoc.value = renderedHtml
@@ -393,6 +417,7 @@ onMounted(() => {
         panelWidth.value = Math.round(entry.contentRect.width)
         panelHeight.value = Math.round(entry.contentRect.height)
       }
+      updateIframeContentHeight()
     })
     observer.observe(wrapper)
   }
@@ -508,22 +533,27 @@ const stripeBg = {
           <svg v-if="!copied" class="size-5 text-gray-400 group-hover:text-gray-300" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.25 5.25H7.25C6.14543 5.25 5.25 6.14543 5.25 7.25V14.25C5.25 15.3546 6.14543 16.25 7.25 16.25H14.25C15.3546 16.25 16.25 15.3546 16.25 14.25V7.25C16.25 6.14543 15.3546 5.25 14.25 5.25Z" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /><path d="M2.80103 11.998L1.77203 5.07397C1.61003 3.98097 2.36403 2.96397 3.45603 2.80197L10.38 1.77297C11.313 1.63397 12.19 2.16297 12.528 3.00097" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /></svg>
           <svg v-else class="size-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
         </button>
-        <div
-          ref="compiledSourceEl"
-          v-show="sourceView === 'compiled'"
-          class="shiki-line-numbers h-full overflow-auto [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full [&_pre]:overflow-x-auto dark:[&_pre]:bg-gray-950!"
-          v-html="sourceHtml"
-        />
-        <div
-          ref="vueSourceEl"
-          v-show="sourceView === 'vue'"
-          class="shiki-line-numbers h-full overflow-auto [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full [&_pre]:overflow-x-auto dark:[&_pre]:bg-gray-950!"
-          v-html="vueSourceHtml"
-        />
-        <pre
-          v-show="sourceView === 'plaintext'"
-          class="h-full overflow-auto p-6 pt-14 text-sm leading-6 min-h-full text-gray-300 bg-[#27212e] dark:bg-gray-950 whitespace-pre-wrap break-words"
-        >{{ plaintextContent }}</pre>
+        <ScrollArea v-show="sourceView === 'compiled'" class="h-full">
+          <div
+            ref="compiledSourceEl"
+            class="shiki-line-numbers [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full dark:[&_pre]:bg-gray-950!"
+            v-html="sourceHtml"
+          />
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+        <ScrollArea v-show="sourceView === 'vue'" class="h-full">
+          <div
+            ref="vueSourceEl"
+            class="shiki-line-numbers [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full dark:[&_pre]:bg-gray-950!"
+            v-html="vueSourceHtml"
+          />
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+        <ScrollArea v-show="sourceView === 'plaintext'" class="h-full">
+          <pre
+            class="p-6 pt-14 text-sm leading-6 min-h-full text-gray-300 bg-[#27212e] dark:bg-gray-950 whitespace-pre-wrap break-words"
+          >{{ plaintextContent }}</pre>
+        </ScrollArea>
       </div>
 
       <!-- Preview view -->
@@ -560,11 +590,15 @@ const stripeBg = {
           </div>
           <!-- Iframe -->
           <div ref="wrapperEl" class="absolute inset-5 border border-gray-200 dark:border-gray-800">
-            <iframe
-              ref="iframeEl"
-              :srcdoc="srcdoc"
-              class="h-full w-full border-0 bg-white"
-            />
+            <ScrollArea class="h-full w-full">
+              <iframe
+                ref="iframeEl"
+                :srcdoc="srcdoc"
+                @load="updateIframeContentHeight"
+                class="w-full border-0 bg-white"
+                :style="{ height: iframeContentHeight ? `${iframeContentHeight}px` : '100%' }"
+              />
+            </ScrollArea>
           </div>
         </div>
       </div>
@@ -598,7 +632,7 @@ const stripeBg = {
               <ChevronDown v-else class="size-4" />
             </Button>
           </div>
-          <div class="flex-1 overflow-auto">
+          <ScrollArea class="flex-1">
             <TabsContent value="compatibility" class="mt-0">
               <p v-if="compatibilityLoading" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">Checking compatibility...</p>
               <p v-else-if="compatibilityError" class="px-4 py-3 text-xs text-red-500 dark:text-red-400">{{ compatibilityError }}</p>
@@ -670,7 +704,7 @@ const stripeBg = {
                 </div>
               </div>
             </TabsContent>
-          </div>
+          </ScrollArea>
         </Tabs>
       </div>
   </div>

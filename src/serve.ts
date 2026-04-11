@@ -13,6 +13,7 @@ import { runTransformers } from './transformers/index.ts'
 import { createRenderer, type Renderer } from './render/createRenderer.ts'
 import { serveCompatibility } from './server/compatibility.ts'
 import { serveLint } from './server/linter.ts'
+import { sendEmail } from './server/email.ts'
 import type { MaizzleConfig } from './types/index.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -225,6 +226,14 @@ function maizzleDevPlugin(
 
         if (url.startsWith('/__maizzle/stats/')) {
           return await serveStats(url, config, renderer, res)
+        }
+
+        if (url.startsWith('/__maizzle/email/') && req.method === 'POST') {
+          return await serveEmailEndpoint(url, req, res, config, renderer)
+        }
+
+        if (url === '/__maizzle/email-config') {
+          return serveEmailConfig(config, res)
         }
 
         next()
@@ -510,6 +519,76 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
     res.statusCode = 500
     res.end(JSON.stringify({ error: error.message }))
   }
+}
+
+async function serveEmailEndpoint(url: string, req: any, res: any, config: MaizzleConfig, renderer: Renderer) {
+  const templateSlug = url.replace('/__maizzle/email/', '').replace(/\?.*$/, '')
+
+  const contentPatterns = config.content ?? ['emails/**/*.vue']
+  const templates = await glob(contentPatterns)
+  const match = templates.find(t => t.replace(/\.(vue|md)$/, '') === templateSlug)
+
+  if (!match) {
+    res.statusCode = 404
+    res.end(JSON.stringify({ success: false, message: 'Template not found' }))
+    return
+  }
+
+  let body = ''
+  for await (const chunk of req) body += chunk
+
+  let payload: { to: string[]; subject: string }
+
+  try {
+    payload = JSON.parse(body)
+  } catch {
+    res.statusCode = 400
+    res.end(JSON.stringify({ success: false, message: 'Invalid JSON' }))
+    return
+  }
+
+  if (!payload.to?.length) {
+    res.statusCode = 400
+    res.end(JSON.stringify({ success: false, message: 'Missing recipients' }))
+    return
+  }
+
+  try {
+    const absolutePath = resolve(match)
+    await renderer.invalidateAll()
+
+    const rendered = await renderer.render(absolutePath, config)
+    let html = rendered.html
+    const templateConfig = rendered.templateConfig
+    const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
+    html = await runTransformers(html, templateConfig, absolutePath, doctype)
+    html = `${doctype}\n${html}`
+
+    const text = createPlaintext(html)
+
+    const result = await sendEmail(
+      { to: payload.to, subject: payload.subject, html, text },
+      config,
+      templateConfig,
+    )
+
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify(result))
+  } catch (error: any) {
+    res.statusCode = 500
+    res.end(JSON.stringify({ success: false, message: error.message }))
+  }
+}
+
+function serveEmailConfig(config: MaizzleConfig, res: any) {
+  const emailConfig = config.server?.email
+  res.setHeader('Content-Type', 'application/json')
+  res.end(JSON.stringify({
+    to: emailConfig?.to ? (Array.isArray(emailConfig.to) ? emailConfig.to : [emailConfig.to]) : [],
+    from: emailConfig?.from ?? '',
+    subject: emailConfig?.subject ?? '',
+    hasTransport: !!emailConfig?.transport,
+  }))
 }
 
 export function printBanner(server: ViteDevServer, startupTime?: number) {

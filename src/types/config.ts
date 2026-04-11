@@ -443,6 +443,35 @@ export interface MaizzleConfig {
      * }
      */
     watch?: string[]
+    /**
+     * Email sending configuration for the "Send test" feature in the dev UI.
+     *
+     * When not configured, falls back to Ethereal (free fake SMTP — emails
+     * are captured and viewable via a URL, never actually delivered).
+     *
+     * @example
+     * server: {
+     *   email: {
+     *     to: ['test@example.com'],
+     *     from: 'dev@maizzle.test',
+     *     transport: {
+     *       host: 'smtp.mailtrap.io',
+     *       port: 587,
+     *       auth: { user: '...', pass: '...' },
+     *     },
+     *   },
+     * }
+     */
+    email?: {
+      /** Default recipient(s). */
+      to?: string | string[]
+      /** Sender address. @default 'Maizzle <maizzle@ethereal.email>' */
+      from?: string
+      /** Default subject line. */
+      subject?: string
+      /** Nodemailer transport options (SMTP, SES, etc.). Omit to use Ethereal. */
+      transport?: Record<string, unknown>
+    }
   }
   /** Tailwind CSS and email CSS optimization settings. */
   css?: CssConfig

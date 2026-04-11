@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronUp, ChevronDown, Check } from 'lucide-vue-next'
+import { ChevronUp, ChevronDown, Check, ExternalLink } from 'lucide-vue-next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,16 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  TagsInput,
+  TagsInputInput,
+  TagsInputItem,
+  TagsInputItemDelete,
+  TagsInputItemText,
+} from '@/components/ui/tags-input'
 
 import stripesUrl from '../stripes.svg'
 
@@ -93,6 +102,50 @@ const lintIssues = ref<LintIssue[]>([])
 const lintLoading = ref(false)
 const stats = ref<TemplateStats | null>(null)
 const statsLoading = ref(false)
+
+// Email test state
+const emailTo = ref<string[]>([])
+const emailSubject = ref('')
+const emailSending = ref(false)
+const emailPreventThreading = ref(true)
+const emailResult = ref<{ success: boolean; message: string; previewUrl?: string } | null>(null)
+
+async function fetchEmailConfig() {
+  try {
+    const res = await fetch('/__maizzle/email-config')
+    const data = await res.json()
+    if (data.to?.length && !emailTo.value.length) emailTo.value = data.to
+    if (data.subject && !emailSubject.value) emailSubject.value = data.subject
+  } catch {}
+}
+
+async function sendTestEmail() {
+  if (!emailTo.value.length) return
+  emailSending.value = true
+  emailResult.value = null
+
+  try {
+    const res = await fetch(`/__maizzle/email/${route.params.template}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: emailTo.value,
+        subject: (() => {
+          let subj = emailSubject.value || String(route.params.template)
+          if (emailPreventThreading.value) {
+            subj += ` | ${new Date().toISOString().slice(0, 19)}`
+          }
+          return subj
+        })(),
+      }),
+    })
+    emailResult.value = await res.json()
+  } catch (error: any) {
+    emailResult.value = { success: false, message: error.message }
+  } finally {
+    emailSending.value = false
+  }
+}
 
 let renderedHtml = ''
 
@@ -211,10 +264,12 @@ watch(() => route.params.template, () => {
   compatibilityError.value = ''
   lintIssues.value = []
   stats.value = null
+  emailResult.value = null
   sourceView.value = 'compiled'
   fetchTemplate().then(fetchCompatibility)
   fetchLint()
   fetchStats()
+  fetchEmailConfig()
   if (viewMode.value === 'source') fetchSource()
 }, { immediate: true })
 
@@ -444,7 +499,7 @@ const activeTab = ref<string | undefined>(undefined)
 function toggleBottomPanel() {
   bottomPanelOpen.value = !bottomPanelOpen.value
   if (bottomPanelOpen.value) {
-    tabsPanelHeight.value = 200
+    tabsPanelHeight.value = 300
     if (!activeTab.value) activeTab.value = 'compatibility'
   } else {
     tabsPanelHeight.value = 40
@@ -462,7 +517,7 @@ function onTabClick(tab: string) {
   activeTab.value = tab
   if (!bottomPanelOpen.value) {
     bottomPanelOpen.value = true
-    tabsPanelHeight.value = 200
+    tabsPanelHeight.value = 300
   }
 }
 
@@ -620,7 +675,7 @@ const stripeBg = {
       class="absolute bottom-0 left-0 right-0 z-20 overflow-hidden border-t border-gray-200 dark:border-gray-800/50"
       :class="[
         !tabsDragging ? 'transition-[height] duration-200 ease-in-out' : '',
-        bottomPanelOpen ? 'bg-white/80 dark:bg-gray-950/80 backdrop-blur-md' : 'bg-white dark:bg-gray-950',
+        'bg-white dark:bg-gray-950',
       ]"
       :style="{ height: `${tabsPanelHeight}px` }"
     >
@@ -639,6 +694,9 @@ const stripeBg = {
               </TabsTrigger>
               <TabsTrigger value="stats" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('stats')">
                 Stats
+              </TabsTrigger>
+              <TabsTrigger value="test" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('test')">
+                Test
               </TabsTrigger>
             </TabsList>
             <Button variant="ghost" size="icon" class="h-7 w-7 hover:bg-transparent!" @click="toggleBottomPanel">
@@ -715,6 +773,57 @@ const stripeBg = {
                 <div class="flex items-center gap-1.5">
                   <span class="text-gray-500 dark:text-gray-400">Links</span>
                   <span class="font-medium tabular-nums">{{ stats.links }}</span>
+                </div>
+              </div>
+            </ScrollArea></TabsContent>
+            <TabsContent value="test" class="mt-0 h-full"><ScrollArea class="h-full">
+              <div class="px-4 py-3 max-w-md">
+                <div class="space-y-2">
+                  <div class="flex items-center gap-2">
+                    <label class="text-xs text-gray-500 dark:text-gray-400 w-12 shrink-0">To</label>
+                    <TagsInput v-model="emailTo" delimiter=" " add-on-paste class="flex-1 min-h-7 gap-1 px-2 py-1">
+                      <TagsInputItem v-for="item in emailTo" :key="item" :value="item" class="h-5 text-xs rounded">
+                        <TagsInputItemText class="px-1.5 py-0 text-xs" />
+                        <TagsInputItemDelete class="size-3.5" />
+                      </TagsInputItem>
+                      <TagsInputInput class="text-xs min-h-5 px-0.5" placeholder="Add emails..." />
+                    </TagsInput>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <label class="text-xs text-gray-500 dark:text-gray-400 w-12 shrink-0">Subject</label>
+                    <div class="flex-1 flex items-center gap-3">
+                      <Input v-model="emailSubject" :placeholder="String(route.params.template)" class="flex-1 h-7 text-xs! px-2" />
+                      <label class="flex items-center gap-1.5 cursor-pointer select-none shrink-0">
+                        <Checkbox v-model="emailPreventThreading" :default-checked="true" class="size-3.5" />
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Prevent threading</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 mt-3">
+                  <Button
+                    size="sm"
+                    class="h-7 text-xs px-3"
+                    :disabled="!emailTo.length || emailSending"
+                    @click="sendTestEmail"
+                  >
+                    <svg v-if="emailSending" class="size-3.5 animate-spin [animation-duration:0.6s]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                    {{ emailSending ? 'Sending' : 'Send' }}
+                  </Button>
+                </div>
+                <div v-if="emailResult" class="mt-2">
+                  <p class="text-xs" :class="emailResult.success ? 'text-gray-950 dark:text-white' : 'text-red-600'">
+                    {{ emailResult.message }}
+                    <a
+                      v-if="emailResult.previewUrl"
+                      :href="emailResult.previewUrl"
+                      target="_blank"
+                      rel="noopener"
+                      class="inline-flex items-center gap-0.5 text-gray-500 dark:text-gray-400 hover:underline ml-1"
+                    >
+                      View <ExternalLink class="size-3" />
+                    </a>
+                  </p>
                 </div>
               </div>
             </ScrollArea></TabsContent>

@@ -70,17 +70,23 @@ export function inlineCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[]
     })
   }
 
-  // Handle style tags with embed attributes
+  // Handle style tags with embed attributes.
+  // We add a marker attribute that persists through the pipeline,
+  // then restore data-embed from it after Juice runs.
   walk(dom, (node) => {
     const el = node as Element
     if (el.name === 'style' && el.attribs) {
-      // Add data-embed to style tags with embed attribute
+      // Sync data-embed ↔ embed
       if (el.attribs.embed && !('data-embed' in el.attribs)) {
         el.attribs['data-embed'] = ''
       }
-      // Add embed to style tags with data-embed attribute
       if (el.attribs['data-embed'] && !('embed' in el.attribs)) {
         el.attribs.embed = ''
+      }
+
+      // Add marker that persists through the pipeline
+      if ('data-embed' in el.attribs) {
+        el.attribs['data-maizzle-embed'] = ''
       }
     }
   })
@@ -124,6 +130,17 @@ export function inlineCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[]
       }
     })
   }
+
+  // Restore data-embed from our marker, then remove the marker.
+  // The purge step will handle final data-embed/embed removal.
+  walk(result, (node) => {
+    const el = node as Element
+    if (el.name === 'style' && el.attribs && 'data-maizzle-embed' in el.attribs) {
+      el.attribs['data-embed'] = ''
+      el.attribs.embed = ''
+      delete el.attribs['data-maizzle-embed']
+    }
+  })
 
   return result
 }

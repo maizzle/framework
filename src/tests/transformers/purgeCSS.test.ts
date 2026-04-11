@@ -176,4 +176,128 @@ describe('purgeCSS', () => {
     const html = `<html><head><style>.unused { color: red }</style></head><body><p>hi</p></body></html>`
     expect(serialize(purgeCSS(parse(html)))).toBe(html)
   })
+
+  // ---------------------------------------------------------------------------
+  // Deep purge — PostCSS + css-select DOM-aware selector removal
+  // ---------------------------------------------------------------------------
+
+  describe('deep purge', () => {
+    it('removes compound selectors not matching any DOM element', () => {
+      const html = `<html><head><style>.prose img { max-width: 100% } .prose p { margin: 0 }</style></head><body><div class="prose"><p>hi</p></div></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('.prose p')
+      expect(result).not.toContain('.prose img')
+    })
+
+    it('removes tag selectors not present in DOM', () => {
+      const html = `<html><head><style>h1 { font-size: 24px } p { margin: 0 }</style></head><body><p>hi</p></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('p')
+      expect(result).not.toContain('h1')
+    })
+
+    it('preserves selectors that match elements in the DOM', () => {
+      const html = `<html><head><style>.btn { padding: 10px } .btn-primary { color: blue }</style></head><body><a class="btn btn-primary">click</a></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('.btn')
+      expect(result).toContain('.btn-primary')
+    })
+
+    it('skips data-embed style tags', () => {
+      // .prose img doesn't exist but deep purge should skip data-embed tags
+      // The class .prose must exist so email-comb doesn't strip it first
+      const html = `<html><head><style data-embed>.prose img { max-width: 100% }</style></head><body><div class="prose"><p>hi</p></div></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('.prose img')
+    })
+
+    it('removes data-embed and embed attributes after purging', () => {
+      const html = `<html><head><style data-embed embed>.prose { color: red }</style></head><body><div class="prose">hi</div></body></html>`
+      const result = run(html, true)
+      expect(result).not.toContain('data-embed')
+      expect(result).not.toContain(' embed')
+      expect(result).toContain('.prose')
+    })
+
+    it('removes :not() selectors when no element matches', () => {
+      const html = `<html><head><style>.prose :not(pre) > code { color: red } .prose p { margin: 0 }</style></head><body><div class="prose"><p>hi</p></div></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('.prose p')
+      expect(result).not.toContain(':not(pre) > code')
+    })
+
+    it('preserves :not() selectors when elements match', () => {
+      const html = `<html><head><style>.prose :not(pre) > code { color: red }</style></head><body><div class="prose"><p><code>hi</code></p></div></body></html>`
+      const result = run(html, true)
+      expect(result).toContain(':not(pre) > code')
+    })
+
+    it('preserves pseudo-class selectors', () => {
+      const html = `<html><head><style>a:hover { color: red } .gone { color: blue }</style></head><body><a href="#">link</a></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('a:hover')
+      expect(result).not.toContain('.gone')
+    })
+
+    it('preserves pseudo-element selectors', () => {
+      const html = `<html><head><style>p::before { content: "" }</style></head><body><p>hi</p></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('p::before')
+    })
+
+    it('preserves rules inside @media at-rules', () => {
+      // .btn exists in body so email-comb keeps the @media rule,
+      // deep purge should skip rules inside at-rules
+      const html = `<html><head><style>@media (max-width: 600px) { .btn { color: red } }</style></head><body><a class="btn">hi</a></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('@media')
+      expect(result).toContain('.btn')
+    })
+
+    it('removes empty at-rules after purging their children', () => {
+      // .kept class exists so email-comb preserves the @media,
+      // .gone does not exist so email-comb removes it at top level
+      const html = `<html><head><style>.gone { color: red } @media (max-width: 600px) { .kept { display: block } }</style></head><body><div class="kept">hi</div></body></html>`
+      const result = run(html, true)
+      expect(result).not.toContain('.gone')
+      expect(result).toContain('@media')
+      expect(result).toContain('.kept')
+    })
+
+    it('removes style tag entirely when all rules are purged', () => {
+      const html = `<html><head><style>.a { color: red } .b { color: blue }</style></head><body><p>hi</p></body></html>`
+      const result = run(html, true)
+      expect(result).not.toContain('<style')
+      expect(result).not.toContain('</style>')
+    })
+
+    it('preserves default safelisted selectors in deep purge', () => {
+      const html = `<html><head><style>.gmail-fix { display: none } .outlook-reset { margin: 0 } .gone { color: red }</style></head><body><p>hi</p></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('.gmail-fix')
+      expect(result).toContain('.outlook-reset')
+      expect(result).not.toContain('.gone')
+    })
+
+    it('preserves user safelisted selectors in deep purge', () => {
+      const html = `<html><head><style>.custom-keep { color: red } .nope { color: blue }</style></head><body><p>hi</p></body></html>`
+      const result = run(html, { safelist: ['.custom-keep'] })
+      expect(result).toContain('.custom-keep')
+      expect(result).not.toContain('.nope')
+    })
+
+    it('trims unmatched selectors from a multi-selector rule', () => {
+      const html = `<html><head><style>.exists, .ghost { color: red }</style></head><body><div class="exists">hi</div></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('.exists')
+      expect(result).not.toContain('.ghost')
+    })
+
+    it('does not throw on unusual selectors', () => {
+      // Ensure deep purge handles edge cases gracefully without crashing
+      const html = `<html><head><style>.foo > * + * { color: red }</style></head><body><div class="foo"><p>a</p><p>b</p></div></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('.foo > * + *')
+    })
+  })
 })

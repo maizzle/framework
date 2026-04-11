@@ -39,5 +39,13 @@ export function tailwindCleanup(config: MaizzleConfig): postcss.Plugin[] {
         }
       },
     },
+    {
+      postcssPlugin: 'tailwind-cleanup-text-decoration',
+      Declaration(decl) {
+        if (decl.prop === 'text-decoration-line') {
+          decl.prop = 'text-decoration'
+        }
+      },
+    },
   ]
 }

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { SidebarProps } from "."
+import { watch } from "vue"
+import { useRoute } from "vue-router"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import SheetDescription from '@/components/ui/sheet/SheetDescription.vue'
@@ -17,7 +19,12 @@ const props = withDefaults(defineProps<SidebarProps>(), {
   collapsible: "offcanvas",
 })
 
+const route = useRoute()
 const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+
+watch(() => route.path, () => {
+  if (isMobile.value) setOpenMobile(false)
+})
 </script>
 
 <template>
@@ -36,7 +43,7 @@ const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
       data-slot="sidebar"
       data-mobile="true"
       :side="side"
-      class="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+      class="bg-sidebar! text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
       :style="{
         '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
       }"

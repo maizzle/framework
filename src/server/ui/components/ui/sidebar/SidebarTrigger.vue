@@ -9,7 +9,7 @@ const props = defineProps<{
   class?: HTMLAttributes["class"]
 }>()
 
-const { open, toggleSidebar } = useSidebar()
+const { isMobile, open, toggleSidebar } = useSidebar()
 </script>
 
 <template>
@@ -18,11 +18,12 @@ const { open, toggleSidebar } = useSidebar()
     data-slot="sidebar-trigger"
     variant="ghost"
     size="icon"
-    :class="cn('h-7 w-7', props.class)"
+    :class="cn('h-7 w-7 hover:bg-transparent', props.class)"
     @click="toggleSidebar"
   >
-    <PanelRightOpen v-if="open" class="dark:text-gray-400" />
-    <PanelRightClose v-else class="dark:text-gray-400" />
+    <svg v-if="isMobile" class="size-4 dark:text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><line x1="3" y1="7" x2="21" y2="7" /><line x1="3" y1="12" x2="15" y2="12" /><line x1="3" y1="17" x2="18" y2="17" /></svg>
+    <PanelRightOpen v-else-if="open" class="dark:text-gray-400" :stroke-width="1" />
+    <PanelRightClose v-else class="dark:text-gray-400" :stroke-width="1" />
     <span class="sr-only">Toggle Sidebar</span>
   </Button>
 </template>

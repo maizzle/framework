@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
-import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, X, Search } from 'lucide-vue-next'
+import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, Search, Camera, FileCode, FileText, Code, BookText, MailQuestion } from 'lucide-vue-next'
+import { toBlob } from 'html-to-image'
 import logoUrl from '@/logo.svg'
 import logoGradientUrl from '@/logo-gradient.svg'
 import { Kbd } from '@/components/ui/kbd'
@@ -21,6 +22,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandShortcut,
 } from '@/components/ui/command'
 import {
   Sidebar,
@@ -36,7 +38,6 @@ import {
   SidebarMenuButton,
   SidebarProvider,
   SidebarTrigger,
-  SidebarInput,
 } from '@/components/ui/sidebar'
 
 
@@ -54,7 +55,6 @@ watchEffect(() => {
 })
 
 const templates = ref<Template[]>([])
-const search = ref('')
 const loading = ref(true)
 const viewMode = ref<'preview' | 'source'>('preview')
 const sidebarOpen = ref(localStorage.getItem('maizzle:sidebar') !== 'closed')
@@ -105,14 +105,9 @@ if ((import.meta as any).hot) {
 }
 
 const grouped = computed(() => {
-  const filtered = templates.value.filter(t =>
-    t.name.toLowerCase().includes(search.value.toLowerCase())
-    || t.path.toLowerCase().includes(search.value.toLowerCase())
-  )
-
   const groups: Record<string, Template[]> = {}
 
-  for (const t of filtered) {
+  for (const t of templates.value) {
     const parts = t.path.split('/')
     const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : '.'
     if (!groups[dir]) groups[dir] = []
@@ -132,7 +127,68 @@ const isPreviewRoute = computed(() => route.path !== '/')
 
 // Command palette
 const router = useRouter()
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)
+const modKey = isMac ? '⌘' : 'Ctrl'
 const commandOpen = ref(false)
+const commandSearch = ref('')
+
+watch(commandOpen, (open) => {
+  if (!open) commandSearch.value = ''
+})
+
+const screenshotting = ref(false)
+
+async function copyScreenshot() {
+  commandOpen.value = false
+
+  const iframe = document.querySelector('iframe') as HTMLIFrameElement | null
+  const doc = iframe?.contentDocument
+  if (!doc?.body) return
+
+  screenshotting.value = true
+
+  try {
+    const blob = await toBlob(doc.body, {
+      width: doc.body.scrollWidth,
+      height: doc.body.scrollHeight,
+    })
+
+    if (blob) {
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ])
+    }
+  } finally {
+    screenshotting.value = false
+  }
+}
+
+async function copyHtml() {
+  commandOpen.value = false
+  const slug = route.params.template as string
+  if (!slug) return
+  const res = await fetch(`/__maizzle/render/${slug}`)
+  await navigator.clipboard.writeText(await res.text())
+}
+
+async function copyPlaintext() {
+  commandOpen.value = false
+  const slug = route.params.template as string
+  if (!slug) return
+  const res = await fetch(`/__maizzle/plaintext/${slug}`)
+  await navigator.clipboard.writeText(await res.text())
+}
+
+async function copySource() {
+  commandOpen.value = false
+  const slug = route.params.template as string
+  if (!slug) return
+  const res = await fetch(`/__maizzle/vue-source/${slug}`)
+  const html = await res.text()
+  const el = document.createElement('div')
+  el.innerHTML = html
+  await navigator.clipboard.writeText(el.textContent || '')
+}
 
 const commandGrouped = computed(() => {
   const groups: Record<string, Template[]> = {}
@@ -147,6 +203,7 @@ const commandGrouped = computed(() => {
   return groups
 })
 
+
 function getFileName(path: string) {
   return path.split('/').pop() || path
 }
@@ -154,6 +211,11 @@ function getFileName(path: string) {
 function onCommandSelect(href: string) {
   commandOpen.value = false
   router.push(href)
+}
+
+function openExternal(url: string) {
+  commandOpen.value = false
+  window.open(url, '_blank', 'noopener')
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -172,6 +234,29 @@ function onKeydown(e: KeyboardEvent) {
   if (e.key === '/' && !isInputFocused()) {
     e.preventDefault()
     commandOpen.value = true
+    return
+  }
+
+  // Copy shortcuts (Cmd on Mac, Alt on Win/Linux)
+  if ((isMac ? e.metaKey : e.altKey) && !e.shiftKey && isPreviewRoute.value) {
+    switch (e.key.toLowerCase()) {
+      case 's':
+        e.preventDefault()
+        copyScreenshot()
+        return
+      case 'c':
+        e.preventDefault()
+        copyHtml()
+        return
+      case 'p':
+        e.preventDefault()
+        copyPlaintext()
+        return
+      case 'u':
+        e.preventDefault()
+        copySource()
+        return
+    }
   }
 }
 
@@ -204,31 +289,14 @@ onUnmounted(() => {
           <img :src="logoUrl" alt="Maizzle" class="h-4 dark:hidden">
           <img :src="logoGradientUrl" alt="Maizzle" class="hidden h-4 dark:block">
         </RouterLink>
-        <SidebarTrigger class="-mr-1" />
-      </SidebarHeader>
-
-      <div class="px-3 pt-3 pb-1">
-        <div class="relative flex items-center">
-          <Search class="absolute left-2.5 size-3.5 text-gray-400 pointer-events-none" />
-          <SidebarInput
-            v-model="search"
-            placeholder="Search emails..."
-            class="text-xs! pl-8 pr-14"
-            @keydown.esc="search && (search = '')"
-          />
-          <button
-            v-if="search"
-            class="absolute right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            @click="search = ''"
-          >
-            <X class="size-3.5" />
-          </button>
-          <kbd v-else class="absolute right-2 flex items-center gap-0.5 text-[10px] font-sans cursor-pointer" @click="commandOpen = true">
-            <span class="text-gray-400 dark:text-gray-500">{{ typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘' : 'Ctrl' }}</span>
+        <button class="inline-flex items-center gap-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" @click="commandOpen = true">
+          <Search class="size-3.5" />
+          <kbd class="flex items-center gap-0.5 text-[10px] font-sans">
+            <span>{{ modKey }}</span>
             <span class="text-gray-300 dark:text-gray-600">K</span>
           </kbd>
-        </div>
-      </div>
+        </button>
+      </SidebarHeader>
 
       <SidebarContent>
         <ScrollArea class="flex-1">
@@ -273,24 +341,17 @@ onUnmounted(() => {
     <SidebarInset>
       <!-- Header toolbar -->
       <header class="grid h-12 grid-cols-[1fr_auto_1fr] items-center border-b px-4">
-        <div>
-          <Transition
-            enter-from-class="opacity-0"
-            enter-active-class="transition-opacity duration-150 delay-200"
-            leave-active-class="transition-opacity duration-0"
-            leave-to-class="opacity-0"
-          >
-            <SidebarTrigger v-show="!sidebarOpen" />
-          </Transition>
+        <div class="flex items-center">
+          <SidebarTrigger />
         </div>
 
         <!-- View mode toggles (centered) -->
         <ToggleGroup v-if="isPreviewRoute" v-model="viewMode" type="single" variant="outline" size="sm">
           <ToggleGroupItem value="preview">
-            <Monitor class="size-4 dark:text-gray-400" />
+            <Monitor class="size-4 dark:text-gray-400" :stroke-width="1" />
           </ToggleGroupItem>
           <ToggleGroupItem value="source">
-            <CodeXml class="size-4 dark:text-gray-400" />
+            <CodeXml class="size-4 dark:text-gray-400" :stroke-width="1" />
           </ToggleGroupItem>
         </ToggleGroup>
         <div v-else />
@@ -304,10 +365,10 @@ onUnmounted(() => {
           </span>
           <DropdownMenu v-if="isPreviewRoute" v-model:open="deviceMenuOpen" :modal="false">
             <DropdownMenuTrigger as-child>
-              <Button variant="outline" size="sm" class="gap-1.5">
-                <Smartphone class="size-4 dark:text-gray-400" />
+              <Button variant="ghost" size="sm" class="gap-1.5 shadow-none border-none hover:bg-transparent">
+                <Smartphone class="size-4 dark:text-gray-400" :stroke-width="1" />
                 <span v-if="selectedDevice" class="text-xs">{{ selectedDevice.name }}</span>
-                <ChevronDown class="size-3 opacity-50" />
+                <ChevronDown class="size-3 opacity-50" :stroke-width="1" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" class="min-w-52 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md dark:border-white/10">
@@ -338,26 +399,84 @@ onUnmounted(() => {
       </div>
     </SidebarInset>
 
-    <CommandDialog v-model:open="commandOpen" title="Search emails" description="Search and navigate to an email">
-      <CommandInput placeholder="Search emails..." />
+    <CommandDialog v-model:open="commandOpen" title="Command palette" description="Run commands or search emails">
+      <CommandInput v-model="commandSearch" :placeholder="isPreviewRoute ? 'Type a command or search...' : 'Search emails...'" />
       <CommandList>
-        <CommandEmpty>No emails found.</CommandEmpty>
-        <CommandGroup v-for="(items, dir) in commandGrouped" :key="dir" :heading="String(dir)">
+        <CommandEmpty>No results found.</CommandEmpty>
+
+        <!-- Copy to clipboard commands: shown when not searching -->
+        <CommandGroup v-if="!commandSearch && isPreviewRoute" heading="Copy to clipboard">
           <CommandItem
-            v-for="t in items"
-            :key="t.path"
-            :value="t.path"
-            @select="onCommandSelect(t.href)"
+            value="Screenshot"
+            @select="copyScreenshot"
           >
-            <svg class="size-3 shrink-0 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-              <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-            </svg>
-            <span>{{ getFileName(t.path) }}</span>
+            <Camera class="size-3 shrink-0 opacity-50" />
+            <span>Screenshot</span>
+            <CommandShortcut>{{ isMac ? '⌘' : 'ALT+' }}S</CommandShortcut>
+          </CommandItem>
+          <CommandItem
+            value="HTML"
+            @select="copyHtml"
+          >
+            <FileCode class="size-3 shrink-0 opacity-50" />
+            <span>HTML</span>
+            <CommandShortcut>{{ isMac ? '⌘' : 'ALT+' }}C</CommandShortcut>
+          </CommandItem>
+          <CommandItem
+            value="Plaintext"
+            @select="copyPlaintext"
+          >
+            <FileText class="size-3 shrink-0 opacity-50" />
+            <span>Plaintext</span>
+            <CommandShortcut>{{ isMac ? '⌘' : 'ALT+' }}P</CommandShortcut>
+          </CommandItem>
+          <CommandItem
+            value="Vue source"
+            @select="copySource"
+          >
+            <Code class="size-3 shrink-0 opacity-50" />
+            <span>Vue source</span>
+            <CommandShortcut>{{ isMac ? '⌘' : 'ALT+' }}U</CommandShortcut>
           </CommandItem>
         </CommandGroup>
+
+        <!-- Resources: always shown when not searching -->
+        <CommandGroup v-if="!commandSearch" heading="Resources">
+          <CommandItem
+            value="Documentation"
+            @select="openExternal('https://maizzle.com')"
+          >
+            <BookText class="size-3 shrink-0 opacity-50" />
+            <span>Documentation</span>
+          </CommandItem>
+          <CommandItem
+            value="Can I Email"
+            @select="openExternal('https://www.caniemail.com')"
+          >
+            <MailQuestion class="size-3 shrink-0 opacity-50" />
+            <span>Can I Email</span>
+          </CommandItem>
+        </CommandGroup>
+
+        <!-- Templates: shown when searching -->
+        <template v-if="commandSearch">
+          <CommandGroup v-for="(items, dir) in commandGrouped" :key="dir" :heading="String(dir)">
+            <CommandItem
+              v-for="t in items"
+              :key="t.path"
+              :value="t.path"
+              @select="onCommandSelect(t.href)"
+            >
+              <svg class="size-3 shrink-0 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+              </svg>
+              <span>{{ getFileName(t.path) }}</span>
+            </CommandItem>
+          </CommandGroup>
+        </template>
       </CommandList>
-      <div class="flex items-center gap-4 border-t px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+      <div class="flex items-center gap-4 border-t px-3 py-2 text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">
         <span class="inline-flex items-center gap-1">
           <Kbd><ArrowUp class="size-3" /></Kbd>
           <Kbd><ArrowDown class="size-3" /></Kbd>
@@ -365,7 +484,7 @@ onUnmounted(() => {
         </span>
         <span class="inline-flex items-center gap-1">
           <Kbd><CornerDownLeft class="size-3" /></Kbd>
-          Open
+          {{ commandSearch ? 'View' : 'Run' }}
         </span>
         <span class="inline-flex items-center gap-1">
           <Kbd>Esc</Kbd>

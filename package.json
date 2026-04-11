@@ -48,6 +48,7 @@
     "domhandler": "^5.0.3",
     "email-comb": "^7.1.3",
     "html-crush": "^6.1.3",
+    "html-to-image": "^1.11.13",
     "htmlparser2": "^10.1.0",
     "is-url-superb": "^6.1.0",
     "jiti": "^2.6.1",

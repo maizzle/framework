@@ -474,8 +474,11 @@ function onTabsDragStart(e: MouseEvent) {
   const startY = e.clientY
   const startHeight = tabsPanelHeight.value
 
+  const rootEl = containerEl.value?.closest('.relative.h-full') as HTMLElement | null
+  const maxHeight = rootEl ? rootEl.getBoundingClientRect().height : Infinity
+
   const onMouseMove = (e: MouseEvent) => {
-    const newHeight = Math.max(40, startHeight + startY - e.clientY)
+    const newHeight = Math.max(40, Math.min(maxHeight, startHeight + startY - e.clientY))
     tabsPanelHeight.value = newHeight
     bottomPanelOpen.value = newHeight > 40
 
@@ -504,8 +507,8 @@ const stripeBg = {
 </script>
 
 <template>
-  <div class="flex flex-col h-full">
-    <div class="relative flex-1 min-h-0 overflow-hidden">
+  <div class="relative h-full">
+    <div class="absolute inset-0 bottom-10 overflow-hidden">
       <!-- Source code view -->
       <div v-show="viewMode === 'source'" class="absolute inset-0 min-w-0 overflow-hidden">
         <div class="absolute top-3 left-6 z-10">
@@ -531,7 +534,7 @@ const stripeBg = {
           </DropdownMenu>
         </div>
         <button
-          class="absolute top-3 right-6 z-10 inline-flex items-center justify-center rounded-md px-2.5 h-8 bg-transparent hover:bg-transparent group disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          class="absolute top-3 right-3 z-10 inline-flex items-center justify-center rounded-md size-9 backdrop-blur-sm bg-white/10 hover:bg-white/20 group disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           :disabled="copied"
           @click="copySource"
         >
@@ -560,6 +563,9 @@ const stripeBg = {
           >{{ plaintextContent }}</pre>
         </ScrollArea>
       </div>
+
+      <!-- Blocks iframe from stealing pointer events while dragging tabs -->
+      <div v-if="tabsDragging" class="fixed inset-0 z-50" />
 
       <!-- Preview view -->
       <div v-show="viewMode !== 'source'" class="absolute inset-0">
@@ -609,36 +615,39 @@ const stripeBg = {
       </div>
     </div>
 
-    <!-- Tabs panel (always visible) -->
+    <!-- Tabs panel (overlay) -->
     <div
-      class="shrink-0 bg-white dark:bg-gray-950 overflow-hidden"
-      :class="!tabsDragging ? 'transition-[height] duration-200 ease-in-out' : ''"
+      class="absolute bottom-0 left-0 right-0 z-20 overflow-hidden border-t border-gray-200 dark:border-gray-800/50"
+      :class="[
+        !tabsDragging ? 'transition-[height] duration-200 ease-in-out' : '',
+        bottomPanelOpen ? 'bg-white/80 dark:bg-gray-950/80 backdrop-blur-md' : 'bg-white dark:bg-gray-950',
+      ]"
       :style="{ height: `${tabsPanelHeight}px` }"
     >
         <div
-          class="relative h-px bg-gray-200 dark:bg-gray-800/50 cursor-row-resize before:absolute before:top-0 before:left-0 before:right-0 before:h-3.25 before:content-['']"
+          class="relative h-0 cursor-row-resize before:absolute before:top-0 before:left-0 before:right-0 before:h-3.25 before:content-['']"
           @mousedown="onTabsDragStart"
         />
         <Tabs :model-value="activeTab" class="flex flex-col min-h-0 h-full">
           <div class="flex items-center justify-between min-h-10 px-4 shrink-0" :class="bottomPanelOpen ? 'border-b' : ''">
             <TabsList class="h-full bg-transparent! rounded-none! p-0 gap-1">
-              <TabsTrigger value="compatibility" class="text-xs px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('compatibility')">
+              <TabsTrigger value="compatibility" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('compatibility')">
                 Compatibility
               </TabsTrigger>
-              <TabsTrigger value="lint" class="text-xs px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('lint')">
+              <TabsTrigger value="lint" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('lint')">
                 Linter
               </TabsTrigger>
-              <TabsTrigger value="stats" class="text-xs px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('stats')">
+              <TabsTrigger value="stats" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('stats')">
                 Stats
               </TabsTrigger>
             </TabsList>
             <Button variant="ghost" size="icon" class="h-7 w-7 hover:bg-transparent!" @click="toggleBottomPanel">
-              <ChevronUp v-if="!bottomPanelOpen" class="size-4 dark:text-gray-400" />
-              <ChevronDown v-else class="size-4 dark:text-gray-400" />
+              <ChevronUp v-if="!bottomPanelOpen" class="size-4 dark:text-gray-400" :stroke-width="1" />
+              <ChevronDown v-else class="size-4 dark:text-gray-400" :stroke-width="1" />
             </Button>
           </div>
-          <ScrollArea class="flex-1">
-            <TabsContent value="compatibility" class="mt-0">
+          <div class="flex-1 min-h-0">
+            <TabsContent value="compatibility" class="mt-0 h-full"><ScrollArea class="h-full">
               <p v-if="compatibilityLoading" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">Checking compatibility...</p>
               <p v-else-if="compatibilityError" class="px-4 py-3 text-xs text-red-500 dark:text-red-400">{{ compatibilityError }}</p>
               <p v-else-if="compatibilityIssues.length === 0" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">No compatibility issues found.</p>
@@ -666,8 +675,8 @@ const stripeBg = {
                   </div>
                 </li>
               </ul>
-            </TabsContent>
-            <TabsContent value="lint" class="mt-0">
+            </ScrollArea></TabsContent>
+            <TabsContent value="lint" class="mt-0 h-full"><ScrollArea class="h-full">
               <p v-if="lintLoading" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">Linting...</p>
               <p v-else-if="lintIssues.length === 0" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">No issues found.</p>
               <ul v-else class="text-xs divide-y">
@@ -687,8 +696,8 @@ const stripeBg = {
                   </div>
                 </li>
               </ul>
-            </TabsContent>
-            <TabsContent value="stats" class="mt-0">
+            </ScrollArea></TabsContent>
+            <TabsContent value="stats" class="mt-0 h-full"><ScrollArea class="h-full">
               <p v-if="statsLoading" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">Loading stats...</p>
               <p v-else-if="!stats" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">No stats available.</p>
               <div v-else class="px-4 py-3 flex items-center gap-6 text-xs">
@@ -708,8 +717,8 @@ const stripeBg = {
                   <span class="font-medium tabular-nums">{{ stats.links }}</span>
                 </div>
               </div>
-            </TabsContent>
-          </ScrollArea>
+            </ScrollArea></TabsContent>
+          </div>
         </Tabs>
       </div>
   </div>

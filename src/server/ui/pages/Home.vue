@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Terminal } from 'lucide-vue-next'
 import { Kbd } from '@/components/ui/kbd'
 import {
   Empty,
@@ -29,7 +30,7 @@ function openCommandPalette() {
       </EmptyMedia>
       <EmptyTitle>Select an email to preview</EmptyTitle>
       <EmptyDescription>
-        Choose an email from the sidebar to see a live preview.
+        Choose an email from the <span class="md:hidden">menu</span><span class="hidden md:inline">sidebar</span> to see a live preview.
       </EmptyDescription>
     </EmptyHeader>
     <EmptyContent>
@@ -37,9 +38,8 @@ function openCommandPalette() {
         class="text-gray-500 dark:text-gray-400 text-sm cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
         @click="openCommandPalette"
       >
-        Press
-        <Kbd>{{ isMac ? '⌘' : 'Ctrl' }}</Kbd> + <Kbd>K</Kbd>
-        to open the command palette
+        <span class="md:hidden inline-flex items-center gap-1.5 rounded-md bg-gray-100 dark:bg-gray-800 px-3 py-1.5"><Terminal class="size-3.5" /> Quick search</span>
+        <span class="hidden md:inline">Press <Kbd>{{ isMac ? '⌘' : 'Ctrl' }}</Kbd> + <Kbd>K</Kbd> to open the command palette</span>
       </p>
     </EmptyContent>
   </Empty>

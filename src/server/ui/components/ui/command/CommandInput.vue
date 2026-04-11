@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ListboxFilterProps } from "reka-ui"
 import type { HTMLAttributes } from "vue"
+import { watch } from "vue"
 import { reactiveOmit } from "@vueuse/core"
 import { Search } from "lucide-vue-next"
 import { ListboxFilter, useForwardProps } from "reka-ui"
@@ -13,13 +14,30 @@ defineOptions({
 
 const props = defineProps<ListboxFilterProps & {
   class?: HTMLAttributes["class"]
+  modelValue?: string
 }>()
 
-const delegatedProps = reactiveOmit(props, "class")
+const emit = defineEmits<{
+  (e: "update:modelValue", value: string): void
+}>()
+
+const delegatedProps = reactiveOmit(props, "class", "modelValue")
 
 const forwardedProps = useForwardProps(delegatedProps)
 
 const { filterState } = useCommand()
+
+// Sync external v-model → internal filter
+watch(() => props.modelValue, (val) => {
+  if (val !== undefined && val !== filterState.search) {
+    filterState.search = val
+  }
+})
+
+// Sync internal filter → external v-model
+watch(() => filterState.search, (val) => {
+  emit("update:modelValue", val)
+})
 </script>
 
 <template>

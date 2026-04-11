@@ -157,10 +157,14 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
     const el = node as Element
     const attrs = el.attribs || {}
 
-    // Skip marked style tags, but remove the marker attribute first
-    const markerAttr = ['raw', 'embed', 'data-embed'].find(attr => attr in attrs)
-    if (markerAttr) {
-      delete el.attribs[markerAttr]
+    // Skip marked style tags
+    // Remove 'raw' marker but preserve 'embed'/'data-embed' for Juice
+    if ('raw' in attrs) {
+      delete el.attribs.raw
+      return
+    }
+
+    if ('embed' in attrs || 'data-embed' in attrs) {
       return
     }
 

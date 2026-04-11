@@ -1,4 +1,5 @@
 import { dirname, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { isLaravel } from '../utils/detect.ts'
 import { createServer } from 'vite'
@@ -70,6 +71,80 @@ function codeBlockExtract() {
   }
 }
 
+/**
+ * Vite plugin that pre-processes <Markdown> tags:
+ * - Extracts slot content, dedents it, and passes as :content prop
+ * - Resolves `src` prop to read file contents at build time
+ */
+function markdownExtract() {
+  const re = /<(Markdown|markdown)((?:\s[^>]*?)?)>([\s\S]*?)<\/\1>/g
+  const selfClosingRe = /<(Markdown|markdown)((?:\s[^>]*?\bsrc\s*=\s*"[^"]*"[^>]*?))\/>/g
+
+  return {
+    name: 'maizzle:markdown-extract',
+    enforce: 'pre' as const,
+    transform(code: string, id: string) {
+      if (!id.endsWith('.vue') && !id.endsWith('.md')) return
+      if (!code.includes('Markdown') && !code.includes('markdown')) return
+
+      let transformed = code
+
+      // Handle <Markdown>content</Markdown>
+      transformed = transformed.replace(re, (_match, tag, attrs, content) => {
+        if (/(?:^|\s):content\b/.test(attrs) || /v-bind:content\b/.test(attrs)) return _match
+
+        const stripped = content.replace(/^\n+/, '').replace(/\s+$/, '')
+        if (!stripped) return _match
+
+        const minIndent = stripped.match(/^[ \t]*(?=\S)/gm)
+          ?.reduce((min: number, ws: string) => Math.min(min, ws.length), Infinity) ?? 0
+
+        const dedented = minIndent > 0
+          ? stripped.replace(new RegExp(`^[ \\t]{${minIndent}}`, 'gm'), '')
+          : stripped
+
+        const escaped = dedented
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+
+        return `<${tag}${attrs} content="${escaped}" />`
+      })
+
+      // Handle <Markdown src="./file.md" /> — resolve and inline file content
+      transformed = transformed.replace(selfClosingRe, (_match, tag, attrs) => {
+        const srcMatch = attrs.match(/\bsrc\s*=\s*"([^"]*)"/)
+        if (!srcMatch) return _match
+
+        const srcPath = srcMatch[1]
+        const resolvedPath = resolve(dirname(id), srcPath)
+
+        let fileContent: string
+        try {
+          fileContent = readFileSync(resolvedPath, 'utf-8').trim()
+        } catch {
+          return _match
+        }
+
+        // Remove src prop, add content prop
+        const cleanAttrs = attrs.replace(/\s*\bsrc\s*=\s*"[^"]*"/, '')
+        const escaped = fileContent
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+
+        return `<${tag}${cleanAttrs} content="${escaped}" />`
+      })
+
+      if (transformed !== code) {
+        return { code: transformed, map: null }
+      }
+    },
+  }
+}
+
 const vuePkgDir = dirname(fileURLToPath(import.meta.resolve('vue/package.json')))
 const vueServerRendererPkgDir = dirname(fileURLToPath(import.meta.resolve('@vue/server-renderer/package.json')))
 const unheadVuePkgDir = resolve(dirname(fileURLToPath(import.meta.resolve('@unhead/vue'))), '..')
@@ -124,6 +199,7 @@ export async function createRenderer(
     configFile: false,
     plugins: [
       codeBlockExtract(),
+      markdownExtract(),
       {
         name: 'maizzle:virtual-sfc',
         resolveId(id) {

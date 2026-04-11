@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
-import Preview from '../../components/Preview.vue'
+import Preheader from '../../components/Preheader.vue'
 
 function render(props: Record<string, any> = {}, slotContent?: string) {
   const app = createSSRApp({
-    render: () => h(Preview, props, slotContent
+    render: () => h(Preheader, props, slotContent
       ? { default: () => slotContent }
       : undefined
     ),
@@ -19,7 +19,7 @@ function render(props: Record<string, any> = {}, slotContent?: string) {
   })
 }
 
-describe('Preview', () => {
+describe('Preheader', () => {
   describe('structure', () => {
     it('renders a hidden div', async () => {
       const html = await render()

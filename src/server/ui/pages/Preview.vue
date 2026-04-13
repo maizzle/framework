@@ -360,7 +360,7 @@ const emit = defineEmits<{ 'clear-device': [] }>()
 
 type Edge = 'left' | 'right' | 'top' | 'bottom'
 
-function onEdgeDrag(e: MouseEvent, edge: Edge) {
+function onEdgeDrag(e: MouseEvent | TouchEvent, edge: Edge) {
   e.preventDefault()
   isDragging.value = true
   emit('clear-device')
@@ -368,8 +368,10 @@ function onEdgeDrag(e: MouseEvent, edge: Edge) {
   const container = containerEl.value
   if (!container) return
 
-  const startX = e.clientX
-  const startY = e.clientY
+  const isTouch = e.type === 'touchstart'
+  const startPoint = isTouch ? (e as TouchEvent).touches[0] : (e as MouseEvent)
+  const startX = startPoint.clientX
+  const startY = startPoint.clientY
   const rect = container.getBoundingClientRect()
   const gutter = 40 // 20px padding on each side
   const maxW = rect.width - gutter
@@ -380,13 +382,14 @@ function onEdgeDrag(e: MouseEvent, edge: Edge) {
   const isHorizontal = edge === 'left' || edge === 'right'
   const sign = (edge === 'left' || edge === 'top') ? -1 : 1
 
-  const onMove = (ev: MouseEvent) => {
+  const onMove = (ev: MouseEvent | TouchEvent) => {
+    const point = ev.type === 'touchmove' ? (ev as TouchEvent).touches[0] : (ev as MouseEvent)
     if (isHorizontal) {
       // Symmetric: each side moves by the delta, so total change is 2x
-      const delta = (ev.clientX - startX) * sign
+      const delta = (point.clientX - startX) * sign
       iframeWidth.value = Math.max(200, Math.min(maxW, startW + delta * 2))
     } else {
-      const delta = (ev.clientY - startY) * sign
+      const delta = (point.clientY - startY) * sign
       iframeHeight.value = Math.max(100, Math.min(maxH, startH + delta * 2))
     }
   }
@@ -396,10 +399,14 @@ function onEdgeDrag(e: MouseEvent, edge: Edge) {
     updateFullSize()
     document.removeEventListener('mousemove', onMove)
     document.removeEventListener('mouseup', onUp)
+    document.removeEventListener('touchmove', onMove)
+    document.removeEventListener('touchend', onUp)
   }
 
   document.addEventListener('mousemove', onMove)
   document.addEventListener('mouseup', onUp)
+  document.addEventListener('touchmove', onMove, { passive: false })
+  document.addEventListener('touchend', onUp)
 }
 
 function updateFullSize() {
@@ -639,19 +646,19 @@ const stripeBg = {
           }"
         >
           <!-- Top handle -->
-          <div class="group hidden min-[430px]:flex absolute top-0 left-5 right-5 h-5 items-center justify-center cursor-ns-resize" @mousedown="onEdgeDrag($event, 'top')">
+          <div class="group hidden min-[430px]:flex absolute top-0 left-5 right-5 h-5 items-center justify-center cursor-ns-resize" @mousedown="onEdgeDrag($event, 'top')" @touchstart.prevent="onEdgeDrag($event, 'top')">
             <div class="h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
           </div>
           <!-- Bottom handle -->
-          <div class="group hidden min-[430px]:flex absolute bottom-0 left-5 right-5 h-5 items-center justify-center cursor-ns-resize" @mousedown="onEdgeDrag($event, 'bottom')">
+          <div class="group hidden min-[430px]:flex absolute bottom-0 left-5 right-5 h-5 items-center justify-center cursor-ns-resize" @mousedown="onEdgeDrag($event, 'bottom')" @touchstart.prevent="onEdgeDrag($event, 'bottom')">
             <div class="h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
           </div>
           <!-- Left handle -->
-          <div class="group hidden min-[430px]:flex absolute left-0 top-5 bottom-5 w-5 items-center justify-center cursor-ew-resize" @mousedown="onEdgeDrag($event, 'left')">
+          <div class="group hidden min-[430px]:flex absolute left-0 top-5 bottom-5 w-5 items-center justify-center cursor-ew-resize" @mousedown="onEdgeDrag($event, 'left')" @touchstart.prevent="onEdgeDrag($event, 'left')">
             <div class="w-1 h-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
           </div>
           <!-- Right handle -->
-          <div class="group hidden min-[430px]:flex absolute right-0 top-5 bottom-5 w-5 items-center justify-center cursor-ew-resize" @mousedown="onEdgeDrag($event, 'right')">
+          <div class="group hidden min-[430px]:flex absolute right-0 top-5 bottom-5 w-5 items-center justify-center cursor-ew-resize" @mousedown="onEdgeDrag($event, 'right')" @touchstart.prevent="onEdgeDrag($event, 'right')">
             <div class="w-1 h-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
           </div>
           <!-- Iframe -->

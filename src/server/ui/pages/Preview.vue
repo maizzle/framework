@@ -581,33 +581,33 @@ const stripeBg = {
       <div v-show="viewMode === 'source'" class="absolute inset-0 min-w-0 overflow-hidden">
         <div class="absolute top-3 left-6 z-10">
           <DropdownMenu :modal="false">
-            <DropdownMenuTrigger class="inline-flex items-center gap-1 rounded-md bg-white/80 dark:bg-white/10 backdrop-blur-md px-2.5 h-7 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-white/15 transition-colors">
+            <DropdownMenuTrigger class="inline-flex items-center gap-1 rounded-md bg-[#27212e]/80 dark:bg-gray-950/80 backdrop-blur-md border border-white/10 px-2.5 h-7 text-xs font-medium text-gray-300 hover:bg-[#27212e] dark:hover:bg-gray-950 transition-colors">
               {{ sourceView === 'compiled' ? 'HTML' : sourceView === 'vue' ? 'Source' : 'Plaintext' }}
               <ChevronDown class="size-3 opacity-50" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" class="min-w-32 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md dark:border-white/10">
-              <DropdownMenuItem class="text-xs font-medium text-gray-600 dark:text-gray-400 focus:text-gray-900 dark:focus:text-gray-200 dark:focus:bg-white/10" @click="sourceView = 'vue'">
-                <Check v-if="sourceView === 'vue'" class="size-3 text-gray-900 dark:text-gray-200" />
-                <span :class="[sourceView === 'vue' ? 'text-gray-900 dark:text-gray-200' : 'pl-5']">Source</span>
+            <DropdownMenuContent align="start" class="min-w-32 bg-[#27212e]/80 dark:bg-gray-950/80 backdrop-blur-md border-white/10">
+              <DropdownMenuItem class="text-xs font-medium text-gray-400 focus:text-gray-200 focus:bg-white/10" @click="sourceView = 'vue'">
+                <Check v-if="sourceView === 'vue'" class="size-3 text-gray-200" />
+                <span :class="[sourceView === 'vue' ? 'text-gray-200' : 'pl-5']">Source</span>
               </DropdownMenuItem>
-              <DropdownMenuItem class="text-xs font-medium text-gray-600 dark:text-gray-400 focus:text-gray-900 dark:focus:text-gray-200 dark:focus:bg-white/10" @click="sourceView = 'compiled'">
-                <Check v-if="sourceView === 'compiled'" class="size-3 text-gray-900 dark:text-gray-200" />
-                <span :class="[sourceView === 'compiled' ? 'text-gray-900 dark:text-gray-200' : 'pl-5']">HTML</span>
+              <DropdownMenuItem class="text-xs font-medium text-gray-400 focus:text-gray-200 focus:bg-white/10" @click="sourceView = 'compiled'">
+                <Check v-if="sourceView === 'compiled'" class="size-3 text-gray-200" />
+                <span :class="[sourceView === 'compiled' ? 'text-gray-200' : 'pl-5']">HTML</span>
               </DropdownMenuItem>
-              <DropdownMenuItem class="text-xs font-medium text-gray-600 dark:text-gray-400 focus:text-gray-900 dark:focus:text-gray-200 dark:focus:bg-white/10" @click="sourceView = 'plaintext'">
-                <Check v-if="sourceView === 'plaintext'" class="size-3 text-gray-900 dark:text-gray-200" />
-                <span :class="[sourceView === 'plaintext' ? 'text-gray-900 dark:text-gray-200' : 'pl-5']">Plaintext</span>
+              <DropdownMenuItem class="text-xs font-medium text-gray-400 focus:text-gray-200 focus:bg-white/10" @click="sourceView = 'plaintext'">
+                <Check v-if="sourceView === 'plaintext'" class="size-3 text-gray-200" />
+                <span :class="[sourceView === 'plaintext' ? 'text-gray-200' : 'pl-5']">Plaintext</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
         <button
-          class="absolute top-3 right-3 z-10 inline-flex items-center justify-center rounded-md size-9 backdrop-blur-sm bg-white/10 hover:bg-white/20 group disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          class="absolute top-3 right-[26px] z-10 inline-flex items-center justify-center rounded-md size-7 bg-[#27212e]/80 dark:bg-gray-950/80 backdrop-blur-md border border-white/10 hover:bg-[#27212e] dark:hover:bg-gray-950 group disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           :disabled="copied"
           @click="copySource"
         >
-          <svg v-if="!copied" class="size-5 text-gray-400 group-hover:text-gray-300" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.25 5.25H7.25C6.14543 5.25 5.25 6.14543 5.25 7.25V14.25C5.25 15.3546 6.14543 16.25 7.25 16.25H14.25C15.3546 16.25 16.25 15.3546 16.25 14.25V7.25C16.25 6.14543 15.3546 5.25 14.25 5.25Z" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /><path d="M2.80103 11.998L1.77203 5.07397C1.61003 3.98097 2.36403 2.96397 3.45603 2.80197L10.38 1.77297C11.313 1.63397 12.19 2.16297 12.528 3.00097" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /></svg>
-          <svg v-else class="size-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+          <svg v-if="!copied" class="size-3.5 text-gray-400 group-hover:text-gray-300" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.25 5.25H7.25C6.14543 5.25 5.25 6.14543 5.25 7.25V14.25C5.25 15.3546 6.14543 16.25 7.25 16.25H14.25C15.3546 16.25 16.25 15.3546 16.25 14.25V7.25C16.25 6.14543 15.3546 5.25 14.25 5.25Z" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /><path d="M2.80103 11.998L1.77203 5.07397C1.61003 3.98097 2.36403 2.96397 3.45603 2.80197L10.38 1.77297C11.313 1.63397 12.19 2.16297 12.528 3.00097" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <svg v-else class="size-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
         </button>
         <ScrollArea v-show="sourceView === 'compiled'" class="h-full">
           <div

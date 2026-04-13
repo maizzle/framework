@@ -697,7 +697,7 @@ const stripeBg = {
           @mousedown="onTabsDragStart"
         />
         <Tabs :model-value="activeTab" class="flex flex-col min-h-0 h-full">
-          <div class="flex items-center justify-between min-h-10 px-4 shrink-0" :class="bottomPanelOpen ? 'border-b' : ''">
+          <div class="flex items-center justify-between min-h-10 pl-2 pr-3 shrink-0" :class="bottomPanelOpen ? 'border-b' : ''">
             <TabsList class="h-full bg-transparent! rounded-none! p-0 gap-1">
               <TabsTrigger value="compatibility" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('compatibility')">
                 Compatibility

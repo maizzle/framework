@@ -400,12 +400,12 @@ onUnmounted(() => {
     </SidebarInset>
 
     <CommandDialog v-model:open="commandOpen" title="Command palette" description="Run commands or search emails">
-      <CommandInput v-model="commandSearch" :placeholder="isPreviewRoute ? 'Type a command or search...' : 'Search emails...'" />
+      <CommandInput v-model="commandSearch" placeholder="Type a command or find an email..." />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
 
-        <!-- Copy to clipboard commands: shown when not searching -->
-        <CommandGroup v-if="!commandSearch && isPreviewRoute" heading="Copy to clipboard">
+        <!-- Copy to clipboard commands -->
+        <CommandGroup v-if="isPreviewRoute" heading="Copy to clipboard">
           <CommandItem
             value="Screenshot"
             @select="copyScreenshot"
@@ -440,8 +440,8 @@ onUnmounted(() => {
           </CommandItem>
         </CommandGroup>
 
-        <!-- Resources: always shown when not searching -->
-        <CommandGroup v-if="!commandSearch" heading="Resources">
+        <!-- Resources -->
+        <CommandGroup heading="Resources">
           <CommandItem
             value="Documentation"
             @select="openExternal('https://maizzle.com')"
@@ -458,7 +458,7 @@ onUnmounted(() => {
           </CommandItem>
         </CommandGroup>
 
-        <!-- Templates: shown when searching -->
+        <!-- Templates -->
         <template v-if="commandSearch">
           <CommandGroup v-for="(items, dir) in commandGrouped" :key="dir" :heading="String(dir)">
             <CommandItem

@@ -276,7 +276,8 @@ async function fetchLint() {
     const template = props.templates?.find(t => t.href === '/' + route.params.template)
     const filePath = template?.path ?? route.params.template
     const res = await fetch(`/__maizzle/lint/${filePath}`)
-    lintIssues.value = await res.json()
+    const data = await res.json()
+    lintIssues.value = Array.isArray(data) ? data.filter((i: LintIssue) => i.title) : []
   } catch {
     lintIssues.value = []
   } finally {
@@ -740,7 +741,7 @@ const stripeBg = {
             </Button>
           </div>
           <div class="flex-1 min-h-0">
-            <TabsContent value="compatibility" class="mt-0 h-full flex flex-col"><div v-if="!compatibilityLoading && !compatibilityError && compatibilityIssues.length > 0" class="flex gap-1 px-4 py-2 border-b border-gray-200 dark:border-white/10 shrink-0">
+            <TabsContent value="compatibility" class="mt-0 h-full flex flex-col"><div v-if="!compatibilityLoading && !compatibilityError && compatibilityIssues.length > 0" class="flex gap-1 pl-3 pr-4 py-2 border-b border-gray-200 dark:border-white/10 shrink-0">
                 <button
                   v-for="cat in activeCompatibilityCategories"
                   :key="cat"
@@ -753,123 +754,131 @@ const stripeBg = {
                   {{ cat === 'css' ? 'CSS' : cat === 'html' ? 'HTML' : cat.charAt(0).toUpperCase() + cat.slice(1) }}
                   <span class="ml-0.5 tabular-nums">{{ compatibilityIssues.filter(i => i.category === cat).length }}</span>
                 </button>
-              </div><ScrollArea class="h-full flex-1 min-h-0">
-              <p v-if="compatibilityLoading" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">Checking compatibility...</p>
-              <p v-else-if="compatibilityError" class="px-4 py-3 text-xs text-red-500 dark:text-red-400">{{ compatibilityError }}</p>
-              <p v-else-if="compatibilityIssues.length === 0" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">No compatibility issues found.</p>
-              <ul v-else class="text-xs divide-y">
-                <li
-                  v-for="(issue, i) in filteredCompatibilityIssues"
-                  :key="i"
-                  class="px-4 py-1.5 hover:bg-gray-50 dark:hover:bg-white/5"
-                >
-                  <div class="flex items-center gap-2">
-                    <a v-if="issue.url" :href="issue.url" target="_blank" rel="noopener" class="font-medium hover:underline shrink-0" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
-                      {{ issue.title }}
-                    </a>
-                    <span v-else class="font-medium shrink-0" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
-                      {{ issue.title }}
-                    </span>
-                    <span class="text-gray-400 dark:text-gray-600 shrink-0">&middot;</span>
-                    <span class="text-gray-500 dark:text-gray-400 truncate">{{ issue.type === 'error' ? 'Not supported' : 'Partial support' }} in {{ issue.clients.map((c: any) => c.name).join(', ') }}</span>
-                    <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0 ml-auto" @click="goToCompiledLine(issue.line!)">L{{ issue.line }}</button>
-                  </div>
-                </li>
-              </ul>
-            </ScrollArea></TabsContent>
-            <TabsContent value="lint" class="mt-0 h-full"><ScrollArea class="h-full">
-              <p v-if="lintLoading" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">Linting...</p>
-              <p v-else-if="lintIssues.length === 0" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">No issues found.</p>
-              <ul v-else class="text-xs divide-y">
-                <li
-                  v-for="(issue, i) in lintIssues"
-                  :key="i"
-                  class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-white/5"
-                >
-                  <div class="flex items-start justify-between gap-4">
-                    <div>
-                      <span class="font-medium" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
+              </div>
+              <ScrollArea class="h-full flex-1 min-h-0 pl-5">
+                <p v-if="compatibilityLoading" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">Checking compatibility...</p>
+                <p v-else-if="compatibilityError" class="pr-4 py-3 text-xs text-red-500 dark:text-red-400">{{ compatibilityError }}</p>
+                <p v-else-if="compatibilityIssues.length === 0" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">No compatibility issues found.</p>
+                <ul v-else class="text-xs divide-y">
+                  <li
+                    v-for="(issue, i) in filteredCompatibilityIssues"
+                    :key="i"
+                    class="pr-4 py-1.5 hover:bg-gray-50 dark:hover:bg-white/5"
+                  >
+                    <div class="flex items-center gap-2">
+                      <a v-if="issue.url" :href="issue.url" target="_blank" rel="noopener" class="font-medium hover:underline shrink-0" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
+                        {{ issue.title }}
+                      </a>
+                      <span v-else class="font-medium shrink-0" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
                         {{ issue.title }}
                       </span>
-                      <div class="text-gray-500 dark:text-gray-400 mt-0.5">{{ issue.message }}</div>
+                      <span class="text-gray-400 dark:text-gray-600 shrink-0">&middot;</span>
+                      <span class="text-gray-500 dark:text-gray-400 truncate">{{ issue.type === 'error' ? 'Not supported' : 'Partial support' }} in {{ issue.clients.map((c: any) => c.name).join(', ') }}</span>
+                      <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0 ml-auto" @click="goToCompiledLine(issue.line!)">L{{ issue.line }}</button>
                     </div>
-                    <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0" @click="goToLine(issue.line!)">L{{ issue.line }}</button>
-                  </div>
-                </li>
-              </ul>
-            </ScrollArea></TabsContent>
-            <TabsContent value="stats" class="mt-0 h-full"><ScrollArea class="h-full">
-              <p v-if="statsLoading" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">Loading stats...</p>
-              <p v-else-if="!stats" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">No stats available.</p>
-              <div v-else class="px-4 py-3 flex items-center gap-6 text-xs">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-gray-500 dark:text-gray-400">Size</span>
-                  <span
-                    class="font-medium tabular-nums"
-                    :class="stats.size.bytes > 102400 ? 'text-red-600' : stats.size.bytes > 51200 ? 'text-amber-600' : 'text-gray-900 dark:text-gray-300'"
-                  >{{ stats.size.formatted }}</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-gray-500 dark:text-gray-400">Images</span>
-                  <span class="font-medium tabular-nums">{{ stats.images }}</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-gray-500 dark:text-gray-400">Links</span>
-                  <span class="font-medium tabular-nums">{{ stats.links }}</span>
-                </div>
-              </div>
-            </ScrollArea></TabsContent>
-            <TabsContent value="test" class="mt-0 h-full"><ScrollArea class="h-full">
-              <div class="px-4 py-3 max-w-md">
-                <div class="space-y-2">
-                  <div class="flex items-center gap-2">
-                    <label class="text-xs text-gray-500 dark:text-gray-400 w-12 shrink-0">To</label>
-                    <TagsInput v-model="emailTo" delimiter=" " add-on-paste class="flex-1 min-h-7 gap-1 px-2 py-1">
-                      <TagsInputItem v-for="item in emailTo" :key="item" :value="item" class="h-5 text-xs rounded">
-                        <TagsInputItemText class="px-1.5 py-0 text-xs" />
-                        <TagsInputItemDelete class="size-3.5" />
-                      </TagsInputItem>
-                      <TagsInputInput class="text-xs min-h-5 px-0.5" placeholder="Add emails..." />
-                    </TagsInput>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <label class="text-xs text-gray-500 dark:text-gray-400 w-12 shrink-0">Subject</label>
-                    <div class="flex-1 flex items-center gap-3">
-                      <Input v-model="emailSubject" :placeholder="String(route.params.template)" class="flex-1 h-7 text-xs! px-2" />
-                      <label class="flex items-center gap-1.5 cursor-pointer select-none shrink-0">
-                        <Checkbox v-model="emailPreventThreading" :default-checked="true" class="size-3.5" />
-                        <span class="text-xs text-gray-500 dark:text-gray-400">Prevent threading</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <div class="flex items-center gap-3 mt-3">
-                  <Button
-                    size="sm"
-                    class="h-7 text-xs px-3"
-                    :disabled="!emailTo.length || emailSending"
-                    @click="sendTestEmail"
+                  </li>
+                </ul>
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="lint" class="mt-0 h-full">
+              <ScrollArea class="h-full pl-5">
+                <p v-if="lintLoading" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">Linting...</p>
+                <p v-else-if="lintIssues.length === 0" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">No issues found.</p>
+                <ul v-else class="text-xs divide-y">
+                  <li
+                    v-for="(issue, i) in lintIssues"
+                    :key="i"
+                    class="pr-4 py-2 hover:bg-gray-50 dark:hover:bg-white/5"
                   >
-                    <svg v-if="emailSending" class="size-3.5 animate-spin [animation-duration:0.6s]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
-                    {{ emailSending ? 'Sending' : 'Send' }}
-                  </Button>
+                    <div class="flex items-start justify-between gap-4">
+                      <div>
+                        <span class="font-medium" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
+                          {{ issue.title }}
+                        </span>
+                        <div class="text-gray-500 dark:text-gray-400 mt-0.5">{{ issue.message }}</div>
+                      </div>
+                      <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0" @click="goToLine(issue.line!)">L{{ issue.line }}</button>
+                    </div>
+                  </li>
+                </ul>
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="stats" class="mt-0 h-full">
+                <ScrollArea class="h-full pl-5">
+                <p v-if="statsLoading" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">Loading stats...</p>
+                <p v-else-if="!stats" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">No stats available.</p>
+                <div v-else class="pr-4 py-3 flex items-center gap-6 text-xs">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-gray-500 dark:text-gray-400">Size</span>
+                    <span
+                      class="font-medium tabular-nums"
+                      :class="stats.size.bytes > 102400 ? 'text-red-600' : stats.size.bytes > 51200 ? 'text-amber-600' : 'text-gray-900 dark:text-gray-300'"
+                    >{{ stats.size.formatted }}</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-gray-500 dark:text-gray-400">Images</span>
+                    <span class="font-medium tabular-nums">{{ stats.images }}</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-gray-500 dark:text-gray-400">Links</span>
+                    <span class="font-medium tabular-nums">{{ stats.links }}</span>
+                  </div>
                 </div>
-                <div v-if="emailResult" class="mt-2">
-                  <p class="text-xs" :class="emailResult.success ? 'text-gray-950 dark:text-white' : 'text-red-600'">
-                    {{ emailResult.message }}
-                    <a
-                      v-if="emailResult.previewUrl"
-                      :href="emailResult.previewUrl"
-                      target="_blank"
-                      rel="noopener"
-                      class="inline-flex items-center gap-0.5 text-gray-500 dark:text-gray-400 hover:underline ml-1"
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="test" class="mt-0 h-full">
+              <ScrollArea class="h-full pl-5">
+                <div class="pr-4 py-3 max-w-md">
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                      <label class="text-xs text-gray-500 dark:text-gray-400 w-12 shrink-0">To</label>
+                      <TagsInput v-model="emailTo" delimiter=" " add-on-paste class="flex-1 min-h-7 gap-1 px-2 py-1">
+                        <TagsInputItem v-for="item in emailTo" :key="item" :value="item" class="h-5 text-xs rounded">
+                          <TagsInputItemText class="px-1.5 py-0 text-xs" />
+                          <TagsInputItemDelete class="size-3.5" />
+                        </TagsInputItem>
+                        <TagsInputInput class="text-xs min-h-5 px-0.5" placeholder="Add emails..." />
+                      </TagsInput>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <label class="text-xs text-gray-500 dark:text-gray-400 w-12 shrink-0">Subject</label>
+                      <div class="flex-1 flex items-center gap-3">
+                        <Input v-model="emailSubject" :placeholder="String(route.params.template)" class="flex-1 h-7 text-xs! px-2" />
+                        <label class="flex items-center gap-1.5 cursor-pointer select-none shrink-0">
+                          <Checkbox v-model="emailPreventThreading" :default-checked="true" class="size-3.5" />
+                          <span class="text-xs text-gray-500 dark:text-gray-400">Prevent threading</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3 mt-3">
+                    <Button
+                      size="sm"
+                      class="h-7 text-xs px-3"
+                      :disabled="!emailTo.length || emailSending"
+                      @click="sendTestEmail"
                     >
-                      View <ExternalLink class="size-3" />
-                    </a>
-                  </p>
+                      <svg v-if="emailSending" class="size-3.5 animate-spin [animation-duration:0.6s]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                      {{ emailSending ? 'Sending' : 'Send' }}
+                    </Button>
+                  </div>
+                  <div v-if="emailResult" class="mt-2">
+                    <p class="text-xs" :class="emailResult.success ? 'text-gray-950 dark:text-white' : 'text-red-600'">
+                      {{ emailResult.message }}
+                      <a
+                        v-if="emailResult.previewUrl"
+                        :href="emailResult.previewUrl"
+                        target="_blank"
+                        rel="noopener"
+                        class="inline-flex items-center gap-0.5 text-gray-500 dark:text-gray-400 hover:underline ml-1"
+                      >
+                        View <ExternalLink class="size-3" />
+                      </a>
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </ScrollArea></TabsContent>
+              </ScrollArea>
+            </TabsContent>
           </div>
         </Tabs>
       </div>

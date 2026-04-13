@@ -1,7 +1,5 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { glob } from 'tinyglobby'
-import type { MaizzleConfig } from '../types/index.ts'
 
 interface LintIssue {
   type: 'error' | 'warning'
@@ -10,21 +8,11 @@ interface LintIssue {
   line?: number
 }
 
-export async function serveLint(url: string, config: MaizzleConfig, res: any) {
-  const templateSlug = url.replace('/__maizzle/lint/', '').replace(/\?.*$/, '')
-
-  const contentPatterns = config.content ?? ['emails/**/*.vue']
-  const templates = await glob(contentPatterns)
-  const match = templates.find(t => t.replace(/\.(vue|md)$/, '') === templateSlug)
-
-  if (!match) {
-    res.statusCode = 404
-    res.end(JSON.stringify({ error: 'Template not found' }))
-    return
-  }
+export function serveLint(url: string, res: any) {
+  const filePath = url.replace('/__maizzle/lint/', '').replace(/\?.*$/, '')
 
   try {
-    const source = readFileSync(resolve(match), 'utf-8')
+    const source = readFileSync(resolve(filePath), 'utf-8')
 
     // Extract only the <template> block for linting
     const templateMatch = source.match(/<template\b[^>]*>([\s\S]*)<\/template>/)
@@ -45,128 +33,64 @@ export async function serveLint(url: string, config: MaizzleConfig, res: any) {
   }
 }
 
+function lineAt(html: string, offset: number, lineOffset: number): number {
+  return html.slice(0, offset).split('\n').length + lineOffset
+}
+
 function lintHtml(html: string, lineOffset = 0): LintIssue[] {
   const issues: LintIssue[] = []
-  const lines = html.split('\n')
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    const lineNum = i + 1 + lineOffset
+  // Match all tags (multiline) — [^>] doesn't cross > so use [\s\S] with lazy quantifier
+  const tagRe = /<([a-zA-Z][a-zA-Z0-9]*)\b([\s\S]*?)>/g
 
-    // Images missing alt text
-    const imgMatches = [...line.matchAll(/<img\b[^>]*?>/gi)]
-    for (const match of imgMatches) {
-      const tag = match[0]
+  for (const m of Array.from(html.matchAll(tagRe))) {
+    const tag = m[0]
+    const tagName = m[1].toLowerCase()
+    const line = lineAt(html, m.index!, lineOffset)
+
+    // Images
+    if (tagName === 'img') {
       if (!/\balt\s*=/i.test(tag)) {
-        issues.push({
-          type: 'warning',
-          title: 'Missing alt text',
-          message: 'Image is missing the alt attribute',
-          line: lineNum,
-        })
+        issues.push({ type: 'warning', title: 'Missing alt text', message: 'Image is missing the alt attribute', line })
       }
-    }
 
-    // Images with empty or missing src
-    for (const match of imgMatches) {
-      const tag = match[0]
       const srcMatch = tag.match(/\bsrc\s*=\s*["']([^"']*)["']/i)
       if (!srcMatch) {
-        issues.push({
-          type: 'error',
-          title: 'Missing image src',
-          message: 'Image tag has no src attribute',
-          line: lineNum,
-        })
+        issues.push({ type: 'error', title: 'Missing image src', message: 'Image tag has no src attribute', line })
       } else if (!srcMatch[1].trim()) {
-        issues.push({
-          type: 'error',
-          title: 'Empty image src',
-          message: 'Image src attribute is empty',
-          line: lineNum,
-        })
+        issues.push({ type: 'error', title: 'Empty image src', message: 'Image src attribute is empty', line })
       } else if (srcMatch[1].trim().startsWith('http:')) {
-        issues.push({
-          type: 'warning',
-          title: 'Insecure image src',
-          message: 'Image loads over HTTP instead of HTTPS',
-          line: lineNum,
-        })
+        issues.push({ type: 'warning', title: 'Insecure image src', message: 'Image loads over HTTP instead of HTTPS', line })
       }
     }
 
-    // Links: missing href, empty href, placeholder href
-    const linkMatches = [...line.matchAll(/<a\b[^>]*?>/gi)]
-    for (const match of linkMatches) {
-      const tag = match[0]
-      const hrefMatch = tag.match(/\bhref\s*=\s*["']([^"']*)["']/i)
-
-      if (!hrefMatch) {
-        issues.push({
-          type: 'error',
-          title: 'Missing link href',
-          message: 'Anchor tag has no href attribute',
-          line: lineNum,
-        })
-      } else {
-        const href = hrefMatch[1].trim()
-        if (!href) {
-          issues.push({
-            type: 'warning',
-            title: 'Empty link href',
-            message: 'Link href attribute is empty',
-            line: lineNum,
-          })
-        } else if (href === '#' || href === '/') {
-          issues.push({
-            type: 'warning',
-            title: 'Placeholder link',
-            message: `Link href is "${href}"`,
-            line: lineNum,
-          })
-        } else if (href.startsWith('http:')) {
-          issues.push({
-            type: 'warning',
-            title: 'Insecure link',
-            message: 'Link uses HTTP instead of HTTPS',
-            line: lineNum,
-          })
-        } else if (href.startsWith('http') && !/^https?:\/\/.+\..+/i.test(href)) {
-          issues.push({
-            type: 'warning',
-            title: 'Invalid link',
-            message: `Link href "${href}" looks malformed`,
-            line: lineNum,
-          })
-        }
+    // Any tag with href (catches <a>, <Button>, etc.)
+    const hrefMatch = tag.match(/\bhref\s*=\s*["']([^"']*)["']/i)
+    if (hrefMatch) {
+      const href = hrefMatch[1].trim()
+      if (!href) {
+        issues.push({ type: 'warning', title: 'Empty link href', message: 'Link href attribute is empty', line })
+      } else if (href === '#' || href === '/') {
+        issues.push({ type: 'warning', title: 'Placeholder link', message: `Link href is "${href}"`, line })
+      } else if (href.startsWith('http:')) {
+        issues.push({ type: 'warning', title: 'Insecure link', message: 'Link uses HTTP instead of HTTPS', line })
+      } else if (href.startsWith('http') && !/^https?:\/\/.+\..+/i.test(href)) {
+        issues.push({ type: 'warning', title: 'Invalid link', message: `Link href "${href}" looks malformed`, line })
       }
     }
 
-    // Insecure resources (<link href>, <script src>, <source src>)
-    const resourceMatches = [...line.matchAll(/<(?:link|script|source)\b[^>]*?>/gi)]
-    for (const match of resourceMatches) {
-      const tag = match[0]
+    // Insecure resources (<link>, <script>, <source>)
+    if (['link', 'script', 'source'].includes(tagName)) {
       const attrMatch = tag.match(/\b(?:href|src)\s*=\s*["']([^"']*)["']/i)
       if (attrMatch && attrMatch[1].trim().startsWith('http:')) {
-        issues.push({
-          type: 'warning',
-          title: 'Insecure resource',
-          message: 'Resource loads over HTTP instead of HTTPS',
-          line: lineNum,
-        })
+        issues.push({ type: 'warning', title: 'Insecure resource', message: 'Resource loads over HTTP instead of HTTPS', line })
       }
     }
+  }
 
-    // Insecure CSS url() references
-    const urlMatches = [...line.matchAll(/url\s*\(\s*["']?(http:[^"')]+)["']?\s*\)/gi)]
-    for (const _match of urlMatches) {
-      issues.push({
-        type: 'warning',
-        title: 'Insecure CSS url()',
-        message: 'CSS url() loads over HTTP instead of HTTPS',
-        line: lineNum,
-      })
-    }
+  // Insecure CSS url() references
+  for (const m of Array.from(html.matchAll(/url\s*\(\s*["']?(http:[^"')]+)["']?\s*\)/gi))) {
+    issues.push({ type: 'warning', title: 'Insecure CSS url()', message: 'CSS url() loads over HTTP instead of HTTPS', line: lineAt(html, m.index!, lineOffset) })
   }
 
   // Check for unclosed tags (block-level and common inline elements)
@@ -204,7 +128,10 @@ function lintHtml(html: string, lineOffset = 0): LintIssue[] {
 
       if (fullMatch.startsWith('</')) {
         // Closing tag
-        const lastOpen = stack.findLastIndex(s => s.tag === tagName)
+        let lastOpen = -1
+        for (let j = stack.length - 1; j >= 0; j--) {
+          if (stack[j].tag === tagName) { lastOpen = j; break }
+        }
         if (lastOpen !== -1) {
           stack.splice(lastOpen, 1)
         }

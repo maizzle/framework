@@ -213,7 +213,7 @@ function maizzleDevPlugin(
         }
 
         if (url.startsWith('/__maizzle/lint/')) {
-          return await serveLint(url, config, res)
+          return serveLint(url, res)
         }
 
         if (url.startsWith('/__maizzle/vue-source/')) {

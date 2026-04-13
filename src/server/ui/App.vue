@@ -394,7 +394,7 @@ onUnmounted(() => {
       <!-- Main content -->
       <div class="flex-1 overflow-hidden">
         <RouterView v-slot="{ Component }">
-          <component :is="Component" v-model:view-mode="viewMode" :device="selectedDevice" :reset-key="resetKey" v-model:panel-width="panelWidth" v-model:panel-height="panelHeight" v-model:is-dragging="isDragging" v-model:is-full-size="isFullSize" @clear-device="selectedDevice = null; isFullSize = false" />
+          <component :is="Component" v-model:view-mode="viewMode" :device="selectedDevice" :reset-key="resetKey" :templates="templates" v-model:panel-width="panelWidth" v-model:panel-height="panelHeight" v-model:is-dragging="isDragging" v-model:is-full-size="isFullSize" @clear-device="selectedDevice = null; isFullSize = false" />
         </RouterView>
       </div>
     </SidebarInset>

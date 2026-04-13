@@ -29,9 +29,16 @@ interface Device {
   height: number
 }
 
+interface Template {
+  name: string
+  path: string
+  href: string
+}
+
 const props = defineProps<{
   device?: Device | null
   resetKey?: number
+  templates?: Template[]
 }>()
 
 const viewMode = defineModel<'preview' | 'source'>('viewMode', { default: 'preview' })
@@ -253,7 +260,9 @@ async function fetchCompatibility() {
 async function fetchLint() {
   lintLoading.value = true
   try {
-    const res = await fetch(`/__maizzle/lint/${route.params.template}`)
+    const template = props.templates?.find(t => t.href === '/' + route.params.template)
+    const filePath = template?.path ?? route.params.template
+    const res = await fetch(`/__maizzle/lint/${filePath}`)
     lintIssues.value = await res.json()
   } catch {
     lintIssues.value = []

@@ -60,18 +60,24 @@ const iframeWidth = ref<number | null>(null)
 const iframeHeight = ref<number | null>(null)
 const iframeContentHeight = ref<number | null>(null)
 
-async function copySource() {
+function copySource() {
+  let text: string
   if (sourceView.value === 'compiled') {
-    await navigator.clipboard.writeText(srcdoc.value)
+    text = srcdoc.value
   } else if (sourceView.value === 'plaintext') {
-    await navigator.clipboard.writeText(plaintextContent.value)
+    text = plaintextContent.value
   } else {
     const el = document.createElement('div')
     el.innerHTML = vueSourceHtml.value
-    await navigator.clipboard.writeText(el.textContent || '')
+    text = el.textContent || ''
   }
-  copied.value = true
-  setTimeout(() => { copied.value = false }, 2000)
+
+  const blob = new Blob([text], { type: 'text/plain' })
+  const item = new ClipboardItem({ 'text/plain': blob })
+  navigator.clipboard.write([item]).then(() => {
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  })
 }
 
 interface CompatibilityIssue {

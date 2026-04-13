@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ChevronUp, ChevronDown, Check, ExternalLink } from 'lucide-vue-next'
 import {
@@ -90,6 +90,7 @@ function copySource() {
 interface CompatibilityIssue {
   type: 'error' | 'warning'
   title: string
+  category: string
   clients: Array<{ name: string, notes: string[] }>
   url?: string
   line?: number
@@ -111,6 +112,15 @@ interface TemplateStats {
 const compatibilityIssues = ref<CompatibilityIssue[]>([])
 const compatibilityLoading = ref(false)
 const compatibilityError = ref('')
+const compatibilityCategory = ref('')
+const compatibilityCategories = ['css', 'html', 'image', 'others'] as const
+const activeCompatibilityCategories = computed(() =>
+  compatibilityCategories.filter(cat => compatibilityIssues.value.some(i => i.category === cat))
+)
+const filteredCompatibilityIssues = computed(() => {
+  if (!compatibilityCategory.value) return compatibilityIssues.value
+  return compatibilityIssues.value.filter(i => i.category === compatibilityCategory.value)
+})
 const lintIssues = ref<LintIssue[]>([])
 const lintLoading = ref(false)
 const stats = ref<TemplateStats | null>(null)
@@ -249,6 +259,9 @@ async function fetchCompatibility() {
       compatibilityIssues.value = []
     } else {
       compatibilityIssues.value = data
+      // Default to first category that has issues
+      const firstCat = compatibilityCategories.find(cat => data.some((i: CompatibilityIssue) => i.category === cat))
+      compatibilityCategory.value = firstCat || ''
     }
   } catch {
     compatibilityIssues.value = []
@@ -727,31 +740,39 @@ const stripeBg = {
             </Button>
           </div>
           <div class="flex-1 min-h-0">
-            <TabsContent value="compatibility" class="mt-0 h-full"><ScrollArea class="h-full">
+            <TabsContent value="compatibility" class="mt-0 h-full flex flex-col"><div v-if="!compatibilityLoading && !compatibilityError && compatibilityIssues.length > 0" class="flex gap-1 px-4 py-2 border-b border-gray-200 dark:border-white/10 shrink-0">
+                <button
+                  v-for="cat in activeCompatibilityCategories"
+                  :key="cat"
+                  class="px-2 py-0.5 text-[11px] rounded-full cursor-pointer transition-colors"
+                  :class="compatibilityCategory === cat
+                    ? 'bg-gray-900 text-white dark:bg-gray-600 dark:text-gray-100'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'"
+                  @click="compatibilityCategory = cat"
+                >
+                  {{ cat === 'css' ? 'CSS' : cat === 'html' ? 'HTML' : cat.charAt(0).toUpperCase() + cat.slice(1) }}
+                  <span class="ml-0.5 tabular-nums">{{ compatibilityIssues.filter(i => i.category === cat).length }}</span>
+                </button>
+              </div><ScrollArea class="h-full flex-1 min-h-0">
               <p v-if="compatibilityLoading" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">Checking compatibility...</p>
               <p v-else-if="compatibilityError" class="px-4 py-3 text-xs text-red-500 dark:text-red-400">{{ compatibilityError }}</p>
               <p v-else-if="compatibilityIssues.length === 0" class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">No compatibility issues found.</p>
               <ul v-else class="text-xs divide-y">
                 <li
-                  v-for="(issue, i) in compatibilityIssues"
+                  v-for="(issue, i) in filteredCompatibilityIssues"
                   :key="i"
-                  class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-white/5"
+                  class="px-4 py-1.5 hover:bg-gray-50 dark:hover:bg-white/5"
                 >
-                  <div class="flex items-start justify-between gap-4">
-                    <div>
-                      <a v-if="issue.url" :href="issue.url" target="_blank" rel="noopener" class="font-medium hover:underline" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
-                        {{ issue.title }}
-                      </a>
-                      <span v-else class="font-medium" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
-                        {{ issue.title }}
-                      </span>
-                      <div class="text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
-                        <div v-for="client in issue.clients" :key="client.name">
-                          <span class="text-gray-700 dark:text-gray-300">{{ client.name }}</span><span v-if="client.notes.length">: {{ client.notes.join('. ') }}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0" @click="goToCompiledLine(issue.line!)">L{{ issue.line }}</button>
+                  <div class="flex items-center gap-2">
+                    <a v-if="issue.url" :href="issue.url" target="_blank" rel="noopener" class="font-medium hover:underline shrink-0" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
+                      {{ issue.title }}
+                    </a>
+                    <span v-else class="font-medium shrink-0" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
+                      {{ issue.title }}
+                    </span>
+                    <span class="text-gray-400 dark:text-gray-600 shrink-0">&middot;</span>
+                    <span class="text-gray-500 dark:text-gray-400 truncate">{{ issue.type === 'error' ? 'Not supported' : 'Partial support' }} in {{ issue.clients.map((c: any) => c.name).join(', ') }}</span>
+                    <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0 ml-auto" @click="goToCompiledLine(issue.line!)">L{{ issue.line }}</button>
                   </div>
                 </li>
               </ul>

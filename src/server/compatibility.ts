@@ -20,10 +20,12 @@ export async function serveCompatibility(req: any, res: any) {
       html,
     })
 
-    // Build title -> caniemail URL lookup
+    // Build title -> caniemail URL and category lookups
     const urlMap = new Map<string, string>()
+    const categoryMap = new Map<string, string>()
     for (const item of (rawData as any).data) {
       urlMap.set(item.title, item.url)
+      categoryMap.set(item.title, item.category)
     }
 
     const issues: Array<{ type: 'error' | 'warning', client: string, title: string, notes: string[], line?: number }> = []
@@ -56,6 +58,7 @@ export async function serveCompatibility(req: any, res: any) {
     const grouped = new Map<string, {
       type: 'error' | 'warning'
       title: string
+      category: string
       clients: Array<{ name: string, notes: string[] }>
       url?: string
       line?: number
@@ -84,6 +87,7 @@ export async function serveCompatibility(req: any, res: any) {
         grouped.set(key, {
           type: issue.type,
           title: issue.title,
+          category: categoryMap.get(issue.title) || 'others',
           clients: [{ name: clientName, notes: [...issue.notes] }],
           url: urlMap.get(issue.title),
           line: issue.line,
@@ -91,8 +95,12 @@ export async function serveCompatibility(req: any, res: any) {
       }
     }
 
-    // Sort: errors first, then warnings
+    // Sort: by category order, then errors first, then alphabetically
+    const categoryOrder = ['css', 'html', 'image', 'others']
     const sortedIssues = [...grouped.values()].sort((a, b) => {
+      const catA = categoryOrder.indexOf(a.category)
+      const catB = categoryOrder.indexOf(b.category)
+      if (catA !== catB) return catA - catB
       if (a.type !== b.type) return a.type === 'error' ? -1 : 1
       return a.title.localeCompare(b.title)
     })

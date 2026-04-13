@@ -639,23 +639,23 @@ const stripeBg = {
           }"
         >
           <!-- Top handle -->
-          <div class="group absolute top-0 left-5 right-5 h-5 flex items-center justify-center cursor-ns-resize" @mousedown="onEdgeDrag($event, 'top')">
+          <div class="group hidden min-[430px]:flex absolute top-0 left-5 right-5 h-5 items-center justify-center cursor-ns-resize" @mousedown="onEdgeDrag($event, 'top')">
             <div class="h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
           </div>
           <!-- Bottom handle -->
-          <div class="group absolute bottom-0 left-5 right-5 h-5 flex items-center justify-center cursor-ns-resize" @mousedown="onEdgeDrag($event, 'bottom')">
+          <div class="group hidden min-[430px]:flex absolute bottom-0 left-5 right-5 h-5 items-center justify-center cursor-ns-resize" @mousedown="onEdgeDrag($event, 'bottom')">
             <div class="h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
           </div>
           <!-- Left handle -->
-          <div class="group absolute left-0 top-5 bottom-5 w-5 flex items-center justify-center cursor-ew-resize" @mousedown="onEdgeDrag($event, 'left')">
+          <div class="group hidden min-[430px]:flex absolute left-0 top-5 bottom-5 w-5 items-center justify-center cursor-ew-resize" @mousedown="onEdgeDrag($event, 'left')">
             <div class="w-1 h-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
           </div>
           <!-- Right handle -->
-          <div class="group absolute right-0 top-5 bottom-5 w-5 flex items-center justify-center cursor-ew-resize" @mousedown="onEdgeDrag($event, 'right')">
+          <div class="group hidden min-[430px]:flex absolute right-0 top-5 bottom-5 w-5 items-center justify-center cursor-ew-resize" @mousedown="onEdgeDrag($event, 'right')">
             <div class="w-1 h-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
           </div>
           <!-- Iframe -->
-          <div ref="wrapperEl" class="absolute inset-5 border border-gray-200 dark:border-gray-800">
+          <div ref="wrapperEl" class="absolute inset-0 min-[430px]:inset-5 border border-gray-200 dark:border-gray-800">
             <ScrollArea class="h-full w-full bg-white dark:bg-gray-950">
               <iframe
                 ref="iframeEl"

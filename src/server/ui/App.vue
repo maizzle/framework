@@ -359,13 +359,13 @@ onUnmounted(() => {
         <div class="flex items-center justify-end gap-3">
           <span
             v-if="isPreviewRoute && (!isFullSize || selectedDevice) && panelWidth"
-            class="text-xs font-medium tabular-nums text-gray-500 dark:text-gray-400 select-none"
+            class="hidden min-[430px]:inline text-xs font-medium tabular-nums text-gray-500 dark:text-gray-400 select-none"
           >
             {{ panelWidth }} &times; {{ panelHeight }}
           </span>
           <DropdownMenu v-if="isPreviewRoute" v-model:open="deviceMenuOpen" :modal="false">
             <DropdownMenuTrigger as-child>
-              <Button variant="ghost" size="sm" class="gap-1.5 shadow-none border-none hover:bg-transparent">
+              <Button variant="ghost" size="sm" class="hidden min-[430px]:inline-flex gap-1.5 shadow-none border-none hover:bg-transparent">
                 <Smartphone class="size-4 dark:text-gray-400" :stroke-width="1" />
                 <span v-if="selectedDevice" class="text-xs">{{ selectedDevice.name }}</span>
                 <ChevronDown class="size-3 opacity-50" :stroke-width="1" />

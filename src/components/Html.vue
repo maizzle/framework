@@ -8,6 +8,13 @@ const attrs = useAttrs()
 const slots = useSlots()
 
 const props = defineProps({
+  /**
+   * Language code for the `lang` attribute on `<html>`.
+   *
+   * Also provided to the child `Body` component for `xml:lang`.
+   *
+   * @default 'en'
+   */
   lang: {
     type: String as PropType<
       | 'af' | 'ar' | 'az'
@@ -35,10 +42,26 @@ const props = defineProps({
     >,
     default: 'en'
   },
+  /**
+   * Text direction of the document.
+   *
+   * - `ltr` — left to right (default)
+   * - `rtl` — right to left
+   *
+   * @default 'ltr'
+   */
   dir: {
     type: String as PropType<'ltr' | 'rtl'>,
     default: 'ltr'
   },
+  /**
+   * Whether to include VML and Office XML namespace declarations.
+   *
+   * Required for Outlook VML support (background images, etc.).
+   * Set to `false` to omit the `xmlns:v` and `xmlns:o` attributes.
+   *
+   * @default true
+   */
   xmlns: {
     type: [Boolean, String],
     default: true

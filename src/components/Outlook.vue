@@ -22,11 +22,47 @@ const parseList = (value: string) =>
 export default {
   name: 'Outlook',
   props: {
+    /**
+     * Render content only in the specified Outlook version(s).
+     *
+     * Comma-separated list of years.
+     *
+     * @example '2013'
+     * @example '2013,2016'
+     */
     only: String,
+    /**
+     * Render content in all Outlook versions except the specified one(s).
+     *
+     * Comma-separated list of years.
+     *
+     * @example '2007'
+     * @example '2007,2010'
+     */
     not: String,
+    /**
+     * Render content in Outlook versions lower than the specified year.
+     *
+     * @example '2013'
+     */
     lt: String,
+    /**
+     * Render content in Outlook versions lower than or equal to the specified year.
+     *
+     * @example '2013'
+     */
     lte: String,
+    /**
+     * Render content in Outlook versions greater than the specified year.
+     *
+     * @example '2010'
+     */
     gt: String,
+    /**
+     * Render content in Outlook versions greater than or equal to the specified year.
+     *
+     * @example '2010'
+     */
     gte: String
   },
   setup(props, { slots }) {

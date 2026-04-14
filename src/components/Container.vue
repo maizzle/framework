@@ -7,7 +7,15 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 
 const props = defineProps({
-  /** Max width of the container. */
+  /**
+   * Max width of the container.
+   *
+   * Applied as `max-width` on the div and as `width` on the MSO table.
+   * Also provided to child `Row` and `Column` components for
+   * automatic column width calculation.
+   *
+   * @default '37.5em'
+   */
   width: {
     type: [String, Number],
     default: '37.5em'

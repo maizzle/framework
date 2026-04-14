@@ -5,34 +5,62 @@ import { normalizeToPixels } from './utils.ts'
 const attrs = useAttrs()
 
 const props = defineProps({
+  /**
+   * Height (thickness) of the divider line.
+   *
+   * @default '1px'
+   */
   height: {
     type: [String, Number],
     default: '1px'
   },
+  /**
+   * Background color of the divider line.
+   *
+   * Defaults to `#cbd5e1` when no Tailwind `bg-*` class is used.
+   *
+   * @example '#e2e8f0'
+   */
   color: {
     type: String,
     default: null
   },
+  /**
+   * Vertical spacing (margin) above and below the divider.
+   *
+   * Overridden by `top` and `bottom` if set.
+   *
+   * @default '24px'
+   */
   spaceY: {
     type: [String, Number],
     default: '24px'
   },
+  /**
+   * Horizontal spacing (margin) on both sides of the divider.
+   *
+   * Overridden by `left` and `right` if set.
+   */
   spaceX: {
     type: [String, Number],
     default: null
   },
+  /** Margin above the divider. Overrides `spaceY` for the top side. */
   top: {
     type: [String, Number],
     default: null
   },
+  /** Margin below the divider. Overrides `spaceY` for the bottom side. */
   bottom: {
     type: [String, Number],
     default: null
   },
+  /** Margin to the left of the divider. Overrides `spaceX` for the left side. */
   left: {
     type: [String, Number],
     default: null
   },
+  /** Margin to the right of the divider. Overrides `spaceX` for the right side. */
   right: {
     type: [String, Number],
     default: null

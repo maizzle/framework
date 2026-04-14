@@ -7,22 +7,42 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 
 const props = defineProps({
-  /** Max height of the overlapped (background) content. */
+  /**
+   * Max height of the background (default slot) content.
+   *
+   * This constrains the visible area of the background layer.
+   */
   height: {
     type: [String, Number],
     required: true
   },
-  /** Width of the overlay table and VML rect. */
+  /**
+   * Width of the overlay table and VML rectangle.
+   *
+   * Should match the width of the content being overlapped.
+   */
   width: {
     type: [String, Number],
     required: true
   },
-  /** Height of the VML rect for Outlook. Defaults to height. */
+  /**
+   * Height of the VML rectangle in Outlook.
+   *
+   * Defaults to the `height` prop value. Use this to fine-tune
+   * the overlay height specifically for Outlook rendering.
+   */
   msoHeight: {
     type: [String, Number],
     default: null
   },
-  /** VML textbox inset value for Outlook positioning. */
+  /**
+   * VML textbox inset for Outlook positioning.
+   *
+   * Controls the offset of the overlay content as `top,right,bottom,left`.
+   * Use negative values to shift content upward into the background area.
+   *
+   * @default '0,-60px,0,0'
+   */
   msoInset: {
     type: String,
     default: '0,-60px,0,0'

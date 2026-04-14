@@ -4,7 +4,12 @@ import { createStaticVNode } from 'vue'
 export default {
   inheritAttrs: false,
   props: {
-    /** The inline code text. */
+    /**
+     * The inline code text to render.
+     *
+     * If not provided, the slot content is used instead.
+     * The text is HTML-escaped automatically.
+     */
     code: {
       type: String,
       default: ''

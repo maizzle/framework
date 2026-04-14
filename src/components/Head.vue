@@ -2,7 +2,14 @@
 import { createStaticVNode } from 'vue'
 
 const props = defineProps({
-  /** Render an empty head before the main head, for Yahoo! Android responsive support. */
+  /**
+   * Render an empty `<head>` before the main head element.
+   *
+   * This is a workaround for Yahoo! Mail on Android, which
+   * strips styles from the first `<head>` element.
+   *
+   * @default false
+   */
   double: {
     type: [Boolean, String],
     default: false

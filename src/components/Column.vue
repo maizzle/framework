@@ -8,12 +8,23 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 
 const props = defineProps({
-  /** Override the auto-computed min-width. */
+  /**
+   * Override the auto-computed column width.
+   *
+   * By default, the width is calculated from the parent `Row`
+   * by dividing its width by the column count.
+   */
   width: {
     type: [String, Number],
     default: null
   },
-  /** Inline CSS applied only to the MSO td element. */
+  /**
+   * Inline CSS applied only to the MSO `<td>` element.
+   *
+   * Use for Outlook-specific styling that shouldn't affect other clients.
+   *
+   * @example 'padding: 10px'
+   */
   msoStyle: {
     type: String,
     default: undefined

@@ -7,12 +7,24 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 
 const props = defineProps({
-  /** Width of the section. Applied to both the div and MSO table when set. */
+  /**
+   * Width of the section.
+   *
+   * Applied as `max-width` on the div and as `width` on the MSO table.
+   *
+   * @default '100%'
+   */
   width: {
     type: [String, Number],
     default: '100%'
   },
-  /** Inline CSS applied only to the MSO td element. */
+  /**
+   * Inline CSS applied only to the MSO `<td>` element.
+   *
+   * Use for Outlook-specific styling that shouldn't affect other clients.
+   *
+   * @example 'padding: 10px 20px'
+   */
   msoStyle: {
     type: String,
     default: undefined

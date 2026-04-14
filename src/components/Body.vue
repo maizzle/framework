@@ -8,6 +8,13 @@ const attrs = useAttrs()
 const slots = useSlots()
 
 const props = defineProps({
+  /**
+   * Language code for the `xml:lang` attribute on `<body>`.
+   *
+   * Inherited from the parent `Html` component's `lang` prop by default.
+   *
+   * @example 'fr'
+   */
   xmlLang: {
     type: String as PropType<
       | 'af' | 'ar' | 'az'
@@ -35,6 +42,14 @@ const props = defineProps({
     >,
     default: undefined
   },
+  /**
+   * Text direction of the body.
+   *
+   * - `ltr` — left to right (default)
+   * - `rtl` — right to left
+   *
+   * @default 'ltr'
+   */
   dir: {
     type: String as PropType<'ltr' | 'rtl'>,
     default: 'ltr'

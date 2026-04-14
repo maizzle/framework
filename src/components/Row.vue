@@ -7,12 +7,23 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 
 const props = defineProps({
-  /** Override the inherited container width. */
+  /**
+   * Override the inherited container width.
+   *
+   * Used to calculate column widths. Inherited from the
+   * parent `Container` by default.
+   */
   width: {
     type: [String, Number],
     default: null
   },
-  /** Override the auto-detected column count. */
+  /**
+   * Override the auto-detected column count.
+   *
+   * By default, the number of direct child elements is used.
+   * Set this when the auto-detection doesn't match your layout
+   * (e.g. when using `v-if` or `v-for`).
+   */
   cols: {
     type: Number,
     default: null

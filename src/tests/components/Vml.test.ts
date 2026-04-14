@@ -32,8 +32,8 @@ describe('Vml', () => {
     it('uses default fill and stroke values', async () => {
       const html = await render()
 
-      expect(html).toContain('fill="t"')
-      expect(html).toContain('stroke="f"')
+      expect(html).toContain('fill="true"')
+      expect(html).toContain('stroke="false"')
     })
 
     it('uses default fillcolor of none', async () => {
@@ -150,7 +150,7 @@ describe('Vml', () => {
     it('strokecolor enables stroke and sets color', async () => {
       const html = await render({ strokecolor: '#333333' })
 
-      expect(html).toContain('stroke="t"')
+      expect(html).toContain('stroke="true"')
       expect(html).toContain('strokecolor="#333333"')
     })
   })
@@ -188,6 +188,38 @@ describe('Vml', () => {
       expect(html).not.toContain('origin=')
       expect(html).not.toContain('position=')
       expect(html).not.toMatch(/\scolor="/)
+    })
+  })
+
+  describe('backgroundPosition prop', () => {
+    it('maps top,left to origin and position', async () => {
+      const html = await render({ backgroundPosition: 'top,left' })
+      expect(html).toContain('origin="-0.5,-0.5"')
+      expect(html).toContain('position="-0.5,-0.5"')
+    })
+
+    it('maps top,right to origin and position', async () => {
+      const html = await render({ backgroundPosition: 'top,right' })
+      expect(html).toContain('origin="0.5,-0.5"')
+      expect(html).toContain('position="0.5,-0.5"')
+    })
+
+    it('maps bottom,left to origin and position', async () => {
+      const html = await render({ backgroundPosition: 'bottom,left' })
+      expect(html).toContain('origin="-0.5,0.5"')
+      expect(html).toContain('position="-0.5,0.5"')
+    })
+
+    it('maps bottom,right to origin and position', async () => {
+      const html = await render({ backgroundPosition: 'bottom,right' })
+      expect(html).toContain('origin="0.5,0.5"')
+      expect(html).toContain('position="0.5,0.5"')
+    })
+
+    it('explicit origin/position overrides backgroundPosition', async () => {
+      const html = await render({ backgroundPosition: 'top,left', origin: '0,0', position: '1,1' })
+      expect(html).toContain('origin="0,0"')
+      expect(html).toContain('position="1,1"')
     })
   })
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 import { computed, createStaticVNode } from 'vue'
+import type { PropType } from 'vue'
 import { normalizeToPixels } from './utils.ts'
 
 export default {
@@ -14,26 +15,44 @@ export default {
       default: null
     },
     type: {
-      type: String,
+      type: String as PropType<'solid' | 'gradient' | 'gradientradial' | 'tile' | 'pattern' | 'frame'>,
       default: 'frame'
     },
-    sizes: String,
-    origin: String,
-    position: String,
-    aspect: String,
+    sizes: {
+      type: String,
+      validator: (v: string) => /^[\d.]+(px|%|em|rem)?(,[\d.]+(px|%|em|rem)?)+$/.test(v.replace(/\s/g, ''))
+    },
+    origin: {
+      type: String,
+      validator: (v: string) => /^-?[\d.]+(,-?[\d.]+)+$/.test(v.replace(/\s/g, ''))
+    },
+    position: {
+      type: String,
+      validator: (v: string) => /^-?[\d.]+(,-?[\d.]+)+$/.test(v.replace(/\s/g, ''))
+    },
+    backgroundPosition: {
+      type: String as PropType<
+        | 'top,left' | 'top,right'
+        | 'bottom,left' | 'bottom,right'
+      >,
+      validator: (v: string) => /^(top|bottom),(left|right)$/.test(v.replace(/\s/g, ''))
+    },
+    aspect: {
+      type: String as PropType<'atleast' | 'atmost'>,
+    },
     color: String,
     inset: {
       type: String,
       default: '0,0,0,0'
     },
     stroke: {
-      type: String,
-      default: 'f'
+      type: [Boolean, String],
+      default: false
     },
     strokecolor: String,
     fill: {
-      type: String,
-      default: 't'
+      type: [Boolean, String],
+      default: true
     },
     fillcolor: {
       type: String,
@@ -45,12 +64,24 @@ export default {
     }
   },
   setup(props, { slots }) {
+    const backgroundPositionMap: Record<string, string> = {
+      'top,left': '-0.5,-0.5',
+      'top,right': '0.5,-0.5',
+      'bottom,left': '-0.5,0.5',
+      'bottom,right': '0.5,0.5',
+    }
+
+    const resolvedOrigin = computed(() => props.origin ?? (props.backgroundPosition ? backgroundPositionMap[props.backgroundPosition.replace(/\s/g, '')] : undefined))
+    const resolvedPosition = computed(() => props.position ?? (props.backgroundPosition ? backgroundPositionMap[props.backgroundPosition.replace(/\s/g, '')] : undefined))
+
     const before = computed(() => {
       const width = normalizeToPixels(props.width)
 
+      const toBool = (v: boolean | string) => v === true || v === 'true' ? 'true' : 'false'
+
       const rectAttrs = [
-        `fill="${props.fillcolor ? 't' : props.fill}"`,
-        `stroke="${props.strokecolor ? 't' : props.stroke}"`,
+        `fill="${props.fillcolor ? 'true' : toBool(props.fill)}"`,
+        `stroke="${props.strokecolor ? 'true' : toBool(props.stroke)}"`,
         `style="width: ${width};${props.height ? ` height: ${normalizeToPixels(props.height)};` : ''}"`,
         props.strokecolor ? `strokecolor="${props.strokecolor}"` : '',
         props.fillcolor ? `fillcolor="${props.fillcolor}"` : ''
@@ -61,8 +92,8 @@ export default {
         `src="${props.src}"`,
         props.sizes ? `sizes="${props.sizes}"` : '',
         props.aspect ? `aspect="${props.aspect}"` : '',
-        props.origin ? `origin="${props.origin}"` : '',
-        props.position ? `position="${props.position}"` : '',
+        resolvedOrigin.value ? `origin="${resolvedOrigin.value}"` : '',
+        resolvedPosition.value ? `position="${resolvedPosition.value}"` : '',
         props.color ? `color="${props.color}"` : ''
       ].filter(Boolean).join(' ')
 

@@ -1,52 +1,81 @@
-<script lang="ts">
-import { createStaticVNode } from 'vue'
+<script setup lang="ts">
+import { createStaticVNode, provide, useAttrs, useSlots } from 'vue'
 import type { PropType } from 'vue'
 
-export default {
-  name: 'Html',
-  inheritAttrs: false,
-  props: {
-    lang: {
-      type: String,
-      default: 'en'
-    },
-    dir: {
-      type: String as PropType<'ltr' | 'rtl'>,
-      default: 'ltr'
-    },
-    xmlns: {
-      type: Boolean,
-      default: true
-    }
+defineOptions({ inheritAttrs: false })
+
+const attrs = useAttrs()
+const slots = useSlots()
+
+const props = defineProps({
+  lang: {
+    type: String as PropType<
+      | 'af' | 'ar' | 'az'
+      | 'be' | 'bg' | 'bs'
+      | 'ca' | 'cs' | 'cy'
+      | 'da' | 'de' | 'dv'
+      | 'el' | 'en' | 'es' | 'et' | 'eu'
+      | 'fa' | 'fi' | 'fo' | 'fr'
+      | 'gl' | 'gu'
+      | 'he' | 'hi' | 'hr' | 'hu' | 'hy'
+      | 'id' | 'is' | 'it'
+      | 'ja'
+      | 'ka' | 'kk' | 'kn' | 'ko' | 'ky'
+      | 'lt' | 'lv'
+      | 'mk' | 'mn' | 'mr' | 'ms' | 'mt'
+      | 'nb' | 'nl' | 'nn' | 'no'
+      | 'pa' | 'pl' | 'pt'
+      | 'ro' | 'ru'
+      | 'sa' | 'se' | 'sk' | 'sl' | 'sq' | 'sr' | 'sv' | 'sw'
+      | 'ta' | 'te' | 'th' | 'tr' | 'tt'
+      | 'uk' | 'ur' | 'uz'
+      | 'vi'
+      | 'zh'
+      | (string & {})
+    >,
+    default: 'en'
   },
-  setup(props, { slots, attrs }) {
-    return () => {
-      const extraAttrs = Object.entries(attrs)
-        .map(([key, value]) => value === true ? key : `${key}="${value}"`)
-        .join(' ')
-
-      const parts = [
-        `lang="${props.lang}"`,
-        `dir="${props.dir}"`,
-      ]
-
-      if (props.xmlns) {
-        parts.push(
-          'xmlns:v="urn:schemas-microsoft-com:vml"',
-          'xmlns:o="urn:schemas-microsoft-com:office:office"',
-        )
-      }
-
-      if (extraAttrs) {
-        parts.push(extraAttrs)
-      }
-
-      return [
-        createStaticVNode(`<html ${parts.join(' ')}>`, 1),
-        slots.default?.(),
-        createStaticVNode('</html>', 1),
-      ]
-    }
+  dir: {
+    type: String as PropType<'ltr' | 'rtl'>,
+    default: 'ltr'
+  },
+  xmlns: {
+    type: [Boolean, String],
+    default: true
   }
+})
+
+provide('htmlLang', props.lang)
+
+const render = () => {
+  const extraAttrs = Object.entries(attrs)
+    .map(([key, value]) => value === true ? key : `${key}="${value}"`)
+    .join(' ')
+
+  const parts = [
+    `lang="${props.lang}"`,
+    `dir="${props.dir}"`,
+  ]
+
+  if (props.xmlns !== false && props.xmlns !== 'false') {
+    parts.push(
+      'xmlns:v="urn:schemas-microsoft-com:vml"',
+      'xmlns:o="urn:schemas-microsoft-com:office:office"',
+    )
+  }
+
+  if (extraAttrs) {
+    parts.push(extraAttrs)
+  }
+
+  return [
+    createStaticVNode(`<html ${parts.join(' ')}>`, 1),
+    slots.default?.(),
+    createStaticVNode('</html>', 1),
+  ]
 }
 </script>
+
+<template>
+  <render />
+</template>

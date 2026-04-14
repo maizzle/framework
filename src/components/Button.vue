@@ -10,7 +10,10 @@ const attrs = useAttrs()
 
 const props = defineProps({
   /** The URL the button links to. */
-  href: String,
+  href: {
+    type: String,
+    required: true
+  },
   /**
    * The button style variant.
    * - `solid` — filled background (default)

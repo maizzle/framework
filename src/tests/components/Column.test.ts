@@ -57,8 +57,8 @@ describe('Column', () => {
     it('allows cols prop override', () => {
       const wrapper = mountLayout({}, { cols: 4 }, {}, 2)
       const columns = wrapper.findAllComponents(Column)
-      // 37.5em / 4 = 9.375em (cols overrides actual child count)
-      expect(columns[0].find('div').attributes('style')).toContain('min-width: 9.375em')
+      // 37.5em / 4 = 9.38em (cols overrides actual child count)
+      expect(columns[0].find('div').attributes('style')).toContain('min-width: 9.38em')
     })
 
     it('computes min-width from px container width', () => {
@@ -142,6 +142,32 @@ describe('Column', () => {
     it('sets vertical-align: top on MSO td', () => {
       const html = mount(Column).html()
       expect(html).toContain('vertical-align: top')
+    })
+
+    it('nested row inherits column width, not container width', () => {
+      // Container 400px → 2 cols = 200px each → nested row should use 200px → 2 nested cols = 100px
+      const wrapper = mount(
+        defineComponent({
+          render() {
+            return h(Container, { width: '400px' }, () =>
+              h(Row, {}, () => [
+                h(Column, {}, () =>
+                  h(Row, {}, () => [
+                    h(Column, {}, () => 'Nested 1'),
+                    h(Column, {}, () => 'Nested 2'),
+                  ])
+                ),
+                h(Column, {}, () => 'Col 2'),
+              ])
+            )
+          }
+        })
+      )
+      const columns = wrapper.findAllComponents(Column)
+      // First level: 400px / 2 = 200px
+      expect(columns[0].find('div').attributes('style')).toContain('min-width: 200px')
+      // Nested: 200px / 2 = 100px
+      expect(columns[1].find('div').attributes('style')).toContain('min-width: 100px')
     })
 
     it('applies mso-style only to MSO td', () => {

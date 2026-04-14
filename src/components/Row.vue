@@ -48,13 +48,13 @@ const rowWidth = computed(() => props.width ?? containerWidth?.value ?? '37.5em'
 
 function divideValue(value: string | number, divisor: number): string {
   if (typeof value === 'number') {
-    return `${value / divisor}px`
+    return `${parseFloat((value / divisor).toFixed(2))}px`
   }
 
   const num = Number.parseFloat(value)
   const unit = value.replace(String(num), '') || 'px'
 
-  return `${num / divisor}${unit}`
+  return `${parseFloat((num / divisor).toFixed(2))}${unit}`
 }
 
 provide('columnMinWidth', computed(() => divideValue(rowWidth.value, columnCount.value)))

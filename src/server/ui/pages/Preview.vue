@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronUp, ChevronDown, Check, ExternalLink } from 'lucide-vue-next'
+import { ChevronUp, ChevronDown, Check } from 'lucide-vue-next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -832,7 +832,7 @@ const stripeBg = {
                   <div class="space-y-2">
                     <div class="flex items-center gap-2">
                       <label class="text-xs text-gray-500 dark:text-gray-400 w-12 shrink-0">To</label>
-                      <TagsInput v-model="emailTo" delimiter=" " add-on-paste class="flex-1 min-h-7 gap-1 px-2 py-1">
+                      <TagsInput v-model="emailTo" delimiter=" " add-on-paste add-on-blur class="flex-1 min-h-7 gap-1 px-2 py-1">
                         <TagsInputItem v-for="item in emailTo" :key="item" :value="item" class="h-5 text-xs rounded">
                           <TagsInputItemText class="px-1.5 py-0 text-xs" />
                           <TagsInputItemDelete class="size-3.5" />
@@ -870,9 +870,9 @@ const stripeBg = {
                         :href="emailResult.previewUrl"
                         target="_blank"
                         rel="noopener"
-                        class="inline-flex items-center gap-0.5 text-gray-500 dark:text-gray-400 hover:underline ml-1"
+                        class="text-gray-500 dark:text-gray-400 hover:underline"
                       >
-                        View <ExternalLink class="size-3" />
+                        (view)
                       </a>
                     </p>
                   </div>

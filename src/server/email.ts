@@ -54,11 +54,15 @@ export async function sendEmail(
 
   const previewUrl = isEthereal ? nodemailer.getTestMessageUrl(info) || undefined : undefined
 
+  const recipient = payload.to.length === 1
+    ? payload.to[0]
+    : `${payload.to.length} recipients`
+
   return {
     success: true,
-    message: payload.to.length === 1
-      ? `Sent to ${payload.to[0]}`
-      : `Sent to ${payload.to.length} recipients`,
+    message: isEthereal
+      ? 'Sent via Ethereal'
+      : `Sent to ${recipient}`,
     previewUrl: typeof previewUrl === 'string' ? previewUrl : undefined,
   }
 }

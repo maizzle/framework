@@ -18,7 +18,8 @@ const props = defineProps({
 
 const attrs = useAttrs()
 
-const mergedClass = computed(() => twMerge('m-0 my-4 text-base', attrs.class as string))
+const defaultClass = computed(() => props.as === 'span' ? 'text-base' : 'm-0 my-4 text-base')
+const mergedClass = computed(() => twMerge(defaultClass.value, attrs.class as string))
 </script>
 
 <template>

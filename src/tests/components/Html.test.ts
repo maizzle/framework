@@ -38,16 +38,15 @@ describe('Html', () => {
     expect(html).toContain('dir="rtl"')
   })
 
-  it('does not add xmlns attrs by default', async () => {
+  it('includes xmlns VML/Office namespaces by default', async () => {
     const html = await render()
-    expect(html).not.toContain('xmlns')
-  })
-
-  it('adds xmlns and VML/Office namespaces when xmlns is set', async () => {
-    const html = await render({ xmlns: 'http://www.w3.org/1999/xhtml' })
-    expect(html).toContain('xmlns="http://www.w3.org/1999/xhtml"')
     expect(html).toContain('xmlns:v="urn:schemas-microsoft-com:vml"')
     expect(html).toContain('xmlns:o="urn:schemas-microsoft-com:office:office"')
+  })
+
+  it('excludes xmlns namespaces when xmlns is false', async () => {
+    const html = await render({ xmlns: false })
+    expect(html).not.toContain('xmlns')
   })
 
   it('renders slot content', async () => {

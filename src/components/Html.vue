@@ -15,8 +15,8 @@ export default {
       default: 'ltr'
     },
     xmlns: {
-      type: String,
-      default: null
+      type: Boolean,
+      default: true
     }
   },
   setup(props, { slots, attrs }) {
@@ -32,7 +32,6 @@ export default {
 
       if (props.xmlns) {
         parts.push(
-          `xmlns="${props.xmlns}"`,
           'xmlns:v="urn:schemas-microsoft-com:vml"',
           'xmlns:o="urn:schemas-microsoft-com:office:office"',
         )

@@ -143,5 +143,12 @@ describe('Column', () => {
       const html = mount(Column).html()
       expect(html).toContain('vertical-align: top')
     })
+
+    it('applies mso-style only to MSO td', () => {
+      const html = mount(Column, { props: { msoStyle: 'padding: 10px' } }).html()
+      expect(html).toContain('vertical-align: top; padding: 10px')
+      const wrapper = mount(Column, { props: { msoStyle: 'padding: 10px' } })
+      expect(wrapper.find('div').attributes('style')).not.toContain('padding: 10px')
+    })
   })
 })

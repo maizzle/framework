@@ -12,6 +12,11 @@ const props = defineProps({
   width: {
     type: [String, Number],
     default: null
+  },
+  /** Inline CSS applied only to the MSO td element. */
+  msoStyle: {
+    type: String,
+    default: undefined
   }
 })
 
@@ -41,8 +46,14 @@ const styles = computed(() => {
   return `display: inline-block; min-width: ${minWidth.value}; font-size: 16px; vertical-align: top;`
 })
 
+const tdStyle = computed(() => {
+  const parts = ['vertical-align: top']
+  if (props.msoStyle) parts.push(props.msoStyle)
+  return parts.join('; ')
+})
+
 const MsoBefore = () => createStaticVNode(
-  `<!--[if mso]><td width="${msoWidth.value}" style="vertical-align: top"><![endif]-->`,
+  `<!--[if mso]><td width="${msoWidth.value}" style="${tdStyle.value}"><![endif]-->`,
   1
 )
 

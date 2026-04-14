@@ -73,7 +73,7 @@ const MsoAfter = () => createStaticVNode(
 
 <template>
   <MsoBefore />
-  <div v-bind="attrs" style="width: 100%; font-size: 0;">
+  <div v-bind="attrs" style="font-size: 0;">
     <slot />
   </div>
   <MsoAfter />

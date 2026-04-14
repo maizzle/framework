@@ -3,10 +3,9 @@ import { mount } from '@vue/test-utils'
 import Row from '../../components/Row.vue'
 
 describe('Row', () => {
-  it('renders a div with width 100% and font-size 0', () => {
+  it('renders a div with font-size 0', () => {
     const wrapper = mount(Row)
     const style = wrapper.find('div').attributes('style')
-    expect(style).toContain('width: 100%')
     expect(style).toContain('font-size: 0')
   })
 

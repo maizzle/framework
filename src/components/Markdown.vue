@@ -20,10 +20,10 @@ export default {
       type: String as PropType<BundledTheme>,
       default: 'github-dark-high-contrast'
     },
-    /** Wrap output in a div element. @default true */
+    /** Wrap output in a div element. @default false */
     wrapper: {
       type: Boolean,
-      default: true
+      default: false
     },
   },
   inheritAttrs: false,

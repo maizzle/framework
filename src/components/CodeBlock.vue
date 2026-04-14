@@ -9,7 +9,7 @@ export default {
       type: String,
       default: ''
     },
-/** The language for syntax highlighting. @default 'html' */
+    /** The language for syntax highlighting. @default 'html' */
     language: {
       type: String as PropType<BundledLanguage>,
       default: 'html'

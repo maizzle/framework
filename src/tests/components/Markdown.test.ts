@@ -79,27 +79,27 @@ describe('Markdown', () => {
   })
 
   describe('wrapper', () => {
-    it('wraps output in a div by default', async () => {
+    it('does not wrap output in a div by default', async () => {
       const html = await render({ content: 'Hello' })
-
-      expect(html).toMatch(/^<div><p>Hello<\/p>\n<\/div>$/)
-    })
-
-    it('does not wrap when wrapper is false', async () => {
-      const html = await render({ content: 'Hello', wrapper: false })
 
       expect(html).not.toMatch(/^<div>/)
       expect(html).toContain('<p>Hello</p>')
     })
 
+    it('wraps output in a div when wrapper is true', async () => {
+      const html = await render({ content: 'Hello', wrapper: true })
+
+      expect(html).toMatch(/^<div><p>Hello<\/p>\n<\/div>$/)
+    })
+
     it('forwards class to wrapper div', async () => {
-      const html = await render({ content: 'Hello', class: 'prose' })
+      const html = await render({ content: 'Hello', wrapper: true, class: 'prose' })
 
       expect(html).toMatch(/^<div class="prose">/)
     })
 
     it('forwards style to wrapper div', async () => {
-      const html = await render({ content: 'Hello', style: 'color: red' })
+      const html = await render({ content: 'Hello', wrapper: true, style: 'color: red' })
 
       expect(html).toMatch(/^<div style="color: red">/)
     })

@@ -53,6 +53,18 @@ const props = defineProps({
   dir: {
     type: String as PropType<'ltr' | 'rtl'>,
     default: 'ltr'
+  },
+  /**
+   * Accessible label for the email article wrapper.
+   *
+   * Used as the `aria-label` on the inner `<div role="article">`.
+   * Helps screen readers identify the email content.
+   *
+   * @example 'Order confirmation'
+   */
+  ariaLabel: {
+    type: String,
+    default: undefined
   }
 })
 
@@ -75,9 +87,20 @@ const render = () => {
     parts.push(extraAttrs)
   }
 
+  const articleParts = [
+    'role="article"',
+    'aria-roledescription="email"',
+    props.ariaLabel ? `aria-label="${props.ariaLabel}"` : '',
+    `lang="${lang}"`,
+    `dir="${props.dir}"`,
+    'style="font-size: medium; font-size: max(16px, 1rem)"',
+  ].filter(Boolean).join(' ')
+
   return [
     createStaticVNode(`<body ${parts.join(' ')}>`, 1),
+    createStaticVNode(`<div ${articleParts}>`, 1),
     slots.default?.(),
+    createStaticVNode('</div>', 1),
     createStaticVNode('</body>', 1),
   ]
 }

@@ -1,8 +1,20 @@
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue'
+import { type PropType, computed, useAttrs } from 'vue'
 import { twMerge } from 'tailwind-merge'
 
 defineOptions({ inheritAttrs: false })
+
+const props = defineProps({
+  /**
+   * The HTML element to render.
+   * @default 'p'
+   */
+  as: {
+    type: String as PropType<'p' | 'span'>,
+    default: 'p',
+    validator: (v: string) => ['p', 'span'].includes(v),
+  },
+})
 
 const attrs = useAttrs()
 
@@ -10,7 +22,7 @@ const mergedClass = computed(() => twMerge('m-0 my-4 text-base', attrs.class as 
 </script>
 
 <template>
-  <p v-bind="$attrs" :class="mergedClass">
+  <component :is="props.as" v-bind="$attrs" :class="mergedClass">
     <slot />
-  </p>
+  </component>
 </template>

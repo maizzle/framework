@@ -633,25 +633,25 @@ const stripeBg = {
           <svg v-if="!copied" class="size-3.5 text-gray-400 group-hover:text-gray-300" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.25 5.25H7.25C6.14543 5.25 5.25 6.14543 5.25 7.25V14.25C5.25 15.3546 6.14543 16.25 7.25 16.25H14.25C15.3546 16.25 16.25 15.3546 16.25 14.25V7.25C16.25 6.14543 15.3546 5.25 14.25 5.25Z" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /><path d="M2.80103 11.998L1.77203 5.07397C1.61003 3.98097 2.36403 2.96397 3.45603 2.80197L10.38 1.77297C11.313 1.63397 12.19 2.16297 12.528 3.00097" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /></svg>
           <svg v-else class="size-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
         </button>
-        <ScrollArea v-show="sourceView === 'compiled'" class="h-full">
+        <ScrollArea v-show="sourceView === 'compiled'" class="h-full [&_[data-slot=scroll-area-viewport]>div]:flex [&_[data-slot=scroll-area-viewport]>div]:flex-col [&_[data-slot=scroll-area-viewport]>div]:min-h-full">
           <div
             ref="compiledSourceEl"
-            class="shiki-line-numbers [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full dark:[&_pre]:bg-gray-950!"
+            class="flex-1 bg-[#27212e] dark:bg-gray-950 shiki-line-numbers [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full dark:[&_pre]:bg-gray-950!"
             v-html="sourceHtml"
           />
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
-        <ScrollArea v-show="sourceView === 'vue'" class="h-full">
+        <ScrollArea v-show="sourceView === 'vue'" class="h-full [&_[data-slot=scroll-area-viewport]>div]:flex [&_[data-slot=scroll-area-viewport]>div]:flex-col [&_[data-slot=scroll-area-viewport]>div]:min-h-full">
           <div
             ref="vueSourceEl"
-            class="shiki-line-numbers [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full dark:[&_pre]:bg-gray-950!"
+            class="flex-1 bg-[#27212e] dark:bg-gray-950 shiki-line-numbers [&_pre]:p-6 [&_pre]:pt-14 [&_pre]:text-base [&_pre]:leading-6 [&_pre]:min-h-full dark:[&_pre]:bg-gray-950!"
             v-html="vueSourceHtml"
           />
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
-        <ScrollArea v-show="sourceView === 'plaintext'" class="h-full">
+        <ScrollArea v-show="sourceView === 'plaintext'" class="h-full [&_[data-slot=scroll-area-viewport]>div]:flex [&_[data-slot=scroll-area-viewport]>div]:flex-col [&_[data-slot=scroll-area-viewport]>div]:min-h-full">
           <pre
-            class="p-6 pt-14 text-sm leading-6 min-h-full text-gray-300 bg-[#27212e] dark:bg-gray-950 whitespace-pre-wrap break-words"
+            class="p-6 pt-14 text-sm leading-6 flex-1 text-gray-300 bg-[#27212e] dark:bg-gray-950 whitespace-pre-wrap break-words"
           >{{ plaintextContent }}</pre>
         </ScrollArea>
       </div>

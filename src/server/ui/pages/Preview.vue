@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronUp, ChevronDown, Check } from 'lucide-vue-next'
+import { ChevronUp, ChevronDown, Check, Info } from 'lucide-vue-next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,7 @@ import {
   TagsInputItemDelete,
   TagsInputItemText,
 } from '@/components/ui/tags-input'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 import stripesUrl from '../stripes.svg'
 
@@ -814,6 +815,18 @@ const stripeBg = {
                       class="font-medium tabular-nums"
                       :class="stats.size.bytes > 102400 ? 'text-red-600' : stats.size.bytes > 51200 ? 'text-amber-600' : 'text-gray-900 dark:text-gray-300'"
                     >{{ stats.size.formatted }}</span>
+                    <TooltipProvider :delay-duration="0">
+                      <Tooltip>
+                        <TooltipTrigger as-child>
+                          <button type="button">
+                            <Info class="size-3 text-gray-400 dark:text-gray-500" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent class="max-w-60">
+                          Compiled HTML size, excludes image files. Gmail clips content at ~100KB.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   <div class="flex items-center gap-1.5">
                     <span class="text-gray-500 dark:text-gray-400">Images</span>

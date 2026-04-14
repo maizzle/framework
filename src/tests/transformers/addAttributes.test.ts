@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { Element } from 'domhandler'
 import { addAttributes } from '../../transformers/addAttributes.ts'
 import { parse, serialize } from '../../utils/ast/index.ts'
 import type { AttributesConfig } from '../../types/config.ts'
@@ -305,6 +306,15 @@ describe('addAttributes', () => {
       expect(result).toContain('id="main"')
       expect(result).toContain('data-existing="yes"')
       expect(result).toContain('class="added"')
+    })
+
+    it('adds attributes to elements with no attribs object', () => {
+      const el = new Element('div', {})
+      // @ts-expect-error — simulating a node with undefined attribs
+      delete el.attribs
+
+      const dom = addAttributes([el], { add: { div: { role: 'article' } } })
+      expect((dom[0] as Element).attribs.role).toBe('article')
     })
   })
 })

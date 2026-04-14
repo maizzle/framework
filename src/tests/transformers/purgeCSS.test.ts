@@ -299,5 +299,31 @@ describe('purgeCSS', () => {
       const result = run(html, true)
       expect(result).toContain('.foo > * + *')
     })
+
+    it('preserves selectors matching end-of-string safelist pattern', () => {
+      const html = `<html><head><style>.thing-edo { color: red } .gone { color: blue }</style></head><body><p>hi</p></body></html>`
+      const result = run(html, true)
+      // *edo* safelist pattern matches substring, but test a suffix-only pattern
+      const result2 = run(html, { safelist: ['*-edo'] })
+      expect(result2).toContain('.thing-edo')
+      expect(result2).not.toContain('.gone')
+    })
+
+    it('keeps rules with selectors that css-select cannot parse', () => {
+      // Column combinator (||) is valid CSS but not supported by css-select
+      const html = `<html><head><style>col.selected || td { color: red }</style></head><body><table><col class="selected"><tr><td>hi</td></tr></table></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('col.selected || td')
+    })
+
+    it('removes empty @media after all its rules are purged', () => {
+      // All rules inside @media reference non-existent elements,
+      // deep purge skips at-rule children but email-comb removes the rules,
+      // leaving an empty @media that should be cleaned up
+      const html = `<html><head><style>p { color: red } @media (max-width: 600px) { }</style></head><body><p>hi</p></body></html>`
+      const result = run(html, true)
+      expect(result).not.toContain('@media')
+      expect(result).toContain('p')
+    })
   })
 })

@@ -810,4 +810,197 @@ describe('render', () => {
       expect(result.html.startsWith('<!DOCTYPE html>')).toBe(true)
     })
   })
+
+  describe('usePreviewText', () => {
+    it('injects preview text div at start of body', async () => {
+      const result = await render(`
+        <script setup>
+        usePreviewText('Welcome aboard!')
+        </script>
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <h1>Hello</h1>
+            </body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('display:none')
+      expect(result.html).toContain('Welcome aboard!')
+      // Preview div should be before h1
+      const bodyContent = result.html.match(/<body>([\s\S]*?)<\/body>/)?.[1] ?? ''
+      expect(bodyContent.indexOf('Welcome aboard!')).toBeLessThan(bodyContent.indexOf('<h1>'))
+    })
+
+    it('uses custom filler and shy counts', async () => {
+      const result = await render(`
+        <script setup>
+        usePreviewText('Hi', { fillerCount: 2, shyCount: 3 })
+        </script>
+        <template>
+          <html>
+            <head></head>
+            <body><p>Test</p></body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('Hi')
+      expect(result.html).toContain('display:none')
+    })
+  })
+
+  describe('useHead integration', () => {
+    it('injects head tags from useHead()', async () => {
+      const result = await render(`
+        <script setup>
+        useHead({
+          meta: [{ name: 'description', content: 'Test email' }],
+        })
+        </script>
+        <template>
+          <html>
+            <head></head>
+            <body><p>Hello</p></body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('<meta name="description" content="Test email">')
+    })
+
+    it('injects html attributes from useHead()', async () => {
+      const result = await render(`
+        <script setup>
+        useHead({
+          htmlAttrs: { dir: 'rtl' },
+        })
+        </script>
+        <template>
+          <html>
+            <head></head>
+            <body><p>Hello</p></body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('dir="rtl"')
+    })
+
+    it('injects script tags at end of body', async () => {
+      const result = await render(`
+        <script setup>
+        useHead({
+          script: [{ src: 'https://example.com/tracker.js', tagPosition: 'bodyClose' }],
+        })
+        </script>
+        <template>
+          <html>
+            <head></head>
+            <body><p>Hello</p></body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('tracker.js')
+      const bodyContent = result.html.match(/<body>([\s\S]*?)<\/body>/)?.[1] ?? ''
+      expect(bodyContent.indexOf('tracker.js')).toBeGreaterThan(bodyContent.indexOf('<p>'))
+    })
+
+    it('injects noscript tags at start of body', async () => {
+      const result = await render(`
+        <script setup>
+        useHead({
+          noscript: [{ innerHTML: '<img src="https://example.com/pixel.gif">', tagPosition: 'bodyOpen' }],
+        })
+        </script>
+        <template>
+          <html>
+            <head></head>
+            <body><p>Hello</p></body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('pixel.gif')
+    })
+
+    it('injects body attributes from useHead()', async () => {
+      const result = await render(`
+        <script setup>
+        useHead({
+          bodyAttrs: { class: 'email-body' },
+        })
+        </script>
+        <template>
+          <html>
+            <head></head>
+            <body><p>Hello</p></body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('class="email-body"')
+    })
+  })
+
+  describe('CodeBlock extract plugin', () => {
+    it('extracts slot content and passes as code prop', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <CodeBlock lang="html">
+                <div class="test">Hello</div>
+              </CodeBlock>
+            </body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('Hello')
+    })
+  })
+
+  describe('Markdown extract plugin', () => {
+    it('extracts slot content from Markdown component', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <Markdown>
+                # Hello World
+              </Markdown>
+            </body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('Hello World')
+    })
+
+    it('resolves Markdown src prop from file', async () => {
+      mkdirSync(join(tempDir, 'emails'), { recursive: true })
+      writeFileSync(join(tempDir, 'emails/content.md'), '# From File')
+
+      writeSfc(tempDir, 'emails/test-md-src.vue', `
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <Markdown src="./content.md" />
+            </body>
+          </html>
+        </template>
+      `)
+
+      const result = await render(join(tempDir, 'emails/test-md-src.vue'))
+
+      expect(result.html).toContain('From File')
+    })
+  })
 })

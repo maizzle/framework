@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { h } from 'vue'
+import { h, Fragment } from 'vue'
 import NoWidows from '../../components/NoWidows.vue'
 
 describe('NoWidows', () => {
@@ -150,6 +150,30 @@ describe('NoWidows', () => {
         }
       })
       expect(wrapper.html()).toContain('This is a test&nbsp;sentence')
+    })
+  })
+
+  describe('fragment children', () => {
+    it('processes text inside fragment vnodes', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: () => h(Fragment, [
+            'This is a fragment sentence',
+          ]),
+        },
+      })
+      expect(wrapper.html()).toContain('This is a fragment&nbsp;sentence')
+    })
+  })
+
+  describe('raw string children', () => {
+    it('processes raw string children in element slots', () => {
+      const wrapper = mount(NoWidows, {
+        slots: {
+          default: () => h('div', ['This is a raw string child']),
+        },
+      })
+      expect(wrapper.html()).toContain('This is a raw string&nbsp;child')
     })
   })
 

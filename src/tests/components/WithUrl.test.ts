@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, Fragment } from 'vue'
 import WithUrl from '../../components/WithUrl.vue'
 
 describe('WithUrl', () => {
@@ -480,6 +480,45 @@ describe('WithUrl', () => {
       })
 
       expect(wrapper.find('a').attributes('href')).toBe('https://other.com/page?ref=email')
+    })
+  })
+
+  // ─── fragment children ──────────────────────────────────────────────────
+
+  describe('fragment children', () => {
+    it('processes URLs inside fragment vnodes', () => {
+      const wrapper = mount(WithUrl, {
+        props: { base: 'https://cdn.example.com/' },
+        slots: {
+          default: () => h(Fragment, [
+            h('img', { src: 'one.jpg' }),
+            h('img', { src: 'two.jpg' }),
+          ]),
+        },
+      })
+
+      const images = wrapper.findAll('img')
+      expect(images[0].attributes('src')).toBe('https://cdn.example.com/one.jpg')
+      expect(images[1].attributes('src')).toBe('https://cdn.example.com/two.jpg')
+    })
+  })
+
+  // ─── exotic vnode types ────────────────────────────────────────────────
+
+  describe('exotic vnode types', () => {
+    it('passes through vnodes with non-standard types unchanged', () => {
+      const wrapper = mount(WithUrl, {
+        props: { base: 'https://cdn.example.com/' },
+        slots: {
+          default: () => [
+            // Teleport/Suspense-like vnode with symbol type
+            { type: Symbol('exotic'), props: null, children: null },
+            h('img', { src: 'image.jpg' }),
+          ],
+        },
+      })
+
+      expect(wrapper.find('img').attributes('src')).toBe('https://cdn.example.com/image.jpg')
     })
   })
 

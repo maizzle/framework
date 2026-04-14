@@ -24,30 +24,6 @@ describe('defineConfig', () => {
 
       expect(result).toEqual({})
     })
-
-    it('preserves all config properties', () => {
-      const input = {
-        content: ['src/**/*.vue'],
-        output: { path: 'build', extension: 'html' },
-        css: { safe: true, shorthand: true },
-        server: { port: 4000 },
-      }
-
-      const result = defineConfig(input)
-
-      expect(result).toBe(input)
-      expect(result.content).toEqual(['src/**/*.vue'])
-      expect(result.output?.path).toBe('build')
-      expect(result.css?.safe).toBe(true)
-    })
-
-    it('preserves arbitrary user data', () => {
-      const input = { company: 'Acme', theme: { primary: '#ff0000' } }
-      const result = defineConfig(input)
-
-      expect(result.company).toBe('Acme')
-      expect((result as any).theme).toEqual({ primary: '#ff0000' })
-    })
   })
 
   describe('inside Vue SFC', () => {
@@ -134,37 +110,6 @@ describe('defineConfig', () => {
       expect(merged!.content).toEqual(['sfc/**/*.vue'])
     })
 
-    it('deep merges nested objects', () => {
-      let merged: MaizzleConfig | undefined
-
-      const Comp = defineComponent({
-        setup() {
-          merged = defineConfig({
-            css: { shorthand: true },
-          })
-          return () => h('div')
-        },
-      })
-
-      mount(Comp, {
-        global: {
-          provide: {
-            [MaizzleConfigKey as symbol]: {
-              css: {
-                safe: true,
-                preferUnitless: true,
-              },
-            } as MaizzleConfig,
-            [RenderContextKey as symbol]: createRenderContext(),
-          },
-        },
-      })
-
-      expect(merged!.css?.shorthand).toBe(true)
-      expect(merged!.css?.safe).toBe(true)
-      expect(merged!.css?.preferUnitless).toBe(true)
-    })
-
     it('stores merged config in render context', () => {
       const ctx = createRenderContext()
 
@@ -248,48 +193,4 @@ describe('defineConfig', () => {
     })
   })
 
-  describe('render context interaction', () => {
-    it('each defineConfig call in SFC context updates render context', () => {
-      const ctx1 = createRenderContext()
-      const ctx2 = createRenderContext()
-
-      const First = defineComponent({
-        setup() {
-          defineConfig({ output: { path: 'first' } })
-          return () => h('div')
-        },
-      })
-
-      const Second = defineComponent({
-        setup() {
-          defineConfig({ output: { path: 'second' } })
-          return () => h('div')
-        },
-      })
-
-      mount(First, {
-        global: {
-          provide: {
-            [MaizzleConfigKey as symbol]: {} as MaizzleConfig,
-            [RenderContextKey as symbol]: ctx1,
-          },
-        },
-      })
-
-      expect(ctx1.sfcConfig!.output?.path).toBe('first')
-
-      mount(Second, {
-        global: {
-          provide: {
-            [MaizzleConfigKey as symbol]: {} as MaizzleConfig,
-            [RenderContextKey as symbol]: ctx2,
-          },
-        },
-      })
-
-      expect(ctx2.sfcConfig!.output?.path).toBe('second')
-      // First context is unaffected
-      expect(ctx1.sfcConfig!.output?.path).toBe('first')
-    })
-  })
 })

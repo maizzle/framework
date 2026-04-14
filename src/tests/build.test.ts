@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mkdtempSync, writeFileSync, readFileSync, existsSync, mkdirSync, rmSync, symlinkSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, basename } from 'node:path'
 import { tmpdir } from 'node:os'
 import { build } from '../build.ts'
 
@@ -422,9 +422,52 @@ describe('build', () => {
     mkdirSync(join(tempDir, 'public/images'), { recursive: true })
     writeFileSync(join(tempDir, 'public/images/logo.png'), 'fake-png-data')
 
-    const result = await build()
+    const result = await build({
+      config: {
+        static: {
+          source: [join(tempDir, 'public/**/*.*')],
+        },
+      },
+    })
 
-    // Static files should be copied somewhere in the output
-    expect(result.files).toHaveLength(1) // only template files in result
+    expect(result.files).toHaveLength(1)
+
+    const outputDir = join(tempDir, 'dist')
+    expect(existsSync(join(outputDir, 'public/images/logo.png'))).toBe(true)
+    expect(readFileSync(join(outputDir, 'public/images/logo.png'), 'utf-8')).toBe('fake-png-data')
+  })
+
+  it('clears existing output directory before building', async () => {
+    const outputDir = join(tempDir, 'dist')
+    mkdirSync(outputDir, { recursive: true })
+    writeFileSync(join(outputDir, 'stale.html'), 'old content')
+
+    writeSfc(tempDir, 'emails/test.vue', `
+      <template><div>Fresh</div></template>
+    `)
+
+    await build()
+
+    expect(existsSync(join(outputDir, 'stale.html'))).toBe(false)
+    expect(existsSync(join(outputDir, 'test.html'))).toBe(true)
+  })
+
+  it('registers SFC event handlers via useEvent()', async () => {
+    const marker = join(tempDir, 'afterbuild.marker')
+
+    writeSfc(tempDir, 'emails/test.vue', `
+      <script setup>
+      import { writeFileSync } from 'node:fs'
+      useEvent('afterBuild', ({ files }) => {
+        writeFileSync('${marker.replace(/\\/g, '\\\\')}', files.join('\\n'))
+      })
+      </script>
+      <template><div>Test</div></template>
+    `)
+
+    await build()
+
+    expect(existsSync(marker)).toBe(true)
+    expect(readFileSync(marker, 'utf-8')).toContain('test.html')
   })
 })

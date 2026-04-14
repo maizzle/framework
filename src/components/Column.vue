@@ -42,7 +42,7 @@ const styles = computed(() => {
 })
 
 const MsoBefore = () => createStaticVNode(
-  `<!--[if mso]><td width="${msoWidth.value}" style="vertical-align:top"><![endif]-->`,
+  `<!--[if mso]><td width="${msoWidth.value}" style="vertical-align: top"><![endif]-->`,
   1
 )
 

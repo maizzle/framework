@@ -37,7 +37,7 @@ const vmlOpen = computed(() => {
   const w = normalizeToPixels(props.width)
   const h = normalizeToPixels(props.msoHeight ?? props.height)
 
-  return `<!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" stroked="f" filled="f" style="width:${w};height:${h};"><v:textbox inset="${props.msoInset}"><![endif]-->`
+  return `<!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" stroked="f" filled="f" style="width: ${w}; height: ${h};"><v:textbox inset="${props.msoInset}"><![endif]-->`
 })
 
 const VmlBefore = () => createStaticVNode(vmlOpen.value, 1)

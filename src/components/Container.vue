@@ -21,7 +21,7 @@ const styles = computed(() => {
 })
 
 const MsoBefore = () => createStaticVNode(
-  `<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width:${normalizeToPixels(props.width)}" align="center"><tr><td><![endif]-->`,
+  `<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width: ${normalizeToPixels(props.width)}" align="center"><tr><td><![endif]-->`,
   1
 )
 

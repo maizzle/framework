@@ -15,6 +15,6 @@ defineProps({
 
 <template>
   <Teleport to="body:start">
-    <div style="display:none"><slot /><template v-for="i in fillerCount" :key="'f'+i">&#8199;&#847; </template><template v-for="i in shyCount" :key="'s'+i">&shy; </template>&nbsp;</div>
+    <div style="display: none"><slot /><template v-for="i in fillerCount" :key="'f'+i">&#8199;&#847; </template><template v-for="i in shyCount" :key="'s'+i">&shy; </template>&nbsp;</div>
   </Teleport>
 </template>

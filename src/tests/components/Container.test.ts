@@ -39,7 +39,7 @@ describe('Container', () => {
 
     it('renders MSO table with matching width', () => {
       const html = mount(Container, { props: { width: '600px' } }).html()
-      expect(html).toContain('style="width:600px"')
+      expect(html).toContain('style="width: 600px"')
     })
 
     it('renders MSO table with role="none" and align="center"', () => {

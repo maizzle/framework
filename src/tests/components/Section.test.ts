@@ -32,12 +32,12 @@ describe('Section', () => {
 
     it('renders MSO table with 100% width by default', () => {
       const html = mount(Section).html()
-      expect(html).toContain('style="width:100%"')
+      expect(html).toContain('style="width: 100%"')
     })
 
     it('renders MSO table with custom width', () => {
       const html = mount(Section, { props: { width: '600px' } }).html()
-      expect(html).toContain('style="width:600px"')
+      expect(html).toContain('style="width: 600px"')
     })
 
     it('renders MSO table with role="none" and no align attribute', () => {

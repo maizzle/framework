@@ -88,17 +88,17 @@ describe('Overlap', () => {
 
     it('renders v:rect with correct width', () => {
       const wrapper = mountOverlap({ width: 600 })
-      expect(wrapper.html()).toContain('width:600px')
+      expect(wrapper.html()).toContain('width: 600px')
     })
 
     it('renders v:rect with height as default msoHeight', () => {
       const wrapper = mountOverlap({ height: 340 })
-      expect(wrapper.html()).toContain('height:340px')
+      expect(wrapper.html()).toContain('height: 340px')
     })
 
     it('uses msoHeight when provided', () => {
       const wrapper = mountOverlap({ height: 340, msoHeight: 300 })
-      expect(wrapper.html()).toContain('height:300px')
+      expect(wrapper.html()).toContain('height: 300px')
     })
 
     it('uses msoInset as the textbox inset value', () => {

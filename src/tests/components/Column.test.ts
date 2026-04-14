@@ -139,9 +139,9 @@ describe('Column', () => {
       expect(html).toContain('width="50%"')
     })
 
-    it('sets vertical-align:top on MSO td', () => {
+    it('sets vertical-align: top on MSO td', () => {
       const html = mount(Column).html()
-      expect(html).toContain('vertical-align:top')
+      expect(html).toContain('vertical-align: top')
     })
   })
 })

@@ -1,4 +1,5 @@
 import type { Options as MarkdownPluginOptions } from 'unplugin-vue-markdown/types'
+import type { Options as JuiceOptions } from 'juice'
 
 export interface UrlQueryOptions {
   /**
@@ -96,7 +97,7 @@ export interface CssConfig {
    *   }
    * }
    */
-  inline?: boolean | {
+  inline?: boolean | JuiceOptions & {
     /**
      * Convert HTML attributes like `width`, `height`, `bgcolor`, and `valign`
      * to inline CSS styles. Set to `true` for all, or pass an array of attribute names.
@@ -105,18 +106,6 @@ export interface CssConfig {
      */
     attributeToStyle?: boolean | string[]
     /**
-     * Remove `<style>` tags after inlining.
-     *
-     * @default false
-     */
-    removeStyleTags?: boolean
-    /**
-     * Remove selectors from `<style>` tags after they have been inlined.
-     *
-     * @default true
-     */
-    removeInlinedSelectors?: boolean
-    /**
      * Convert `0px`, `0em` etc. to `0` in inline styles.
      *
      * @default true
@@ -124,12 +113,14 @@ export interface CssConfig {
     preferUnitlessValues?: boolean
     /**
      * CSS selectors to preserve in `<style>` tags, even after inlining.
+     * Mapped to Juice's `preservedSelectors` option.
      *
      * @default []
      */
     safelist?: string[]
     /**
      * Duplicate CSS properties to HTML attributes.
+     * Mapped to Juice's static `styleToAttribute` property.
      *
      * @default {}
      *
@@ -140,43 +131,36 @@ export interface CssConfig {
      */
     styleToAttribute?: Record<string, string>
     /**
-     * Add `width` HTML attributes based on inline CSS width values.
-     *
-     * @default true
-     */
-    applyWidthAttributes?: boolean
-    /**
-     * Add `height` HTML attributes based on inline CSS height values.
-     *
-     * @default true
-     */
-    applyHeightAttributes?: boolean
-    /**
      * Elements that can receive `width` HTML attributes.
+     * Mapped to Juice's static `widthElements` property.
      *
      * @default ['img', 'video']
      */
     widthElements?: string[]
     /**
      * Elements that can receive `height` HTML attributes.
+     * Mapped to Juice's static `heightElements` property.
      *
      * @default ['img', 'video']
      */
     heightElements?: string[]
     /**
      * CSS properties to exclude from inlining.
+     * Mapped to Juice's static `excludedProperties` property.
      *
      * @default []
      */
     excludedProperties?: string[]
     /**
      * Template language code blocks to preserve during inlining.
+     * Mapped to Juice's static `codeBlocks` property.
      *
      * @default { EJS: { start: '<%', end: '%>' }, HBS: { start: '\{\{', end: '}}' } }
      */
     codeBlocks?: Record<string, { start: string; end: string }>
     /**
      * Additional CSS string to inline alongside `<style>` tag contents.
+     * Mapped to Juice's `extraCss` option.
      */
     customCSS?: string
   }

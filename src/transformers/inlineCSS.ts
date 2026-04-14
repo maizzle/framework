@@ -4,21 +4,6 @@ import type { ChildNode, Element } from 'domhandler'
 import type { Options as JuiceOptions } from 'juice'
 import type { CssConfig } from '../types/config.ts'
 
-interface InlineCssOptions {
-  removeStyleTags?: boolean
-  removeInlinedSelectors?: boolean
-  preferUnitlessValues?: boolean
-  safelist?: string[]
-  styleToAttribute?: Record<string, string>
-  applyWidthAttributes?: boolean
-  applyHeightAttributes?: boolean
-  widthElements?: string[]
-  heightElements?: string[]
-  excludedProperties?: string[]
-  codeBlocks?: Record<string, { start: string; end: string }>
-  customCSS?: string
-}
-
 /**
  * Inline CSS transformer.
  *
@@ -26,20 +11,7 @@ interface InlineCssOptions {
  * This is important for email client compatibility (especially Outlook on Windows).
  *
  * Enabled when `css.inline` is set to `true` or an object with options.
- *
- * Options:
- * - removeStyleTags: Remove style tags after inlining (default: false)
- * - removeInlinedSelectors: Remove classes after they've been inlined (default: true)
- * - preferUnitlessValues: Convert 0px, 0em, etc. to 0 (default: true)
- * - safelist: Selectors that should not be removed after inlining
- * - styleToAttribute: Map CSS properties to HTML attributes (e.g., background-color -> bgcolor)
- * - applyWidthAttributes: Add width attributes based on inline CSS (default: true)
- * - applyHeightAttributes: Add height attributes based on inline CSS (default: true)
- * - widthElements: Elements that can receive width attributes (default: ['img', 'video'])
- * - heightElements: Elements that can receive height attributes (default: ['img', 'video'])
- * - excludedProperties: CSS properties to exclude from inlining
- * - codeBlocks: Fenced code blocks to ignore (default: { EJS: { start: '<%', end: '%>' }, HBS: { start: '{{', end: '}}' } })
- * - customCSS: Additional CSS to inline
+ * All Juice options are supported and passed through directly.
  */
 export function inlineCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[] {
   const inline = config.inline
@@ -50,20 +22,30 @@ export function inlineCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[]
   }
 
   // Build options from config
-  const options: InlineCssOptions = typeof inline === 'object' ? inline : {}
+  const options = typeof inline === 'object' ? inline : {}
 
-  const removeStyleTags = options.removeStyleTags ?? false
-  const customCSS = options.customCSS ?? ''
+  // Separate Maizzle-specific options from Juice options
+  const {
+    preferUnitlessValues = true,
+    safelist,
+    customCSS = '',
+    styleToAttribute,
+    excludedProperties,
+    widthElements,
+    heightElements,
+    codeBlocks,
+    ...juicePassthrough
+  } = options
 
   // Configure Juice static properties
-  juice.styleToAttribute = options.styleToAttribute ?? {}
-  juice.excludedProperties = ['--tw-shadow', ...(options.excludedProperties ?? [])]
-  juice.widthElements = (options.widthElements ?? ['img', 'video']).map(i => i.toUpperCase()) as unknown as HTMLElement[]
-  juice.heightElements = (options.heightElements ?? ['img', 'video']).map(i => i.toUpperCase()) as unknown as HTMLElement[]
+  juice.styleToAttribute = styleToAttribute ?? {}
+  juice.excludedProperties = ['--tw-shadow', ...(excludedProperties ?? [])]
+  juice.widthElements = (widthElements ?? ['img', 'video']).map(i => i.toUpperCase()) as unknown as HTMLElement[]
+  juice.heightElements = (heightElements ?? ['img', 'video']).map(i => i.toUpperCase()) as unknown as HTMLElement[]
 
   // Add custom code blocks
-  if (options.codeBlocks && typeof options.codeBlocks === 'object') {
-    Object.entries(options.codeBlocks).forEach(([key, value]) => {
+  if (codeBlocks && typeof codeBlocks === 'object') {
+    Object.entries(codeBlocks).forEach(([key, value]) => {
       if (value.start && value.end) {
         juice.codeBlocks[key] = value
       }
@@ -98,25 +80,23 @@ export function inlineCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[]
 
   try {
     const juiceOptions: JuiceOptions = {
-      removeStyleTags,
-      removeInlinedSelectors: options.removeInlinedSelectors ?? true,
-      preservedSelectors: options.safelist ?? [],
-      applyWidthAttributes: options.applyWidthAttributes ?? true,
-      applyHeightAttributes: options.applyHeightAttributes ?? true,
+      removeStyleTags: juicePassthrough.removeStyleTags ?? false,
+      removeInlinedSelectors: juicePassthrough.removeInlinedSelectors ?? true,
+      applyWidthAttributes: juicePassthrough.applyWidthAttributes ?? true,
+      applyHeightAttributes: juicePassthrough.applyHeightAttributes ?? true,
+      preservedSelectors: safelist ?? [],
+      ...customCSS ? { extraCss: customCSS } : {},
+      inlineDuplicateProperties: juicePassthrough.inlineDuplicateProperties ?? true,
+      ...juicePassthrough,
     }
 
-    if (customCSS) {
-      inlinedHtml = juice(serialized, { ...juiceOptions, extraCss: customCSS })
-    } else {
-      inlinedHtml = juice(serialized, juiceOptions)
-    }
+    inlinedHtml = juice(serialized, juiceOptions)
   } catch {
     // If Juice fails, return the dom unchanged
     return dom
   }
 
   // Post-process for preferUnitlessValues
-  const preferUnitlessValues = options.preferUnitlessValues ?? true
   const result = parse(inlinedHtml)
 
   if (preferUnitlessValues) {

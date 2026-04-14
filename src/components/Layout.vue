@@ -77,7 +77,7 @@ defineProps({
       </style>
     </head>
     <body :xml:lang="lang" :class="['m-0 p-0 size-full [word-break:break-word]', bodyClass, $attrs.class]">
-      <div role="article" aria-roledescription="email" :aria-label="ariaLabel" :lang="lang" :dir="dir" style="font-size: medium; font-size: max(16px, 1rem)">
+      <div role="article" aria-roledescription="email" :aria-label="ariaLabel" :lang="lang" :dir="dir" style="font-size: medium;" class="[font-size:max(16px,1rem)]">
         <slot />
       </div>
     </body>

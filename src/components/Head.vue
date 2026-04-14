@@ -1,4 +1,19 @@
+<script setup lang="ts">
+import { createStaticVNode } from 'vue'
+
+const props = defineProps({
+  /** Render an empty head before the main head, for Yahoo! Android responsive support. */
+  double: {
+    type: [Boolean, String],
+    default: false
+  }
+})
+
+const EmptyHead = () => createStaticVNode('<head></head>', 1)
+</script>
+
 <template>
+  <EmptyHead v-if="props.double === true || props.double === 'true'" />
   <head>
     <meta charset="utf-8">
     <meta name="x-apple-disable-message-reformatting">

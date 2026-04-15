@@ -6,6 +6,7 @@ import { createServer, createLogger, type ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { glob } from 'tinyglobby'
+import picomatch from 'picomatch'
 import { createHighlighter, type Highlighter } from 'shiki'
 import { createPlaintext } from './plaintext.ts'
 import { resolveConfig } from './config/index.ts'
@@ -47,7 +48,7 @@ export async function serve(options: ServeOptions = {}) {
   const port = config.server?.port ?? 3000
 
   // Create a renderer for SSR rendering email templates (with dts for dev)
-  let renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat() })
+  let renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat(), vite: config.vite })
 
   const server = await createServer({
     configFile: false,
@@ -152,6 +153,7 @@ function maizzleDevPlugin(
 
       const userWatchPaths = config.server?.watch ?? []
       const watchPaths = [...defaultWatchPaths, ...userWatchPaths]
+      const isWatchedFile = picomatch(watchPaths)
 
       for (const watchPath of watchPaths) {
         server.watcher.add(watchPath)
@@ -172,12 +174,12 @@ function maizzleDevPlugin(
       })
 
       server.watcher.on('change', async (file) => {
-        if (watchPaths.some(p => file.endsWith(p))) {
+        if (isWatchedFile(file)) {
           config = await resolveConfig(configInput)
 
           // Recreate the renderer so config changes (e.g. markdown.shikiTheme) take effect
           await renderer.close()
-          renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat() })
+          renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat(), vite: config.vite })
         }
 
         // Invalidate all renderer modules so component and config changes
@@ -186,7 +188,7 @@ function maizzleDevPlugin(
 
         if (
           isTemplateFile(file)
-          || watchPaths.some(p => file.endsWith(p))
+          || isWatchedFile(file)
         ) {
           server.ws.send({ type: 'custom', event: 'maizzle:template-updated', data: { file } })
         }

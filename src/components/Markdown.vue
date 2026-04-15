@@ -1,6 +1,6 @@
 <script lang="ts">
 import { createStaticVNode, type PropType } from 'vue'
-import { createMarkdownExit } from 'markdown-exit'
+import { createMarkdownExit, type MarkdownExitOptions } from 'markdown-exit'
 import { codeToHtml, type BundledTheme } from 'shiki'
 
 export default {
@@ -24,6 +24,11 @@ export default {
     wrapper: {
       type: Boolean,
       default: false
+    },
+    /** markdown-exit configuration options. Merged with defaults. */
+    config: {
+      type: Object as PropType<MarkdownExitOptions>,
+      default: () => ({})
     },
   },
   inheritAttrs: false,
@@ -54,6 +59,7 @@ export default {
           return ''
         }
       },
+      ...props.config,
     })
 
     const wrapPre = (html: string) =>

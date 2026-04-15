@@ -1302,5 +1302,43 @@ describe('render', () => {
 
       expect(result.html).toContain('From File')
     })
+
+    it('accepts config prop for markdown-exit options', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <Markdown :config="{ typographer: false }">
+                "Hello" -- world...
+              </Markdown>
+            </body>
+          </html>
+        </template>
+      `)
+
+      // With typographer: false, quotes and dashes should NOT be smartified
+      expect(result.html).toContain('"Hello"')
+      expect(result.html).toContain('--')
+    })
+
+    it('typographer is enabled by default', async () => {
+      const result = await render(`
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <Markdown>
+                "Hello" -- world...
+              </Markdown>
+            </body>
+          </html>
+        </template>
+      `)
+
+      // With typographer: true (default), quotes become smart quotes and -- becomes en dash
+      expect(result.html).not.toContain('"Hello"')
+      expect(result.html).not.toContain('--')
+    })
   })
 })

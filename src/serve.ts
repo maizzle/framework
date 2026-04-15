@@ -149,6 +149,7 @@ function maizzleDevPlugin(
         'maizzle.config.ts',
         'tailwind.config.js',
         'tailwind.config.ts',
+        'locales/**',
       ]
 
       const userWatchPaths = config.server?.watch ?? []

@@ -6,6 +6,7 @@ import { attributeToStyle } from './attributeToStyle.ts'
 import { inlineCSS } from './inlineCSS.ts'
 import { removeAttributes } from './removeAttributes.ts'
 import { shorthandCSS } from './shorthandCSS.ts'
+import { sixHex } from './sixHex.ts'
 import { addAttributes } from './addAttributes.ts'
 import { filters } from './filters/index.ts'
 import { base } from './base.ts'
@@ -35,16 +36,17 @@ import type { MaizzleConfig } from '../types/config.ts'
  * 4.  CSS inliner
  * 5.  Remove attributes
  * 6.  Shorthand CSS
- * 7.  Add attributes
- * 8.  Filters
- * 9.  Base URL
- * 10. URL query
- * 11. Purge CSS (serializes/parses internally around email-comb)
- * 12. Entities
+ * 7.  Six-digit HEX
+ * 8.  Add attributes
+ * 9.  Filters
+ * 10. Base URL
+ * 11. URL query
+ * 12. Purge CSS (serializes/parses internally around email-comb)
+ * 13. Entities
  * + Vue-generated comments stripped here (on serialized string)
- * 13. Replace strings
- * 14. Prettify
- * 15. Minify
+ * 14. Replace strings
+ * 15. Prettify
+ * 16. Minify
  */
 export async function runTransformers(
   html: string,
@@ -76,22 +78,25 @@ export async function runTransformers(
   // 6. Shorthand CSS
   dom = shorthandCSS(dom, config.css)
 
-  // 7. Add attributes
+  // 7. Six-digit HEX
+  dom = sixHex(dom, config.css)
+
+  // 8. Add attributes
   dom = addAttributes(dom, config.html?.attributes)
 
-  // 8. Filters
+  // 9. Filters
   dom = filters(dom, config.filters)
 
-  // 9. Base URL (serializes/parses internally for VML/MSO regex passes)
+  // 10. Base URL (serializes/parses internally for VML/MSO regex passes)
   dom = base(dom, config.url)
 
-  // 10. URL query
+  // 11. URL query
   dom = urlQuery(dom, config.url)
 
-  // 11. Purge CSS (serializes/parses internally around email-comb)
+  // 12. Purge CSS (serializes/parses internally around email-comb)
   dom = purgeCSS(dom, config.css)
 
-  // 12. Entities
+  // 13. Entities
   dom = entities(dom, config.html?.decodeEntities)
 
   // Serialize once — remaining transformers operate on the HTML string
@@ -107,13 +112,13 @@ export async function runTransformers(
     .replaceAll('<!--teleport start-->', '')
     .replaceAll('<!--teleport end-->', '')
 
-  // 13. Replace strings
+  // 14. Replace strings
   result = replaceStrings(result, config)
 
-  // 14. Format
+  // 15. Format
   result = await format(result, config)
 
-  // 15. Minify
+  // 16. Minify
   result = minify(result, config)
 
   // Strip self-closing slashes for HTML5 doctypes

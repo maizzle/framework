@@ -42,6 +42,7 @@
     "caniemail": "^1.0.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "color-shorthand-hex-to-six-digit": "^5.1.3",
     "css-select": "^6.0.0",
     "defu": "^6.1.4",
     "dom-serializer": "^2.0.0",

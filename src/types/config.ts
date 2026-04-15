@@ -221,6 +221,14 @@ export interface CssConfig {
    */
   shorthand?: boolean | { tags?: string[] }
   /**
+   * Convert 3-digit HEX colors to 6-digit in `bgcolor` and `color` attributes.
+   *
+   * Some email clients don't support shorthand HEX like `#fff`.
+   *
+   * @default true
+   */
+  sixHex?: boolean
+  /**
    * Remove specific CSS declarations by selector.
    *
    * @example

@@ -40,13 +40,8 @@ export function maizzle(configInput?: Partial<MaizzleConfig>): Plugin[] {
         maizzleServer = null
       }
 
-      const { serve, printBanner } = await import('./serve.ts')
-      maizzleServer = await serve({ config: configInput, silent: true })
-
-      // Print Maizzle banner after the host server prints its URLs
-      hostServer.httpServer?.on('listening', () => {
-        printBanner(maizzleServer!)
-      })
+      const { serve } = await import('./serve.ts')
+      maizzleServer = await serve({ config: configInput })
 
       // Clean up when the host server closes
       hostServer.httpServer?.on('close', () => {

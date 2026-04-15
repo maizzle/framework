@@ -51,7 +51,7 @@ export async function build(options: BuildOptions = {}): Promise<BuildResult> {
     rmSync(outputPath, { recursive: true, force: true })
   }
 
-  const renderer = await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat() })
+  const renderer = await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat(), vite: config.vite })
   const outputFiles: string[] = []
 
   try {

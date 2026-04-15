@@ -35,7 +35,7 @@ export async function render(
   const config = await resolveConfig(options.config)
 
   // Reuse provided renderer or create a temporary one
-  const renderer = options._renderer ?? await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat() })
+  const renderer = options._renderer ?? await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat(), vite: config.vite })
   const ownsRenderer = !options._renderer
 
   try {

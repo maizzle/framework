@@ -1,3 +1,5 @@
+import type { InlineConfig } from 'vite'
+import type { Plugin, Directive } from 'vue'
 import type { Options as MarkdownPluginOptions } from 'unplugin-vue-markdown/types'
 import type { Options as JuiceOptions } from 'juice'
 
@@ -332,6 +334,15 @@ export interface MarkdownConfig extends MarkdownPluginOptions {
   shikiTheme?: import('shiki').BundledTheme
 }
 
+export interface VueConfig {
+  /** Vue plugins to register on the app instance before rendering. */
+  plugins?: Plugin[]
+  /** Custom Vue directives to register globally. */
+  directives?: Record<string, Directive>
+  /** Properties added to `app.config.globalProperties`, available in all templates. */
+  globalProperties?: Record<string, unknown>
+}
+
 export interface MaizzleConfig {
   /**
    * Root directory for the Maizzle email project.
@@ -500,6 +511,33 @@ export interface MaizzleConfig {
   url?: UrlConfig
   /** HTML post-processing settings (attributes, formatting, minification). */
   html?: HtmlConfig
+  /**
+   * Vite configuration options passed to the internal Vite SSR server.
+   *
+   * Use this to add custom Vite plugins or other Vite options.
+   * If a `vite.config.{ts,js}` file exists in the project root, it takes
+   * precedence and this option is used as a fallback.
+   *
+   * @example
+   * vite: {
+   *   plugins: [myPlugin()],
+   * }
+   */
+  vite?: InlineConfig
+  /**
+   * Vue app customization options.
+   *
+   * Register plugins, directives, or global properties on the
+   * internal Vue app instance used for SSR rendering.
+   *
+   * @example
+   * vue: {
+   *   plugins: [createI18n({ locale: 'en', messages })],
+   *   directives: { focus: vFocus },
+   *   globalProperties: { $format: dateFormat },
+   * }
+   */
+  vue?: VueConfig
 
   // Events
 

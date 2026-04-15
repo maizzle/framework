@@ -1,8 +1,8 @@
 import { dirname, resolve } from 'node:path'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { isLaravel } from '../utils/detect.ts'
-import { createServer } from 'vite'
+import { createServer, mergeConfig, type InlineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Markdown from 'unplugin-vue-markdown/vite'
 import AutoImport from 'unplugin-auto-import/vite'
@@ -175,6 +175,8 @@ export interface CreateRendererOptions {
   root?: string
   /** Additional component directories to register for auto-import */
   componentDirs?: string[]
+  /** User Vite config options to merge into the internal SSR server */
+  vite?: InlineConfig
 }
 
 /**
@@ -186,7 +188,7 @@ export interface CreateRendererOptions {
 export async function createRenderer(
   options: CreateRendererOptions = {},
 ): Promise<Renderer> {
-  const { dts = false, markdown: markdownOptionsRaw, root = process.cwd(), componentDirs = [] } = options
+  const { dts = false, markdown: markdownOptionsRaw, root = process.cwd(), componentDirs = [], vite: userViteConfig } = options
   const { shikiTheme = 'github-light', ...markdownOptions } = markdownOptionsRaw ?? {}
 
   const dtsDir = isLaravel()
@@ -196,8 +198,13 @@ export async function createRenderer(
   const VIRTUAL_SFC_ID = 'virtual:maizzle-sfc.vue'
   let virtualSfcSource = ''
 
-  const server = await createServer({
-    configFile: false,
+  // Check for a user vite.config file in the project root
+  const viteConfigFile = ['vite.config.ts', 'vite.config.js']
+    .map(f => resolve(root, f))
+    .find(f => existsSync(f))
+
+  const maizzleConfig: InlineConfig = {
+    configFile: viteConfigFile ?? false,
     plugins: [
       codeBlockExtract(),
       markdownExtract(),
@@ -282,7 +289,17 @@ export async function createRenderer(
     optimizeDeps: {
       noDiscovery: true,
     },
-  })
+  }
+
+  // Merge user's vite config (from config.vite) under Maizzle's config.
+  // mergeConfig(a, b) → b overrides a for scalars, arrays are concatenated.
+  // This ensures Maizzle's critical settings (middlewareMode, appType, etc.) always win,
+  // while user plugins and other options are included.
+  const finalConfig = userViteConfig && !viteConfigFile
+    ? mergeConfig(userViteConfig, maizzleConfig)
+    : maizzleConfig
+
+  const server = await createServer(finalConfig)
 
   return {
     async render(input: string | Component, config: MaizzleConfig): Promise<RenderedTemplate> {
@@ -322,6 +339,18 @@ export async function createRenderer(
       const head = createHead({ disableDefaults: true })
       const app = createSSRApp(component)
       app.use(head)
+
+      // Register user Vue plugins, directives, and global properties
+      if (config.vue) {
+        for (const plugin of config.vue.plugins ?? []) {
+          app.use(plugin)
+        }
+        for (const [name, directive] of Object.entries(config.vue.directives ?? {})) {
+          app.directive(name, directive)
+        }
+        Object.assign(app.config.globalProperties, config.vue.globalProperties)
+      }
+
       app.provide(configKey, config)
       app.provide(contextKey, renderContext)
 

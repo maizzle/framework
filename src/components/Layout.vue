@@ -84,7 +84,7 @@ defineProps({
       :lang="lang"
       :dir="dir"
       style="font-size: medium;"
-      :class="['[font-size:max(16px,1rem)]', $attrs.class]"
+      :class="['[font-size:max(16px,1rem)] font-inter', $attrs.class]"
     >
       <slot />
     </div>

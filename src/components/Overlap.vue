@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, useAttrs, createStaticVNode } from 'vue'
+import { computed, inject, useAttrs, createStaticVNode } from 'vue'
 import { normalizeToPixels } from './utils.ts'
 
 defineOptions({ inheritAttrs: false })
 
 const attrs = useAttrs()
+
+const containerWidth = inject('containerWidth', undefined)
 
 const props = defineProps({
   /**
@@ -19,11 +21,11 @@ const props = defineProps({
   /**
    * Width of the overlay table and VML rectangle.
    *
-   * Should match the width of the content being overlapped.
+   * When used inside a Container, defaults to the container's width.
    */
   width: {
     type: [String, Number],
-    required: true
+    default: undefined
   },
   /**
    * Height of the VML rectangle in Outlook.
@@ -49,12 +51,14 @@ const props = defineProps({
   },
 })
 
+const resolvedWidth = computed(() => props.width ?? containerWidth?.value)
+
 const backgroundStyles = computed(() => {
   return `max-height: ${normalizeToPixels(props.height)}; margin: 0 auto; text-align: center;`
 })
 
 const vmlOpen = computed(() => {
-  const w = normalizeToPixels(props.width)
+  const w = normalizeToPixels(resolvedWidth.value)
   const h = normalizeToPixels(props.msoHeight ?? props.height)
 
   return `<!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" stroked="f" filled="f" style="width: ${w}; height: ${h};"><v:textbox inset="${props.msoInset}"><![endif]-->`
@@ -70,7 +74,7 @@ const VmlAfter = () => createStaticVNode('<!--[if mso]></v:textbox></v:rect><![e
   </div>
   <table style="max-height: 0; position: relative; opacity: 0.999;">
     <tr>
-      <td :style="`width: ${normalizeToPixels(props.width)}; max-width: 100%; vertical-align: top;`">
+      <td :style="`width: ${normalizeToPixels(resolvedWidth)}; max-width: 100%; vertical-align: top;`">
         <VmlBefore />
         <slot name="overlay" />
         <VmlAfter />

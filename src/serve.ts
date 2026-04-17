@@ -21,8 +21,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const devUIDir = resolve(__dirname, 'server/ui')
 
 const require = createRequire(import.meta.url)
-const frameworkNodeModules = resolve(dirname(require.resolve('vue/package.json')), '..')
-const vuePkgDir = dirname(require.resolve('vue/package.json'))
+const pkg = (name: string) => {
+  const resolved = require.resolve(name)
+  const marker = `node_modules/${name}`
+  const idx = resolved.lastIndexOf(marker)
+
+  return resolved.slice(0, idx + marker.length)
+}
 
 export interface ServeOptions {
   config?: Partial<MaizzleConfig> | string
@@ -62,15 +67,9 @@ export async function serve(options: ServeOptions = {}) {
       dedupe: ['vue'],
       alias: [
         { find: '@', replacement: devUIDir },
-        { find: 'vue', replacement: resolve(vuePkgDir, 'dist/vue.runtime.esm-bundler.js') },
-        { find: 'vue-router', replacement: resolve(frameworkNodeModules, 'vue-router') },
-        { find: 'reka-ui', replacement: resolve(frameworkNodeModules, 'reka-ui') },
-        { find: '@vueuse/core', replacement: resolve(frameworkNodeModules, '@vueuse/core') },
-        { find: '@vueuse/shared', replacement: resolve(frameworkNodeModules, '@vueuse/shared') },
-        { find: 'lucide-vue-next', replacement: resolve(frameworkNodeModules, 'lucide-vue-next') },
-        { find: 'class-variance-authority', replacement: resolve(frameworkNodeModules, 'class-variance-authority') },
-        { find: 'clsx', replacement: resolve(frameworkNodeModules, 'clsx') },
-        { find: 'tailwind-merge', replacement: resolve(frameworkNodeModules, 'tailwind-merge') },
+        { find: 'vue', replacement: resolve(pkg('vue'), 'dist/vue.runtime.esm-bundler.js') },
+        ...['vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', 'lucide-vue-next', 'class-variance-authority', 'clsx', 'tailwind-merge']
+          .map(name => ({ find: name, replacement: pkg(name) })),
       ],
     },
     cacheDir: resolve(devUIDir, '.vite'),
@@ -92,7 +91,7 @@ export async function serve(options: ServeOptions = {}) {
       port,
       host: options.host,
       fs: {
-        allow: [process.cwd(), config.root ?? process.cwd(), devUIDir, frameworkNodeModules],
+        allow: [process.cwd(), config.root ?? process.cwd(), devUIDir, ...['vue', 'vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', 'lucide-vue-next', 'class-variance-authority', 'clsx', 'tailwind-merge'].map(pkg)],
       },
     },
     customLogger: customLogger(),

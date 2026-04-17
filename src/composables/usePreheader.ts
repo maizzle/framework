@@ -1,7 +1,7 @@
 import { inject } from 'vue'
 import { RenderContextKey } from './renderContext.ts'
 
-export interface UsePreviewTextOptions {
+export interface UsePreheaderOptions {
   /** Number of &#8199;&#847; filler pairs to render. @default 150 */
   fillerCount?: number
   /** Number of &shy; entities to render. @default 150 */
@@ -9,22 +9,22 @@ export interface UsePreviewTextOptions {
 }
 
 /**
- * Set the preview/preheader text for the current email template.
+ * Set the preheader text for the current email template.
  *
- * Injects a hidden `<div>` at the start of `<body>` with the preview text
+ * Injects a hidden `<div>` at the start of `<body>` with the preheader text
  * followed by filler characters that prevent email clients from pulling
  * in body content after the preheader.
  *
  * Usage in SFC <script setup>:
  * ```ts
- * usePreviewText('Thanks for signing up!')
- * usePreviewText('Welcome!', { fillerCount: 200, shyCount: 200 })
+ * usePreheader('Thanks for signing up!')
+ * usePreheader('Welcome!', { fillerCount: 200, shyCount: 200 })
  * ```
  */
-export function usePreviewText(text: string, options?: UsePreviewTextOptions): void {
+export function usePreheader(text: string, options?: UsePreheaderOptions): void {
   const ctx = inject(RenderContextKey)
   if (ctx) {
-    ctx.previewText = {
+    ctx.preheader = {
       text,
       fillerCount: options?.fillerCount ?? 150,
       shyCount: options?.shyCount ?? 150,

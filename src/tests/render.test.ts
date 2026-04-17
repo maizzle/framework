@@ -811,11 +811,11 @@ describe('render', () => {
     })
   })
 
-  describe('usePreviewText', () => {
-    it('injects preview text div at start of body', async () => {
+  describe('usePreheader', () => {
+    it('injects preheader text div at start of body', async () => {
       const result = await render(`
         <script setup>
-        usePreviewText('Welcome aboard!')
+        usePreheader('Welcome aboard!')
         </script>
         <template>
           <html>
@@ -837,7 +837,7 @@ describe('render', () => {
     it('uses custom filler and shy counts', async () => {
       const result = await render(`
         <script setup>
-        usePreviewText('Hi', { fillerCount: 2, shyCount: 3 })
+        usePreheader('Hi', { fillerCount: 2, shyCount: 3 })
         </script>
         <template>
           <html>

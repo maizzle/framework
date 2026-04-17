@@ -413,9 +413,9 @@ export async function createRenderer(
         html = serializeDom(dom)
       }
 
-      // Inject preview/preheader text from usePreviewText() composable
-      if (renderContext.previewText) {
-        const { text, fillerCount, shyCount } = renderContext.previewText
+      // Inject preheader text from usePreheader() composable
+      if (renderContext.preheader) {
+        const { text, fillerCount, shyCount } = renderContext.preheader
         const filler = '\u2007\u034F '.repeat(fillerCount)
         const shys = '\u00AD '.repeat(shyCount)
         const previewHtml = `<div style="display:none">${text}${filler}${shys}\u00A0</div>`

@@ -31,7 +31,7 @@ describe('Image', () => {
       expect(style).toContain('vertical-align: middle')
     })
 
-    it('does not wrap in picture element without darkSrc or reducedMotionSrc', () => {
+    it('does not wrap in picture element without darkSrc or motionSrc', () => {
       const wrapper = mount(Image, { props: { src: 'img.png', width: 100 } })
       expect(wrapper.find('picture').exists()).toBe(false)
     })
@@ -103,54 +103,54 @@ describe('Image', () => {
     })
   })
 
-  describe('reducedMotionSrc prop', () => {
+  describe('motionSrc prop', () => {
     it('wraps in picture element', () => {
-      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, reducedMotionSrc: 'animation.webp' } })
+      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, motionSrc: 'animation.webp' } })
       expect(wrapper.find('picture').exists()).toBe(true)
     })
 
     it('adds source with no-preference media query', () => {
-      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, reducedMotionSrc: 'animation.webp' } })
+      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, motionSrc: 'animation.webp' } })
       const source = wrapper.find('source')
       expect(source.attributes('srcset')).toBe('animation.webp')
       expect(source.attributes('media')).toBe('(prefers-reduced-motion: no-preference)')
     })
 
     it('uses src as the img fallback', () => {
-      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, reducedMotionSrc: 'animation.webp' } })
+      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, motionSrc: 'animation.webp' } })
       expect(wrapper.find('picture img').attributes('src')).toBe('static.png')
     })
 
     it('derives type for webp', () => {
-      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, reducedMotionSrc: 'animation.webp' } })
+      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, motionSrc: 'animation.webp' } })
       expect(wrapper.find('source').attributes('type')).toBe('image/webp')
     })
 
     it('derives type for gif', () => {
-      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, reducedMotionSrc: 'animation.gif' } })
+      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, motionSrc: 'animation.gif' } })
       expect(wrapper.find('source').attributes('type')).toBe('image/gif')
     })
 
     it('derives type for apng', () => {
-      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, reducedMotionSrc: 'animation.apng' } })
+      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, motionSrc: 'animation.apng' } })
       expect(wrapper.find('source').attributes('type')).toBe('image/apng')
     })
 
     it('derives type for avif', () => {
-      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, reducedMotionSrc: 'animation.avif' } })
+      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, motionSrc: 'animation.avif' } })
       expect(wrapper.find('source').attributes('type')).toBe('image/avif')
     })
 
     it('omits type for unknown extensions', () => {
-      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, reducedMotionSrc: 'animation.xyz' } })
+      const wrapper = mount(Image, { props: { src: 'static.png', width: 100, motionSrc: 'animation.xyz' } })
       expect(wrapper.find('source').attributes('type')).toBeUndefined()
     })
   })
 
-  describe('combined darkSrc and reducedMotionSrc', () => {
+  describe('combined darkSrc and motionSrc', () => {
     it('renders both source elements', () => {
       const wrapper = mount(Image, {
-        props: { src: 'static.png', width: 100, darkSrc: 'dark.png', reducedMotionSrc: 'animation.webp' }
+        props: { src: 'static.png', width: 100, darkSrc: 'dark.png', motionSrc: 'animation.webp' }
       })
       const sources = wrapper.findAll('source')
       expect(sources).toHaveLength(2)
@@ -158,7 +158,7 @@ describe('Image', () => {
 
     it('dark source comes first', () => {
       const wrapper = mount(Image, {
-        props: { src: 'static.png', width: 100, darkSrc: 'dark.png', reducedMotionSrc: 'animation.webp' }
+        props: { src: 'static.png', width: 100, darkSrc: 'dark.png', motionSrc: 'animation.webp' }
       })
       const sources = wrapper.findAll('source')
       expect(sources[0].attributes('media')).toBe('(prefers-color-scheme: dark)')

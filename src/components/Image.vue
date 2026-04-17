@@ -6,7 +6,7 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 
 const props = defineProps({
-  /** The image source URL. When reducedMotionSrc is used, this becomes the static fallback. */
+  /** The image source URL. When motionSrc is used, this becomes the static fallback. */
   src: {
     type: String,
     required: true
@@ -27,7 +27,7 @@ const props = defineProps({
     required: true
   },
   /** Animated image source, shown when user has no reduced motion preference. */
-  reducedMotionSrc: {
+  motionSrc: {
     type: String,
     default: null
   }
@@ -51,11 +51,11 @@ function mimeFromExtension(src: string): string {
   return types[ext] ?? ''
 }
 
-const reducedMotionType = computed(() => mimeFromExtension(props.reducedMotionSrc ?? ''))
+const motionType = computed(() => mimeFromExtension(props.motionSrc ?? ''))
 
 const imgWidth = computed(() => Number.parseInt(String(props.width), 10))
 
-const usePicture = computed(() => props.darkSrc || props.reducedMotionSrc)
+const usePicture = computed(() => props.darkSrc || props.motionSrc)
 
 const imgStyle = 'max-width: 100%; vertical-align: middle;'
 </script>
@@ -63,7 +63,7 @@ const imgStyle = 'max-width: 100%; vertical-align: middle;'
 <template>
   <picture v-if="usePicture">
     <source v-if="darkSrc" :srcset="darkSrc" media="(prefers-color-scheme: dark)">
-    <source v-if="reducedMotionSrc" :srcset="reducedMotionSrc" :type="reducedMotionType || undefined" media="(prefers-reduced-motion: no-preference)">
+    <source v-if="motionSrc" :srcset="motionSrc" :type="motionType || undefined" media="(prefers-reduced-motion: no-preference)">
     <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :style="imgStyle">
   </picture>
   <img v-else v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :style="imgStyle">

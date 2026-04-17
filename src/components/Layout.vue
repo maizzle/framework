@@ -74,7 +74,6 @@ defineProps({
       img {
         @apply max-w-full align-middle;
       }
-
     </style>
   </head>
   <body :xml:lang="lang" :class="['m-0 p-0 size-full [word-break:break-word]', bodyClass]">
@@ -85,7 +84,8 @@ defineProps({
       :lang="lang"
       :dir="dir"
       style="font-size: medium;"
-      :class="['[font-size:max(16px,1rem)]', $attrs.class]">
+      :class="['[font-size:max(16px,1rem)]', $attrs.class]"
+    >
       <slot />
     </div>
   </body>

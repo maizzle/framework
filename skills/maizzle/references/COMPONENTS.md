@@ -17,7 +17,7 @@ All components are auto-imported. No `import` statements needed in templates.
 - `<Text>` — Paragraph or span text
 - `<Link>` — Anchor element with email-safe defaults
 - `<Button>` — Call-to-action button with bulletproof rendering
-- `<Image>` — Image with dark mode and reduced motion variants
+- `<Img>` — Image with dark mode and reduced motion variants
 - `<Divider>` — Horizontal rule / visual separator
 - `<Spacer>` — Vertical or horizontal spacing
 - `<Preheader>` — Hidden preview text shown in inbox list view
@@ -347,30 +347,30 @@ Usage:
   <!-- width inherited from Container -->
   <Container>
     <Overlap height="200px">
-      <Image src="/banner.jpg" alt="Banner" />
+      <Img src="/banner.jpg" alt="Banner" />
 
       <template #overlay>
-        <Image src="/avatar.png" alt="Avatar" width="80" />
+        <Img src="/avatar.png" alt="Avatar" width="80" />
       </template>
     </Overlap>
   </Container>
 
   <!-- explicit width -->
   <Overlap height="200px" width="400px">
-    <Image src="/banner.jpg" alt="Banner" />
+    <Img src="/banner.jpg" alt="Banner" />
 
     <template #overlay>
-      <Image src="/avatar.png" alt="Avatar" width="80" />
+      <Img src="/avatar.png" alt="Avatar" width="80" />
     </template>
   </Overlap>
 
   <!-- responsive -->
   <Overlap height="200px" class="sm:max-h-10">
-    <Image width="552" src="/banner.jpg" alt="Banner" />
+    <Img width="552" src="/banner.jpg" alt="Banner" />
 
     <template #overlay>
         <Section class="text-center mb-40 sm:mb-10">
-        <Image src="/logo.png" alt="Avatar" width="80" />
+        <Img src="/logo.png" alt="Avatar" width="80" />
         </Section>
     </template>
     </Overlap>
@@ -482,7 +482,7 @@ Usage:
 
 ---
 
-## Image
+## Img
 
 Image with optional dark mode and reduced motion variants. Renders a plain `<img>` by default, or wraps in `<picture>` when `darkSrc` or `motionSrc` is provided. Sets `max-width: 100%; vertical-align: middle;` by default (responsive and no bottom gap).
 
@@ -497,16 +497,16 @@ Usage:
 
 ```vue
 <template>
-  <Image src="/logo.png" alt="Logo" width="70" />
+  <Img src="/logo.png" alt="Logo" width="70" />
 
   <!-- Dark mode variant -->
-  <Image src="/logo.png" dark-src="/logo-dark.png" alt="Logo" width="70" />
+  <Img src="/logo.png" dark-src="/logo-dark.png" alt="Logo" width="70" />
 
   <!-- src is the static fallback, motionSrc is the animated version -->
-  <Image src="/hero.png" motion-src="/hero.gif" alt="Hero" width="600" />
+  <Img src="/hero.png" motion-src="/hero.gif" alt="Hero" width="600" />
 
   <!-- All variants with Tailwind styling -->
-  <Image
+  <Img
     alt="Logo"
     width="120"
     src="/logo.png"
@@ -719,8 +719,8 @@ Usage:
 <template>
   <!-- Base URL for all images -->
   <WithUrl base="https://cdn.example.com/emails/">
-    <Image src="/logo.png" alt="Logo" width="70" />
-    <Image src="/banner.jpg" alt="Banner" width="600" />
+    <Img src="/logo.png" alt="Logo" width="70" />
+    <Img src="/banner.jpg" alt="Banner" width="600" />
   </WithUrl>
 
   <!-- UTM tracking on links -->
@@ -731,7 +731,7 @@ Usage:
 
   <!-- Both base URL and query parameters -->
   <WithUrl base="https://cdn.example.com/" parameters="v=2">
-    <Image src="/hero.png" alt="Hero" width="600" />
+    <Img src="/hero.png" alt="Hero" width="600" />
     <Link href="https://example.com">Visit</Link>
   </WithUrl>
 </template>
@@ -822,10 +822,10 @@ Usage:
 ```vue
 <template>
   <NotOutlook>
-    <Image src="/webp-hero.webp" alt="Hero" width="600" />
+    <Img src="/webp-hero.webp" alt="Hero" width="600" />
   </NotOutlook>
   <Outlook>
-    <Image src="/hero-fallback.png" alt="Hero" width="600" />
+    <Img src="/hero-fallback.png" alt="Hero" width="600" />
   </Outlook>
 </template>
 ```

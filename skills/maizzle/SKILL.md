@@ -129,7 +129,7 @@ All built-in components are auto-imported, no import statements needed. See `ref
 | `<Text>` | Paragraph or span text |
 | `<Link>` | Anchor element with email-safe defaults |
 | `<Button>` | Call-to-action button with bulletproof rendering |
-| `<Image>` | Image with dark mode and reduced motion variants |
+| `<Img>` | Image with dark mode and reduced motion variants |
 | `<Divider>` | Horizontal rule / visual separator |
 | `<Spacer>` | Vertical or horizontal spacing |
 | `<Preheader>` | Hidden preview text shown in inbox list view |
@@ -205,7 +205,7 @@ Reference them with absolute paths from root:
 
 ```vue
 <template>
-  <Image src="/logo.png" alt="Logo" width="70" />
+  <Img src="/logo.png" alt="Logo" width="70" />
 </template>
 ```
 
@@ -231,7 +231,7 @@ Result: `/logo.png` becomes `https://cdn.example.com/emails/logo.png`
 ```vue
 <template>
   <WithUrl base="https://cdn.example.com/emails/">
-    <Image src="/logo.png" alt="Logo" />
+    <Img src="/logo.png" alt="Logo" />
   </WithUrl>
 </template>
 ```

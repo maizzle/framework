@@ -91,7 +91,7 @@ Structure for a simple email template with Maizzle components:
         <Text class="text-gray-700 mb-6">
           Build HTML emails with Vue components and Tailwind CSS.
         </Text>
-        <Button 
+        <Button
           class="bg-blue-600 text-white px-4 py-2 rounded"
           href="https://maizzle.com"
         >
@@ -204,7 +204,9 @@ my-project/
 Reference them with absolute paths from root:
 
 ```vue
-<Image src="/logo.png" alt="Logo" width="70" />
+<template>
+  <Image src="/logo.png" alt="Logo" width="70" />
+</template>
 ```
 
 ### URL rewriting
@@ -227,9 +229,11 @@ Result: `/logo.png` becomes `https://cdn.example.com/emails/logo.png`
 **2. Component-level (scoped)** — rewrites URLs only in children:
 
 ```vue
-<WithUrl base="https://cdn.example.com/emails/">
-  <Image src="/logo.png" alt="Logo" />
-</WithUrl>
+<template>
+  <WithUrl base="https://cdn.example.com/emails/">
+    <Image src="/logo.png" alt="Logo" />
+  </WithUrl>
+</template>
 ```
 
 Both approaches skip absolute URLs, data URIs, and fragment links.
@@ -253,9 +257,11 @@ export default defineConfig({
 Or scoped to specific elements with the `<WithUrl>` component:
 
 ```vue
-<WithUrl parameters="utm_source=email&utm_campaign=welcome">
-  <a href="https://example.com">Visit</a>
-</WithUrl>
+<template>
+  <WithUrl parameters="utm_source=email&utm_campaign=welcome">
+    <a href="https://example.com">Visit</a>
+  </WithUrl>
+</template>
 ```
 
 ### Dev vs production
@@ -272,11 +278,13 @@ Maizzle uses Tailwind CSS 4 with full support for its features including media q
 Import `@maizzle/tailwindcss` inside a `<style>` tag in the template's `<Head>` component:
 
 ```vue
-<Head>
-  <style>
-    @import "@maizzle/tailwindcss";
-  </style>
-</Head>
+<template>
+  <Head>
+    <style>
+      @import "@maizzle/tailwindcss";
+    </style>
+  </Head>
+</template>
 ```
 
 This is where Tailwind CSS is compiled from — it includes email-safe resets, optimized theme defaults, Outlook (`mso-*`) utilities, and email client-specific variants. Note: the `<Layout>` component has all of this set up by default.
@@ -288,12 +296,14 @@ The `tailwind.css` file in the project root exists only for Tailwind CSS Intelli
 Style templates with Tailwind utility classes — they are compiled, then inlined into `style` attributes during build:
 
 ```vue
-<Heading level="1" class="text-2xl font-semibold text-slate-900 mb-4">
-  Hello!
-</Heading>
+<template>
+  <Heading level="1" class="text-2xl font-semibold text-slate-900 mb-4">
+    Hello!
+  </Heading>
+</template>
 ```
 
-Use arbitrary values when needed, but stick to Tailwind CSS v4 if possible: 
+Use arbitrary values when needed, but stick to Tailwind CSS v4 if possible:
 
 ```diff
 - w-[600px] text-[#facade]
@@ -308,11 +318,13 @@ Maizzle supports `@media` queries for responsive layouts. The `@maizzle/tailwind
 - `xs:` — `@media (max-width: 430px)`
 
 ```vue
-<Container class="sm:w-full">
-  <Column class="w-1/2 sm:w-full sm:block">
-    <!-- stacks full width on mobile -->
-  </Column>
-</Container>
+<template>
+  <Container class="sm:w-full">
+    <Column class="w-1/2 sm:w-full sm:block">
+      <!-- stacks full width on mobile -->
+    </Column>
+  </Container>
+</template>
 ```
 
 Media queries are preserved in a `<style>` tag in the `<head>` (they can't be inlined). The build pipeline automatically merges and sorts duplicate media queries.
@@ -322,11 +334,13 @@ Media queries are preserved in a `<style>` tag in the `<head>` (they can't be in
 Use Tailwind's `dark:` variant:
 
 ```vue
-<Section class="bg-white dark:bg-gray-800">
-  <Heading level="1" class="text-slate-900 dark:text-gray-100">
-    Hello!
-  </Heading>
-</Section>
+<template>
+  <Section class="bg-white dark:bg-gray-800">
+    <Heading level="1" class="text-slate-900 dark:text-gray-100">
+      Hello!
+    </Heading>
+  </Section>
+</template>
 ```
 
 Dark mode is progressive enhancement — support varies by email client.
@@ -336,9 +350,11 @@ Dark mode is progressive enhancement — support varies by email client.
 Target specific email clients with built-in variants:
 
 ```vue
-<Text class="gmail:text-blue-600 outlook-mac:text-sm apple-mail:leading-6">
-  Client-specific styling
-</Text>
+<template>
+  <Text class="gmail:text-blue-600 outlook-mac:text-sm apple-mail:leading-6">
+    Client-specific styling
+  </Text>
+</template>
 ```
 
 Available client variants: `gmail`, `gmail-android`, `gmail-ipad`, `apple-mail`, `ios`, `outlook-mac`, `outlook-android`, `yahoo`, `thunderbird`, `superhuman`, `notion`, `spark`, and others.

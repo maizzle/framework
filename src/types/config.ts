@@ -195,18 +195,6 @@ export interface CssConfig {
    */
   preferUnitless?: boolean
   /**
-   * Resolve CSS `calc()` expressions to static values where possible.
-   *
-   * @default true
-   */
-  resolveCalc?: boolean
-  /**
-   * Resolve CSS custom properties (`var()`) to their computed values.
-   *
-   * @default true
-   */
-  resolveProps?: boolean
-  /**
    * Replace unsafe CSS class names with email-safe equivalents.
    *
    * @default true

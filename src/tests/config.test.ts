@@ -25,8 +25,6 @@ describe('resolveConfig', () => {
     expect(config.server?.port).toBe(3000)
     expect(config.useTransformers).toBe(true)
     expect(config.css?.preferUnitless).toBe(true)
-    expect(config.css?.resolveCalc).toBe(true)
-    expect(config.css?.resolveProps).toBe(true)
   })
 
   it('loads maizzle.config.js from cwd', async () => {

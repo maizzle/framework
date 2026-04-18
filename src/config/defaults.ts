@@ -17,8 +17,6 @@ export const defaults: MaizzleConfig = {
   css: {
     safe: true,
     preferUnitless: true,
-    resolveCalc: true,
-    resolveProps: true,
   },
   html: {
     decodeEntities: true,

@@ -35,7 +35,7 @@
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.2",
     "@tailwindcss/vite": "^4.2.2",
-    "@unhead/vue": "^2.1.4",
+    "@unhead/vue": "^3.0.4",
     "@vitejs/plugin-vue": "^6.0.4",
     "@vitest/coverage-v8": "^4.0.18",
     "@vueuse/core": "^14.2.1",

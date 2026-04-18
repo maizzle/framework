@@ -1,7 +1,7 @@
 import postcss from 'postcss'
 import tailwindcssPostcss from '@tailwindcss/postcss'
-import customProperties from 'postcss-custom-properties'
 import postcssCalc from 'postcss-calc'
+import resolveProps from '../plugins/postcss/resolveProps.ts'
 import pruneVars from '../plugins/postcss/pruneVars.ts'
 import safeParser from 'postcss-safe-parser'
 import { transform } from 'lightningcss'
@@ -19,9 +19,7 @@ function createProcessor(config: MaizzleConfig) {
       transformAssetUrls: false,
       optimize: false, // we run Lightning CSS manually
     }),
-    customProperties({
-      preserve: false,
-    }),
+    resolveProps(),
     postcssCalc({}),
     pruneVars(),
   ])

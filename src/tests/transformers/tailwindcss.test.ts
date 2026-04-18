@@ -95,7 +95,7 @@ describe('tailwindcss', () => {
       const html = '<style>:root { --brand: #ff0000 } .foo { color: var(--brand) }</style>'
       const result = await run(html)
 
-      // postcss-custom-properties resolves the var() inline, so the
+      // resolveProps resolves the var() inline, so the
       // declaration is consumed — pruneVars should not blow up
       expect(result).toContain('.foo')
       expect(result).toContain('color: red')
@@ -123,7 +123,7 @@ describe('tailwindcss', () => {
       const html = '<style>:root { --base: #0000ff; --alias: var(--base) } .foo { color: var(--alias) }</style>'
       const result = await run(html)
 
-      // postcss-custom-properties resolves the whole chain, so the final
+      // resolveProps resolves the whole chain, so the final
       // rule should carry the concrete colour value (lightningcss normalises blue → #00f)
       expect(result).toContain('.foo')
       expect(result).toContain('color: #00f')
@@ -138,7 +138,7 @@ describe('tailwindcss', () => {
     })
   })
 
-  describe('postcss-custom-properties', () => {
+  describe('resolveProps', () => {
     it('resolves var() references to computed values', async () => {
       const html = '<style>:root { --my-color: #ff0000 } .foo { color: var(--my-color) }</style>'
       const result = await run(html)

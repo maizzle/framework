@@ -60,7 +60,12 @@ export function tailwindCleanup(config: MaizzleConfig): postcss.Plugin[] {
     {
       postcssPlugin: 'tailwind-cleanup-at-rules',
       AtRule(rule) {
-        if (atRules.includes(rule.name)) {
+        if (!atRules.includes(rule.name)) return
+
+        if (rule.nodes?.length) {
+          // Unwrap: keep children, remove the at-rule wrapper
+          rule.replaceWith(rule.nodes)
+        } else {
           rule.remove()
         }
       },

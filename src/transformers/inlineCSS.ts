@@ -99,17 +99,30 @@ export function inlineCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[]
   // Post-process for preferUnitlessValues
   const result = parse(inlinedHtml)
 
-  if (preferUnitlessValues) {
-    walk(result, (node) => {
-      const el = node as Element
-      if (el.attribs?.style) {
-        el.attribs.style = el.attribs.style.replace(
+  walk(result, (node) => {
+    const el = node as Element
+    if (el.attribs?.style) {
+      // Normalize style formatting: ensure spaces after : and ;
+      let style = el.attribs.style
+        .replace(/:\s*/g, ': ')
+        .replace(/;\s*/g, '; ')
+        .trimEnd()
+
+      // Ensure trailing semicolon
+      if (!style.endsWith(';')) {
+        style += ';'
+      }
+
+      if (preferUnitlessValues) {
+        style = style.replace(
           /\b0(px|rem|em|%|vh|vw|vmin|vmax|in|cm|mm|pt|pc|ex|ch)\b/g,
           '0'
         )
       }
-    })
-  }
+
+      el.attribs.style = style
+    }
+  })
 
   // Restore data-embed from our marker, then remove the marker.
   // The purge step will handle final data-embed/embed removal.

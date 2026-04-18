@@ -55,7 +55,7 @@ const columnCount = computed(() => {
 
 const containerWidth = inject<ComputedRef<string | number> | null>('containerWidth', null)
 
-const rowWidth = computed(() => props.width ?? containerWidth?.value ?? '37.5em')
+const rowWidth = computed(() => props.width ?? containerWidth?.value ?? null)
 
 function divideValue(value: string | number, divisor: number): string {
   if (typeof value === 'number') {
@@ -68,7 +68,7 @@ function divideValue(value: string | number, divisor: number): string {
   return `${parseFloat((num / divisor).toFixed(2))}${unit}`
 }
 
-provide('columnMinWidth', computed(() => divideValue(rowWidth.value, columnCount.value)))
+provide('columnMinWidth', computed(() => rowWidth.value ? divideValue(rowWidth.value, columnCount.value) : null))
 provide('columnMsoWidth', computed(() => `${Math.round(100 / columnCount.value)}%`))
 
 const MsoBefore = () => createStaticVNode(

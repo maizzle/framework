@@ -14,22 +14,27 @@ const props = defineProps({
    * Also provided to child `Row` and `Column` components for
    * automatic column width calculation.
    *
-   * @default '37.5em'
+   * When not set, no inline `max-width` is applied to the div —
+   * use Tailwind classes like `max-w-xl mx-auto` instead.
+   * The MSO table defaults to 600px.
    */
   width: {
     type: [String, Number],
-    default: '37.5em'
+    default: null
   }
 })
 
 provide('containerWidth', computed(() => props.width))
 
 const styles = computed(() => {
+  if (!props.width) return 'margin: 0 auto;'
   return `max-width: ${normalizeToPixels(props.width)}; margin: 0 auto;`
 })
 
+const msoWidth = computed(() => normalizeToPixels(props.width ?? 600))
+
 const MsoBefore = () => createStaticVNode(
-  `<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width: ${normalizeToPixels(props.width)}" align="center"><tr><td><![endif]-->`,
+  `<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width: ${msoWidth.value}" align="center"><tr><td><![endif]-->`,
   1
 )
 

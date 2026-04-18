@@ -37,27 +37,19 @@ const injectedMsoWidth = inject<ComputedRef<string> | null>('columnMsoWidth', nu
 
 const minWidth = computed(() => {
   if (props.width) return normalizeToPixels(props.width)
-  if (injectedMinWidth?.value) return injectedMinWidth.value
 
-  // Fallback: divide container width by 2 if available
-  if (containerWidth?.value) {
-    const val = containerWidth.value
-    if (typeof val === 'number') return `${parseFloat((val / 2).toFixed(2))}px`
-    const num = Number.parseFloat(val)
-    const unit = val.replace(String(num), '') || 'px'
-    return `${parseFloat((num / 2).toFixed(2))}${unit}`
-  }
-
-  return '18.75em'
+  return injectedMinWidth?.value ?? null
 })
 
 const msoWidth = computed(() => injectedMsoWidth?.value ?? '50%')
 
 // Provide column width as containerWidth for nested Rows
-provide('containerWidth', minWidth)
+provide('containerWidth', computed(() => minWidth.value ?? containerWidth?.value ?? null))
 
 const styles = computed(() => {
-  return `display: inline-block; min-width: ${minWidth.value}; font-size: 16px; vertical-align: top;`
+  const parts = ['display: inline-block', 'font-size: 16px', 'vertical-align: top']
+  if (minWidth.value) parts.splice(1, 0, `min-width: ${minWidth.value}`)
+  return `${parts.join('; ')};`
 })
 
 const tdStyle = computed(() => {

@@ -37,73 +37,35 @@ describe('Column', () => {
       const wrapper = mount(Column, { slots: { default: () => 'Content' } })
       expect(wrapper.text()).toBe('Content')
     })
-  })
 
-  describe('auto-computed min-width', () => {
-    it('computes min-width from container width / cols', () => {
-      const wrapper = mountLayout()
-      const columns = wrapper.findAllComponents(Column)
-      // 37.5em / 2 cols = 18.75em
-      expect(columns[0].find('div').attributes('style')).toContain('min-width: 18.75em')
-    })
-
-    it('auto-detects 3 columns', () => {
-      const wrapper = mountLayout({}, {}, {}, 3)
-      const columns = wrapper.findAllComponents(Column)
-      // 37.5em / 3 = 12.5em
-      expect(columns[0].find('div').attributes('style')).toContain('min-width: 12.5em')
-    })
-
-    it('allows cols prop override', () => {
-      const wrapper = mountLayout({}, { cols: 4 }, {}, 2)
-      const columns = wrapper.findAllComponents(Column)
-      // 37.5em / 4 = 9.38em (cols overrides actual child count)
-      expect(columns[0].find('div').attributes('style')).toContain('min-width: 9.38em')
-    })
-
-    it('computes min-width from px container width', () => {
+    it('auto-computes min-width from Row injection', () => {
       const wrapper = mountLayout({ width: '600px' })
       const columns = wrapper.findAllComponents(Column)
       // 600px / 2 = 300px
       expect(columns[0].find('div').attributes('style')).toContain('min-width: 300px')
     })
 
-    it('computes min-width from numeric container width', () => {
-      const wrapper = mountLayout({ width: 600 })
+    it('auto-computes min-width for 3 columns', () => {
+      const wrapper = mountLayout({ width: '600px' }, {}, {}, 3)
       const columns = wrapper.findAllComponents(Column)
-      // 600 / 2 = 300px
-      expect(columns[0].find('div').attributes('style')).toContain('min-width: 300px')
-    })
-
-    it('uses row width override over container width', () => {
-      const wrapper = mountLayout({ width: '600px' }, { width: '400px' })
-      const columns = wrapper.findAllComponents(Column)
-      // 400px / 2 = 200px
+      // 600px / 3 = 200px
       expect(columns[0].find('div').attributes('style')).toContain('min-width: 200px')
     })
 
-    it('falls back to 18.75em without container or row', () => {
-      const wrapper = mount(Column)
-      expect(wrapper.find('div').attributes('style')).toContain('min-width: 18.75em')
+    it('does not set min-width when Container has no width prop', () => {
+      const wrapper = mountLayout()
+      const columns = wrapper.findAllComponents(Column)
+      expect(columns[0].find('div').attributes('style')).not.toContain('min-width')
     })
 
-    it('uses container width / 2 when used without row', () => {
-      const wrapper = mount(
-        defineComponent({
-          render() {
-            return h(Container, { width: '600px' }, () =>
-              h(Column, {}, () => 'No row')
-            )
-          }
-        })
-      )
-      const col = wrapper.findComponent(Column)
-      expect(col.find('div').attributes('style')).toContain('min-width: 300px')
+    it('does not set min-width when used standalone without width prop', () => {
+      const wrapper = mount(Column)
+      expect(wrapper.find('div').attributes('style')).not.toContain('min-width')
     })
   })
 
   describe('explicit width override', () => {
-    it('uses explicit width prop over auto-computed', () => {
+    it('uses explicit width prop as min-width', () => {
       const wrapper = mountLayout({}, {}, { width: '400px' })
       const columns = wrapper.findAllComponents(Column)
       expect(columns[0].find('div').attributes('style')).toContain('min-width: 400px')

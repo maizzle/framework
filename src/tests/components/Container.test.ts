@@ -3,16 +3,11 @@ import { mount } from '@vue/test-utils'
 import Container from '../../components/Container.vue'
 
 describe('Container', () => {
-  it('renders a div with max-width and centered margin', () => {
+  it('renders a div with centered margin and no inline max-width by default', () => {
     const wrapper = mount(Container)
     const style = wrapper.find('div').attributes('style')
-    expect(style).toContain('max-width: 37.5em')
     expect(style).toContain('margin: 0px auto')
-  })
-
-  it('uses default width of 37.5em', () => {
-    const wrapper = mount(Container)
-    expect(wrapper.find('div').attributes('style')).toContain('max-width: 37.5em')
+    expect(style).not.toContain('max-width')
   })
 
   it('accepts custom width as string', () => {
@@ -37,7 +32,12 @@ describe('Container', () => {
       expect(html).toContain('<![endif]-->')
     })
 
-    it('renders MSO table with matching width', () => {
+    it('defaults MSO table width to 600px', () => {
+      const html = mount(Container).html()
+      expect(html).toContain('style="width: 600px"')
+    })
+
+    it('renders MSO table with matching width when prop set', () => {
       const html = mount(Container, { props: { width: '600px' } }).html()
       expect(html).toContain('style="width: 600px"')
     })

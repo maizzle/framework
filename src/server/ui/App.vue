@@ -361,7 +361,7 @@ onUnmounted(() => {
             v-if="isPreviewRoute && (!isFullSize || selectedDevice) && panelWidth"
             class="hidden min-[430px]:inline text-xs font-medium tabular-nums text-gray-500 dark:text-gray-400 select-none"
           >
-            {{ panelWidth }} &times; {{ panelHeight }}
+            {{ panelWidth }} <button class="hover:text-gray-700 dark:hover:text-gray-300" @click="selectedDevice = null; isFullSize = true; viewMode = 'preview'; resetKey++">&times;</button> {{ panelHeight }}
           </span>
           <DropdownMenu v-if="isPreviewRoute" v-model:open="deviceMenuOpen" :modal="false">
             <DropdownMenuTrigger as-child>

@@ -26,18 +26,18 @@ Guide for converting React Email (JSX/TSX) templates and components to Maizzle 6
 | `<Tailwind config={...}>` | _(not needed)_ | Maizzle compiles Tailwind automatically via `@import "@maizzle/tailwindcss"` in `<style>`. Remove entirely. |
 | `<Head />` | `<Head>` | Must contain `<style>@import "@maizzle/tailwindcss";</style>` when not using `<Layout>`. |
 | `<Body className="...">` | `<Body class="...">` | Same. Or use `<Layout body-class="...">`. |
-| `<Preview>text</Preview>` | `<Preheader>text</Preheader>` | Different name. Can be placed anywhere inside `<Layout>` (teleported to body start automatically). |
-| `<Container className="max-w-xl mx-auto p-5">` | `<Container class="p-5">` | Maizzle Container handles centering and max-width (default 37.5em/600px) automatically via MSO tables. No need for `mx-auto` or `max-w-xl`. |
+| `<Preview>text</Preview>` | `<Preheader>text</Preheader>` | Different name. Can be placed anywhere, even outside `<Layout>` or `<Html>`, or as a direct child of `<template>` in SFC (teleported to body start automatically). |
+| `<Container className="max-w-xl mx-auto p-5">` | `<Container class="max-w-xl mx-auto p-5">` | Two modes: use `width` prop for fixed width with auto column min-widths (stacks without media queries), or use Tailwind classes for class-based control. MSO table defaults to 600px when no `width` prop. |
 | `<Section>` | `<Section>` | Same concept. Maizzle wraps in MSO table automatically. |
 | `<Row>` | `<Row>` | Same concept. |
-| `<Column className="w-1/2">` | `<Column class="w-1/2">` | Same concept. Maizzle auto-calculates column widths from parent Container. |
+| `<Column className="w-1/2">` | `<Column class="w-1/2 xs:w-full">` | Two modes: with Container `width` prop, columns auto-calculate `min-width` and stack naturally. Without it, use Tailwind classes like `w-1/2 xs:w-full` to control width and stacking via media query. |
 | `<Heading as="h1" className="...">` | `<Heading level="1" class="...">` | Prop is `level` (number) not `as` (string). |
 | `<Heading as="h2">` | `<Heading level="2">` | Same pattern for all levels. |
 | `<Text className="...">` | `<Text class="...">` | Same. Supports `as="span"` prop too. |
-| `<Button href="..." className="... box-border">` | `<Button href="..." class="...">` | Remove `box-border` — Maizzle's Button handles Outlook padding natively via MSO spacers. Remove `block text-center no-underline` too, handled internally. |
+| `<Button href="..." className="... box-border">` | `<Button href="..." class="...">` | Remove `box-border`. Remove `block text-center no-underline` too, handled internally. |
 | `<Link href="...">` | `<Link href="...">` | Same. Maizzle defaults to `no-underline`. |
 | `<Img src="..." alt="..." width="150">` | `<Img src="..." alt="..." width="150">` | Same name. Maizzle also supports `dark-src` and `motion-src` props. |
-| `<Hr className="border-solid border-gray-200 my-5">` | `<Divider />` | Use Maizzle's `<Divider>` with props: `color`, `height`, `space-y`. No need for `border-solid` classes. |
+| `<Hr className="border-solid border-gray-200 my-5">` | `<Divider />` | Use Maizzle's `<Divider>` with props: `color`, `height`, `space-y`. Prefer Tailwind classes i.e. `my-5` over `space-y` when possible. No need for `border-solid` classes. |
 | `<CodeBlock code={code} language="js" theme={dracula}>` | `<CodeBlock code="..." language="js" theme="github-light">` | Theme is a string name (Shiki theme), not an imported object. |
 | `<CodeInline>code</CodeInline>` | `<CodeInline>code</CodeInline>` | Same. |
 | `<Markdown>{content}</Markdown>` | `<Markdown>content</Markdown>` | Same concept. Maizzle also supports `src` prop for loading .md files. |
@@ -190,6 +190,8 @@ Replace the entire `Html > Tailwind > Head + Body` chain with `<Layout>`:
 </template>
 ```
 
+**Note:** When using `<Html>`, you must include the Tailwind import in `<Head>` manually. With `<Layout>`, it's included by default.
+
 ### Step 4: Convert Props and Dynamic Content
 
 **React Email props → Vue `defineProps`:**
@@ -275,10 +277,9 @@ All `className` attributes become `class`. The Tailwind utility classes themselv
 **Remove email workaround classes:**
 
 Maizzle components handle email client quirks internally. Remove:
-- `box-border` on `<Button>` (MSO spacers handle Outlook padding)
-- `block text-center no-underline` on `<Button>` (default styles)
+- `box-border` on `<Button>`
+- `block text-center no-underline` on `<Button>`
 - `border-solid` on `<Divider>` (use the `<Divider>` component instead)
-- `mx-auto max-w-xl` on `<Container>` (centered with MSO table by default)
 
 **Tailwind config customization:**
 
@@ -306,8 +307,8 @@ React Email warns against responsive utilities. Maizzle supports them:
 - `xs:` — `@media (max-width: 430px)`
 
 ```vue
-<Column class="sm:block">
-  <!-- stacks full width on mobile -->
+<Column class="w-1/2 xs:w-full">
+  <!-- 50% on desktop, full width on mobile -->
 </Column>
 ```
 
@@ -362,7 +363,7 @@ Place images in the `public/` folder (not `static/`).
 <!-- Maizzle -->
 <Divider color="#e5e7eb" space-y="20px" />
 <!-- or with Tailwind classes -->
-<Divider class="bg-gray-200" space-y="20px" />
+<Divider class="bg-gray-200 my-5" />
 ```
 
 ### Step 9: Handle Preview/Preheader
@@ -391,8 +392,6 @@ usePreheader('Preview text here')
 ```
 
 ## Full Conversion Examples
-
-> **Note:** These examples are WIP as we finalize the API for the layout components. Some component props or structure may change.
 
 ### Password Reset
 
@@ -471,7 +470,7 @@ const props = defineProps({
 <template>
   <Layout>
     <Preheader>Reset your password - Action required</Preheader>
-    <Container>
+    <Container class="max-w-xl mx-auto">
       <Section class="py-10 px-5 bg-white">
         <Heading class="text-2xl font-bold text-gray-800 mb-5">
           Reset Your Password
@@ -606,16 +605,18 @@ const props = defineProps({
       </Section>
       <Section>
         <Row v-for="(item, i) in items" :key="i" class="mb-4">
-          <Column width="80px" class="align-top">
+          <Column width="80px">
             <Img :src="item.image" :alt="item.name" width="80" class="rounded" />
           </Column>
-          <Column class="align-top pl-4">
-            <Text class="font-bold text-gray-800 m-0">{{ item.name }}</Text>
-            <Text class="text-sm text-gray-500 m-0">
-              Qty: {{ item.quantity }} x ${{ item.price.toFixed(2) }}
-            </Text>
+          <Column>
+            <Section class="pl-4">
+              <Text class="font-bold text-gray-800 m-0">{{ item.name }}</Text>
+              <Text class="text-sm text-gray-500 m-0">
+                Qty: {{ item.quantity }} x ${{ item.price.toFixed(2) }}
+              </Text>
+            </Section>
           </Column>
-          <Column width="96px" class="text-right xs:block xs:text-left xs:pt-2 align-top">
+          <Column width="96px" class="text-right xs:block xs:text-left">
             <Text class="font-bold text-gray-800 m-0">
               ${{ (item.quantity * item.price).toFixed(2) }}
             </Text>
@@ -624,17 +625,16 @@ const props = defineProps({
       </Section>
       <Divider class="bg-gray-200" />
       <Row>
-        <Column class="sm:min-w-1/2">
+        <Column>
           <Text class="text-lg font-bold text-gray-800">Total</Text>
         </Column>
-        <Column class="sm:min-w-1/2 text-right">
+        <Column class="text-right">
           <Text class="text-lg font-bold text-gray-800">${{ total.toFixed(2) }}</Text>
         </Column>
       </Row>
     </Container>
   </Layout>
 </template>
-
 ```
 
 ### Newsletter with Multi-Column Layout
@@ -724,7 +724,7 @@ const props = defineProps({
 <template>
   <Layout>
     <Preheader>Your weekly roundup</Preheader>
-    <Container>
+    <Container class="max-w-xl mx-auto">
       <Section class="pt-10 px-5 pb-5 text-center">
         <Img src="/logo.png" alt="Logo" width="150" />
       </Section>
@@ -737,7 +737,7 @@ const props = defineProps({
 
       <Section v-if="articles.length > 0" class="px-5 mb-6">
         <Row>
-          <Column v-for="(article, i) in articles.slice(0, 2)" :key="i" class="align-top px-1">
+          <Column v-for="(article, i) in articles.slice(0, 2)" :key="i" class="w-1/2 xs:w-full">
             <Img :src="article.image" :alt="article.title" width="280" class="w-full rounded mb-3" />
             <Heading level="3" class="text-lg font-bold text-gray-900 my-3">
               {{ article.title }}
@@ -771,7 +771,7 @@ const props = defineProps({
 
 5. **Keeping `box-border` on Button** — Maizzle's Button handles Outlook padding with MSO spacers internally. The class is unnecessary.
 
-6. **Keeping `mx-auto` or `max-w-xl` on Container** — Maizzle's Container handles centering and max-width automatically.
+6. **Not adding `xs:w-full` on Columns in Tailwind mode** — When using Container without a `width` prop, columns don't auto-calculate `min-width`. Use `w-1/2 xs:w-full` to control width and ensure mobile stacking.
 
 7. **Manual `baseURL` concatenation for images** — Use Maizzle's `url.base` config or `<WithUrl>` component instead.
 

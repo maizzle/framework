@@ -8,7 +8,7 @@ All components are auto-imported. No `import` statements needed in templates.
 - `<Html>` — The `<html>` element with lang and dir attributes
 - `<Head>` — The `<head>` element, includes default meta tags for email
 - `<Body>` — The `<body>` element with email-safe defaults
-- `<Container>` — Centered fixed-width wrapper (default 37.5em or 600px)
+- `<Container>` — Centered wrapper with optional fixed width or Tailwind classes
 - `<Section>` — Full-width content block with padding
 - `<Row>` — Table row for multi-column layouts
 - `<Column>` — Table cell inside a `<Row>`
@@ -213,22 +213,28 @@ Usage:
 
 ## Container
 
-Centered fixed-width wrapper. Renders a `<div>` with `max-width` and `margin: 0 auto`, wrapped in an MSO conditional table for Outlook support.
+Centered wrapper. Renders a `<div>` with `margin: 0 auto`, wrapped in an MSO conditional table for Outlook support.
 
-Provides its width to child `<Row>` and `<Column>` components for automatic column width calculation.
+Two modes:
+- **Prop mode**: set `width` prop for fixed width with auto column `min-width` calculation (columns stack naturally without media queries)
+- **Tailwind mode**: omit `width` prop and use Tailwind classes like `max-w-xl mx-auto` for class-based control. MSO table defaults to 600px.
+
+When `width` is set, it provides the value to child `<Row>` and `<Column>` components for automatic column width calculation.
 
 Props:
-- `width` (String | Number, default: `'37.5em'`) — max width of the container. Applied as `max-width` on the div and `width` on the MSO table.
+- `width` (String | Number, optional) — max width of the container. Applied as `max-width` on the div and `width` on the MSO table. When not set, no inline `max-width` is applied — use Tailwind classes instead. The MSO table defaults to 600px.
 
 Usage:
 
 ```vue
-<Container>
-  <!-- 37.5 (600px) centered content -->
+<!-- Tailwind mode: use classes for width -->
+<Container class="max-w-xl mx-auto">
+  <!-- width controlled by Tailwind, MSO table defaults to 600px -->
 </Container>
 
-<Container width="700px">
-  <!-- wider container -->
+<!-- Prop mode: fixed width with auto column widths -->
+<Container width="600px">
+  <!-- columns auto-calculate min-width and stack naturally -->
 </Container>
 
 <Container :width="552">
@@ -273,53 +279,61 @@ Props:
 
 ## Column
 
-Table cell inside a `<Row>`. Renders as `display: inline-block` with auto-calculated `min-width` based on the parent `<Row>` width divided by the column count. Falls back to `18.75em` (300px) if no parent context.
+Table cell inside a `<Row>`. Renders as `display: inline-block`, wrapped in an MSO `<td>` with auto-calculated percentage width.
+
+Two modes depending on the parent `<Container>`:
+- **With Container `width` prop**: auto-calculates `min-width` from container width / column count. Columns stack naturally on small viewports without media queries.
+- **Without Container `width` prop** (Tailwind mode): no `min-width` is set. Use Tailwind classes like `w-1/2 xs:w-full` to control width and stacking.
+
+The `width` prop always takes precedence and sets `min-width` explicitly.
 
 Provides its own width as container width for nested `<Row>` components.
 
 Props:
-- `width` (String | Number, optional) — override the auto-computed column width
+- `width` (String | Number, optional) — explicit column width, applied as `min-width`
 - `msoStyle` (String, optional) — inline CSS applied only to the MSO `<td>` element
 
 Usage:
 
 ```vue
 <template>
-    <!-- Two equal columns (auto-calculated) -->
-    <Row>
-      <Column class="p-4">Left</Column>
-      <Column class="p-4">Right</Column>
-    </Row>
-    
+    <!-- Tailwind mode: control width with classes -->
+    <Container class="max-w-xl mx-auto">
+      <Row>
+        <Column class="w-1/2 xs:w-full">Left</Column>
+        <Column class="w-1/2 xs:w-full">Right</Column>
+      </Row>
+    </Container>
+
+    <!-- Prop mode: auto min-width, natural stacking -->
+    <Container width="600px">
+      <Row>
+        <Column>Left (300px min-width)</Column>
+        <Column>Right (300px min-width)</Column>
+      </Row>
+    </Container>
+
     <!-- Three columns with explicit count for v-for -->
     <Row :cols="items.length">
-      <Column v-for="item in items" class="p-2">
+      <Column v-for="item in items" class="w-1/3 xs:w-full">
         {{ item }}
       </Column>
     </Row>
-    
-    <!-- Custom column widths -->
+
+    <!-- Custom column widths via prop -->
     <Row>
-      <Column width="200px" class="p-4">Sidebar</Column>
-      <Column width="400px" class="p-4">Main</Column>
+      <Column width="200px">
+        <Section class="p-4">Sidebar</Section>
+      </Column>
+      <Column width="400px">
+        <Section class="p-4">Main</Section>
+      </Column>
     </Row>
-    
-    <!-- Responsive column widths on mobile -->
-    <Row>
-      <Column class="sm:min-w-3/4">Left</Column>
-      <Column class="sm:min-w-1/4">Right</Column>
-    </Row>
-    
-    <!-- Full width stacking on mobile -->
-    <Row>
-      <Column class="sm:block">Left</Column>
-      <Column class="sm:block">Right</Column>
-    </Row>
-    
+
     <!-- Center a stacked column on mobile -->
-    <Row class="sm:text-center">
-      <Column class="sm:text-left">Left</Column>
-      <Column class="sm:text-center">Right</Column>
+    <Row class="xs:text-center">
+      <Column class="w-1/2 xs:w-full xs:text-left">Left</Column>
+      <Column class="w-1/2 xs:w-full xs:text-center">Right</Column>
     </Row>
 </template>
 ```

@@ -115,10 +115,10 @@ All built-in components are auto-imported, no import statements needed. See `ref
 | `<Html>` | The `<html>` element with lang and dir attributes |
 | `<Head>` | The `<head>` element, includes default meta tags for email |
 | `<Body>` | The `<body>` element with email-safe defaults |
-| `<Container>` | Centered fixed-width wrapper (default 37.5em or 600px) |
+| `<Container>` | Centered wrapper — use `width` prop for fixed width or Tailwind classes like `max-w-xl mx-auto` |
 | `<Section>` | Full-width content block with padding |
 | `<Row>` | Table row for multi-column layouts |
-| `<Column>` | Table cell inside a `<Row>` |
+| `<Column>` | Table cell inside a `<Row>` — auto `min-width` with Container `width` prop, or use Tailwind classes like `w-1/2 xs:w-full` |
 | `<Overlap>` | Stacked/overlapping content sections (faux absolute) |
 
 ### Content
@@ -319,15 +319,22 @@ Maizzle supports `@media` queries for responsive layouts. The `@maizzle/tailwind
 
 ```vue
 <template>
-  <Container class="sm:w-full">
-    <Column class="w-1/2 sm:w-full sm:block">
-      <!-- stacks full width on mobile -->
-    </Column>
+  <Container class="max-w-xl mx-auto">
+    <Row>
+      <Column class="w-1/2 xs:w-full">
+        <!-- stacks full width on mobile -->
+      </Column>
+      <Column class="w-1/2 xs:w-full">
+        <!-- stacks full width on mobile -->
+      </Column>
+    </Row>
   </Container>
 </template>
 ```
 
 Media queries are preserved in a `<style>` tag in the `<head>` (they can't be inlined). The build pipeline automatically merges and sorts duplicate media queries.
+
+For more responsive email design patterns, see [PATTERNS.md](references/PATTERNS.md).
 
 ### Dark mode
 
@@ -382,8 +389,6 @@ export default defineConfig({
     shorthand: true,     // use shorthand CSS notation (default: false)
     safe: true,          // replace unsafe class names like `:` and `/` (default: true)
     sixHex: true,        // convert 3-digit to 6-digit hex (default: true)
-    resolveCalc: true,   // resolve calc() expressions (default: true)
-    resolveProps: true,  // resolve CSS custom properties (default: true)
   }
 })
 ```

@@ -101,8 +101,6 @@ These are enabled by default and run automatically:
 
 - `css.safe` (Boolean | Record, default: `true`) — replace unsafe CSS class names with email-safe equivalents. Characters like `:`, `/`, `[`, `]` are replaced. Pass a map to customize replacements.
 - `css.preferUnitless` (Boolean, default: `true`) — convert unitless CSS values (e.g. `line-height: 24px` with `16px` font becomes `1.5`).
-- `css.resolveCalc` (Boolean, default: `true`) — resolve CSS `calc()` expressions to static values.
-- `css.resolveProps` (Boolean, default: `true`) — resolve CSS custom properties (`var()`) to computed values.
 - `css.sixHex` (Boolean, default: `true`) — convert 3-digit HEX colors to 6-digit in `bgcolor` and `color` attributes.
 - `css.base` (String, optional) — base directory for Tailwind CSS `@source` resolution. Auto-set to `root` when `root` is configured.
 - `css.exclude` (String[], optional) — file paths to exclude from CSS processing.
@@ -477,8 +475,6 @@ These are the default config values when no overrides are provided:
   css: {
     safe: true,
     preferUnitless: true,
-    resolveCalc: true,
-    resolveProps: true,
   },
   html: { decodeEntities: true },
   useTransformers: true,

@@ -64,7 +64,7 @@
     "postcss-calc": "^10.1.1",
     "postcss-merge-longhand": "^7.0.5",
     "postcss-safe-parser": "^7.0.1",
-    "postcss-sort-media-queries": "^5.2.0",
+    "postcss-sort-media-queries": "^6.5.0",
     "postcss-value-parser": "^4.2.0",
     "query-string": "^9.3.1",
     "reka-ui": "^2.9.3",

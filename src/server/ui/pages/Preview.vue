@@ -805,10 +805,7 @@ const stripeBg = {
                       </span>
                       <span class="text-gray-400 dark:text-gray-600 shrink-0">&middot;</span>
                       <span class="text-gray-500 dark:text-gray-400 truncate">{{ issue.type === 'error' ? 'Not supported' : 'Partial support' }} in {{ issue.clients.map((c: any) => c.name).join(', ') }}</span>
-                      <!-- Current template: navigate to Vue source view -->
-                      <button v-if="issue.line && isCurrentFile(issue)" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0 ml-auto" @click="goToLine(issue.line!)">L{{ issue.line }}</button>
-                      <!-- Component file: open in editor -->
-                      <button v-else-if="issue.line && !isCurrentFile(issue)" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0 ml-auto flex items-center gap-1" @click="openInEditor(issue.file, issue.line!)">{{ componentName(issue.file) }}:{{ issue.line }}</button>
+                      <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0 ml-auto" @click="openInEditor(issue.file, issue.line!)">{{ isCurrentFile(issue) ? `L${issue.line}` : `${componentName(issue.file)}:${issue.line}` }}</button>
                     </div>
                   </li>
                 </ul>

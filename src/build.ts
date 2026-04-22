@@ -26,7 +26,7 @@ export interface BuildResult {
  */
 export async function build(options: BuildOptions = {}): Promise<BuildResult> {
   const start = Date.now()
-  const spinner = ora('Building templates...').start()
+  const spinner = ora({ text: 'Building templates...', spinner: 'circleHalves' }).start()
 
   const config = await resolveConfig(options.config)
 

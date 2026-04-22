@@ -753,16 +753,16 @@ const stripeBg = {
         <Tabs :model-value="activeTab" class="flex flex-col min-h-0 h-full">
           <div class="flex items-center justify-between min-h-10 pl-2 pr-3 shrink-0" :class="bottomPanelOpen ? 'border-b' : ''">
             <TabsList class="h-full bg-transparent! rounded-none! p-0 gap-1">
-              <TabsTrigger value="compatibility" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('compatibility')">
+              <TabsTrigger value="compatibility" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent dark:bg-transparent! dark:hover:bg-transparent!" @click="onTabClick('compatibility')">
                 Compatibility
               </TabsTrigger>
-              <TabsTrigger value="lint" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('lint')">
+              <TabsTrigger value="lint" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent dark:bg-transparent! dark:hover:bg-transparent!" @click="onTabClick('lint')">
                 Linter
               </TabsTrigger>
-              <TabsTrigger value="stats" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('stats')">
+              <TabsTrigger value="stats" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent dark:bg-transparent! dark:hover:bg-transparent!" @click="onTabClick('stats')">
                 Stats
               </TabsTrigger>
-              <TabsTrigger value="test" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent" @click="onTabClick('test')">
+              <TabsTrigger value="test" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent dark:bg-transparent! dark:hover:bg-transparent!" @click="onTabClick('test')">
                 Test
               </TabsTrigger>
             </TabsList>

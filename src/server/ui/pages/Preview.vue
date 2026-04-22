@@ -412,6 +412,8 @@ function onEdgeDrag(e: MouseEvent | TouchEvent, edge: Edge) {
   const isHorizontal = edge === 'left' || edge === 'right'
   const sign = (edge === 'left' || edge === 'top') ? -1 : 1
 
+  document.documentElement.style.cursor = isHorizontal ? 'ew-resize' : 'ns-resize'
+
   const onMove = (ev: MouseEvent | TouchEvent) => {
     const point = ev.type === 'touchmove' ? (ev as TouchEvent).touches[0] : (ev as MouseEvent)
     if (isHorizontal) {
@@ -426,6 +428,7 @@ function onEdgeDrag(e: MouseEvent | TouchEvent, edge: Edge) {
 
   const onUp = () => {
     isDragging.value = false
+    document.documentElement.style.cursor = ''
     updateFullSize()
     document.removeEventListener('mousemove', onMove)
     document.removeEventListener('mouseup', onUp)

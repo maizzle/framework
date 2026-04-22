@@ -22,7 +22,7 @@ const devUIDir = resolve(__dirname, 'server/ui')
 
 const require = createRequire(import.meta.url)
 const pkg = (name: string) => {
-  const resolved = require.resolve(name)
+  const resolved = require.resolve(name).replace(/\\/g, '/')
   const marker = `node_modules/${name}`
   const idx = resolved.lastIndexOf(marker)
 

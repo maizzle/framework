@@ -95,6 +95,7 @@ interface CompatibilityIssue {
   clients: Array<{ name: string, notes: string[] }>
   url?: string
   line?: number
+  file: string
 }
 
 interface LintIssue {
@@ -247,13 +248,13 @@ async function fetchStats() {
 }
 
 async function fetchCompatibility() {
+  const template = props.templates?.find(t => t.href === '/' + route.params.template)
+  if (!template) return
+
   compatibilityLoading.value = true
   compatibilityError.value = ''
   try {
-    const res = await fetch('/__maizzle/compatibility', {
-      method: 'POST',
-      body: renderedHtml,
-    })
+    const res = await fetch(`/__maizzle/compatibility/${template.path}`)
     const data = await res.json()
     if (data?.error) {
       compatibilityError.value = data.error
@@ -269,6 +270,23 @@ async function fetchCompatibility() {
   } finally {
     compatibilityLoading.value = false
   }
+}
+
+/** Check if an issue is from the currently viewed template file */
+function isCurrentFile(issue: CompatibilityIssue): boolean {
+  const template = props.templates?.find(t => t.href === '/' + route.params.template)
+  if (!template) return true
+  return issue.file.endsWith(template.path)
+}
+
+/** Get a short display name for a component file path */
+function componentName(filePath: string): string {
+  const parts = filePath.replace(/\\/g, '/').split('/')
+  return parts[parts.length - 1]?.replace(/\.vue$/, '') ?? filePath
+}
+
+function openInEditor(file: string, line: number) {
+  fetch(`/__open-in-editor?file=${encodeURIComponent(file + ':' + line)}`)
 }
 
 async function fetchLint() {
@@ -296,12 +314,20 @@ watch(() => route.params.template, () => {
   stats.value = null
   emailResult.value = null
   sourceView.value = 'compiled'
-  fetchTemplate().then(fetchCompatibility)
+  fetchTemplate()
+  fetchCompatibility()
   fetchLint()
   fetchStats()
   fetchEmailConfig()
   if (viewMode.value === 'source') fetchSource()
 }, { immediate: true })
+
+// Templates list loads async from App.vue — re-trigger compatibility once available
+watch(() => props.templates, (templates) => {
+  if (templates?.length && !compatibilityIssues.value.length && !compatibilityLoading.value) {
+    fetchCompatibility()
+  }
+})
 
 watch(viewMode, (mode) => {
   if (mode === 'source') {
@@ -319,7 +345,8 @@ watch(sourceView, (view) => {
 
 if ((import.meta as any).hot) {
   ;(import.meta as any).hot.on('maizzle:template-updated', () => {
-    fetchTemplate().then(fetchCompatibility)
+    fetchTemplate()
+    fetchCompatibility()
     fetchLint()
     fetchStats()
 
@@ -778,7 +805,10 @@ const stripeBg = {
                       </span>
                       <span class="text-gray-400 dark:text-gray-600 shrink-0">&middot;</span>
                       <span class="text-gray-500 dark:text-gray-400 truncate">{{ issue.type === 'error' ? 'Not supported' : 'Partial support' }} in {{ issue.clients.map((c: any) => c.name).join(', ') }}</span>
-                      <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0 ml-auto" @click="goToCompiledLine(issue.line!)">L{{ issue.line }}</button>
+                      <!-- Current template: navigate to Vue source view -->
+                      <button v-if="issue.line && isCurrentFile(issue)" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0 ml-auto" @click="goToLine(issue.line!)">L{{ issue.line }}</button>
+                      <!-- Component file: open in editor -->
+                      <button v-else-if="issue.line && !isCurrentFile(issue)" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0 ml-auto flex items-center gap-1" @click="openInEditor(issue.file, issue.line!)">{{ componentName(issue.file) }}:{{ issue.line }}</button>
                     </div>
                   </li>
                 </ul>

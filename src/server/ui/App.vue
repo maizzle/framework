@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, Search, FileCode, FileText, Code, BookText, MailQuestion } from 'lucide-vue-next'
+import SidebarClose from '@/components/SidebarClose.vue'
 import logoUrl from '@/logo.svg'
 import logoGradientUrl from '@/logo-gradient.svg'
 import { Kbd } from '@/components/ui/kbd'
@@ -258,13 +259,14 @@ onUnmounted(() => {
           <img :src="logoUrl" alt="Maizzle" class="h-4 dark:hidden">
           <img :src="logoGradientUrl" alt="Maizzle" class="hidden h-4 dark:block">
         </RouterLink>
-        <button class="inline-flex items-center gap-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" @click="commandOpen = true">
+        <button class="hidden md:inline-flex items-center gap-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" @click="commandOpen = true">
           <Search class="size-3.5" />
           <kbd class="flex items-center gap-0.5 text-[10px] font-sans">
             <span>{{ modKey }}</span>
             <span class="text-gray-300 dark:text-gray-600">K</span>
           </kbd>
         </button>
+        <SidebarClose />
       </SidebarHeader>
 
       <SidebarContent>

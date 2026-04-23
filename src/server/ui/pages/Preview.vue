@@ -567,17 +567,19 @@ function onTabClick(tab: string) {
 
 const tabsDragging = ref(false)
 
-function onTabsDragStart(e: MouseEvent) {
+function onTabsDragStart(e: MouseEvent | TouchEvent) {
   e.preventDefault()
   tabsDragging.value = true
-  const startY = e.clientY
+  const isTouch = e.type === 'touchstart'
+  const startY = isTouch ? (e as TouchEvent).touches[0].clientY : (e as MouseEvent).clientY
   const startHeight = tabsPanelHeight.value
 
   const rootEl = containerEl.value?.closest('.relative.h-full') as HTMLElement | null
   const maxHeight = rootEl ? rootEl.getBoundingClientRect().height : Infinity
 
-  const onMouseMove = (e: MouseEvent) => {
-    const newHeight = Math.max(40, Math.min(maxHeight, startHeight + startY - e.clientY))
+  const onMove = (e: MouseEvent | TouchEvent) => {
+    const clientY = e.type === 'touchmove' ? (e as TouchEvent).touches[0].clientY : (e as MouseEvent).clientY
+    const newHeight = Math.max(40, Math.min(maxHeight, startHeight + startY - clientY))
     tabsPanelHeight.value = newHeight
     bottomPanelOpen.value = newHeight > 40
 
@@ -588,14 +590,16 @@ function onTabsDragStart(e: MouseEvent) {
     }
   }
 
-  const onMouseUp = () => {
+  const onEnd = () => {
     tabsDragging.value = false
-    document.removeEventListener('mousemove', onMouseMove)
-    document.removeEventListener('mouseup', onMouseUp)
+    document.removeEventListener('mousemove', onMove)
+    document.removeEventListener('mouseup', onEnd)
+    document.removeEventListener('touchmove', onMove)
+    document.removeEventListener('touchend', onEnd)
   }
 
-  document.addEventListener('mousemove', onMouseMove)
-  document.addEventListener('mouseup', onMouseUp)
+  document.addEventListener(isTouch ? 'touchmove' : 'mousemove', onMove)
+  document.addEventListener(isTouch ? 'touchend' : 'mouseup', onEnd)
 }
 
 const stripeBg = {
@@ -726,6 +730,7 @@ const stripeBg = {
         <div
           class="relative h-0 cursor-row-resize before:absolute before:top-0 before:left-0 before:right-0 before:h-3.25 before:content-['']"
           @mousedown="onTabsDragStart"
+          @touchstart.prevent="onTabsDragStart"
         />
         <Tabs :model-value="activeTab" class="flex flex-col min-h-0 h-full">
           <div class="flex items-center justify-between min-h-10 pl-2 pr-3 shrink-0" :class="bottomPanelOpen ? 'border-b' : ''">

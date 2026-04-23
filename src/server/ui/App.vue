@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
-import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, Search, Camera, FileCode, FileText, Code, BookText, MailQuestion } from 'lucide-vue-next'
-import { toBlob } from 'html-to-image'
+import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, Search, FileCode, FileText, Code, BookText, MailQuestion } from 'lucide-vue-next'
 import logoUrl from '@/logo.svg'
 import logoGradientUrl from '@/logo-gradient.svg'
 import { Kbd } from '@/components/ui/kbd'
@@ -136,32 +135,6 @@ watch(commandOpen, (open) => {
   if (!open) commandSearch.value = ''
 })
 
-const screenshotting = ref(false)
-
-async function copyScreenshot() {
-  commandOpen.value = false
-
-  const iframe = document.querySelector('iframe') as HTMLIFrameElement | null
-  const doc = iframe?.contentDocument
-  if (!doc?.body) return
-
-  screenshotting.value = true
-
-  try {
-    const blob = await toBlob(doc.body, {
-      width: doc.body.scrollWidth,
-      height: doc.body.scrollHeight,
-    })
-
-    if (blob) {
-      await navigator.clipboard.write([
-        new ClipboardItem({ 'image/png': blob })
-      ])
-    }
-  } finally {
-    screenshotting.value = false
-  }
-}
 
 async function copyHtml() {
   commandOpen.value = false
@@ -240,10 +213,6 @@ function onKeydown(e: KeyboardEvent) {
   // Copy shortcuts (Cmd on Mac, Alt on Win/Linux)
   if ((isMac ? e.metaKey : e.altKey) && !e.shiftKey && isPreviewRoute.value) {
     switch (e.key.toLowerCase()) {
-      case 's':
-        e.preventDefault()
-        copyScreenshot()
-        return
       case 'c':
         e.preventDefault()
         copyHtml()
@@ -406,14 +375,6 @@ onUnmounted(() => {
 
         <!-- Copy to clipboard commands -->
         <CommandGroup v-if="isPreviewRoute" heading="Copy to clipboard">
-          <CommandItem
-            value="Screenshot"
-            @select="copyScreenshot"
-          >
-            <Camera class="size-3 shrink-0 opacity-50" />
-            <span>Screenshot</span>
-            <CommandShortcut>{{ isMac ? '⌘' : 'ALT+' }}S</CommandShortcut>
-          </CommandItem>
           <CommandItem
             value="HTML"
             @select="copyHtml"

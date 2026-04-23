@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronUp, ChevronDown, Check, Info } from 'lucide-vue-next'
+import { ChevronUp, ChevronDown, Check } from 'lucide-vue-next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +20,6 @@ import {
   TagsInputItemDelete,
   TagsInputItemText,
 } from '@/components/ui/tags-input'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 import stripesUrl from '../stripes.svg'
 
@@ -754,7 +753,7 @@ const stripeBg = {
                 <button
                   v-for="cat in activeCompatibilityCategories"
                   :key="cat"
-                  class="px-2 py-0.5 text-[11px] rounded-full cursor-pointer transition-colors"
+                  class="px-2 py-0.5 text-[11px] rounded-full cursor-default transition-colors"
                   :class="compatibilityCategory === cat
                     ? 'bg-gray-900 text-white dark:bg-gray-600 dark:text-gray-100'
                     : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'"
@@ -772,18 +771,19 @@ const stripeBg = {
                   <li
                     v-for="(issue, i) in filteredCompatibilityIssues"
                     :key="i"
-                    class="pr-4 py-1.5 hover:bg-gray-50 dark:hover:bg-white/5"
+                    class="pr-4 py-2"
                   >
-                    <div class="flex items-center gap-2">
-                      <a v-if="issue.url" :href="issue.url" target="_blank" rel="noopener" class="font-medium hover:underline shrink-0" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
-                        {{ issue.title }}
-                      </a>
-                      <span v-else class="font-medium shrink-0" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
-                        {{ issue.title }}
-                      </span>
-                      <span class="text-gray-400 dark:text-gray-600 shrink-0">&middot;</span>
-                      <span class="text-gray-500 dark:text-gray-400 truncate">{{ issue.type === 'error' ? 'Not supported' : 'Partial support' }} in {{ issue.clients.map((c: any) => c.name).join(', ') }}</span>
-                      <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0 ml-auto" @click="openInEditor(issue.file, issue.line!)">{{ isCurrentFile(issue) ? `L${issue.line}` : `${componentName(issue.file)}:${issue.line}` }}</button>
+                    <div class="flex items-center justify-between gap-4">
+                      <div>
+                        <a v-if="issue.url" :href="issue.url" target="_blank" rel="noopener" class="font-medium hover:underline" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
+                          {{ issue.title }}
+                        </a>
+                        <span v-else class="font-medium" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
+                          {{ issue.title }}
+                        </span>
+                        <div class="text-gray-500 dark:text-gray-400 mt-0.5">{{ issue.type === 'error' ? 'Not supported' : 'Partial support' }} in {{ issue.clients.map((c: any) => c.name).join(', ') }}</div>
+                      </div>
+                      <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0" @click="openInEditor(issue.file, issue.line!)">{{ isCurrentFile(issue) ? `L${issue.line}` : `${componentName(issue.file)}:${issue.line}` }}</button>
                     </div>
                   </li>
                 </ul>
@@ -797,9 +797,9 @@ const stripeBg = {
                   <li
                     v-for="(issue, i) in lintIssues"
                     :key="i"
-                    class="pr-4 py-2 hover:bg-gray-50 dark:hover:bg-white/5"
+                    class="pr-4 py-2 "
                   >
-                    <div class="flex items-start justify-between gap-4">
+                    <div class="flex items-center justify-between gap-4">
                       <div>
                         <span class="font-medium" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
                           {{ issue.title }}
@@ -816,35 +816,35 @@ const stripeBg = {
                 <ScrollArea class="h-full pl-5">
                 <p v-if="statsLoading" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">Loading stats...</p>
                 <p v-else-if="!stats" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">No stats available.</p>
-                <div v-else class="pr-4 py-3 flex items-center gap-6 text-xs">
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-gray-500 dark:text-gray-400">Size</span>
-                    <span
-                      class="font-medium tabular-nums"
-                      :class="stats.size.bytes > 102400 ? 'text-red-600' : stats.size.bytes > 51200 ? 'text-amber-600' : 'text-gray-900 dark:text-gray-300'"
-                    >{{ stats.size.formatted }}</span>
-                    <TooltipProvider :delay-duration="0">
-                      <Tooltip>
-                        <TooltipTrigger as-child>
-                          <button type="button">
-                            <Info class="size-3 text-gray-400 dark:text-gray-500" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent class="max-w-60">
-                          Compiled HTML size, excludes image files. Gmail clips content at ~100KB.
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-gray-500 dark:text-gray-400">Images</span>
-                    <span class="font-medium tabular-nums">{{ stats.images }}</span>
-                  </div>
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-gray-500 dark:text-gray-400">Links</span>
-                    <span class="font-medium tabular-nums">{{ stats.links }}</span>
-                  </div>
-                </div>
+                <ul v-else class="text-xs divide-y divide-gray-200 dark:divide-white/10">
+                  <li class="pr-4 py-2">
+                    <div class="flex items-center justify-between gap-4">
+                      <div>
+                        <span class="font-medium" :class="stats.size.bytes > 102400 ? 'text-red-600' : stats.size.bytes > 51200 ? 'text-amber-600' : 'text-gray-900 dark:text-gray-300'">Size</span>
+                        <div class="text-gray-500 dark:text-gray-400 mt-0.5">Compiled HTML size. Gmail clips emails larger than ~100KB.</div>
+                      </div>
+                      <span class="font-medium tabular-nums shrink-0" :class="stats.size.bytes > 102400 ? 'text-red-600' : stats.size.bytes > 51200 ? 'text-amber-600' : 'text-gray-900 dark:text-gray-300'">{{ stats.size.formatted }}</span>
+                    </div>
+                  </li>
+                  <li class="pr-4 py-2">
+                    <div class="flex items-center justify-between gap-4">
+                      <div>
+                        <span class="font-medium text-gray-900 dark:text-gray-300">Images</span>
+                        <div class="text-gray-500 dark:text-gray-400 mt-0.5">Total from &lt;img&gt; tags and CSS background images.</div>
+                      </div>
+                      <span class="font-medium tabular-nums shrink-0">{{ stats.images }}</span>
+                    </div>
+                  </li>
+                  <li class="pr-4 py-2">
+                    <div class="flex items-center justify-between gap-4">
+                      <div>
+                        <span class="font-medium text-gray-900 dark:text-gray-300">Links</span>
+                        <div class="text-gray-500 dark:text-gray-400 mt-0.5">Total &lt;a&gt; tags with an href attribute.</div>
+                      </div>
+                      <span class="font-medium tabular-nums shrink-0">{{ stats.links }}</span>
+                    </div>
+                  </li>
+                </ul>
               </ScrollArea>
             </TabsContent>
             <TabsContent value="test" class="mt-0 h-full">
@@ -852,19 +852,19 @@ const stripeBg = {
                 <div class="pr-4 py-3 max-w-md">
                   <div class="space-y-2">
                     <div class="flex items-center gap-2">
-                      <label class="text-xs text-gray-500 dark:text-gray-400 w-12 shrink-0">To</label>
+                      <label for="email-to" class="text-xs text-gray-500 dark:text-gray-400 w-12 shrink-0 cursor-pointer">To</label>
                       <TagsInput v-model="emailTo" delimiter=" " add-on-paste add-on-blur class="flex-1 min-h-7 gap-1 px-2 py-1">
                         <TagsInputItem v-for="item in emailTo" :key="item" :value="item" class="h-5 text-xs rounded">
                           <TagsInputItemText class="px-1.5 py-0 text-xs" />
                           <TagsInputItemDelete class="size-3.5" />
                         </TagsInputItem>
-                        <TagsInputInput class="text-xs min-h-5 px-0.5" placeholder="Add emails..." />
+                        <TagsInputInput id="email-to" class="text-xs min-h-5 px-0.5" placeholder="Add emails..." />
                       </TagsInput>
                     </div>
                     <div class="flex items-center gap-2">
-                      <label class="text-xs text-gray-500 dark:text-gray-400 w-12 shrink-0">Subject</label>
+                      <label for="email-subject" class="text-xs text-gray-500 dark:text-gray-400 w-12 shrink-0 cursor-pointer">Subject</label>
                       <div class="flex-1 flex items-center gap-3">
-                        <Input v-model="emailSubject" :placeholder="String(route.params.template)" class="flex-1 h-7 text-xs! px-2" />
+                        <Input id="email-subject" v-model="emailSubject" :placeholder="String(route.params.template)" class="flex-1 h-7 text-xs! px-2" />
                         <label class="flex items-center gap-1.5 cursor-pointer select-none shrink-0">
                           <Checkbox v-model="emailPreventThreading" :default-checked="true" class="size-3.5" />
                           <span class="text-xs text-gray-500 dark:text-gray-400">Prevent threading</span>

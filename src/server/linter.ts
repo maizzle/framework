@@ -104,13 +104,13 @@ function lintHtml(html: string, lineOffset: number, filePath: string): LintIssue
       if (hrefMatch) {
         const href = hrefMatch[1].trim()
         if (!href) {
-          issues.push({ type: 'warning', title: 'Empty link href', message: 'Link href attribute is empty', line, file: filePath })
+          issues.push({ type: 'error', title: 'Empty link href', message: 'Link href attribute is empty', line, file: filePath })
         } else if (href === '#' || href === '/') {
-          issues.push({ type: 'warning', title: 'Placeholder link', message: `Link href is "${href}"`, line, file: filePath })
+          issues.push({ type: 'error', title: 'Placeholder link', message: `Link href is "${href}"`, line, file: filePath })
         } else if (href.startsWith('http:')) {
           issues.push({ type: 'warning', title: 'Insecure link', message: 'Link uses HTTP instead of HTTPS', line, file: filePath })
         } else if (href.startsWith('http') && !/^https?:\/\/.+\..+/i.test(href)) {
-          issues.push({ type: 'warning', title: 'Invalid link', message: `Link href "${href}" looks malformed`, line, file: filePath })
+          issues.push({ type: 'error', title: 'Invalid link', message: `Link href "${href}" looks malformed`, line, file: filePath })
         }
       }
     }

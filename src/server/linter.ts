@@ -1,29 +1,29 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { parseSfcBlocks, findComponentTags, buildComponentMap } from './sfc-utils.ts'
 
 interface LintIssue {
   type: 'error' | 'warning'
   title: string
   message: string
   line?: number
+  file: string
 }
 
-export function serveLint(url: string, res: any) {
+export async function serveLint(url: string, res: any, root: string, componentDirs: string[]) {
   const filePath = url.replace('/__maizzle/lint/', '').replace(/\?.*$/, '')
 
   try {
-    const source = readFileSync(resolve(filePath), 'utf-8')
+    const absolutePath = resolve(filePath)
+    const componentMap = await buildComponentMap(root, componentDirs)
+    const visited = new Set<string>()
+    const issues = checkFile(absolutePath, componentMap, visited)
 
-    // Extract only the <template> block for linting
-    const templateMatch = source.match(/<template\b[^>]*>([\s\S]*)<\/template>/)
-    const html = templateMatch ? templateMatch[1] : source
-
-    // Calculate the offset of the <template> content within the source file
-    const templateOffset = templateMatch
-      ? source.slice(0, source.indexOf(templateMatch[0]) + templateMatch[0].indexOf(templateMatch[1])).split('\n').length - 1
-      : 0
-
-    const issues = lintHtml(html, templateOffset)
+    // Sort: errors first, then warnings, then by line
+    issues.sort((a, b) => {
+      if (a.type !== b.type) return a.type === 'error' ? -1 : 1
+      return (a.line ?? 0) - (b.line ?? 0)
+    })
 
     res.setHeader('Content-Type', 'application/json')
     res.end(JSON.stringify(issues))
@@ -33,11 +33,45 @@ export function serveLint(url: string, res: any) {
   }
 }
 
+function checkFile(
+  filePath: string,
+  componentMap: Map<string, string>,
+  visited: Set<string>,
+): LintIssue[] {
+  if (visited.has(filePath)) return []
+  visited.add(filePath)
+
+  let source: string
+  try {
+    source = readFileSync(filePath, 'utf-8')
+  } catch {
+    return []
+  }
+
+  const { template } = parseSfcBlocks(source)
+  const issues: LintIssue[] = []
+
+  if (template) {
+    issues.push(...lintHtml(template.content, template.offset, filePath))
+
+    // Recurse into components
+    const componentTags = findComponentTags(template.content)
+    for (const tag of componentTags) {
+      const componentPath = componentMap.get(tag.toLowerCase())
+      if (componentPath) {
+        issues.push(...checkFile(componentPath, componentMap, visited))
+      }
+    }
+  }
+
+  return issues
+}
+
 function lineAt(html: string, offset: number, lineOffset: number): number {
   return html.slice(0, offset).split('\n').length + lineOffset
 }
 
-function lintHtml(html: string, lineOffset = 0): LintIssue[] {
+function lintHtml(html: string, lineOffset: number, filePath: string): LintIssue[] {
   const issues: LintIssue[] = []
 
   // Match all tags (multiline) — [^>] doesn't cross > so use [\s\S] with lazy quantifier
@@ -51,31 +85,33 @@ function lintHtml(html: string, lineOffset = 0): LintIssue[] {
     // Images
     if (tagName === 'img') {
       if (!/\balt\s*=/i.test(tag)) {
-        issues.push({ type: 'warning', title: 'Missing alt text', message: 'Image is missing the alt attribute', line })
+        issues.push({ type: 'warning', title: 'Missing alt text', message: 'Image is missing the alt attribute', line, file: filePath })
       }
 
       const srcMatch = tag.match(/\bsrc\s*=\s*["']([^"']*)["']/i)
       if (!srcMatch) {
-        issues.push({ type: 'error', title: 'Missing image src', message: 'Image tag has no src attribute', line })
+        issues.push({ type: 'error', title: 'Missing image src', message: 'Image tag has no src attribute', line, file: filePath })
       } else if (!srcMatch[1].trim()) {
-        issues.push({ type: 'error', title: 'Empty image src', message: 'Image src attribute is empty', line })
+        issues.push({ type: 'error', title: 'Empty image src', message: 'Image src attribute is empty', line, file: filePath })
       } else if (srcMatch[1].trim().startsWith('http:')) {
-        issues.push({ type: 'warning', title: 'Insecure image src', message: 'Image loads over HTTP instead of HTTPS', line })
+        issues.push({ type: 'warning', title: 'Insecure image src', message: 'Image loads over HTTP instead of HTTPS', line, file: filePath })
       }
     }
 
-    // Any tag with href (catches <a>, <Button>, etc.)
-    const hrefMatch = tag.match(/\bhref\s*=\s*["']([^"']*)["']/i)
-    if (hrefMatch) {
-      const href = hrefMatch[1].trim()
-      if (!href) {
-        issues.push({ type: 'warning', title: 'Empty link href', message: 'Link href attribute is empty', line })
-      } else if (href === '#' || href === '/') {
-        issues.push({ type: 'warning', title: 'Placeholder link', message: `Link href is "${href}"`, line })
-      } else if (href.startsWith('http:')) {
-        issues.push({ type: 'warning', title: 'Insecure link', message: 'Link uses HTTP instead of HTTPS', line })
-      } else if (href.startsWith('http') && !/^https?:\/\/.+\..+/i.test(href)) {
-        issues.push({ type: 'warning', title: 'Invalid link', message: `Link href "${href}" looks malformed`, line })
+    // Any tag with href — skip resource tags handled below
+    if (!['link', 'script', 'source'].includes(tagName)) {
+      const hrefMatch = tag.match(/\bhref\s*=\s*["']([^"']*)["']/i)
+      if (hrefMatch) {
+        const href = hrefMatch[1].trim()
+        if (!href) {
+          issues.push({ type: 'warning', title: 'Empty link href', message: 'Link href attribute is empty', line, file: filePath })
+        } else if (href === '#' || href === '/') {
+          issues.push({ type: 'warning', title: 'Placeholder link', message: `Link href is "${href}"`, line, file: filePath })
+        } else if (href.startsWith('http:')) {
+          issues.push({ type: 'warning', title: 'Insecure link', message: 'Link uses HTTP instead of HTTPS', line, file: filePath })
+        } else if (href.startsWith('http') && !/^https?:\/\/.+\..+/i.test(href)) {
+          issues.push({ type: 'warning', title: 'Invalid link', message: `Link href "${href}" looks malformed`, line, file: filePath })
+        }
       }
     }
 
@@ -83,14 +119,14 @@ function lintHtml(html: string, lineOffset = 0): LintIssue[] {
     if (['link', 'script', 'source'].includes(tagName)) {
       const attrMatch = tag.match(/\b(?:href|src)\s*=\s*["']([^"']*)["']/i)
       if (attrMatch && attrMatch[1].trim().startsWith('http:')) {
-        issues.push({ type: 'warning', title: 'Insecure resource', message: 'Resource loads over HTTP instead of HTTPS', line })
+        issues.push({ type: 'warning', title: 'Insecure resource', message: 'Resource loads over HTTP instead of HTTPS', line, file: filePath })
       }
     }
   }
 
   // Insecure CSS url() references
   for (const m of Array.from(html.matchAll(/url\s*\(\s*["']?(http:[^"')]+)["']?\s*\)/gi))) {
-    issues.push({ type: 'warning', title: 'Insecure CSS url()', message: 'CSS url() loads over HTTP instead of HTTPS', line: lineAt(html, m.index!, lineOffset) })
+    issues.push({ type: 'warning', title: 'Insecure CSS url()', message: 'CSS url() loads over HTTP instead of HTTPS', line: lineAt(html, m.index!, lineOffset), file: filePath })
   }
 
   // Check for unclosed tags (block-level and common inline elements)
@@ -148,14 +184,9 @@ function lintHtml(html: string, lineOffset = 0): LintIssue[] {
       title: 'Unclosed tag',
       message: `<${unclosed.tag}> tag is not closed`,
       line: unclosed.line,
+      file: filePath,
     })
   }
-
-  // Sort: errors first, then warnings, then by line
-  issues.sort((a, b) => {
-    if (a.type !== b.type) return a.type === 'error' ? -1 : 1
-    return (a.line ?? 0) - (b.line ?? 0)
-  })
 
   return issues
 }

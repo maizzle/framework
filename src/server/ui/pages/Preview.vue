@@ -103,6 +103,7 @@ interface LintIssue {
   title: string
   message: string
   line?: number
+  file: string
 }
 
 interface TemplateStats {
@@ -273,7 +274,7 @@ async function fetchCompatibility() {
 }
 
 /** Check if an issue is from the currently viewed template file */
-function isCurrentFile(issue: CompatibilityIssue): boolean {
+function isCurrentFile(issue: { file: string }): boolean {
   const template = props.templates?.find(t => t.href === '/' + route.params.template)
   if (!template) return true
   return issue.file.endsWith(template.path)
@@ -290,11 +291,12 @@ function openInEditor(file: string, line: number) {
 }
 
 async function fetchLint() {
+  const template = props.templates?.find(t => t.href === '/' + route.params.template)
+  if (!template) return
+
   lintLoading.value = true
   try {
-    const template = props.templates?.find(t => t.href === '/' + route.params.template)
-    const filePath = template?.path ?? route.params.template
-    const res = await fetch(`/__maizzle/lint/${filePath}`)
+    const res = await fetch(`/__maizzle/lint/${template.path}`)
     const data = await res.json()
     lintIssues.value = Array.isArray(data) ? data.filter((i: LintIssue) => i.title) : []
   } catch {
@@ -322,10 +324,13 @@ watch(() => route.params.template, () => {
   if (viewMode.value === 'source') fetchSource()
 }, { immediate: true })
 
-// Templates list loads async from App.vue — re-trigger compatibility once available
+// Templates list loads async from App.vue — re-trigger once available
 watch(() => props.templates, (templates) => {
   if (templates?.length && !compatibilityIssues.value.length && !compatibilityLoading.value) {
     fetchCompatibility()
+  }
+  if (templates?.length && !lintIssues.value.length && !lintLoading.value) {
+    fetchLint()
   }
 })
 
@@ -362,33 +367,6 @@ if ((import.meta as any).hot) {
       if (sourceView.value === 'plaintext') fetchPlaintext()
     }
   })
-}
-
-
-async function goToLine(line: number) {
-  // Switch to source view showing Vue source
-  viewMode.value = 'source'
-  sourceView.value = 'vue'
-
-  // Ensure vue source is loaded
-  if (!vueSourceHtml.value) {
-    await fetchVueSource()
-  }
-
-  await nextTick()
-
-  const el = vueSourceEl.value
-  if (!el) return
-
-  // Remove previous highlight
-  el.querySelectorAll('.shiki-highlight-line').forEach(l => l.classList.remove('shiki-highlight-line'))
-
-  // Find and highlight the line
-  const lineEl = el.querySelector(`[data-line="${line}"]`)
-  if (lineEl) {
-    lineEl.classList.add('shiki-highlight-line')
-    lineEl.scrollIntoView({ block: 'center', behavior: 'smooth' })
-  }
 }
 
 async function goToCompiledLine(line: number) {
@@ -828,7 +806,7 @@ const stripeBg = {
                         </span>
                         <div class="text-gray-500 dark:text-gray-400 mt-0.5">{{ issue.message }}</div>
                       </div>
-                      <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0" @click="goToLine(issue.line!)">L{{ issue.line }}</button>
+                      <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0" @click="openInEditor(issue.file, issue.line!)">{{ isCurrentFile(issue) ? `L${issue.line}` : `${componentName(issue.file)}:${issue.line}` }}</button>
                     </div>
                   </li>
                 </ul>

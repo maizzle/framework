@@ -70,7 +70,9 @@ const iframeContentHeight = ref<number | null>(null)
 function copySource() {
   let text: string
   if (sourceView.value === 'compiled') {
-    text = srcdoc.value
+    // `renderedHtml` holds the raw compiled HTML (srcdoc is only populated
+    // for the initial iframe load; subsequent renders use doc.write).
+    text = renderedHtml || srcdoc.value
   } else if (sourceView.value === 'plaintext') {
     text = plaintextContent.value
   } else {
@@ -79,11 +81,11 @@ function copySource() {
     text = el.textContent || ''
   }
 
-  const blob = new Blob([text], { type: 'text/plain' })
-  const item = new ClipboardItem({ 'text/plain': blob })
-  navigator.clipboard.write([item]).then(() => {
+  navigator.clipboard.writeText(text).then(() => {
     copied.value = true
     setTimeout(() => { copied.value = false }, 2000)
+  }).catch((err) => {
+    console.error('Copy failed:', err)
   })
 }
 

@@ -6,6 +6,7 @@ import valueParser from 'postcss-value-parser'
 import { Parser } from 'htmlparser2'
 import { DomHandler, type ChildNode, type Element } from 'domhandler'
 import { parseSfcBlocks, findComponentTags, buildComponentMap, type SfcBlock } from './sfc-utils.ts'
+import { scanLint } from './linter.ts'
 import { tailwindcss as compileWithPipeline } from '../transformers/tailwindcss.ts'
 import type { MaizzleConfig } from '../types/index.ts'
 
@@ -24,15 +25,20 @@ interface Feature {
 }
 
 interface Issue {
-  slug: string
+  kind: 'compat' | 'lint'
+  slug?: string
   title: string
-  url: string
+  url?: string
   category: string
-  supportLevel: SupportLevel
-  supportLabel: string
-  affectedClients: string[]
   line?: number
   file: string
+  // compat-only
+  supportLevel?: SupportLevel
+  supportLabel?: string
+  affectedClients?: string[]
+  // lint-only
+  severity?: 'error' | 'warning'
+  message?: string
 }
 
 interface Indexes {
@@ -62,6 +68,8 @@ interface Indexes {
   htmlSemantics?: Feature
   htmlStyleInBody?: Feature
   imageExt: Map<string, Feature[]>
+  /** All features by slug — unfiltered, used for URL lookups (e.g. by lint). */
+  bySlug: Map<string, { title: string, url: string }>
 }
 
 let indexes: Indexes | null = null
@@ -81,6 +89,7 @@ function emptyIndexes(nicenames: any): Indexes {
     cssFunction: new Map(), cssUnit: new Map(),
     htmlTag: new Map(), htmlAttr: new Map(), htmlInputType: new Map(), htmlButtonType: new Map(),
     imageExt: new Map(),
+    bySlug: new Map(),
   }
 }
 
@@ -287,6 +296,9 @@ export async function initCompatibility(): Promise<Indexes | null> {
       const idx = emptyIndexes(data.nicenames?.support ?? {})
       const familyNicenames = data.nicenames?.family ?? {}
       for (const item of data.data ?? []) {
+        // Record every slug's title/url so lint can look up caniemail pages
+        // for issues that map to a known feature, even ignored ones.
+        if (item.slug && item.url) idx.bySlug.set(item.slug, { title: item.title, url: item.url })
         const support = computeSupport(item.stats, familyNicenames)
         if (!support) continue
         const f: Feature = {
@@ -686,6 +698,7 @@ async function scan(rootFile: string, config: MaizzleConfig, componentDirs: stri
     if (seen.has(key)) return
     seen.add(key)
     issues.push({
+      kind: 'compat',
       slug: f.slug, title: f.title, url: f.url, category: f.category,
       supportLevel: f.supportLevel, supportLabel: labelFor(idx, f.supportLevel),
       affectedClients: f.affectedClients,
@@ -776,7 +789,12 @@ function extractSelectorClasses(selector: string): string[] {
 }
 
 const CATEGORY_ORDER = ['css', 'html', 'image', 'others']
-const LEVEL_ORDER: Record<SupportLevel, number> = { unsupported: 0, mitigated: 1, unknown: 2 }
+const LEVEL_ORDER: Record<string, number> = { error: 0, unsupported: 1, warning: 2, mitigated: 3, unknown: 4 }
+
+function orderKey(i: Issue): number {
+  if (i.kind === 'lint') return LEVEL_ORDER[i.severity!] ?? 99
+  return LEVEL_ORDER[i.supportLevel!] ?? 99
+}
 
 export async function serveCompatibility(
   url: string,
@@ -787,13 +805,34 @@ export async function serveCompatibility(
   const filePath = url.replace('/__maizzle/compatibility/', '').replace(/\?.*$/, '')
   try {
     const absolutePath = resolve(filePath)
-    const issues = await scan(absolutePath, config, componentDirs)
+    const [compatIssues, lintIssues] = await Promise.all([
+      scan(absolutePath, config, componentDirs),
+      scanLint(absolutePath, config, componentDirs),
+    ])
+
+    const idx = await initCompatibility()
+    const lintAsIssues: Issue[] = lintIssues.map((li) => {
+      const info = li.slug ? idx?.bySlug.get(li.slug) : undefined
+      return {
+        kind: 'lint',
+        slug: li.slug,
+        title: li.title,
+        url: info?.url,
+        category: li.category,
+        severity: li.type,
+        message: li.message,
+        line: li.line,
+        file: li.file,
+      }
+    })
+
+    const issues: Issue[] = [...compatIssues, ...lintAsIssues]
     issues.sort((a, b) => {
       const c = CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category)
       if (c) return c
-      const l = LEVEL_ORDER[a.supportLevel] - LEVEL_ORDER[b.supportLevel]
+      const l = orderKey(a) - orderKey(b)
       if (l) return l
-      return a.slug.localeCompare(b.slug)
+      return (a.slug ?? a.title).localeCompare(b.slug ?? b.title)
     })
     res.setHeader('Content-Type', 'application/json')
     res.end(JSON.stringify(issues))

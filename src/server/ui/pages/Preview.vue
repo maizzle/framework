@@ -87,31 +87,54 @@ function copySource() {
   })
 }
 
-interface CompatibilityIssue {
-  slug: string
+interface CheckIssue {
+  kind: 'compat' | 'lint'
+  slug?: string
   title: string
-  url: string
+  url?: string
   category: string
-  supportLevel: 'unsupported' | 'mitigated' | 'unknown'
-  supportLabel: string
-  affectedClients: string[]
   line?: number
   file: string
+  // compat-only
+  supportLevel?: 'unsupported' | 'mitigated' | 'unknown'
+  supportLabel?: string
+  affectedClients?: string[]
+  // lint-only
+  severity?: 'error' | 'warning'
+  message?: string
 }
 
-function issueSubtext(issue: CompatibilityIssue): string {
-  const clients = issue.affectedClients.join(', ')
+function issueSubtext(issue: CheckIssue): string {
+  if (issue.kind === 'lint') return issue.message ?? ''
+  const clients = (issue.affectedClients ?? []).join(', ')
   if (issue.supportLevel === 'unsupported') return `Not supported in ${clients}`
   if (issue.supportLevel === 'mitigated') return `Partial support in ${clients}`
   return `Support unknown in ${clients}`
 }
 
-interface LintIssue {
-  type: 'error' | 'warning'
-  title: string
-  message: string
-  line?: number
-  file: string
+/**
+ * Split a message on backtick-delimited code spans. Returns alternating
+ * { text } and { code } segments so the template can render <code> inline
+ * without needing v-html.
+ */
+function issueSegments(issue: CheckIssue): Array<{ code: boolean, text: string }> {
+  const raw = issueSubtext(issue)
+  if (!raw) return []
+  const out: Array<{ code: boolean, text: string }> = []
+  const parts = raw.split('`')
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i]) out.push({ code: i % 2 === 1, text: parts[i] })
+  }
+  return out
+}
+
+function issueColorClass(issue: CheckIssue): string {
+  if (issue.kind === 'lint') {
+    return issue.severity === 'error' ? 'text-rose-600' : 'text-amber-600'
+  }
+  if (issue.supportLevel === 'unsupported') return 'text-rose-600'
+  if (issue.supportLevel === 'mitigated') return 'text-amber-600'
+  return 'text-gray-500 dark:text-gray-400'
 }
 
 interface TemplateStats {
@@ -120,7 +143,7 @@ interface TemplateStats {
   links: number
 }
 
-const compatibilityIssues = ref<CompatibilityIssue[]>([])
+const compatibilityIssues = ref<CheckIssue[]>([])
 const compatibilityLoading = ref(false)
 const compatibilityError = ref('')
 const compatibilityCategory = ref('')
@@ -132,8 +155,6 @@ const filteredCompatibilityIssues = computed(() => {
   if (!compatibilityCategory.value) return compatibilityIssues.value
   return compatibilityIssues.value.filter(i => i.category === compatibilityCategory.value)
 })
-const lintIssues = ref<LintIssue[]>([])
-const lintLoading = ref(false)
 const stats = ref<TemplateStats | null>(null)
 const statsLoading = ref(false)
 
@@ -270,9 +291,15 @@ async function fetchCompatibility() {
       compatibilityIssues.value = []
     } else {
       compatibilityIssues.value = data
-      // Default to first category that has issues
-      const firstCat = compatibilityCategories.find(cat => data.some((i: CompatibilityIssue) => i.category === cat))
-      compatibilityCategory.value = firstCat || ''
+      // Keep the current category if it still has issues; otherwise fall
+      // back to the first category that does. Prevents a "refresh" during
+      // edits from snapping back to CSS when the user is on HTML/Image.
+      const current = compatibilityCategory.value
+      const currentStillActive = current && data.some((i: CheckIssue) => i.category === current)
+      if (!currentStillActive) {
+        const firstCat = compatibilityCategories.find(cat => data.some((i: CheckIssue) => i.category === cat))
+        compatibilityCategory.value = firstCat || ''
+      }
     }
   } catch {
     compatibilityIssues.value = []
@@ -298,35 +325,17 @@ function openInEditor(file: string, line: number) {
   fetch(`/__open-in-editor?file=${encodeURIComponent(file + ':' + line)}`)
 }
 
-async function fetchLint() {
-  const template = props.templates?.find(t => t.href === '/' + route.params.template)
-  if (!template) return
-
-  lintLoading.value = true
-  try {
-    const res = await fetch(`/__maizzle/lint/${template.path}`)
-    const data = await res.json()
-    lintIssues.value = Array.isArray(data) ? data.filter((i: LintIssue) => i.title) : []
-  } catch {
-    lintIssues.value = []
-  } finally {
-    lintLoading.value = false
-  }
-}
-
 watch(() => route.params.template, () => {
   sourceHtml.value = ''
   vueSourceHtml.value = ''
   plaintextContent.value = ''
   compatibilityIssues.value = []
   compatibilityError.value = ''
-  lintIssues.value = []
   stats.value = null
   emailResult.value = null
   sourceView.value = 'compiled'
   fetchTemplate()
   fetchCompatibility()
-  fetchLint()
   fetchStats()
   fetchEmailConfig()
   if (viewMode.value === 'source') fetchSource()
@@ -336,9 +345,6 @@ watch(() => route.params.template, () => {
 watch(() => props.templates, (templates) => {
   if (templates?.length && !compatibilityIssues.value.length && !compatibilityLoading.value) {
     fetchCompatibility()
-  }
-  if (templates?.length && !lintIssues.value.length && !lintLoading.value) {
-    fetchLint()
   }
 })
 
@@ -360,7 +366,6 @@ if ((import.meta as any).hot) {
   ;(import.meta as any).hot.on('maizzle:template-updated', () => {
     fetchTemplate()
     fetchCompatibility()
-    fetchLint()
     fetchStats()
 
     // Always clear all source views so they re-fetch when switched to
@@ -745,10 +750,7 @@ const stripeBg = {
           <div class="flex items-center justify-between min-h-10 pl-2 pr-3 shrink-0" :class="bottomPanelOpen ? 'border-b' : ''">
             <TabsList class="h-full bg-transparent! rounded-none! p-0 gap-1">
               <TabsTrigger value="compatibility" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent dark:bg-transparent! dark:hover:bg-transparent!" @click="onTabClick('compatibility')">
-                Compatibility
-              </TabsTrigger>
-              <TabsTrigger value="lint" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent dark:bg-transparent! dark:hover:bg-transparent!" @click="onTabClick('lint')">
-                Linter
+                Checks
               </TabsTrigger>
               <TabsTrigger value="stats" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent dark:bg-transparent! dark:hover:bg-transparent!" @click="onTabClick('stats')">
                 Stats
@@ -778,9 +780,9 @@ const stripeBg = {
                 </button>
               </div>
               <ScrollArea class="h-full flex-1 min-h-0 pl-5">
-                <p v-if="compatibilityLoading" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">Checking compatibility...</p>
+                <p v-if="compatibilityLoading" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">Running checks...</p>
                 <p v-else-if="compatibilityError" class="pr-4 py-3 text-xs text-red-500 dark:text-red-400">{{ compatibilityError }}</p>
-                <p v-else-if="compatibilityIssues.length === 0" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">No compatibility issues found.</p>
+                <p v-else-if="compatibilityIssues.length === 0" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">No issues found.</p>
                 <ul v-else class="text-xs divide-y">
                   <li
                     v-for="(issue, i) in filteredCompatibilityIssues"
@@ -789,33 +791,18 @@ const stripeBg = {
                   >
                     <div class="flex items-center justify-between gap-4">
                       <div>
-                        <a :href="issue.url" target="_blank" rel="noopener" class="font-medium hover:underline" :class="issue.supportLevel === 'unsupported' ? 'text-rose-600' : issue.supportLevel === 'mitigated' ? 'text-amber-600' : 'text-gray-500 dark:text-gray-400'">
+                        <a v-if="issue.url" :href="issue.url" target="_blank" rel="noopener" class="font-medium hover:underline" :class="issueColorClass(issue)">
                           {{ issue.title }}
                         </a>
-                        <div class="text-gray-500 dark:text-gray-400 mt-0.5">{{ issueSubtext(issue) }}</div>
-                      </div>
-                      <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0" @click="openInEditor(issue.file, issue.line!)">{{ isCurrentFile(issue) ? `L${issue.line}` : `${componentName(issue.file)}:${issue.line}` }}</button>
-                    </div>
-                  </li>
-                </ul>
-              </ScrollArea>
-            </TabsContent>
-            <TabsContent value="lint" class="mt-0 h-full">
-              <ScrollArea class="h-full pl-5">
-                <p v-if="lintLoading" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">Linting...</p>
-                <p v-else-if="lintIssues.length === 0" class="pr-4 py-3 text-xs text-gray-500 dark:text-gray-400">No issues found.</p>
-                <ul v-else class="text-xs divide-y">
-                  <li
-                    v-for="(issue, i) in lintIssues"
-                    :key="i"
-                    class="pr-4 py-2 "
-                  >
-                    <div class="flex items-center justify-between gap-4">
-                      <div>
-                        <span class="font-medium" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
+                        <span v-else class="font-medium" :class="issueColorClass(issue)">
                           {{ issue.title }}
                         </span>
-                        <div class="text-gray-500 dark:text-gray-400 mt-0.5">{{ issue.message }}</div>
+                        <div class="text-gray-500 dark:text-gray-400 mt-0.5">
+                          <template v-for="(seg, j) in issueSegments(issue)" :key="j">
+                            <code v-if="seg.code" class="px-1 py-0.5 rounded bg-gray-100 dark:bg-white/10 font-mono text-[11px]">{{ seg.text }}</code>
+                            <template v-else>{{ seg.text }}</template>
+                          </template>
+                        </div>
                       </div>
                       <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0" @click="openInEditor(issue.file, issue.line!)">{{ isCurrentFile(issue) ? `L${issue.line}` : `${componentName(issue.file)}:${issue.line}` }}</button>
                     </div>

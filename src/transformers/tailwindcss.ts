@@ -50,7 +50,7 @@ function decodeEntities(str: string): string {
  * and would pass through @source directives unconsumed.
  */
 function usesTailwind(css: string): boolean {
-  return /(@import\s+["'](tailwindcss|@maizzle\/tailwindcss)|@tailwind\s)/.test(css)
+  return /((@import|@reference)\s+["'](tailwindcss|@maizzle\/tailwindcss)|@tailwind\s)/.test(css)
 }
 
 /**
@@ -155,14 +155,11 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
     const el = node as Element
     const attrs = el.attribs || {}
 
-    // Skip marked style tags
-    // Remove 'raw' marker but preserve 'embed'/'data-embed' for Juice
+    // `raw` opts out of compilation entirely (marker is consumed here).
+    // `embed`/`data-embed` only signal "preserve tag after inlining" — they
+    // still need to go through compile so Tailwind/@apply resolves.
     if ('raw' in attrs) {
       delete el.attribs.raw
-      return
-    }
-
-    if ('embed' in attrs || 'data-embed' in attrs) {
       return
     }
 

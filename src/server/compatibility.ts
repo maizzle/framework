@@ -60,6 +60,7 @@ interface Indexes {
   htmlMailtoLinks?: Feature
   htmlMetaColorScheme?: Feature
   htmlSemantics?: Feature
+  htmlStyleInBody?: Feature
   imageExt: Map<string, Feature[]>
 }
 
@@ -152,6 +153,13 @@ const IGNORED_SLUGS = new Set([
 
 function classify(f: Feature, idx: Indexes) {
   const slug = f.slug
+  // Retain html-style feature for the body-only detector even though it's
+  // blacklisted from the normal html-tag detection path. Title is suffixed
+  // so the flag reads as a body-placement warning, not a blanket `<style>`.
+  if (slug === 'html-style') {
+    idx.htmlStyleInBody = { ...f, title: `${f.title} in <body>` }
+    return
+  }
   if (IGNORED_SLUGS.has(slug)) return
 
   if (f.category === 'css') return classifyCss(f, slug, idx)
@@ -531,6 +539,9 @@ function walkTemplate(
   const semanticTags = new Set(['article', 'aside', 'details', 'figcaption', 'figure',
     'footer', 'header', 'main', 'mark', 'nav', 'section', 'time', 'summary'])
 
+  // Stack of tags that opened a body-scope: a literal <body> or a
+  // <Teleport to="body..."> whose rendered contents land inside body.
+  const bodyScopeStack: string[] = []
   const parser = new Parser({
     onopentag(tag, attrs) {
       const startIdx = (parser as any).startIndex as number
@@ -540,6 +551,12 @@ function walkTemplate(
       if (tagFs) for (const f of tagFs) onHit(f, line)
 
       if (idx.htmlSemantics && semanticTags.has(tag)) onHit(idx.htmlSemantics, line)
+
+      if (tag === 'style' && bodyScopeStack.length > 0 && idx.htmlStyleInBody) {
+        onHit(idx.htmlStyleInBody, line)
+      }
+      if (tag === 'body') bodyScopeStack.push(tag)
+      else if (tag === 'teleport' && /body/i.test(attrs.to ?? '')) bodyScopeStack.push(tag)
 
       for (const attr in attrs) {
         const attrFs = idx.htmlAttr.get(attr)
@@ -577,6 +594,10 @@ function walkTemplate(
 
       // inline style attribute → scan as CSS decl list
       if (attrs.style) scanInlineStyle(attrs.style, idx, line, onHit)
+    },
+    onclosetag(tag) {
+      const top = bodyScopeStack[bodyScopeStack.length - 1]
+      if (top === tag) bodyScopeStack.pop()
     },
     onprocessinginstruction(name) {
       if (idx.htmlDoctype && name.toLowerCase() === '!doctype') {

@@ -457,15 +457,34 @@ function walkCss(
 
   root.walkAtRules((atRule: AtRule) => {
     const line = atRule.source?.start?.line
-    const sel = containingSelector(atRule)
-    const fs = idx.cssAtRule.get(atRule.name)
-    if (fs) for (const f of fs) onHit(f, { line, selector: sel })
-    if (atRule.name === 'media' && idx.cssMediaFeature.size) {
-      for (const [feat, fs2] of idx.cssMediaFeature) {
-        if (atRule.params.includes(`(${feat}`) || atRule.params.includes(feat)) {
-          for (const f of fs2) onHit(f, { line, selector: sel })
+    let sel = containingSelector(atRule)
+    if (atRule.name === 'media' && !sel) {
+      const innerSelectors: string[] = []
+      atRule.walkRules((r) => { innerSelectors.push(r.selector) })
+      if (innerSelectors.length) sel = innerSelectors.join(', ')
+    }
+
+    if (atRule.name === 'media') {
+      // Pick the most specific media-feature match (prefers-color-scheme,
+      // hover, orientation, …). If one matches, skip the generic `css-at-media`
+      // to avoid duplicate rows pointing at the same line.
+      const specific: Feature[] = []
+      if (idx.cssMediaFeature.size) {
+        for (const [feat, fs2] of idx.cssMediaFeature) {
+          if (atRule.params.includes(`(${feat}`) || atRule.params.includes(feat)) {
+            specific.push(...fs2)
+          }
         }
       }
+      if (specific.length) {
+        for (const f of specific) onHit(f, { line, selector: sel })
+      } else {
+        const fs = idx.cssAtRule.get('media')
+        if (fs) for (const f of fs) onHit(f, { line, selector: sel })
+      }
+    } else {
+      const fs = idx.cssAtRule.get(atRule.name)
+      if (fs) for (const f of fs) onHit(f, { line, selector: sel })
     }
   })
 
@@ -691,10 +710,7 @@ async function scan(rootFile: string, config: MaizzleConfig, componentDirs: stri
   const issues: Issue[] = []
   const seen = new Set<string>()
   const add = (f: Feature, file: string, line?: number) => {
-    // @media features come from Tailwind variant wrappers (hover:, md:, …)
-    // which don't map cleanly to a single source line — suppress line jump.
-    const resolvedLine = f.slug.startsWith('css-at-media') ? undefined : line
-    const key = `${f.slug}|${file}|${resolvedLine ?? 0}`
+    const key = `${f.slug}|${file}|${line ?? 0}`
     if (seen.has(key)) return
     seen.add(key)
     issues.push({
@@ -702,7 +718,7 @@ async function scan(rootFile: string, config: MaizzleConfig, componentDirs: stri
       slug: f.slug, title: f.title, url: f.url, category: f.category,
       supportLevel: f.supportLevel, supportLabel: labelFor(idx, f.supportLevel),
       affectedClients: f.affectedClients,
-      line: resolvedLine, file,
+      line, file,
     })
   }
 
@@ -716,10 +732,17 @@ async function scan(rootFile: string, config: MaizzleConfig, componentDirs: stri
   for (const block of compiledBlocks) {
     walkCss(block.css, idx, (feature, node) => {
       const locations = classLocations(node.selector, streams)
-      if (locations.length) {
-        for (const { file, line } of locations) add(feature, file, line)
-      } else {
+      if (!locations.length) {
         add(feature, block.file, block.line)
+        return
+      }
+      // @media features collapse to a single source line: the first usage
+      // of whatever class/variant triggered the wrapper. Other features
+      // show up for every occurrence.
+      if (feature.slug.startsWith('css-at-media')) {
+        add(feature, locations[0].file, locations[0].line)
+      } else {
+        for (const { file, line } of locations) add(feature, file, line)
       }
     })
   }

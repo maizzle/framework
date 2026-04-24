@@ -272,6 +272,35 @@ export interface AttributesConfig {
 
 export type EntitiesConfig = boolean | Record<string, string>
 
+/**
+ * caniemail.com client family slugs. Maintained manually from
+ * https://www.caniemail.com/api/data.json — update this list when caniemail
+ * adds new clients.
+ */
+export type CaniemailClient =
+  | 'gmail' | 'outlook' | 'yahoo' | 'apple-mail'
+  | 'aol' | 'thunderbird' | 'microsoft' | 'samsung-email'
+  | 'sfr' | 'orange' | 'protonmail' | 'hey' | 'mail-ru'
+  | 'fastmail' | 'laposte' | 't-online-de' | 'free-fr'
+  | 'gmx' | 'web-de' | 'ionos-1and1' | 'rainloop' | 'wp-pl'
+
+export interface ChecksConfig {
+  /**
+   * Client families to check against. Defaults to the four majors:
+   * Gmail, Apple Mail, Outlook, Yahoo. Pass `'all'` to check every client
+   * in the caniemail dataset.
+   */
+  clients?: CaniemailClient[] | 'all'
+  /**
+   * Filter which severities are reported. Omit to show everything.
+   *
+   * - `'error'` — only errors (unsupported features, hard lint errors)
+   * - `'warning'` — only warnings (partial / unknown support, lint warnings)
+   * - `'lint'` — only lint items (both severities, no compat items)
+   */
+  level?: 'error' | 'warning' | 'lint'
+}
+
 export interface PostcssConfig {
   /**
    * Selector prefixes to strip from compiled CSS.
@@ -467,6 +496,20 @@ export interface MaizzleConfig {
       /** Nodemailer transport options (SMTP, SES, etc.). Omit to use Ethereal. */
       transport?: Record<string, unknown>
     }
+    /**
+     * Configure or disable the Checks tab in the dev UI.
+     *
+     * Set to `false` to disable checks entirely (the tab is hidden).
+     *
+     * @example
+     * server: {
+     *   checks: {
+     *     clients: ['gmail', 'outlook', 'apple-mail'],
+     *     level: 'error',
+     *   }
+     * }
+     */
+    checks?: false | ChecksConfig
   }
   /** Tailwind CSS and email CSS optimization settings. */
   css?: CssConfig

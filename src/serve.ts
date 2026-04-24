@@ -180,6 +180,10 @@ function maizzleDevPlugin(
           // Recreate the renderer so config changes (e.g. markdown.shikiTheme) take effect
           await renderer.close()
           renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat(), vite: config.vite })
+
+          // Push UI-relevant config bits so the dev UI reacts to live edits
+          // without a page reload. Uses the same shape as the initial inject.
+          server.ws.send({ type: 'custom', event: 'maizzle:config-updated', data: buildUiConfig(config) })
         }
 
         // Invalidate all renderer modules so component and config changes
@@ -245,7 +249,7 @@ function maizzleDevPlugin(
       return () => {
         server.middlewares.use(async (req: any, res: any, next: any) => {
           if (isNavigationRequest(req)) {
-            return await serveDevUI(server, res, req.url || '/')
+            return await serveDevUI(server, res, req.url || '/', config)
           }
 
           next()
@@ -264,11 +268,25 @@ function isNavigationRequest(req: any): boolean {
   return req.method === 'GET' && accept.includes('text/html')
 }
 
-async function serveDevUI(server: ViteDevServer, res: any, url: string) {
+/**
+ * Shape exposed to the dev UI both at initial HTML load (as
+ * `window.__MAIZZLE_CONFIG__`) and on the `maizzle:config-updated` HMR event.
+ * Add UI-visible config bits here; consumers on both ends pick up automatically.
+ */
+function buildUiConfig(config: MaizzleConfig) {
+  return {
+    checks: config.server?.checks ?? true,
+  }
+}
+
+async function serveDevUI(server: ViteDevServer, res: any, url: string, config: MaizzleConfig) {
   let indexHtml = readFileSync(resolve(devUIDir, 'index.html'), 'utf-8')
 
   indexHtml = indexHtml.replace('./main.ts', `/@fs/${resolve(devUIDir, 'main.ts')}`)
   indexHtml = indexHtml.replace('./favicon.svg', `/@fs/${resolve(devUIDir, 'favicon.svg')}`)
+
+  const configScript = `<script>window.__MAIZZLE_CONFIG__ = ${JSON.stringify(buildUiConfig(config))};</script>`
+  indexHtml = indexHtml.replace('</head>', `${configScript}</head>`)
 
   const transformed = await server.transformIndexHtml(url, indexHtml)
 

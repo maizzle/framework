@@ -11,7 +11,7 @@ import { tailwindcss as compileWithPipeline } from '../transformers/tailwindcss.
 import type { MaizzleConfig } from '../types/index.ts'
 
 const API_URL = 'https://www.caniemail.com/api/data.json'
-const CLIENT_FAMILIES = new Set(['gmail', 'apple-mail', 'outlook', 'yahoo'])
+const DEFAULT_CLIENTS = new Set(['gmail', 'apple-mail', 'outlook', 'yahoo'])
 
 type SupportLevel = 'unsupported' | 'mitigated' | 'unknown'
 
@@ -20,8 +20,7 @@ interface Feature {
   title: string
   url: string
   category: string
-  supportLevel: SupportLevel
-  affectedClients: string[]
+  stats: any
 }
 
 interface Issue {
@@ -43,6 +42,7 @@ interface Issue {
 
 interface Indexes {
   nicenames: { supported: string, mitigated: string, unsupported: string, unknown: string, mixed: string }
+  familyNicenames: Record<string, string>
   cssProp: Map<string, Feature[]>
   cssPropValue: Map<string, Array<{ value: string, feature: Feature }>>
   cssAtRule: Map<string, Feature[]>
@@ -81,9 +81,10 @@ function mpush<K, V>(m: Map<K, V[]>, k: K, v: V) {
   else m.set(k, [v])
 }
 
-function emptyIndexes(nicenames: any): Indexes {
+function emptyIndexes(nicenames: any, familyNicenames: Record<string, string>): Indexes {
   return {
     nicenames,
+    familyNicenames,
     cssProp: new Map(), cssPropValue: new Map(), cssAtRule: new Map(),
     cssMediaFeature: new Map(), cssPseudoClass: new Map(), cssPseudoElement: new Map(),
     cssFunction: new Map(), cssUnit: new Map(),
@@ -93,17 +94,30 @@ function emptyIndexes(nicenames: any): Indexes {
   }
 }
 
+function hasAnyNonY(stats: any): boolean {
+  if (!stats) return false
+  for (const family in stats) {
+    for (const plat in stats[family]) {
+      for (const ver in stats[family][plat]) {
+        const v = stripNotes(String(stats[family][plat][ver]).trim())
+        if (v && v !== 'y') return true
+      }
+    }
+  }
+  return false
+}
+
 /** Strip `#N` note markers — `"y #1"` → `"y"`. Notes document edge cases but
  *  don't change support semantics, so treat `y #1` as fully supported. */
 function stripNotes(v: string): string {
   return v.split(/\s+/).filter(t => t && !t.startsWith('#')).join(' ')
 }
 
-function computeSupport(stats: any, familyNicenames: Record<string, string>): { level: SupportLevel, affected: string[] } | null {
+function computeSupport(stats: any, familyNicenames: Record<string, string>, allowedClients: Set<string> | 'all'): { level: SupportLevel, affected: string[] } | null {
   let nY = 0, nN = 0, nU = 0, nPartial = 0, total = 0
   const affectedFamilies = new Set<string>()
   for (const family in stats) {
-    if (!CLIENT_FAMILIES.has(family)) continue
+    if (allowedClients !== 'all' && !allowedClients.has(family)) continue
     let familyHasNonY = false
     for (const plat in stats[family]) {
       // Only score the latest version per (family, platform) — legacy
@@ -293,21 +307,21 @@ export async function initCompatibility(): Promise<Indexes | null> {
       const res = await fetch(API_URL)
       if (!res.ok) return null
       const data = await res.json()
-      const idx = emptyIndexes(data.nicenames?.support ?? {})
-      const familyNicenames = data.nicenames?.family ?? {}
+      const idx = emptyIndexes(data.nicenames?.support ?? {}, data.nicenames?.family ?? {})
       for (const item of data.data ?? []) {
         // Record every slug's title/url so lint can look up caniemail pages
         // for issues that map to a known feature, even ignored ones.
         if (item.slug && item.url) idx.bySlug.set(item.slug, { title: item.title, url: item.url })
-        const support = computeSupport(item.stats, familyNicenames)
-        if (!support) continue
+        // Index the feature if any cell anywhere in the matrix is non-y.
+        // Per-request aggregation (with the active client filter) decides
+        // whether to actually surface the issue.
+        if (!hasAnyNonY(item.stats)) continue
         const f: Feature = {
           slug: item.slug,
           title: item.title,
           url: item.url,
           category: item.category,
-          supportLevel: support.level,
-          affectedClients: support.affected,
+          stats: item.stats,
         }
         classify(f, idx)
       }
@@ -320,8 +334,9 @@ export async function initCompatibility(): Promise<Indexes | null> {
   return initPromise
 }
 
-// Fire the fetch at module load (dev-server start)
-void initCompatibility()
+// Note: fetch of the caniemail dataset is lazy — it fires on the first
+// check request, not at module load, so `server.checks: false` pays no
+// network cost.
 
 interface FileStreams {
   path: string
@@ -698,7 +713,12 @@ function labelFor(idx: Indexes, level: SupportLevel): string {
   return n.unknown ?? 'Support unknown'
 }
 
-async function scan(rootFile: string, config: MaizzleConfig, componentDirs: string[]): Promise<Issue[]> {
+async function scan(
+  rootFile: string,
+  config: MaizzleConfig,
+  componentDirs: string[],
+  allowedClients: Set<string> | 'all',
+): Promise<Issue[]> {
   const idx = await initCompatibility()
   if (!idx) return []
 
@@ -709,15 +729,26 @@ async function scan(rootFile: string, config: MaizzleConfig, componentDirs: stri
 
   const issues: Issue[] = []
   const seen = new Set<string>()
+  const resolvedCache = new Map<string, { level: SupportLevel, affected: string[] } | null>()
+  const resolveSupport = (f: Feature) => {
+    let cached = resolvedCache.get(f.slug)
+    if (cached === undefined) {
+      cached = computeSupport(f.stats, idx.familyNicenames, allowedClients)
+      resolvedCache.set(f.slug, cached)
+    }
+    return cached
+  }
   const add = (f: Feature, file: string, line?: number) => {
     const key = `${f.slug}|${file}|${line ?? 0}`
     if (seen.has(key)) return
+    const support = resolveSupport(f)
+    if (!support) return
     seen.add(key)
     issues.push({
       kind: 'compat',
       slug: f.slug, title: f.title, url: f.url, category: f.category,
-      supportLevel: f.supportLevel, supportLabel: labelFor(idx, f.supportLevel),
-      affectedClients: f.affectedClients,
+      supportLevel: support.level, supportLabel: labelFor(idx, support.level),
+      affectedClients: support.affected,
       line, file,
     })
   }
@@ -819,6 +850,30 @@ function orderKey(i: Issue): number {
   return LEVEL_ORDER[i.supportLevel!] ?? 99
 }
 
+function resolveChecksConfig(config: MaizzleConfig) {
+  const raw = (config as any).server?.checks
+  if (raw === false) return null
+  const clients: Set<string> | 'all' = raw?.clients === 'all'
+    ? 'all'
+    : Array.isArray(raw?.clients) && raw.clients.length
+      ? new Set(raw.clients as string[])
+      : DEFAULT_CLIENTS
+  const level: 'error' | 'warning' | 'lint' | null = raw?.level ?? null
+  return { clients, level }
+}
+
+function passesLevelFilter(issue: Issue, level: 'error' | 'warning' | 'lint' | null): boolean {
+  if (!level) return true
+  if (level === 'lint') return issue.kind === 'lint'
+  if (issue.kind === 'lint') {
+    return level === 'error' ? issue.severity === 'error' : issue.severity === 'warning'
+  }
+  // compat
+  return level === 'error'
+    ? issue.supportLevel === 'unsupported'
+    : issue.supportLevel === 'mitigated' || issue.supportLevel === 'unknown'
+}
+
 export async function serveCompatibility(
   url: string,
   res: any,
@@ -826,10 +881,19 @@ export async function serveCompatibility(
   componentDirs: string[],
 ) {
   const filePath = url.replace('/__maizzle/compatibility/', '').replace(/\?.*$/, '')
+  const checksCfg = resolveChecksConfig(config)
   try {
+    res.setHeader('Content-Type', 'application/json')
+    if (!checksCfg) {
+      // Defensive: UI hides the tab using window.__MAIZZLE_CONFIG__ so it
+      // shouldn't reach this endpoint when disabled, but if something else
+      // does, return an empty list.
+      res.end(JSON.stringify([]))
+      return
+    }
     const absolutePath = resolve(filePath)
     const [compatIssues, lintIssues] = await Promise.all([
-      scan(absolutePath, config, componentDirs),
+      scan(absolutePath, config, componentDirs, checksCfg.clients),
       scanLint(absolutePath, config, componentDirs),
     ])
 
@@ -849,7 +913,8 @@ export async function serveCompatibility(
       }
     })
 
-    const issues: Issue[] = [...compatIssues, ...lintAsIssues]
+    let issues: Issue[] = [...compatIssues, ...lintAsIssues]
+    if (checksCfg.level) issues = issues.filter((i) => passesLevelFilter(i, checksCfg.level))
     issues.sort((a, b) => {
       const c = CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category)
       if (c) return c
@@ -857,7 +922,6 @@ export async function serveCompatibility(
       if (l) return l
       return (a.slug ?? a.title).localeCompare(b.slug ?? b.title)
     })
-    res.setHeader('Content-Type', 'application/json')
     res.end(JSON.stringify(issues))
   } catch (error: any) {
     res.statusCode = 500

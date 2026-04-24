@@ -104,12 +104,10 @@ interface CheckIssue {
   message?: string
 }
 
-function issueSubtext(issue: CheckIssue): string {
-  if (issue.kind === 'lint') return issue.message ?? ''
-  const clients = (issue.affectedClients ?? []).join(', ')
-  if (issue.supportLevel === 'unsupported') return `Not supported in ${clients}`
-  if (issue.supportLevel === 'mitigated') return `Partial support in ${clients}`
-  return `Support unknown in ${clients}`
+function supportPrefix(issue: CheckIssue): string {
+  if (issue.supportLevel === 'unsupported') return 'Not supported in'
+  if (issue.supportLevel === 'mitigated') return 'Partial support in'
+  return 'Support unknown in'
 }
 
 /**
@@ -117,8 +115,7 @@ function issueSubtext(issue: CheckIssue): string {
  * { text } and { code } segments so the template can render <code> inline
  * without needing v-html.
  */
-function issueSegments(issue: CheckIssue): Array<{ code: boolean, text: string }> {
-  const raw = issueSubtext(issue)
+function messageSegments(raw: string | undefined): Array<{ code: boolean, text: string }> {
   if (!raw) return []
   const out: Array<{ code: boolean, text: string }> = []
   const parts = raw.split('`')
@@ -147,6 +144,12 @@ const compatibilityIssues = ref<CheckIssue[]>([])
 const compatibilityLoading = ref(false)
 const compatibilityError = ref('')
 const compatibilityCategory = ref('')
+// Injected by serveDevUI into index.html — synchronous, available before
+// any HTTP calls, so the Checks tab never flashes in when disabled.
+const checksConfig = (window as any).__MAIZZLE_CONFIG__?.checks
+const compatibilityDisabled = ref(checksConfig === false)
+const expandedIssueKeys = ref(new Set<string>())
+const issueKey = (issue: CheckIssue, i: number): string => `${issue.file}|${issue.line ?? 0}|${issue.slug ?? issue.title}|${i}`
 const compatibilityCategories = ['css', 'html', 'image', 'others'] as const
 const activeCompatibilityCategories = computed(() =>
   compatibilityCategories.filter(cat => compatibilityIssues.value.some(i => i.category === cat))
@@ -278,6 +281,7 @@ async function fetchStats() {
 }
 
 async function fetchCompatibility() {
+  if (compatibilityDisabled.value) return
   const template = props.templates?.find(t => t.href === '/' + route.params.template)
   if (!template) return
 
@@ -286,18 +290,19 @@ async function fetchCompatibility() {
   try {
     const res = await fetch(`/__maizzle/compatibility/${template.path}`)
     const data = await res.json()
-    if (data?.error) {
+    if (!Array.isArray(data) && data?.error) {
       compatibilityError.value = data.error
       compatibilityIssues.value = []
     } else {
-      compatibilityIssues.value = data
+      const issues: CheckIssue[] = Array.isArray(data) ? data : []
+      compatibilityIssues.value = issues
       // Keep the current category if it still has issues; otherwise fall
       // back to the first category that does. Prevents a "refresh" during
       // edits from snapping back to CSS when the user is on HTML/Image.
       const current = compatibilityCategory.value
-      const currentStillActive = current && data.some((i: CheckIssue) => i.category === current)
+      const currentStillActive = current && issues.some((i) => i.category === current)
       if (!currentStillActive) {
-        const firstCat = compatibilityCategories.find(cat => data.some((i: CheckIssue) => i.category === cat))
+        const firstCat = compatibilityCategories.find(cat => issues.some((i) => i.category === cat))
         compatibilityCategory.value = firstCat || ''
       }
     }
@@ -378,6 +383,22 @@ if ((import.meta as any).hot) {
       if (sourceView.value === 'compiled') fetchSource()
       if (sourceView.value === 'vue') fetchVueSource()
       if (sourceView.value === 'plaintext') fetchPlaintext()
+    }
+  })
+
+  // Keep the UI in sync with live config edits. Payload is the same shape
+  // as the initial `window.__MAIZZLE_CONFIG__` inject — we replace it and
+  // derive per-feature flags from there.
+  ;(import.meta as any).hot.on('maizzle:config-updated', (data: Record<string, unknown>) => {
+    ;(window as any).__MAIZZLE_CONFIG__ = data
+    const wasDisabled = compatibilityDisabled.value
+    const nowDisabled = data?.checks === false
+    compatibilityDisabled.value = nowDisabled
+    if (nowDisabled) {
+      compatibilityIssues.value = []
+      if (activeTab.value === 'compatibility') activeTab.value = 'stats'
+    } else if (wasDisabled) {
+      fetchCompatibility()
     }
   })
 }
@@ -554,11 +575,13 @@ const bottomPanelOpen = ref(false)
 const tabsPanelHeight = ref(40)
 const activeTab = ref<string | undefined>(undefined)
 
+const defaultTab = () => compatibilityDisabled.value ? 'stats' : 'compatibility'
+
 function toggleBottomPanel() {
   bottomPanelOpen.value = !bottomPanelOpen.value
   if (bottomPanelOpen.value) {
     tabsPanelHeight.value = 300
-    if (!activeTab.value) activeTab.value = 'compatibility'
+    if (!activeTab.value) activeTab.value = defaultTab()
   } else {
     tabsPanelHeight.value = 40
     activeTab.value = undefined
@@ -600,7 +623,7 @@ function onTabsDragStart(e: MouseEvent | TouchEvent) {
     if (!bottomPanelOpen.value) {
       activeTab.value = undefined
     } else if (!activeTab.value) {
-      activeTab.value = 'compatibility'
+      activeTab.value = defaultTab()
     }
   }
 
@@ -749,7 +772,7 @@ const stripeBg = {
         <Tabs :model-value="activeTab" class="flex flex-col min-h-0 h-full">
           <div class="flex items-center justify-between min-h-10 pl-2 pr-3 shrink-0" :class="bottomPanelOpen ? 'border-b' : ''">
             <TabsList class="h-full bg-transparent! rounded-none! p-0 gap-1">
-              <TabsTrigger value="compatibility" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent dark:bg-transparent! dark:hover:bg-transparent!" @click="onTabClick('compatibility')">
+              <TabsTrigger v-if="!compatibilityDisabled" value="compatibility" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent dark:bg-transparent! dark:hover:bg-transparent!" @click="onTabClick('compatibility')">
                 Checks
               </TabsTrigger>
               <TabsTrigger value="stats" class="text-xs font-normal px-3 h-full rounded-none! border-0! shadow-none! border-b! border-transparent select-none data-[state=active]:border-gray-400 data-[state=active]:dark:border-gray-600 data-[state=active]:bg-transparent data-[state=inactive]:bg-transparent dark:bg-transparent! dark:hover:bg-transparent!" @click="onTabClick('stats')">
@@ -798,9 +821,23 @@ const stripeBg = {
                           {{ issue.title }}
                         </span>
                         <div class="text-gray-500 dark:text-gray-400 mt-0.5">
-                          <template v-for="(seg, j) in issueSegments(issue)" :key="j">
-                            <code v-if="seg.code" class="px-1 py-0.5 rounded bg-gray-100 dark:bg-white/10 font-mono text-[11px]">{{ seg.text }}</code>
-                            <template v-else>{{ seg.text }}</template>
+                          <template v-if="issue.kind === 'lint'">
+                            <template v-for="(seg, j) in messageSegments(issue.message)" :key="j">
+                              <code v-if="seg.code" class="px-1 py-0.5 rounded bg-gray-100 dark:bg-white/10 font-mono text-[11px]">{{ seg.text }}</code>
+                              <template v-else>{{ seg.text }}</template>
+                            </template>
+                          </template>
+                          <template v-else>
+                            {{ supportPrefix(issue) }}
+                            <template v-if="(issue.affectedClients?.length ?? 0) <= 4 || expandedIssueKeys.has(issueKey(issue, i))">
+                              {{ (issue.affectedClients ?? []).join(', ') }}
+                            </template>
+                            <template v-else>
+                              {{ issue.affectedClients!.slice(0, 4).join(', ') }}
+                              <button class="underline cursor-pointer hover:text-gray-700 dark:hover:text-gray-200" @click="expandedIssueKeys.add(issueKey(issue, i)); expandedIssueKeys = new Set(expandedIssueKeys)">
+                                + {{ issue.affectedClients!.length - 4 }} others
+                              </button>
+                            </template>
                           </template>
                         </div>
                       </div>

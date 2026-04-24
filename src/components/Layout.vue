@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { PropType } from 'vue'
+import { computed, useAttrs, type PropType } from 'vue'
+import { twMerge } from 'tailwind-merge'
 
 defineOptions({ inheritAttrs: false })
 
-defineProps({
+const props = defineProps({
   /**
    * Classes to add to the `<body>` tag.
    */
@@ -41,6 +42,10 @@ defineProps({
     default: undefined
   }
 })
+
+const attrs = useAttrs()
+const bodyMergedClass = computed(() => twMerge('m-0 p-0 size-full [word-break:break-word]', props.bodyClass))
+const articleMergedClass = computed(() => twMerge('[font-size:max(16px,1rem)] font-inter', attrs.class as string))
 </script>
 
 <template>
@@ -76,7 +81,7 @@ defineProps({
       }
     </style>
   </head>
-  <body :xml:lang="lang" :class="['m-0 p-0 size-full [word-break:break-word]', bodyClass]">
+  <body :xml:lang="lang" :class="bodyMergedClass">
     <div
       role="article"
       aria-roledescription="email"
@@ -84,7 +89,7 @@ defineProps({
       :lang="lang"
       :dir="dir"
       style="font-size: medium;"
-      :class="['[font-size:max(16px,1rem)] font-inter', $attrs.class]"
+      :class="articleMergedClass"
     >
       <slot />
     </div>

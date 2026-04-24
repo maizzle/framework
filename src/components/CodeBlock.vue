@@ -1,5 +1,6 @@
 <script lang="ts">
 import { createStaticVNode, type PropType } from 'vue'
+import { twMerge } from 'tailwind-merge'
 import { codeToHtml, getSingletonHighlighter, type BundledLanguage, type BundledTheme } from 'shiki'
 
 export default {
@@ -56,7 +57,7 @@ export default {
       .replace(/^<pre[^>]*><code>/, '')
       .replace(/<\/code><\/pre>$/, '')
 
-    const classes = ['font-mono', attrs.class].filter(Boolean).join(' ')
+    const classes = twMerge('font-mono', attrs.class as string)
     const baseStyles = `background-color:${bg};padding:16px;overflow:auto;white-space:pre;word-wrap:normal;word-break:normal;word-spacing:normal`
     const styles = [baseStyles, attrs.style].filter(Boolean).join(';')
 

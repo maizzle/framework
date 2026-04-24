@@ -51,7 +51,7 @@ export function addAttributes(dom: ChildNode[], config: AttributesConfig = {}): 
 
   // Deep merge user attributes on top of defaults using defu
   const userAttributes = typeof addConfig === 'object' ? addConfig : {}
-  const attributesToAdd = merge(userAttributes, DEFAULT_ATTRIBUTES) as Record<string, Record<string, string | boolean | number>>
+  const attributesToAdd = merge(userAttributes, DEFAULT_ATTRIBUTES) as Record<string, false | Record<string, false | string | boolean | number>>
 
   if (Object.keys(attributesToAdd).length === 0) {
     return dom
@@ -59,6 +59,8 @@ export function addAttributes(dom: ChildNode[], config: AttributesConfig = {}): 
 
   // Process each selector pattern
   for (const [selectorPattern, attributes] of Object.entries(attributesToAdd)) {
+    // User opted out of this selector entirely (e.g. `table: false`)
+    if (attributes === false) continue
     // Split by comma for multiple selectors
     const selectors = selectorPattern.split(',').map(s => s.trim())
 
@@ -76,6 +78,8 @@ export function addAttributes(dom: ChildNode[], config: AttributesConfig = {}): 
         }
 
         for (const [attrName, attrValue] of Object.entries(attributes)) {
+          // User opted out of this specific attribute (e.g. `role: false`)
+          if (attrValue === false) continue
           // Special handling for class - merge instead of replace
           if (attrName === 'class' && el.attribs.class) {
             const existingClasses = el.attribs.class.split(/\s+/).filter(Boolean)

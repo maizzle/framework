@@ -242,6 +242,10 @@ export interface AttributesConfig {
   /**
    * Add attributes to HTML elements.
    *
+   * Set the whole map to `false` to disable auto-add. Set a selector
+   * entry to `false` to skip that selector. Set an individual attribute
+   * to `false` to skip just that attribute while keeping the rest.
+   *
    * @example
    * html: {
    *   attributes: {
@@ -252,7 +256,7 @@ export interface AttributesConfig {
    *   }
    * }
    */
-  add?: false | Record<string, Record<string, string | boolean | number>>
+  add?: false | Record<string, false | Record<string, false | string | boolean | number>>
   /**
    * Remove attributes from HTML elements by name or name-value pair.
    *

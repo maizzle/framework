@@ -4,7 +4,7 @@ import { addAttributes } from '../../transformers/addAttributes.ts'
 import { parse, serialize } from '../../utils/ast/index.ts'
 import type { AttributesConfig } from '../../types/config.ts'
 
-function run(html: string, add?: false | Record<string, Record<string, string | boolean | number>>): string {
+function run(html: string, add?: false | Record<string, false | Record<string, false | string | boolean | number>>): string {
   return serialize(addAttributes(parse(html), { add } satisfies AttributesConfig))
 }
 
@@ -55,6 +55,21 @@ describe('addAttributes', () => {
       const html = '<img src="test.jpg">'
       const result = run(html, false)
       expect(result).toBe(html)
+    })
+
+    it('skips a single selector when set to false', () => {
+      const html = '<table><tr><td></td></tr></table><img src="a.jpg">'
+      const result = run(html, { table: false })
+      expect(result).toBe('<table><tr><td></td></tr></table><img src="a.jpg" alt>')
+    })
+
+    it('skips a single attribute when set to false', () => {
+      const result = run('<table><tr><td></td></tr></table>', {
+        table: { role: false },
+      })
+      expect(result).not.toContain('role=')
+      expect(result).toContain('cellpadding="0"')
+      expect(result).toContain('cellspacing="0"')
     })
   })
 

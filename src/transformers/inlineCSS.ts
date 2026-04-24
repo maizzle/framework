@@ -58,11 +58,12 @@ export function inlineCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[]
   walk(dom, (node) => {
     const el = node as Element
     if (el.name === 'style' && el.attribs) {
-      // Sync data-embed ↔ embed
-      if (el.attribs.embed && !('data-embed' in el.attribs)) {
+      // Sync data-embed ↔ embed. Use `in` so presence-only attrs
+      // (<style embed> → attribs.embed === '') still count.
+      if ('embed' in el.attribs && !('data-embed' in el.attribs)) {
         el.attribs['data-embed'] = ''
       }
-      if (el.attribs['data-embed'] && !('embed' in el.attribs)) {
+      if ('data-embed' in el.attribs && !('embed' in el.attribs)) {
         el.attribs.embed = ''
       }
 

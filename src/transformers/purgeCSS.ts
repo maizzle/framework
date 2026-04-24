@@ -117,7 +117,7 @@ function deepPurge(dom: ChildNode[], safelist: string[]): ChildNode[] {
     const el = node as Element
 
     if (el.name !== 'style' || !el.attribs) return
-    if ('data-embed' in el.attribs) return
+    if ('data-embed' in el.attribs || 'embed' in el.attribs) return
 
     const textNode = el.children?.find((c: any) => c.type === 'text') as any
     if (!textNode?.data?.trim()) return

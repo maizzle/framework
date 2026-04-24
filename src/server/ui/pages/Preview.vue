@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/tags-input'
 
 import stripesUrl from '../stripes.svg'
+import { applyColorInversion, undoColorInversion } from '@/lib/emulated-dark-mode'
 
 interface Device {
   name: string
@@ -42,6 +43,7 @@ const props = defineProps<{
 }>()
 
 const viewMode = defineModel<'preview' | 'source'>('viewMode', { default: 'preview' })
+const darkMode = defineModel<boolean>('darkMode', { default: false })
 
 const route = useRoute()
 const srcdoc = ref('')
@@ -232,6 +234,19 @@ function updateIframeContentHeight() {
   }
 }
 
+function onIframeLoad() {
+  updateIframeContentHeight()
+  const iframe = iframeEl.value
+  if (darkMode.value && iframe) applyColorInversion(iframe)
+}
+
+watch(darkMode, (on) => {
+  const iframe = iframeEl.value
+  if (!iframe) return
+  if (on) applyColorInversion(iframe)
+  else undoColorInversion(iframe)
+})
+
 async function fetchTemplate() {
   const res = await fetch(`/__maizzle/render/${route.params.template}`)
   renderedHtml = await res.text()
@@ -247,6 +262,7 @@ async function fetchTemplate() {
     doc.close()
     // Hide iframe body overflow — scrolling is handled by the outer ScrollArea
     if (doc.body) doc.body.style.overflow = 'hidden'
+    if (darkMode.value && iframe) applyColorInversion(iframe)
     await nextTick()
     updateIframeContentHeight()
   } else {
@@ -747,7 +763,7 @@ const stripeBg = {
               <iframe
                 ref="iframeEl"
                 :srcdoc="srcdoc"
-                @load="updateIframeContentHeight"
+                @load="onIframeLoad"
                 class="w-full border-0 bg-white dark:bg-gray-950"
                 :style="{ height: iframeContentHeight ? `${iframeContentHeight}px` : '100%' }"
               />

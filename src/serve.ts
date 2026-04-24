@@ -84,13 +84,15 @@ export async function serve(options: ServeOptions = {}) {
         'class-variance-authority',
         'clsx',
         'tailwind-merge',
+        'culori',
+        'postcss-safe-parser',
       ],
     },
     server: {
       port,
       host: options.host,
       fs: {
-        allow: [process.cwd(), config.root ?? process.cwd(), devUIDir, ...['vue', 'vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', 'lucide-vue-next', 'class-variance-authority', 'clsx', 'tailwind-merge'].map(pkg)],
+        allow: [process.cwd(), config.root ?? process.cwd(), devUIDir, ...['vue', 'vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', 'lucide-vue-next', 'class-variance-authority', 'clsx', 'tailwind-merge', 'culori', 'postcss-safe-parser'].map(pkg)],
       },
     },
     customLogger: customLogger(),

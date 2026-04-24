@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
-import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, Search, FileCode, FileText, Code, BookText, MailQuestion } from 'lucide-vue-next'
+import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, Search, FileCode, FileText, Code, BookText, MailQuestion, Moon, Sun } from 'lucide-vue-next'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import SidebarClose from '@/components/SidebarClose.vue'
 import logoUrl from '@/logo.svg'
 import logoGradientUrl from '@/logo-gradient.svg'
@@ -77,6 +78,8 @@ const devicePresets: DevicePreset[] = [
 
 const selectedDevice = ref<DevicePreset | null>(null)
 const deviceMenuOpen = ref(false)
+const darkMode = ref(false)
+const darkTooltipOpen = ref(false)
 const panelWidth = ref(0)
 const panelHeight = ref(0)
 const isDragging = ref(false)
@@ -241,13 +244,24 @@ function onWindowBlur() {
   deviceMenuOpen.value = false
 }
 
+// Close the dark-mode tooltip when the cursor enters the preview iframe.
+// The iframe captures further pointer events, so Radix's pointerleave logic
+// never resolves and the tooltip would otherwise stay visible.
+function onPointerOver(e: PointerEvent) {
+  if ((e.target as HTMLElement)?.tagName === 'IFRAME') {
+    darkTooltipOpen.value = false
+  }
+}
+
 onMounted(() => {
   document.addEventListener('keydown', onKeydown)
   window.addEventListener('blur', onWindowBlur)
+  document.addEventListener('pointerover', onPointerOver)
 })
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeydown)
   window.removeEventListener('blur', onWindowBlur)
+  document.removeEventListener('pointerover', onPointerOver)
 })
 </script>
 
@@ -334,7 +348,21 @@ onUnmounted(() => {
           >
             {{ panelWidth }} <button class="hover:text-gray-700 dark:hover:text-gray-300" @click="selectedDevice = null; isFullSize = true; viewMode = 'preview'; resetKey++">&times;</button> {{ panelHeight }}
           </span>
-          <DropdownMenu v-if="isPreviewRoute" v-model:open="deviceMenuOpen" :modal="false">
+          <div v-if="isPreviewRoute" class="flex items-center gap-1">
+            <TooltipProvider v-if="viewMode === 'preview'" :delay-duration="300">
+              <Tooltip v-model:open="darkTooltipOpen">
+                <TooltipTrigger as-child>
+                  <Button variant="ghost" size="icon" class="size-7 hover:bg-transparent" @click="darkMode = !darkMode; darkTooltipOpen = false">
+                    <Sun v-if="darkMode" class="size-4 dark:text-gray-400" :stroke-width="1" />
+                    <Moon v-else class="size-4 dark:text-gray-400" :stroke-width="1" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Emulate dark mode
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <DropdownMenu v-model:open="deviceMenuOpen" :modal="false">
             <DropdownMenuTrigger as-child>
               <Button variant="ghost" size="sm" class="hidden min-[430px]:inline-flex gap-1.5 shadow-none border-none hover:bg-transparent">
                 <Smartphone class="size-4 dark:text-gray-400" :stroke-width="1" />
@@ -358,14 +386,15 @@ onUnmounted(() => {
                 <span class="ml-auto text-[11px] text-gray-400 dark:text-gray-500 tabular-nums tracking-tight">{{ device.width }}&times;{{ device.height }}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
 
       <!-- Main content -->
       <div class="flex-1 overflow-hidden">
         <RouterView v-slot="{ Component }">
-          <component :is="Component" v-model:view-mode="viewMode" :device="selectedDevice" :reset-key="resetKey" :templates="templates" v-model:panel-width="panelWidth" v-model:panel-height="panelHeight" v-model:is-dragging="isDragging" v-model:is-full-size="isFullSize" @clear-device="selectedDevice = null; isFullSize = false" />
+          <component :is="Component" v-model:view-mode="viewMode" :device="selectedDevice" :reset-key="resetKey" :templates="templates" v-model:panel-width="panelWidth" v-model:panel-height="panelHeight" v-model:is-dragging="isDragging" v-model:is-full-size="isFullSize" v-model:dark-mode="darkMode" @clear-device="selectedDevice = null; isFullSize = false" />
         </RouterView>
       </div>
     </SidebarInset>

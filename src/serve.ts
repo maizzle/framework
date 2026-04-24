@@ -211,7 +211,7 @@ function maizzleDevPlugin(
         }
 
         if (url.startsWith('/__maizzle/compatibility/')) {
-          return await serveCompatibility(url, res, config.root ?? process.cwd(), [config.components?.source ?? []].flat())
+          return await serveCompatibility(url, res, config, [config.components?.source ?? []].flat())
         }
 
         if (url.startsWith('/__maizzle/lint/')) {

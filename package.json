@@ -39,7 +39,6 @@
     "@vitejs/plugin-vue": "^6.0.4",
     "@vitest/coverage-v8": "^4.0.18",
     "@vueuse/core": "^14.2.1",
-    "caniemail": "^1.0.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "color-shorthand-hex-to-six-digit": "^5.1.3",

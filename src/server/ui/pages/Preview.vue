@@ -88,13 +88,22 @@ function copySource() {
 }
 
 interface CompatibilityIssue {
-  type: 'error' | 'warning'
+  slug: string
   title: string
+  url: string
   category: string
-  clients: Array<{ name: string, notes: string[] }>
-  url?: string
+  supportLevel: 'unsupported' | 'mitigated' | 'unknown'
+  supportLabel: string
+  affectedClients: string[]
   line?: number
   file: string
+}
+
+function issueSubtext(issue: CompatibilityIssue): string {
+  const clients = issue.affectedClients.join(', ')
+  if (issue.supportLevel === 'unsupported') return `Not supported in ${clients}`
+  if (issue.supportLevel === 'mitigated') return `Partial support in ${clients}`
+  return `Support unknown in ${clients}`
 }
 
 interface LintIssue {
@@ -780,13 +789,10 @@ const stripeBg = {
                   >
                     <div class="flex items-center justify-between gap-4">
                       <div>
-                        <a v-if="issue.url" :href="issue.url" target="_blank" rel="noopener" class="font-medium hover:underline" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
+                        <a :href="issue.url" target="_blank" rel="noopener" class="font-medium hover:underline" :class="issue.supportLevel === 'unsupported' ? 'text-rose-600' : issue.supportLevel === 'mitigated' ? 'text-amber-600' : 'text-gray-500 dark:text-gray-400'">
                           {{ issue.title }}
                         </a>
-                        <span v-else class="font-medium" :class="issue.type === 'error' ? 'text-red-600' : 'text-amber-600'">
-                          {{ issue.title }}
-                        </span>
-                        <div class="text-gray-500 dark:text-gray-400 mt-0.5">{{ issue.type === 'error' ? 'Not supported' : 'Partial support' }} in {{ issue.clients.map((c: any) => c.name).join(', ') }}</div>
+                        <div class="text-gray-500 dark:text-gray-400 mt-0.5">{{ issueSubtext(issue) }}</div>
                       </div>
                       <button v-if="issue.line" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer tabular-nums shrink-0" @click="openInEditor(issue.file, issue.line!)">{{ isCurrentFile(issue) ? `L${issue.line}` : `${componentName(issue.file)}:${issue.line}` }}</button>
                     </div>

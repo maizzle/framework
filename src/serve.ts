@@ -1,12 +1,11 @@
 import { readFileSync } from 'node:fs'
-import { dirname, resolve, basename } from 'node:path'
+import { dirname, resolve, basename, matchesGlob } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import { createServer, createLogger, type ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { glob } from 'tinyglobby'
-import picomatch from 'picomatch'
 import { createHighlighter, type Highlighter } from 'shiki'
 import { createPlaintext } from './plaintext.ts'
 import { resolveConfig } from './config/index.ts'
@@ -153,7 +152,7 @@ function maizzleDevPlugin(
 
       const userWatchPaths = config.server?.watch ?? []
       const watchPaths = [...defaultWatchPaths, ...userWatchPaths]
-      const isWatchedFile = picomatch(watchPaths)
+      const isWatchedFile = (file: string) => watchPaths.some(p => matchesGlob(file, p))
 
       for (const watchPath of watchPaths) {
         server.watcher.add(watchPath)

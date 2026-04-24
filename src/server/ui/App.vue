@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, onUnmounted, watch, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, Search, FileCode, FileText, Code, BookText, MailQuestion, Moon, Sun } from 'lucide-vue-next'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import SidebarClose from '@/components/SidebarClose.vue'
 import logoUrl from '@/logo.svg'
 import logoGradientUrl from '@/logo-gradient.svg'
@@ -79,7 +78,6 @@ const devicePresets: DevicePreset[] = [
 const selectedDevice = ref<DevicePreset | null>(null)
 const deviceMenuOpen = ref(false)
 const darkMode = ref(false)
-const darkTooltipOpen = ref(false)
 const panelWidth = ref(0)
 const panelHeight = ref(0)
 const isDragging = ref(false)
@@ -238,24 +236,18 @@ function onWindowBlur() {
   deviceMenuOpen.value = false
 }
 
-// Close the dark-mode tooltip when the cursor enters the preview iframe.
-// The iframe captures further pointer events, so Radix's pointerleave logic
-// never resolves and the tooltip would otherwise stay visible.
-function onPointerOver(e: PointerEvent) {
-  if ((e.target as HTMLElement)?.tagName === 'IFRAME') {
-    darkTooltipOpen.value = false
-  }
+function toggleDarkMode() {
+  commandOpen.value = false
+  darkMode.value = !darkMode.value
 }
 
 onMounted(() => {
   document.addEventListener('keydown', onKeydown)
   window.addEventListener('blur', onWindowBlur)
-  document.addEventListener('pointerover', onPointerOver)
 })
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeydown)
   window.removeEventListener('blur', onWindowBlur)
-  document.removeEventListener('pointerover', onPointerOver)
 })
 </script>
 
@@ -343,19 +335,6 @@ onUnmounted(() => {
             {{ panelWidth }} <button class="hover:text-gray-700 dark:hover:text-gray-300" @click="selectedDevice = null; isFullSize = true; viewMode = 'preview'; resetKey++">&times;</button> {{ panelHeight }}
           </span>
           <div v-if="isPreviewRoute" class="flex items-center gap-1">
-            <TooltipProvider v-if="viewMode === 'preview'" :delay-duration="300">
-              <Tooltip v-model:open="darkTooltipOpen">
-                <TooltipTrigger as-child>
-                  <Button variant="ghost" size="icon" class="size-7 hover:bg-transparent" @click="darkMode = !darkMode; darkTooltipOpen = false">
-                    <Sun v-if="darkMode" class="size-4 dark:text-gray-400" :stroke-width="1" />
-                    <Moon v-else class="size-4 dark:text-gray-400" :stroke-width="1" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Emulate dark mode
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
             <DropdownMenu v-model:open="deviceMenuOpen" :modal="false">
             <DropdownMenuTrigger as-child>
               <Button variant="ghost" size="sm" class="hidden min-[430px]:inline-flex gap-1.5 shadow-none border-none hover:bg-transparent">
@@ -395,8 +374,20 @@ onUnmounted(() => {
 
     <CommandDialog v-model:open="commandOpen" title="Command palette" description="Run commands or search emails">
       <CommandInput v-model="commandSearch" placeholder="Type a command or find an email..." />
-      <CommandList>
+      <CommandList class="max-h-[400px]">
         <CommandEmpty>No results found.</CommandEmpty>
+
+        <!-- Preview commands -->
+        <CommandGroup v-if="isPreviewRoute && viewMode === 'preview'" heading="Preview">
+          <CommandItem
+            :value="darkMode ? 'Disable dark mode' : 'Emulate dark mode'"
+            @select="toggleDarkMode"
+          >
+            <Sun v-if="darkMode" class="size-3 shrink-0 opacity-50" />
+            <Moon v-else class="size-3 shrink-0 opacity-50" />
+            <span>{{ darkMode ? 'Disable dark mode' : 'Emulate dark mode' }}</span>
+          </CommandItem>
+        </CommandGroup>
 
         <!-- Copy to clipboard commands -->
         <CommandGroup v-if="isPreviewRoute" heading="Copy to clipboard">

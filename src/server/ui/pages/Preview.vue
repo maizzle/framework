@@ -558,6 +558,7 @@ function forwardIframeKeys(iframe: HTMLIFrameElement) {
         metaKey: e.metaKey,
         shiftKey: e.shiftKey,
         altKey: e.altKey,
+        bubbles: true,
       }))
     })
   } catch {}

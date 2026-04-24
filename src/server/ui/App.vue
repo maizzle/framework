@@ -202,12 +202,6 @@ function onKeydown(e: KeyboardEvent) {
     return
   }
 
-  if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
-    e.preventDefault()
-    sidebarOpen.value = !sidebarOpen.value
-    return
-  }
-
   if (e.key === '/' && !isInputFocused()) {
     e.preventDefault()
     commandOpen.value = true

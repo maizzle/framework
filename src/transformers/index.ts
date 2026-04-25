@@ -4,6 +4,7 @@ import { tailwindcss } from './tailwindcss.ts'
 import { safeClassNames } from './safeClassNames.ts'
 import { attributeToStyle } from './attributeToStyle.ts'
 import { inlineCSS } from './inlineCSS.ts'
+import { msoWidthFromClass } from './msoWidthFromClass.ts'
 import { removeAttributes } from './removeAttributes.ts'
 import { shorthandCSS } from './shorthandCSS.ts'
 import { sixHex } from './sixHex.ts'
@@ -71,6 +72,9 @@ export async function runTransformers(
 
   // 4. CSS inliner (serializes/parses internally around juice)
   dom = inlineCSS(dom, config.css)
+
+  // 4.5. Resolve MSO width placeholders from inlined max-width/width
+  dom = msoWidthFromClass(dom)
 
   // 5. Remove attributes
   dom = removeAttributes(dom, config.html?.attributes)

@@ -3,11 +3,43 @@ import { mount } from '@vue/test-utils'
 import Container from '../../components/Container.vue'
 
 describe('Container', () => {
-  it('renders a div with centered margin and no inline max-width by default', () => {
+  it('applies w-150 m-0 mx-auto by default when no width prop is set', () => {
     const wrapper = mount(Container)
-    const style = wrapper.find('div').attributes('style')
-    expect(style).toContain('margin: 0px auto')
-    expect(style).not.toContain('max-width')
+    const div = wrapper.find('div')
+    expect(div.classes()).toContain('w-150')
+    expect(div.classes()).toContain('m-0')
+    expect(div.classes()).toContain('mx-auto')
+    expect(div.attributes('style')).toBeUndefined()
+  })
+
+  it('overrides the default width with a user-provided w-* class via twMerge', () => {
+    const wrapper = mount(Container, { attrs: { class: 'w-[400px]' } })
+    const div = wrapper.find('div')
+    expect(div.classes()).toContain('w-[400px]')
+    expect(div.classes()).not.toContain('w-150')
+    expect(div.classes()).toContain('mx-auto')
+  })
+
+  it('drops the default w-150 when the user passes a max-w-* class', () => {
+    const wrapper = mount(Container, { attrs: { class: 'max-w-xl' } })
+    const classes = wrapper.find('div').classes()
+    expect(classes).toContain('max-w-xl')
+    expect(classes).not.toContain('w-150')
+    expect(classes).toContain('mx-auto')
+  })
+
+  it('drops the default w-150 when the user passes a min-w-* class', () => {
+    const wrapper = mount(Container, { attrs: { class: 'min-w-0' } })
+    const classes = wrapper.find('div').classes()
+    expect(classes).toContain('min-w-0')
+    expect(classes).not.toContain('w-150')
+  })
+
+  it('drops the default w-150 when a width class has a variant prefix', () => {
+    const wrapper = mount(Container, { attrs: { class: 'sm:max-w-xl' } })
+    const classes = wrapper.find('div').classes()
+    expect(classes).toContain('sm:max-w-xl')
+    expect(classes).not.toContain('w-150')
   })
 
   it('accepts custom width as string', () => {
@@ -32,9 +64,9 @@ describe('Container', () => {
       expect(html).toContain('<![endif]-->')
     })
 
-    it('defaults MSO table width to 600px', () => {
+    it('emits an MSO width placeholder when no width prop is set', () => {
       const html = mount(Container).html()
-      expect(html).toContain('style="width: 600px"')
+      expect(html).toMatch(/style="width: __MAIZZLE_MSOW_c\d+__"/)
     })
 
     it('renders MSO table with matching width when prop set', () => {
@@ -51,6 +83,22 @@ describe('Container', () => {
     it('renders MSO closing tags', () => {
       const html = mount(Container).html()
       expect(html).toContain('<!--[if mso]></td></tr></table><![endif]-->')
+    })
+
+    it('msoWidth prop overrides MSO table width and skips the placeholder', () => {
+      const html = mount(Container, { props: { msoWidth: 720 } }).html()
+      expect(html).toContain('style="width: 720px"')
+      expect(html).not.toContain('__MAIZZLE_MSOW_')
+    })
+
+    it('msoWidth wins over width on the MSO table', () => {
+      const html = mount(Container, { props: { width: '500px', msoWidth: '720px' } }).html()
+      expect(html).toContain('style="width: 720px"')
+    })
+
+    it('width prop still applies max-width to the div even when msoWidth is set', () => {
+      const wrapper = mount(Container, { props: { width: '500px', msoWidth: '720px' } })
+      expect(wrapper.find('div').attributes('style')).toContain('max-width: 500px')
     })
   })
 })

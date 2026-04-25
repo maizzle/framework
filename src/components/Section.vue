@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { computed, createStaticVNode, useAttrs } from 'vue'
-import { hasWidthInStyle, hasWidthUtility, normalizeToPixels } from './utils.ts'
+import { hasWidthInStyle, hasWidthUtility, nextId, normalizeToPixels } from './utils.ts'
 
 defineOptions({ inheritAttrs: false })
-
-let counter = 0
 
 const attrs = useAttrs()
 
@@ -50,7 +48,7 @@ const userHasWidth = computed(() => {
 })
 
 const useMarker = props.width == null && userHasWidth.value
-const msoId = useMarker ? `s${++counter}` : null
+const msoId = useMarker ? nextId('s') : null
 
 const divStyle = computed(() => {
   const parts: string[] = []

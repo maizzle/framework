@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed, provide, createStaticVNode, useAttrs } from 'vue'
 import { twMerge } from 'tailwind-merge'
-import { hasWidthUtility, normalizeToPixels } from './utils.ts'
+import { hasWidthUtility, nextId, normalizeToPixels } from './utils.ts'
 
 defineOptions({ inheritAttrs: false })
-
-let counter = 0
 
 const attrs = useAttrs()
 
@@ -41,7 +39,7 @@ const props = defineProps({
 provide('containerWidth', computed(() => props.width))
 
 const useMarker = props.width == null && props.msoWidth == null
-const msoId = useMarker ? `c${++counter}` : null
+const msoId = useMarker ? nextId('c') : null
 
 const styles = computed(() => {
   if (props.width == null) return undefined

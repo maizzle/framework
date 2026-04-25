@@ -118,4 +118,91 @@ describe('columnWidth', () => {
       expect(run(html)).toContain('width: 33%')
     })
   })
+
+  describe('non-min-width style markers (Overlap)', () => {
+    it('substitutes a width: marker with the resolved px value', () => {
+      const html =
+        `<div data-maizzle-cw="600px">`
+        + `<div data-maizzle-cw-id="o1" data-maizzle-cw-count="1"></div>`
+        + `<td style="width: __MAIZZLE_COLW_o1__; max-width: 100%"></td>`
+        + `</div>`
+      const out = run(html)
+      expect(out).toContain('width: 600px')
+      expect(out).not.toContain('__MAIZZLE_COLW_')
+    })
+
+    it('falls back to 100% for count=1 when no source ancestor exists', () => {
+      const html =
+        `<div data-maizzle-cw-id="o1" data-maizzle-cw-count="1"></div>`
+        + `<td style="width: __MAIZZLE_COLW_o1__"></td>`
+      const out = run(html)
+      expect(out).toContain('width: 100%')
+      expect(out).not.toContain('__MAIZZLE_COLW_')
+    })
+
+    it('substitutes the same marker in both style and comment text', () => {
+      const html =
+        `<div data-maizzle-cw="500px">`
+        + `<div data-maizzle-cw-id="o1" data-maizzle-cw-count="1"></div>`
+        + `<td style="width: __MAIZZLE_COLW_o1__"></td>`
+        + `<!--[if mso]><v:rect style="width: __MAIZZLE_COLW_o1__; height: 200px"><![endif]-->`
+        + `</div>`
+      const out = run(html)
+      expect(out.match(/500px/g)?.length).toBeGreaterThanOrEqual(2)
+      expect(out).not.toContain('__MAIZZLE_COLW_')
+    })
+  })
+
+  describe('self-source width (Overlap with own width class)', () => {
+    it('reads width from the marked element\'s own inlined max-width', () => {
+      const html =
+        `<div data-maizzle-cw-id="o1" data-maizzle-cw-count="1" data-maizzle-cw-self="" style="max-width: 576px"></div>`
+        + `<td style="width: __MAIZZLE_COLW_o1__"></td>`
+      const out = run(html)
+      expect(out).toContain('width: 576px')
+      expect(out).not.toContain('__MAIZZLE_COLW_')
+      expect(out).not.toContain('data-maizzle-cw-self')
+    })
+
+    it('self-source ignores ancestor data-maizzle-cw', () => {
+      const html =
+        `<div data-maizzle-cw="999px">`
+        + `<div data-maizzle-cw-id="o1" data-maizzle-cw-count="1" data-maizzle-cw-self="" style="max-width: 400px"></div>`
+        + `<td style="width: __MAIZZLE_COLW_o1__"></td>`
+        + `</div>`
+      expect(run(html)).toContain('width: 400px')
+    })
+
+    it('falls back to 100% when self-source has no inlined width', () => {
+      const html =
+        `<div data-maizzle-cw-id="o1" data-maizzle-cw-count="1" data-maizzle-cw-self=""></div>`
+        + `<td style="width: __MAIZZLE_COLW_o1__"></td>`
+      expect(run(html)).toContain('width: 100%')
+    })
+  })
+
+  describe('overlap height substitution', () => {
+    it('reads height from the marked element\'s own inlined height', () => {
+      const html =
+        `<div data-maizzle-oh-id="o1" style="height: 200px"></div>`
+        + `<!--[if mso]><v:rect style="width: 600px; height: __MAIZZLE_OH_o1__"><![endif]-->`
+      const out = run(html)
+      expect(out).toContain('height: 200px')
+      expect(out).not.toContain('__MAIZZLE_OH_')
+      expect(out).not.toContain('data-maizzle-oh-id')
+    })
+
+    it('reads max-height when height is absent', () => {
+      const html =
+        `<div data-maizzle-oh-id="o1" style="max-height: 12.5rem"></div>`
+        + `<!--[if mso]><v:rect style="height: __MAIZZLE_OH_o1__"><![endif]-->`
+      // 12.5rem → 200px
+      expect(run(html)).toContain('height: 200px')
+    })
+
+    it('falls back to 100% when no height source is found', () => {
+      const html = `<!--[if mso]><v:rect style="height: __MAIZZLE_OH_o1__"><![endif]-->`
+      expect(run(html)).toContain('height: 100%')
+    })
+  })
 })

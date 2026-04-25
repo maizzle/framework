@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed, createStaticVNode, inject, useAttrs } from 'vue'
 import type { ComputedRef } from 'vue'
-import { normalizeToPixels } from './utils.ts'
+import { nextId, normalizeToPixels } from './utils.ts'
 
 defineOptions({ inheritAttrs: false })
-
-let counter = 0
 
 const attrs = useAttrs()
 
@@ -39,7 +37,7 @@ const columnCount = inject<ComputedRef<number> | null>('columnCount', null)
 const count = computed(() => columnCount?.value ?? 2)
 
 const useMarker = props.width == null
-const colId = useMarker ? `co${++counter}` : null
+const colId = useMarker ? nextId('co') : null
 
 const minWidth = computed(() => {
   if (props.width != null) return normalizeToPixels(props.width)

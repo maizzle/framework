@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createSSRApp, h } from 'vue'
+import { renderToString } from 'vue/server-renderer'
 import Overlap from '../../components/Overlap.vue'
+
+async function ssr(props = {}, slots: Record<string, () => unknown> = { default: () => 'bg', overlay: () => 'ov' }) {
+  return renderToString(createSSRApp({
+    render() { return h(Overlap, props, slots) }
+  }))
+}
 
 function mountOverlap(props = {}, defaultSlot = 'Background', overlaySlot = 'Overlay') {
   return mount(Overlap, {
@@ -120,6 +128,65 @@ describe('Overlap', () => {
     it('includes VML closing tags', () => {
       const html = mountOverlap().html()
       expect(html).toContain('</v:textbox></v:rect>')
+    })
+  })
+
+  describe('width inheritance', () => {
+    it('emits a width placeholder on td and VML when no width prop is set', async () => {
+      const html = await ssr({ height: 340 })
+      expect(html).toMatch(/<td style="width: __MAIZZLE_COLW_o\d+__/)
+      expect(html).toMatch(/<v:rect[^>]*style="width: __MAIZZLE_COLW_o\d+__/)
+    })
+
+    it('uses the same id for td width, VML width, and the cw-id anchor', async () => {
+      const html = await ssr({ height: 340 })
+      const id = html.match(/data-maizzle-cw-id="(o\d+)"/)?.[1]
+      expect(id).toMatch(/^o\d+$/)
+      expect(html).toContain(`data-maizzle-cw-count="1"`)
+      expect(html).toContain(`<td style="width: __MAIZZLE_COLW_${id}__`)
+      expect(html).toContain(`<v:rect xmlns:v="urn:schemas-microsoft-com:vml" stroked="f" filled="f" style="width: __MAIZZLE_COLW_${id}__`)
+    })
+
+    it('does not emit a placeholder when width prop is set', async () => {
+      const html = await ssr({ height: 340, width: 600 })
+      expect(html).not.toContain('__MAIZZLE_COLW_')
+      expect(html).not.toContain('data-maizzle-cw-id')
+      expect(html).not.toContain('data-maizzle-cw-count')
+    })
+
+    it('emits data-maizzle-cw-self when a width class is on the component', async () => {
+      const html = await ssr({}, {
+        default: () => 'bg',
+        overlay: () => 'ov'
+      }).then((s) => s)
+      // re-render with class via SSR helper
+      const html2 = await renderToString(createSSRApp({
+        render() {
+          return h(Overlap, { class: 'max-w-xl' }, { default: () => 'bg', overlay: () => 'ov' })
+        }
+      }))
+      expect(html2).toMatch(/data-maizzle-cw-self(?:=""|\s|>)/)
+      expect(html2).toMatch(/<td style="width: __MAIZZLE_COLW_o\d+__/)
+    })
+
+    it('emits data-maizzle-oh-id when a height class is on the component and no height prop', async () => {
+      const html = await renderToString(createSSRApp({
+        render() {
+          return h(Overlap, { class: 'h-50' }, { default: () => 'bg', overlay: () => 'ov' })
+        }
+      }))
+      expect(html).toMatch(/data-maizzle-oh-id="o\d+"/)
+      expect(html).toMatch(/<v:rect[^>]*height: __MAIZZLE_OH_o\d+__/)
+    })
+
+    it('does not emit data-maizzle-oh-id when height prop is set', async () => {
+      const html = await renderToString(createSSRApp({
+        render() {
+          return h(Overlap, { class: 'h-50', height: 340 }, { default: () => 'bg', overlay: () => 'ov' })
+        }
+      }))
+      expect(html).not.toContain('data-maizzle-oh-id')
+      expect(html).not.toContain('__MAIZZLE_OH_')
     })
   })
 })

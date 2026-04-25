@@ -3,16 +3,19 @@ import type { ChildNode, Element } from 'domhandler'
 
 const RE_MAX_WIDTH = /(?:^|;\s*)max-width:\s*([^;]+)/i
 const RE_WIDTH = /(?:^|;\s*)width:\s*([^;]+)/i
+const RE_PERCENT = /^[\d.]+%$/
 
-function toPx(value: string): number | null {
-  const m = value.trim().match(/^([\d.]+)(px|rem|em|pt)?$/i)
+function resolveWidth(value: string): string | null {
+  const trimmed = value.trim()
+  if (RE_PERCENT.test(trimmed)) return trimmed
+  const m = trimmed.match(/^([\d.]+)(px|rem|em|pt)?$/i)
   if (!m) return null
   const n = parseFloat(m[1])
   switch ((m[2] || 'px').toLowerCase()) {
-    case 'px': return Math.round(n)
+    case 'px': return `${Math.round(n)}px`
     case 'rem':
-    case 'em': return Math.round(n * 16)
-    case 'pt': return Math.round(n * 1.333)
+    case 'em': return `${Math.round(n * 16)}px`
+    case 'pt': return `${Math.round(n * 1.333)}px`
     default: return null
   }
 }
@@ -22,10 +25,12 @@ function toPx(value: string): number | null {
  * comments by reading the inlined `max-width` (or `width`) of the
  * paired element marked with `data-maizzle-msow-id`.
  *
- * Used by `<Container>` to derive Outlook's table width from the
- * resolved Tailwind class on the inner div, after CSS inlining.
+ * Used by `<Container>` and `<Section>` to derive Outlook's table width
+ * from the resolved Tailwind class or inline style on the inner div,
+ * after CSS inlining.
  *
- * Falls back to `600px` when the value can't be parsed.
+ * Falls back to the value of `data-maizzle-msow-fallback` (default
+ * `600px`) when the value can't be parsed.
  */
 export function msoWidthFromClass(dom: ChildNode[]): ChildNode[] {
   const widths = new Map<string, string>()
@@ -36,10 +41,13 @@ export function msoWidthFromClass(dom: ChildNode[]): ChildNode[] {
     if (!id) return
     delete el.attribs['data-maizzle-msow-id']
 
+    const fallback = el.attribs['data-maizzle-msow-fallback'] ?? '600px'
+    delete el.attribs['data-maizzle-msow-fallback']
+
     const style = el.attribs.style ?? ''
     const raw = style.match(RE_MAX_WIDTH)?.[1] ?? style.match(RE_WIDTH)?.[1]
-    const px = raw ? toPx(raw) : null
-    widths.set(id, px ? `${px}px` : '600px')
+    const resolved = raw ? resolveWidth(raw) : null
+    widths.set(id, resolved ?? fallback)
   })
 
   if (widths.size === 0) return dom

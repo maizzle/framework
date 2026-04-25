@@ -31,11 +31,11 @@ describe('msoWidthFromClass', () => {
     expect(run(html)).toContain('width: 480px')
   })
 
-  it('falls back to 600px when no resolvable value (e.g. percentage)', () => {
+  it('passes percentage values through', () => {
     const html = `<!--[if mso]><table style="width: __MAIZZLE_MSOW_p__"><![endif]-->`
-      + `<div style="max-width: 100%;" data-maizzle-msow-id="p"></div>`
+      + `<div style="max-width: 50%;" data-maizzle-msow-id="p"></div>`
       + `<!--[if mso]><![endif]-->`
-    expect(run(html)).toContain('width: 600px')
+    expect(run(html)).toContain('width: 50%')
   })
 
   it('falls back to 600px when no style on element', () => {
@@ -43,6 +43,15 @@ describe('msoWidthFromClass', () => {
       + `<div data-maizzle-msow-id="q"></div>`
       + `<!--[if mso]><![endif]-->`
     expect(run(html)).toContain('width: 600px')
+  })
+
+  it('uses data-maizzle-msow-fallback when value is unresolvable', () => {
+    const html = `<!--[if mso]><table style="width: __MAIZZLE_MSOW_f__"><![endif]-->`
+      + `<div data-maizzle-msow-id="f" data-maizzle-msow-fallback="100%"></div>`
+      + `<!--[if mso]><![endif]-->`
+    const out = run(html)
+    expect(out).toContain('width: 100%')
+    expect(out).not.toContain('data-maizzle-msow-fallback')
   })
 
   it('handles multiple containers independently', () => {

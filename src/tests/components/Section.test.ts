@@ -85,4 +85,61 @@ describe('Section', () => {
       expect(html).toContain('padding: 20px')
     })
   })
+
+  describe('class/inline style width resolution', () => {
+    it('emits a width placeholder when a width utility class is passed', () => {
+      const html = mount(Section, { attrs: { class: 'max-w-md' } }).html()
+      expect(html).toMatch(/style="width: __MAIZZLE_MSOW_s\d+__"/)
+    })
+
+    it('emits a width placeholder when an inline style with max-width is passed', () => {
+      const html = mount(Section, { attrs: { style: 'max-width: 500px' } }).html()
+      expect(html).toMatch(/style="width: __MAIZZLE_MSOW_s\d+__"/)
+    })
+
+    it('emits a width placeholder when an inline style with width is passed', () => {
+      const html = mount(Section, { attrs: { style: 'width: 480px' } }).html()
+      expect(html).toMatch(/style="width: __MAIZZLE_MSOW_s\d+__"/)
+    })
+
+    it('attaches data-maizzle-msow-id and 100% fallback on the div when emitting a placeholder', () => {
+      const wrapper = mount(Section, { attrs: { class: 'max-w-md' } })
+      const div = wrapper.find('div')
+      expect(div.attributes('data-maizzle-msow-id')).toMatch(/^s\d+$/)
+      expect(div.attributes('data-maizzle-msow-fallback')).toBe('100%')
+    })
+
+    it('does not emit a placeholder when no width source is provided', () => {
+      const html = mount(Section).html()
+      expect(html).toContain('style="width: 100%"')
+      expect(html).not.toContain('__MAIZZLE_MSOW_')
+      expect(mount(Section).find('div').attributes('data-maizzle-msow-id')).toBeUndefined()
+    })
+
+    it('does not emit a placeholder when a non-width class is passed', () => {
+      const html = mount(Section, { attrs: { class: 'bg-red-500 p-4' } }).html()
+      expect(html).toContain('style="width: 100%"')
+      expect(html).not.toContain('__MAIZZLE_MSOW_')
+    })
+
+    it('does not emit a placeholder when a non-width inline style is passed', () => {
+      const html = mount(Section, { attrs: { style: 'background-color: red' } }).html()
+      expect(html).toContain('style="width: 100%"')
+      expect(html).not.toContain('__MAIZZLE_MSOW_')
+    })
+
+    it('width prop takes precedence over class-derived width', () => {
+      const html = mount(Section, {
+        props: { width: '600px' },
+        attrs: { class: 'max-w-md' }
+      }).html()
+      expect(html).toContain('style="width: 600px"')
+      expect(html).not.toContain('__MAIZZLE_MSOW_')
+    })
+
+    it('detects width utilities behind variant prefixes', () => {
+      const html = mount(Section, { attrs: { class: 'sm:max-w-xl' } }).html()
+      expect(html).toMatch(/style="width: __MAIZZLE_MSOW_s\d+__"/)
+    })
+  })
 })

@@ -10,6 +10,8 @@ import type { ChildNode, Element } from 'domhandler'
 import { walk } from '../utils/ast/index.ts'
 import { tailwindCleanup } from '../plugins/postcss/tailwindCleanup.ts'
 import { mergeMediaQueries } from '../plugins/postcss/mergeMediaQueries.ts'
+import { quoteFontFamilies } from '../plugins/postcss/quoteFontFamilies.ts'
+import { decodeStyleEntities } from '../utils/decodeStyleEntities.ts'
 import type { MaizzleConfig } from '../types/config.ts'
 
 function createProcessor(config: MaizzleConfig) {
@@ -23,23 +25,6 @@ function createProcessor(config: MaizzleConfig) {
     postcssCalc({}),
     pruneVars(),
   ])
-}
-
-/**
- * Decode HTML entities that Vue SSR encodes inside <style> tags.
- *
- * Vue's renderToString HTML-encodes quotes and other characters
- * inside <style> tags within templates, breaking CSS like
- * `@import "@maizzle/tailwindcss"` → `@import &quot;...&quot;`
- */
-function decodeEntities(str: string): string {
-  return str
-    .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
 }
 
 /**
@@ -80,7 +65,7 @@ function lowerSyntax(css: string): string {
  * then sorts and merges media queries.
  */
 async function optimizeCss(css: string, config: MaizzleConfig): Promise<string> {
-  const plugins: postcss.Plugin[] = [...tailwindCleanup(config)]
+  const plugins: postcss.Plugin[] = [...tailwindCleanup(config), quoteFontFamilies()]
 
   const mediaPlugin = mergeMediaQueries(config)
   if (mediaPlugin) plugins.push(mediaPlugin)
@@ -171,7 +156,7 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
 
     if (!rawContent.trim()) return
 
-    styleTags.push({ node: el, cssContent: decodeEntities(rawContent) })
+    styleTags.push({ node: el, cssContent: decodeStyleEntities(rawContent) })
   })
 
   if (!styleTags.length) return dom

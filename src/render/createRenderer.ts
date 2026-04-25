@@ -377,37 +377,47 @@ export async function createRenderer(
       }
 
       // Inject SSR teleport content into their target elements
-      if (ssrContext.teleports) {
+      const hasTeleports = ssrContext.teleports && Object.keys(ssrContext.teleports).length > 0
+      const hasFonts = (renderContext.fonts?.length ?? 0) > 0
+
+      if (hasTeleports || hasFonts) {
         const { parse: parseDom, serialize: serializeDom, walk } = await import('../utils/ast/index.ts')
         let dom = parseDom(html)
 
-        for (const [rawTarget, content] of Object.entries(ssrContext.teleports) as [string, string][]) {
-          if (!content) continue
+        if (hasTeleports) {
+          for (const [rawTarget, content] of Object.entries(ssrContext.teleports) as [string, string][]) {
+            if (!content) continue
 
-          const prepend = rawTarget.endsWith(':start')
-          const target = prepend ? rawTarget.slice(0, -6) : rawTarget
-          const targetChildren = parseDom(content)
+            const prepend = rawTarget.endsWith(':start')
+            const target = prepend ? rawTarget.slice(0, -6) : rawTarget
+            const targetChildren = parseDom(content)
 
-          walk(dom, (node) => {
-            const el = node as import('domhandler').Element
+            walk(dom, (node) => {
+              const el = node as import('domhandler').Element
 
-            if (!el.name) return
+              if (!el.name) return
 
-            const matched
-              = target === el.name
-              || (target.startsWith('#') && el.attribs?.id === target.slice(1))
-              || (target.startsWith('.') && el.attribs?.class?.split(/\s+/).includes(target.slice(1)))
+              const matched
+                = target === el.name
+                || (target.startsWith('#') && el.attribs?.id === target.slice(1))
+                || (target.startsWith('.') && el.attribs?.class?.split(/\s+/).includes(target.slice(1)))
 
-            if (matched) {
-              for (const child of targetChildren) {
-                child.parent = el as any
+              if (matched) {
+                for (const child of targetChildren) {
+                  child.parent = el as any
+                }
+
+                el.children = prepend
+                  ? [...targetChildren, ...(el.children || [])] as any
+                  : [...(el.children || []), ...targetChildren] as any
               }
+            })
+          }
+        }
 
-              el.children = prepend
-                ? [...targetChildren, ...(el.children || [])] as any
-                : [...(el.children || []), ...targetChildren] as any
-            }
-          })
+        if (hasFonts) {
+          const { injectFonts } = await import('./injectFonts.ts')
+          injectFonts(dom, renderContext.fonts!, parseDom, walk)
         }
 
         html = serializeDom(dom)

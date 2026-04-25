@@ -174,7 +174,7 @@ const mergedClass = computed(() => twMerge(defaultClasses.value, attrs.class as 
         <Outlook><i class="mso-font-width-[150%]" :style="`mso-text-raise: ${msoPb};`" hidden>&emsp;</i></Outlook>
         <template v-if="icon && iconPosition === 'left'">
           <span :style="`mso-text-raise: ${msoPt}`">
-            <img :src="icon" :width="parsedIconWidth" :class="`align-baseline max-w-full ${iconClass}`">
+            <img :src="icon" :width="parsedIconWidth" :class="`align-baseline max-w-full ${iconClass}`" alt="">
           </span>
           <Outlook><i class="mso-font-width-[30%]" hidden>&emsp;&#8203;</i></Outlook>
         </template>
@@ -182,7 +182,7 @@ const mergedClass = computed(() => twMerge(defaultClasses.value, attrs.class as 
         <template v-if="icon && iconPosition === 'right'">
           <Outlook><i class="mso-font-width-[30%]" hidden>&emsp;&#8203;</i></Outlook>
           <span :style="`mso-text-raise: ${msoPt}`">
-            <img :src="icon" :width="parsedIconWidth" :class="`align-baseline max-w-full ${iconClass}`">
+            <img :src="icon" :width="parsedIconWidth" :class="`align-baseline max-w-full ${iconClass}`" alt="">
           </span>
         </template>
         <Outlook><i class="mso-font-width-[150%]" hidden>&emsp;&#8203;</i></Outlook>

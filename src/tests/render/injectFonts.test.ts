@@ -49,11 +49,11 @@ describe('injectFonts', () => {
     expect(styleMatch?.[1]).toContain('@theme')
   })
 
-  it('falls back to :root in a new <style> when no Tailwind import exists', () => {
+  it('falls back to a plain class rule when no Tailwind import exists', () => {
     const out = run('<html><head></head><body></body></html>', [ROBOTO])
-    expect(out).toContain(':root {')
-    expect(out).toContain("--font-roboto: 'Roboto', Verdana, sans-serif;")
+    expect(out).toContain(`.font-roboto { font-family: 'Roboto', Verdana, sans-serif; }`)
     expect(out).not.toContain('@theme')
+    expect(out).not.toContain(':root')
   })
 
   it('emits one @theme block with all registered fonts', () => {

@@ -15,8 +15,8 @@ function getText(el: Element): string {
  * Inject font `<link>` tags into `<head>` and merge `@theme` declarations
  * into the template's existing Tailwind `<style>` block (so the
  * `font-{slug}` utilities are generated in the same compilation unit
- * as the Tailwind import). Falls back to a `:root` declaration when no
- * Tailwind import is present.
+ * as the Tailwind import). Without a Tailwind import, emits plain
+ * `.font-{slug}` class rules so the utility still works.
  */
 export function injectFonts(
   dom: ChildNode[],
@@ -49,19 +49,21 @@ export function injectFonts(
   }
   head.children = [...(head.children || []), ...linkNodes] as any
 
-  const declarations = fonts
-    .map(f => `  --font-${f.slug}: ${f.declaration};`)
-    .join('\n')
-
   if (tailwindStyle) {
+    const themeDecls = fonts
+      .map(f => `  --font-${f.slug}: ${f.declaration};`)
+      .join('\n')
     const existing = getText(tailwindStyle)
     tailwindStyle.children = [{
       type: 'text',
-      data: `${existing}\n@theme {\n${declarations}\n}\n`,
+      data: `${existing}\n@theme {\n${themeDecls}\n}\n`,
       parent: tailwindStyle,
     } as any]
   } else {
-    const styleNodes = parseDom(`<style>:root {\n${declarations}\n}</style>`)
+    const classRules = fonts
+      .map(f => `.font-${f.slug} { font-family: ${f.declaration}; }`)
+      .join('\n')
+    const styleNodes = parseDom(`<style>\n${classRules}\n</style>`)
     for (const child of styleNodes) {
       (child as any).parent = head
     }

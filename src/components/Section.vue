@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, createStaticVNode, useAttrs } from 'vue'
-import { normalizeToPixels } from './utils.ts'
+import { hasWidthInStyle, hasWidthUtility, normalizeToPixels } from './utils.ts'
 
 defineOptions({ inheritAttrs: false })
 
@@ -44,18 +44,6 @@ const userStyle = computed(() => {
     : String(s)
 })
 
-function hasWidthUtility(classStr: string): boolean {
-  return classStr.split(/\s+/).some((c) => {
-    const utility = c.split(':').pop() ?? ''
-    const clean = utility.replace(/^!/, '')
-    return /^(w-|max-w-|min-w-)/.test(clean)
-  })
-}
-
-function hasWidthInStyle(styleStr: string): boolean {
-  return /(?:^|;\s*)(?:max-width|width)\s*:/i.test(styleStr)
-}
-
 const userHasWidth = computed(() => {
   const cls = (attrs.class as string) ?? ''
   return hasWidthUtility(cls) || hasWidthInStyle(userStyle.value)
@@ -89,6 +77,12 @@ const msoWidth = computed(() => {
   return '100%'
 })
 
+const colWidthSource = computed(() => {
+  if (props.width != null) return normalizeToPixels(props.width)
+  if (userHasWidth.value) return ''
+  return null
+})
+
 const MsoBefore = () => {
   const tdStyle = tdStyles.value ? ` style="${tdStyles.value}"` : ''
   return createStaticVNode(
@@ -110,6 +104,7 @@ const MsoAfter = () => createStaticVNode(
     :style="divStyle"
     :data-maizzle-msow-id="msoId"
     :data-maizzle-msow-fallback="useMarker ? '100%' : null"
+    :data-maizzle-cw="colWidthSource"
   >
     <slot />
   </div>

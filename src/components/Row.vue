@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Comment, computed, createStaticVNode, inject, provide, useAttrs, useSlots, Fragment } from 'vue'
-import type { ComputedRef, VNode } from 'vue'
+import { Comment, computed, createStaticVNode, provide, useAttrs, useSlots, Fragment } from 'vue'
+import type { VNode } from 'vue'
+import { hasWidthInStyle, hasWidthUtility, normalizeToPixels } from './utils.ts'
 
 defineOptions({ inheritAttrs: false })
 
@@ -8,10 +9,12 @@ const attrs = useAttrs()
 
 const props = defineProps({
   /**
-   * Override the inherited container width.
+   * Explicit row width.
    *
-   * Used to calculate column widths. Inherited from the
-   * parent `Container` by default.
+   * Used as the width source for column min-width calculation.
+   * When not set, the nearest sized ancestor (`Container`, `Section`,
+   * outer `Column`, or this row's own width class/inline style) is
+   * used instead.
    */
   width: {
     type: [String, Number],
@@ -53,26 +56,40 @@ const columnCount = computed(() => {
   return countChildren(children) || 1
 })
 
-const containerWidth = inject<ComputedRef<string | number> | null>('containerWidth', null)
+provide('columnCount', columnCount)
 
-const rowWidth = computed(() => props.width ?? containerWidth?.value ?? null)
+const userStyle = computed(() => {
+  const s = attrs.style
+  if (!s) return ''
+  return typeof s === 'object'
+    ? Object.entries(s).map(([k, v]) => `${k.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${v}`).join('; ')
+    : String(s)
+})
 
-function divideValue(value: string | number, divisor: number): string {
-  if (typeof value === 'number') {
-    return `${parseFloat((value / divisor).toFixed(2))}px`
-  }
+const userHasWidth = computed(() => {
+  const cls = (attrs.class as string) ?? ''
+  return hasWidthUtility(cls) || hasWidthInStyle(userStyle.value)
+})
 
-  const num = Number.parseFloat(value)
-  const unit = value.replace(String(num), '') || 'px'
+const colWidthSource = computed(() => {
+  if (props.width != null) return normalizeToPixels(props.width)
+  if (userHasWidth.value) return ''
+  return null
+})
 
-  return `${parseFloat((num / divisor).toFixed(2))}${unit}`
-}
+const restAttrs = computed(() => {
+  const { style: _, ...rest } = attrs
+  return rest
+})
 
-provide('columnMinWidth', computed(() => rowWidth.value ? divideValue(rowWidth.value, columnCount.value) : null))
-provide('columnMsoWidth', computed(() => `${Math.round(100 / columnCount.value)}%`))
+const divStyle = computed(() => {
+  const parts: string[] = ['font-size: 0;']
+  if (userStyle.value) parts.push(userStyle.value)
+  return parts.join(' ')
+})
 
 const MsoBefore = () => createStaticVNode(
-  '<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]-->',
+  '<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width: 100%"><tr><![endif]-->',
   1
 )
 
@@ -84,7 +101,11 @@ const MsoAfter = () => createStaticVNode(
 
 <template>
   <MsoBefore />
-  <div v-bind="attrs" style="font-size: 0;">
+  <div
+    v-bind="restAttrs"
+    :style="divStyle"
+    :data-maizzle-cw="colWidthSource"
+  >
     <slot />
   </div>
   <MsoAfter />

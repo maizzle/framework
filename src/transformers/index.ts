@@ -5,6 +5,7 @@ import { safeClassNames } from './safeClassNames.ts'
 import { attributeToStyle } from './attributeToStyle.ts'
 import { inlineCSS } from './inlineCSS.ts'
 import { msoWidthFromClass } from './msoWidthFromClass.ts'
+import { columnWidth } from './columnWidth.ts'
 import { removeAttributes } from './removeAttributes.ts'
 import { shorthandCSS } from './shorthandCSS.ts'
 import { sixHex } from './sixHex.ts'
@@ -75,6 +76,9 @@ export async function runTransformers(
 
   // 4.5. Resolve MSO width placeholders from inlined max-width/width
   dom = msoWidthFromClass(dom)
+
+  // 4.6. Resolve Column min-width placeholders from nearest sized ancestor
+  dom = columnWidth(dom)
 
   // 5. Remove attributes
   dom = removeAttributes(dom, config.html?.attributes)

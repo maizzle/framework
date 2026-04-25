@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, provide, createStaticVNode, useAttrs } from 'vue'
 import { twMerge } from 'tailwind-merge'
-import { normalizeToPixels } from './utils.ts'
+import { hasWidthUtility, normalizeToPixels } from './utils.ts'
 
 defineOptions({ inheritAttrs: false })
 
@@ -14,8 +14,8 @@ const props = defineProps({
    * Max width of the container.
    *
    * Applied as `max-width` on the div and as `width` on the MSO table.
-   * Also provided to child `Row` and `Column` components for
-   * automatic column width calculation.
+   * Also used as the width source for descendant `Row`/`Column`
+   * components when computing column widths.
    *
    * When not set, the div defaults to `w-150 mx-auto` (600px,
    * centered) — overridable via Tailwind classes such as
@@ -48,14 +48,6 @@ const styles = computed(() => {
   return `max-width: ${normalizeToPixels(props.width)}; margin: 0 auto;`
 })
 
-function hasWidthUtility(classStr: string): boolean {
-  return classStr.split(/\s+/).some((c) => {
-    const utility = c.split(':').pop() ?? ''
-    const clean = utility.replace(/^!/, '')
-    return /^(w-|max-w-|min-w-)/.test(clean)
-  })
-}
-
 const mergedClass = computed(() => {
   if (props.width != null) return attrs.class as string | undefined
   const userClass = (attrs.class as string) ?? ''
@@ -70,6 +62,10 @@ const msoWidth = computed(() => {
   if (props.width != null) return normalizeToPixels(props.width)
   return `__MAIZZLE_MSOW_${msoId}__`
 })
+
+const colWidthSource = computed(() =>
+  props.width != null ? normalizeToPixels(props.width) : ''
+)
 
 const MsoBefore = () => createStaticVNode(
   `<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width: ${msoWidth.value}" align="center"><tr><td><![endif]-->`,
@@ -89,6 +85,7 @@ const MsoAfter = () => createStaticVNode(
     :class="mergedClass"
     :style="styles"
     :data-maizzle-msow-id="msoId"
+    :data-maizzle-cw="colWidthSource"
   >
     <slot />
   </div>

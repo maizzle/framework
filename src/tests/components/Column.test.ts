@@ -38,37 +38,41 @@ describe('Column', () => {
       expect(wrapper.text()).toBe('Content')
     })
 
-    it('auto-computes min-width from Row injection', () => {
+    it('emits a min-width placeholder and column count when no width prop is set', () => {
       const wrapper = mountLayout({ width: '600px' })
-      const columns = wrapper.findAllComponents(Column)
-      // 600px / 2 = 300px
-      expect(columns[0].find('div').attributes('style')).toContain('min-width: 300px')
+      const div = wrapper.findAllComponents(Column)[0].find('div')
+      expect(div.attributes('style')).toMatch(/min-width: __MAIZZLE_COLW_co\d+__/)
+      expect(div.attributes('data-maizzle-cw-id')).toMatch(/^co\d+$/)
+      expect(div.attributes('data-maizzle-cw-count')).toBe('2')
     })
 
-    it('auto-computes min-width for 3 columns', () => {
-      const wrapper = mountLayout({ width: '600px' }, {}, {}, 3)
-      const columns = wrapper.findAllComponents(Column)
-      // 600px / 3 = 200px
-      expect(columns[0].find('div').attributes('style')).toContain('min-width: 200px')
+    it('emits column count from Row even when nested deep', () => {
+      const wrapper = mountLayout({}, {}, {}, 3)
+      const div = wrapper.findAllComponents(Column)[0].find('div')
+      expect(div.attributes('data-maizzle-cw-count')).toBe('3')
     })
 
-    it('does not set min-width when Container has no width prop', () => {
-      const wrapper = mountLayout()
-      const columns = wrapper.findAllComponents(Column)
-      expect(columns[0].find('div').attributes('style')).not.toContain('min-width')
-    })
-
-    it('does not set min-width when used standalone without width prop', () => {
+    it('emits a placeholder even when no width source ancestor exists', () => {
       const wrapper = mount(Column)
-      expect(wrapper.find('div').attributes('style')).not.toContain('min-width')
+      const div = wrapper.find('div')
+      expect(div.attributes('style')).toMatch(/min-width: __MAIZZLE_COLW_co\d+__/)
+      expect(div.attributes('data-maizzle-cw-id')).toMatch(/^co\d+$/)
+    })
+
+    it('defaults column count to 2 when no Row is present', () => {
+      const wrapper = mount(Column)
+      expect(wrapper.find('div').attributes('data-maizzle-cw-count')).toBe('2')
     })
   })
 
   describe('explicit width override', () => {
-    it('uses explicit width prop as min-width', () => {
+    it('uses explicit width prop as literal min-width without a placeholder', () => {
       const wrapper = mountLayout({}, {}, { width: '400px' })
-      const columns = wrapper.findAllComponents(Column)
-      expect(columns[0].find('div').attributes('style')).toContain('min-width: 400px')
+      const div = wrapper.findAllComponents(Column)[0].find('div')
+      expect(div.attributes('style')).toContain('min-width: 400px')
+      expect(div.attributes('style')).not.toContain('__MAIZZLE_COLW_')
+      expect(div.attributes('data-maizzle-cw-id')).toBeUndefined()
+      expect(div.attributes('data-maizzle-cw-count')).toBeUndefined()
     })
 
     it('adds px to numeric width', () => {
@@ -84,52 +88,29 @@ describe('Column', () => {
       expect(html).toContain('<!--[if mso]></td><![endif]-->')
     })
 
-    it('sets MSO td width from row injection', () => {
+    it('emits a width placeholder on the MSO td when no width prop is set', () => {
+      const html = mountLayout({}, {}, {}, 2).html()
+      expect(html).toMatch(/<td style="width: __MAIZZLE_COLW_co\d+__/)
+    })
+
+    it('uses the same placeholder id on min-width and MSO td width', () => {
       const wrapper = mountLayout({}, {}, {}, 2)
+      const div = wrapper.findAllComponents(Column)[0].find('div')
+      const id = div.attributes('data-maizzle-cw-id')
       const html = wrapper.html()
-      expect(html).toContain('width="50%"')
+      expect(html).toContain(`min-width: __MAIZZLE_COLW_${id}__`)
+      expect(html).toContain(`<td style="width: __MAIZZLE_COLW_${id}__`)
     })
 
-    it('computes MSO td width for 3 columns', () => {
-      const wrapper = mountLayout({}, {}, {}, 3)
-      const html = wrapper.html()
-      expect(html).toContain('width="33%"')
-    })
-
-    it('defaults MSO td width to 50% without row', () => {
-      const html = mount(Column).html()
-      expect(html).toContain('width="50%"')
+    it('uses literal MSO td width when explicit width prop is set', () => {
+      const html = mount(Column, { props: { width: '300px' } }).html()
+      expect(html).toContain('<td style="width: 300px')
+      expect(html).not.toContain('__MAIZZLE_COLW_')
     })
 
     it('sets vertical-align: top on MSO td', () => {
       const html = mount(Column).html()
       expect(html).toContain('vertical-align: top')
-    })
-
-    it('nested row inherits column width, not container width', () => {
-      // Container 400px → 2 cols = 200px each → nested row should use 200px → 2 nested cols = 100px
-      const wrapper = mount(
-        defineComponent({
-          render() {
-            return h(Container, { width: '400px' }, () =>
-              h(Row, {}, () => [
-                h(Column, {}, () =>
-                  h(Row, {}, () => [
-                    h(Column, {}, () => 'Nested 1'),
-                    h(Column, {}, () => 'Nested 2'),
-                  ])
-                ),
-                h(Column, {}, () => 'Col 2'),
-              ])
-            )
-          }
-        })
-      )
-      const columns = wrapper.findAllComponents(Column)
-      // First level: 400px / 2 = 200px
-      expect(columns[0].find('div').attributes('style')).toContain('min-width: 200px')
-      // Nested: 200px / 2 = 100px
-      expect(columns[1].find('div').attributes('style')).toContain('min-width: 100px')
     })
 
     it('applies mso-style only to MSO td', () => {

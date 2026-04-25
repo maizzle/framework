@@ -17,7 +17,7 @@ describe('Row', () => {
   describe('MSO conditional comments', () => {
     it('wraps div with MSO table and tr', () => {
       const html = mount(Row).html()
-      expect(html).toContain('<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]-->')
+      expect(html).toContain('<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width: 100%"><tr><![endif]-->')
     })
 
     it('renders MSO closing tags', () => {

@@ -13,6 +13,10 @@ export { build } from './build.ts'
 // Dev server
 export { serve } from './serve.ts'
 
+// Prepare (generate .maizzle/ type definitions)
+export { prepare } from './prepare.ts'
+export type { PrepareOptions } from './prepare.ts'
+
 // Config
 export { defineConfig, resolveConfig } from './config/index.ts'
 

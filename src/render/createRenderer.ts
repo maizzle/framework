@@ -2,6 +2,7 @@ import { dirname, resolve } from 'node:path'
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { isLaravel } from '../utils/detect.ts'
+import { rowSourceLocation } from './plugins/rowSourceLocation.ts'
 import { createServer, mergeConfig, type InlineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Markdown from 'unplugin-vue-markdown/vite'
@@ -208,6 +209,7 @@ export async function createRenderer(
     plugins: [
       codeBlockExtract(),
       markdownExtract(),
+      rowSourceLocation(),
       {
         name: 'maizzle:virtual-sfc',
         resolveId(id) {

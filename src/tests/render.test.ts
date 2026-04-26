@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, symlinkSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -995,6 +995,78 @@ describe('render', () => {
       `)
 
       expect(result.html).toContain('Hello')
+    })
+  })
+
+  describe('Row source-location plugin and warning', () => {
+    it('warns when <Row> has element children but no <Column>', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        // Distinct shape per test to dodge Row.vue's module-level dedupe set.
+        await render(`
+          <template>
+            <Row><p>row-warn-test-element</p></Row>
+          </template>
+        `)
+        const calls = warn.mock.calls.map(c => String(c[0]))
+        expect(calls.some(s => /\[maizzle\] <Row>.*has no <Column>/.test(s))).toBe(true)
+      } finally {
+        warn.mockRestore()
+      }
+    })
+
+    it('warns when <Row> has only text content', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        await render(`
+          <template>
+            <Row>row-warn-test-text-only</Row>
+          </template>
+        `)
+        const calls = warn.mock.calls.map(c => String(c[0]))
+        expect(calls.some(s => /\[maizzle\] <Row>.*has no <Column>/.test(s))).toBe(true)
+      } finally {
+        warn.mockRestore()
+      }
+    })
+
+    it('does not warn when <Row> contains a <Column>', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        await render(`
+          <template>
+            <Row><Column>row-warn-test-good</Column></Row>
+          </template>
+        `)
+        const calls = warn.mock.calls.map(c => String(c[0]))
+        expect(calls.some(s => /\[maizzle\] <Row>/.test(s))).toBe(false)
+      } finally {
+        warn.mockRestore()
+      }
+    })
+
+    it('does not warn for an empty <Row />', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        await render(`
+          <template>
+            <Row />
+          </template>
+        `)
+        const calls = warn.mock.calls.map(c => String(c[0]))
+        expect(calls.some(s => /\[maizzle\] <Row>/.test(s))).toBe(false)
+      } finally {
+        warn.mockRestore()
+      }
+    })
+
+    it('strips data-maizzle-loc from the rendered output', async () => {
+      const result = await render(`
+        <template>
+          <Row><Column>x</Column></Row>
+        </template>
+      `)
+      expect(result.html).not.toContain('data-maizzle-loc')
     })
   })
 

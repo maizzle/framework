@@ -1,6 +1,11 @@
+<script lang="ts">
+const warnedLocations = new Set<string>()
+</script>
+
 <script setup lang="ts">
-import { Comment, computed, createStaticVNode, provide, useAttrs, useSlots, Fragment } from 'vue'
+import { Comment, Text, computed, createStaticVNode, provide, useAttrs, useSlots, Fragment } from 'vue'
 import type { VNode } from 'vue'
+import Column from './Column.vue'
 import { hasWidthInStyle, hasWidthUtility, normalizeToPixels } from './utils.ts'
 
 defineOptions({ inheritAttrs: false })
@@ -49,6 +54,41 @@ function countChildren(vnodes: VNode[]): number {
   return count
 }
 
+function hasColumnChild(vnodes: VNode[]): boolean {
+  for (const vnode of vnodes) {
+    if (vnode.type === Fragment && Array.isArray(vnode.children)) {
+      if (hasColumnChild(vnode.children as VNode[])) return true
+    } else if (vnode.type === Column) {
+      return true
+    } else if (
+      typeof vnode.type === 'object'
+      && vnode.type !== null
+      && '__name' in vnode.type
+      && (vnode.type as { __name?: string }).__name === 'Column'
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
+function hasMeaningfulContent(vnodes: VNode[]): boolean {
+  for (const vnode of vnodes) {
+    if (vnode.type === Comment) continue
+    if (vnode.type === Fragment && Array.isArray(vnode.children)) {
+      if (hasMeaningfulContent(vnode.children as VNode[])) return true
+      continue
+    }
+    if (vnode.type === Text) {
+      if (typeof vnode.children === 'string' && vnode.children.trim()) return true
+      continue
+    }
+    if (typeof vnode.type === 'symbol') continue
+    return true
+  }
+  return false
+}
+
 const columnCount = computed(() => {
   if (props.cols) return props.cols
 
@@ -78,7 +118,7 @@ const colWidthSource = computed(() => {
 })
 
 const restAttrs = computed(() => {
-  const { style: _, ...rest } = attrs
+  const { style: _, 'data-maizzle-loc': __, ...rest } = attrs
   return rest
 })
 
@@ -97,6 +137,16 @@ const MsoAfter = () => createStaticVNode(
   '<!--[if mso]></tr></table><![endif]-->',
   1
 )
+
+const initialChildren = slots.default?.() ?? []
+if (hasMeaningfulContent(initialChildren) && !hasColumnChild(initialChildren)) {
+  const loc = (attrs['data-maizzle-loc'] as string | undefined) ?? '<unknown location>'
+  if (!warnedLocations.has(loc)) {
+    warnedLocations.add(loc)
+    const display = loc.split('/').pop() ?? loc
+    console.warn(`[maizzle] <Row> in ${display} has no <Column> inside it. Layout will break in Outlook.`)
+  }
+}
 </script>
 
 <template>

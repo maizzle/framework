@@ -155,7 +155,7 @@ describe('Overlap', () => {
     })
 
     it('emits data-maizzle-cw-self when a width class is on the component', async () => {
-      const html = await ssr({}, {
+      const _html = await ssr({}, {
         default: () => 'bg',
         overlay: () => 'ov'
       }).then((s) => s)

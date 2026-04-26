@@ -302,7 +302,7 @@ describe('purgeCSS', () => {
 
     it('preserves selectors matching end-of-string safelist pattern', () => {
       const html = `<html><head><style>.thing-edo { color: red } .gone { color: blue }</style></head><body><p>hi</p></body></html>`
-      const result = run(html, true)
+      const _result = run(html, true)
       // *edo* safelist pattern matches substring, but test a suffix-only pattern
       const result2 = run(html, { safelist: ['*-edo'] })
       expect(result2).toContain('.thing-edo')

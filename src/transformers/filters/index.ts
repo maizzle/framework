@@ -10,7 +10,7 @@ export type FiltersConfig = false | Record<string, (str: string, value: string) 
  * Process children before parents so nested filter elements work correctly.
  */
 function walkBottomUp(nodes: ChildNode[], callback: (node: ChildNode) => void): void {
-  for (const node of [...nodes]) {
+  for (const node of nodes.slice()) {
     if ('children' in node && node.children?.length) {
       walkBottomUp(node.children as ChildNode[], callback)
     }

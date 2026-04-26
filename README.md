@@ -7,7 +7,7 @@
       </picture>
     </a>
   </p>
-  <p>Quickly build HTML emails with Tailwind CSS</p>
+  <p>The modern email development framework</p>
   <div>
 
   [![Version][npm-version-shield]][npm]
@@ -20,9 +20,9 @@
 
 ## About
 
-> **Note:** This repository contains the core code of the Maizzle framework. If you want to build HTML emails using Maizzle, visit the [Starter repository](https://github.com/maizzle/maizzle).
+> **Note:** This repository contains the core code of the Maizzle framework. If you want to start building HTML emails using Maizzle, visit the [Starter repository](https://github.com/maizzle/maizzle).
 
-Maizzle is a framework that helps you quickly build HTML emails with [Tailwind CSS](https://tailwindcss.com/).
+Maizzle is a Vite-powered framework for building HTML emails with Vue and Tailwind CSS.
 
 ## Documentation
 

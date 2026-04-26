@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useAttrs, type PropType } from 'vue'
+import { computed, useAttrs, createStaticVNode, type PropType } from 'vue'
 import { twMerge } from 'tailwind-merge'
 
 defineOptions({ inheritAttrs: false })
@@ -31,6 +31,18 @@ const props = defineProps({
     default: 'ltr'
   },
   /**
+   * Render an empty `<head>` before the main head element.
+   *
+   * This is a workaround for Yahoo! Mail on Android, which
+   * strips the first `<head>` element it finds.
+   *
+   * @default false
+   */
+  doubleHead: {
+    type: [Boolean, String],
+    default: false
+  },
+  /**
    * Accessible label for the email article wrapper.
    *
    * Used as the `aria-label` on the inner `<div role="article">`.
@@ -46,10 +58,13 @@ const props = defineProps({
 const attrs = useAttrs()
 const bodyMergedClass = computed(() => twMerge('m-0 p-0 size-full [word-break:break-word]', props.bodyClass))
 const articleMergedClass = computed(() => twMerge('[font-size:max(16px,1rem)] font-inter', attrs.class as string))
+
+const EmptyHead = () => createStaticVNode('<head></head>', 1)
 </script>
 
 <template>
   <html :lang="lang" :dir="dir" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+  <EmptyHead v-if="props.doubleHead === true || props.doubleHead === 'true'" />
   <head>
     <meta charset="utf-8">
     <meta name="x-apple-disable-message-reformatting">

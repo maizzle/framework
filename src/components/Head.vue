@@ -6,7 +6,7 @@ const props = defineProps({
    * Render an empty `<head>` before the main head element.
    *
    * This is a workaround for Yahoo! Mail on Android, which
-   * strips styles from the first `<head>` element.
+   * strips the first `<head>` element it finds.
    *
    * @default false
    */

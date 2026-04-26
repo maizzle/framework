@@ -132,4 +132,53 @@ describe('Outlook', () => {
       expect(html).toContain('<![endif]-->')
     })
   })
+
+  describe('open and close props', () => {
+    it('inserts open prop after the conditional start', async () => {
+      const html = await renderRaw({ open: '<table><tr><td>' })
+      expect(html).toContain('<!--[if mso]><table><tr><td>')
+    })
+
+    it('inserts close prop before the conditional end', async () => {
+      const html = await renderRaw({ close: '</td></tr></table>' })
+      expect(html).toContain('</td></tr></table><![endif]-->')
+    })
+
+    it('preserves unbalanced open and close fragments around the slot', async () => {
+      const html = await renderRaw(
+        { open: '<table><tr><td>', close: '</td></tr></table>' },
+        () => h('p', 'inside')
+      )
+
+      const openIdx = html.indexOf('<!--[if mso]><table><tr><td>')
+      const slotIdx = html.indexOf('<p>inside</p>')
+      const closeIdx = html.indexOf('</td></tr></table><![endif]-->')
+
+      expect(openIdx).toBeGreaterThanOrEqual(0)
+      expect(slotIdx).toBeGreaterThan(openIdx)
+      expect(closeIdx).toBeGreaterThan(slotIdx)
+    })
+
+    it('combines open/close with version-targeted conditionals', async () => {
+      const html = await renderRaw({
+        only: '2013',
+        open: '<table>',
+        close: '</table>',
+      })
+      expect(html).toContain('<!--[if mso 15]><table>')
+      expect(html).toContain('</table><![endif]-->')
+    })
+
+    it('emits raw HTML verbatim without escaping', async () => {
+      const html = await renderRaw({ open: '<table align="center" width="600">' })
+      expect(html).toContain('<table align="center" width="600">')
+      expect(html).not.toContain('&lt;table')
+    })
+
+    it('omits open and close when not provided', async () => {
+      const html = await renderRaw()
+      expect(html).toContain('<!--[if mso]>')
+      expect(html).not.toContain('<table>')
+    })
+  })
 })

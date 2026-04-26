@@ -405,6 +405,39 @@ describe('render', () => {
       expect(result.html).toContain('<div>First</div>')
       expect(result.html).toContain('<div>Second</div>')
     })
+
+    it('preserves content inside MSO conditional comments around Vue SSR fragment markers', async () => {
+      // Vue SSR emits `<!--[-->`/`<!--]-->` fragment markers around slots.
+      // Each contains `-->` which would prematurely terminate a surrounding
+      // `<!--[if mso]>...<![endif]-->` if the markers reached htmlparser2.
+      const result = await render(`
+        <template>
+          <Outlook open="<table><tr><td>" close="</td></tr></table>">
+            INSIDE
+          </Outlook>
+        </template>
+      `)
+
+      expect(result.html).toContain('<!--[if mso]>')
+      expect(result.html).toContain('<table>')
+      expect(result.html).toContain('<tr>')
+      expect(result.html).toContain('<td>')
+      expect(result.html).toContain('INSIDE')
+      expect(result.html).toContain('</td>')
+      expect(result.html).toContain('</tr>')
+      expect(result.html).toContain('</table>')
+      expect(result.html).toContain('<![endif]-->')
+      expect(result.html).not.toContain('<!--[-->')
+      expect(result.html).not.toContain('<!--]-->')
+
+      const openIdx = result.html.indexOf('<!--[if mso]>')
+      const closeIdx = result.html.indexOf('<![endif]-->')
+      const tableOpenIdx = result.html.indexOf('<table>')
+      const tableCloseIdx = result.html.indexOf('</table>')
+      expect(tableOpenIdx).toBeGreaterThan(openIdx)
+      expect(tableCloseIdx).toBeGreaterThan(tableOpenIdx)
+      expect(closeIdx).toBeGreaterThan(tableCloseIdx)
+    })
   })
 
   describe('teleport', () => {

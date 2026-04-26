@@ -56,6 +56,17 @@ export async function runTransformers(
   filePath?: string,
   doctype?: string,
 ): Promise<string> {
+  // Strip Vue SSR fragment markers before parsing. They contain `-->`, which
+  // prematurely terminates conditional comments like `<!--[if mso]>...<![endif]-->`
+  // when htmlparser2 reads them, swallowing real markup into comment data.
+  html = html
+    .replaceAll('<!--[-->', '')
+    .replaceAll('<!--]-->', '')
+    .replaceAll('<!--teleport start anchor-->', '')
+    .replaceAll('<!--teleport anchor-->', '')
+    .replaceAll('<!--teleport start-->', '')
+    .replaceAll('<!--teleport end-->', '')
+
   // Parse once — all DOM transformers share this array
   let dom = parse(html)
 
@@ -110,15 +121,6 @@ export async function runTransformers(
   // Serialize once — remaining transformers operate on the HTML string
   const isXhtml = doctype ? /xhtml/i.test(doctype) : false
   let result = serialize(dom, { selfClosingTags: isXhtml })
-
-  // Remove Vue-generated comments after serializing
-  result = result
-    .replaceAll('<!--[-->', '')
-    .replaceAll('<!--]-->', '')
-    .replaceAll('<!--teleport start anchor-->', '')
-    .replaceAll('<!--teleport anchor-->', '')
-    .replaceAll('<!--teleport start-->', '')
-    .replaceAll('<!--teleport end-->', '')
 
   // 14. Replace strings
   result = replaceStrings(result, config)

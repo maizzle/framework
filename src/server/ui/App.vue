@@ -367,7 +367,7 @@ onUnmounted(() => {
               min="200"
               :max="maxIframeWidth || undefined"
               aria-label="Preview width"
-              class="bg-transparent border-0 outline-none p-0 m-0 text-inherit font-inherit text-center tabular-nums w-[3.5ch] focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              class="bg-transparent border-0 outline-none p-0 m-0 text-inherit font-inherit text-center tabular-nums w-[4.5ch] focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             >
             <button class="hover:text-gray-700 dark:hover:text-gray-300" @click="selectedDevice = null; isFullSize = true; viewMode = 'preview'; resetKey++">&times;</button>
             <input
@@ -376,7 +376,7 @@ onUnmounted(() => {
               min="100"
               :max="maxIframeHeight || undefined"
               aria-label="Preview height"
-              class="bg-transparent border-0 outline-none p-0 m-0 text-inherit font-inherit text-center tabular-nums w-[3.5ch] focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              class="bg-transparent border-0 outline-none p-0 m-0 text-inherit font-inherit text-center tabular-nums w-[4.5ch] focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             >
           </span>
           <div v-if="isPreviewRoute" class="flex items-center gap-1">

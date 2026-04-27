@@ -243,6 +243,56 @@ function readWidthFromStyle(el: Element): string | null {
   return raw ? resolveLength(raw) : null
 }
 
+/**
+ * Convert a user-supplied length to absolute px against the column's
+ * resolved source width (post-inset). Percentages multiply against the
+ * source; absolute units (px/rem/em/pt) pass through `resolveLength`.
+ * Returns null when the value or source can't be expressed in px.
+ */
+function userValueToPx(rawValue: string, sourcePx: string | null): string | null {
+  const trimmed = rawValue.trim()
+
+  const absMatch = trimmed.match(/^([\d.]+)(px|rem|em|pt)$/i)
+  if (absMatch) return resolveLength(trimmed)
+
+  const pctMatch = trimmed.match(/^([\d.]+)%$/)
+  if (!pctMatch || !sourcePx) return null
+  const sourceMatch = sourcePx.match(/^([\d.]+)px$/)
+  if (!sourceMatch) return null
+  const pct = parseFloat(pctMatch[1])
+  const src = parseFloat(sourceMatch[1])
+  return `${Math.round((pct / 100) * src)}px`
+}
+
+/**
+ * Find the user-set `min-width:` value in an inlined style. Juice keeps
+ * both our placeholder declaration and the one inlined from a class
+ * like `min-w-1/3`, so we filter out any `min-width:` whose value
+ * contains our placeholder token. Returns the raw value (e.g. `33.33%`,
+ * `200px`) or null when the user didn't add their own.
+ */
+function findUserMinWidth(style: string): string | null {
+  const matches = [...style.matchAll(/(?:^|;)\s*min-width\s*:\s*([^;]+)/gi)]
+  for (const m of matches) {
+    const v = m[1].trim()
+    if (!v.includes('__MAIZZLE_COLW_')) return v
+  }
+  return null
+}
+
+/**
+ * Return the smaller of two px lengths (e.g. `288px`, `192px`). Used to
+ * cap our count-based min-width down to the user's `max-width:` so the
+ * cap is never silently violated when min > max. Returns `a` unchanged
+ * when either value isn't a parseable px length.
+ */
+function minPxLength(a: string, b: string): string {
+  const am = a.match(/^([\d.]+)px$/)
+  const bm = b.match(/^([\d.]+)px$/)
+  if (!am || !bm) return a
+  return parseFloat(am[1]) < parseFloat(bm[1]) ? a : b
+}
+
 function readHeightFromStyle(el: Element): string | null {
   const style = el.attribs?.style ?? ''
   const raw = style.match(RE_MAX_HEIGHT)?.[1]
@@ -298,6 +348,35 @@ export function columnWidth(dom: ChildNode[]): ChildNode[] {
 
   const widthResolutions = new Map<string, string>()
   const widthFallbacks = new Map<string, string>()
+  /**
+   * Column ids whose absolute user `width:` was promoted to `min-width:`
+   * — the original `width:` declaration must be stripped from the
+   * column's style (otherwise it'd compete with the min-width and CSS
+   * spec would have width win at the column's chosen px size, defeating
+   * the natural mobile stacking we get from a tall min-width).
+   */
+  const stripWidth = new Set<string>()
+  /**
+   * Column ids where the user wrote a percentage `width:` (e.g. `w-1/2`)
+   * — that's an explicit opt-out of the px-based stacking model. Keep
+   * the user's `width: X%` and drop our `min-width:` placeholder so the
+   * column always sits at that percentage of its parent and never stacks.
+   */
+  const dropMinWidth = new Set<string>()
+  /**
+   * Column ids where the user wrote their own `min-width:` (e.g. via
+   * `min-w-1/3`). Juice inlines theirs after ours, so two `min-width:`
+   * declarations end up in the style; we strip the user's after using
+   * its value as the column's resolution, so our placeholder remains
+   * the last word.
+   */
+  const stripUserMinWidth = new Set<string>()
+  /**
+   * Column ids where the user already supplied a `max-width:` of their
+   * own — our default `max-width: 100%` would just be shadowed by it
+   * (last wins) and bloat the style attribute, so skip emitting it.
+   */
+  const userHasMaxWidth = new Set<string>()
 
   for (const { id, count } of columns) {
     widthFallbacks.set(id, `${Math.round(100 / Math.max(count, 1))}%`)
@@ -340,13 +419,76 @@ export function columnWidth(dom: ChildNode[]): ChildNode[] {
       }
     }
 
-    if (sourceWidth) {
-      const adjusted = subtractInsetPx(sourceWidth, accumulatedInsetPx)
-      const div = divideLength(adjusted, count)
-      if (div) {
-        widthResolutions.set(id, div)
-        el.attribs['data-maizzle-cw'] = div
+    const adjusted = sourceWidth ? subtractInsetPx(sourceWidth, accumulatedInsetPx) : null
+    const countBased = adjusted ? divideLength(adjusted, count) : null
+
+    /**
+     * Four user-override paths, decided by which CSS property the user
+     * actually wrote:
+     *
+     *   - `min-width: X` → user's value wins. Convert to px against
+     *                     the source (if %), use as the column's
+     *                     resolution, and strip the user's min-width
+     *                     declaration so our placeholder substitution
+     *                     remains the last `min-width:` in style.
+     *   - `width: X%`   → opt-out of px stacking. Keep `width:` in
+     *                     style, drop our `min-width:` placeholder.
+     *                     Cols stay at X% of parent forever, never stack.
+     *   - `width: Xpx` (or rem/em/pt) → fixed pixel column. Promote to
+     *                     `min-width:`, strip the original `width:` so
+     *                     it doesn't compete.
+     *   - `max-width: X` → CSS cap. Keep the `max-width:` declaration;
+     *                     clamp our count-based min-width *down* to
+     *                     the user's max-width when our min would
+     *                     otherwise violate it.
+     */
+    const style = el.attribs?.style ?? ''
+    const userMinRaw = findUserMinWidth(style)
+    const widthRaw = style.match(RE_WIDTH)?.[1]
+    const maxRaw = style.match(RE_MAX_WIDTH)?.[1]
+
+    if (userMinRaw) {
+      const minPx = userValueToPx(userMinRaw, adjusted) ?? resolveLength(userMinRaw)
+      if (minPx) {
+        widthResolutions.set(id, minPx)
+        el.attribs['data-maizzle-cw'] = minPx
+        stripUserMinWidth.add(id)
+        continue
       }
+    }
+
+    if (widthRaw) {
+      const widthVal = resolveLength(widthRaw)
+      if (widthVal?.endsWith('%')) {
+        widthResolutions.set(id, widthVal)
+        el.attribs['data-maizzle-cw'] = widthVal
+        dropMinWidth.add(id)
+        continue
+      }
+      if (widthVal) {
+        widthResolutions.set(id, widthVal)
+        el.attribs['data-maizzle-cw'] = widthVal
+        stripWidth.add(id)
+        continue
+      }
+    }
+
+    if (maxRaw && countBased) {
+      const maxPx = userValueToPx(maxRaw, adjusted)
+      if (maxPx) {
+        const cappedMin = countBased.endsWith('px')
+          ? minPxLength(countBased, maxPx)
+          : maxPx
+        widthResolutions.set(id, cappedMin)
+        el.attribs['data-maizzle-cw'] = cappedMin
+        userHasMaxWidth.add(id)
+        continue
+      }
+    }
+
+    if (countBased) {
+      widthResolutions.set(id, countBased)
+      el.attribs['data-maizzle-cw'] = countBased
     }
   }
 
@@ -373,15 +515,52 @@ export function columnWidth(dom: ChildNode[]): ChildNode[] {
 
     const style = el.attribs.style
     if (style && (style.includes('__MAIZZLE_COLW_') || style.includes('__MAIZZLE_OH_'))) {
-      let next = style.replace(
-        /(?:^|;\s*)min-width:\s*__MAIZZLE_COLW_([^_]+)__\s*;?/g,
-        (_m, mid) => widthResolutions.has(mid) ? `; min-width: ${widthResolutions.get(mid)}` : ''
+      let next = style
+      const cwId = el.attribs['data-maizzle-cw-id']
+
+      /**
+       * Strip user-set declarations BEFORE substitution:
+       *  - their `min-width:` (the one without our placeholder token)
+       *    would override our resolved declaration via "last wins";
+       *  - their absolute `width:` would compete with the `width:` we're
+       *    about to emit and the duplicates would just bloat the style.
+       */
+      if (cwId && stripUserMinWidth.has(cwId)) {
+        next = next.replace(
+          /(^|;\s*)min-width\s*:\s*([^;]+)/gi,
+          (m, _prefix, val) => val.includes('__MAIZZLE_COLW_') ? m : '',
+        )
+      }
+      if (cwId && stripWidth.has(cwId)) {
+        next = next.replace(/(^|;\s*)width\s*:\s*[^;]+/gi, '')
+      }
+
+      /**
+       * Swap the column's `min-width:` placeholder for `width: <res>;
+       * max-width: 100%`. Width gives the same stacking trigger as
+       * min-width (inline-block wraps when sum > parent), and the
+       * max-width: 100% clamp keeps the column from overflowing the
+       * viewport once it drops to its own row on mobile. Skip the
+       * `max-width: 100%` clamp when the user already supplied their
+       * own `max-width:` — last-wins would shadow ours anyway.
+       */
+      next = next.replace(
+        /(^|;\s*)min-width:\s*__MAIZZLE_COLW_([^_]+)__/g,
+        (_m, prefix, mid) => {
+          if (dropMinWidth.has(mid)) return ''
+          if (!widthResolutions.has(mid)) return ''
+          const decl = userHasMaxWidth.has(mid)
+            ? `width: ${widthResolutions.get(mid)}`
+            : `width: ${widthResolutions.get(mid)}; max-width: 100%`
+          return `${prefix}${decl}`
+        },
       )
       next = next
         .replace(/__MAIZZLE_COLW_([^_]+)__/g,
           (_m, mid) => widthResolutions.get(mid) ?? widthFallbacks.get(mid) ?? '100%')
         .replace(/__MAIZZLE_OH_([^_]+)__/g,
           (_m, hid) => heightResolutions.get(hid) ?? '100%')
+
       next = next.replace(/^;\s*/, '').replace(/;\s*$/, '').trim()
       if (next) el.attribs.style = next
       else delete el.attribs.style

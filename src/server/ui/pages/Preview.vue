@@ -61,12 +61,23 @@ const wrapperEl = ref<HTMLElement>()
 
 const panelWidth = defineModel<number>('panelWidth', { default: 0 })
 const panelHeight = defineModel<number>('panelHeight', { default: 0 })
+/**
+ * Container's available area, exposed to the toolbar so size inputs can
+ * clamp typed values without paying a layout-recalc cost on
+ * every drag tick. Kept in sync via a ResizeObserver.
+ */
+const maxIframeWidth = defineModel<number>('maxIframeWidth', { default: 0 })
+const maxIframeHeight = defineModel<number>('maxIframeHeight', { default: 0 })
 const isDragging = defineModel<boolean>('isDragging', { default: false })
 const isFullSize = defineModel<boolean>('isFullSize', { default: true })
 
-// Custom resizable: width/height of the iframe wrapper (null = fill container)
-const iframeWidth = ref<number | null>(null)
-const iframeHeight = ref<number | null>(null)
+/**
+ * Custom resizable: width/height of the iframe wrapper (null = fill the
+ * container). Exposed as v-models so the toolbar's size indicator
+ * can drive these too, alongside the drag handles.
+ */
+const iframeWidth = defineModel<number | null>('iframeWidth', { default: null })
+const iframeHeight = defineModel<number | null>('iframeHeight', { default: null })
 const iframeContentHeight = ref<number | null>(null)
 
 function copySource() {
@@ -508,6 +519,7 @@ function updateFullSize() {
     && (iframeHeight.value === null || iframeHeight.value >= rect.height - gutter - 2)
 }
 
+
 function applyDeviceSize(device: Device | null | undefined) {
   if (!device) {
     iframeWidth.value = null
@@ -544,6 +556,7 @@ watch(viewMode, async (mode) => {
 })
 
 let observer: ResizeObserver | null = null
+let containerObserver: ResizeObserver | null = null
 
 function forwardIframeKeys(iframe: HTMLIFrameElement) {
   try {
@@ -580,6 +593,21 @@ onMounted(() => {
     observer.observe(wrapper)
   }
 
+  const container = containerEl.value
+  if (container) {
+    const gutter = 40
+    const rect = container.getBoundingClientRect()
+    maxIframeWidth.value = Math.max(0, Math.round(rect.width - gutter))
+    maxIframeHeight.value = Math.max(0, Math.round(rect.height - gutter))
+    containerObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        maxIframeWidth.value = Math.max(0, Math.round(entry.contentRect.width - gutter))
+        maxIframeHeight.value = Math.max(0, Math.round(entry.contentRect.height - gutter))
+      }
+    })
+    containerObserver.observe(container)
+  }
+
   const el = iframeEl.value
   if (el) {
     el.addEventListener('load', () => forwardIframeKeys(el))
@@ -588,6 +616,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   observer?.disconnect()
+  containerObserver?.disconnect()
 })
 
 const bottomPanelOpen = ref(false)

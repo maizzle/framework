@@ -80,6 +80,10 @@ const deviceMenuOpen = ref(false)
 const darkMode = ref(false)
 const panelWidth = ref(0)
 const panelHeight = ref(0)
+const iframeWidth = ref<number | null>(null)
+const iframeHeight = ref<number | null>(null)
+const maxIframeWidth = ref(0)
+const maxIframeHeight = ref(0)
 const isDragging = ref(false)
 const isFullSize = ref(true)
 const resetKey = ref(0)
@@ -88,6 +92,31 @@ function selectDevice(device: DevicePreset) {
   selectedDevice.value = device
   viewMode.value = 'preview'
 }
+
+/**
+ * Writable proxies for the toolbar's size-indicator inputs. Display falls back
+ * to the measured panel size when the iframe dimension is null (the axis
+ * hasn't been explicitly set yet — e.g. user only dragged one axis).
+ * Setter rejects non-finite/non-positive values and clamps to
+ * [200, maxIframeWidth] / [100, maxIframeHeight] so users
+ * can't push the drag handles off-screen via the input.
+ */
+const widthInput = computed<number>({
+  get: () => Math.round(iframeWidth.value ?? panelWidth.value),
+  set: (v) => {
+    if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) return
+    const max = maxIframeWidth.value || v
+    iframeWidth.value = Math.max(200, Math.min(max, Math.round(v)))
+  },
+})
+const heightInput = computed<number>({
+  get: () => Math.round(iframeHeight.value ?? panelHeight.value),
+  set: (v) => {
+    if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) return
+    const max = maxIframeHeight.value || v
+    iframeHeight.value = Math.max(100, Math.min(max, Math.round(v)))
+  },
+})
 
 watch(sidebarOpen, (open) => {
   localStorage.setItem('maizzle:sidebar', open ? 'open' : 'closed')
@@ -332,7 +361,23 @@ onUnmounted(() => {
             v-if="isPreviewRoute && (!isFullSize || selectedDevice) && panelWidth"
             class="hidden min-[430px]:inline text-xs font-medium tabular-nums text-gray-500 dark:text-gray-400 select-none"
           >
-            {{ panelWidth }} <button class="hover:text-gray-700 dark:hover:text-gray-300" @click="selectedDevice = null; isFullSize = true; viewMode = 'preview'; resetKey++">&times;</button> {{ panelHeight }}
+            <input
+              v-model.number="widthInput"
+              type="number"
+              min="200"
+              :max="maxIframeWidth || undefined"
+              aria-label="Preview width"
+              class="bg-transparent border-0 outline-none p-0 m-0 text-inherit font-inherit text-center tabular-nums w-[3.5ch] focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            >
+            <button class="hover:text-gray-700 dark:hover:text-gray-300" @click="selectedDevice = null; isFullSize = true; viewMode = 'preview'; resetKey++">&times;</button>
+            <input
+              v-model.number="heightInput"
+              type="number"
+              min="100"
+              :max="maxIframeHeight || undefined"
+              aria-label="Preview height"
+              class="bg-transparent border-0 outline-none p-0 m-0 text-inherit font-inherit text-center tabular-nums w-[3.5ch] focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            >
           </span>
           <div v-if="isPreviewRoute" class="flex items-center gap-1">
             <DropdownMenu v-model:open="deviceMenuOpen" :modal="false">
@@ -367,7 +412,7 @@ onUnmounted(() => {
       <!-- Main content -->
       <div class="flex-1 overflow-hidden">
         <RouterView v-slot="{ Component }">
-          <component :is="Component" v-model:view-mode="viewMode" :device="selectedDevice" :reset-key="resetKey" :templates="templates" v-model:panel-width="panelWidth" v-model:panel-height="panelHeight" v-model:is-dragging="isDragging" v-model:is-full-size="isFullSize" v-model:dark-mode="darkMode" @clear-device="selectedDevice = null; isFullSize = false" />
+          <component :is="Component" v-model:view-mode="viewMode" :device="selectedDevice" :reset-key="resetKey" :templates="templates" v-model:panel-width="panelWidth" v-model:panel-height="panelHeight" v-model:iframe-width="iframeWidth" v-model:iframe-height="iframeHeight" v-model:max-iframe-width="maxIframeWidth" v-model:max-iframe-height="maxIframeHeight" v-model:is-dragging="isDragging" v-model:is-full-size="isFullSize" v-model:dark-mode="darkMode" @clear-device="selectedDevice = null; isFullSize = false" />
         </RouterView>
       </div>
     </SidebarInset>

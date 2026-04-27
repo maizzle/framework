@@ -281,7 +281,9 @@ export async function createRenderer(
     server: {
       middlewareMode: true,
       hmr: false,
-      watch: null,
+      // Watcher is required so unplugin-vue-components and unplugin-auto-import
+      // detect added/removed component files and rewrite their .d.ts on the fly.
+      // (We only render via SSR — HMR is off, but chokidar still drives the plugins.)
       fs: {
         allow: [process.cwd(), root, ...componentDirs, vuePkgDir, vueServerRendererPkgDir, unheadVuePkgDir, vueRouterPkgDir],
       },

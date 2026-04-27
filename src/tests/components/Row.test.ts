@@ -5,10 +5,9 @@ import Row from '../../components/Row.vue'
 import Column from '../../components/Column.vue'
 
 describe('Row', () => {
-  it('renders a div with font-size 0', () => {
+  it('renders a div with text-0 (font-size: 0) class to kill inline-block whitespace', () => {
     const wrapper = mount(Row)
-    const style = wrapper.find('div').attributes('style')
-    expect(style).toContain('font-size: 0')
+    expect(wrapper.find('div').classes()).toContain('text-0')
   })
 
   it('renders slot content', () => {

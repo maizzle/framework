@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, createStaticVNode, inject, useAttrs } from 'vue'
 import type { ComputedRef } from 'vue'
+import { twMerge } from 'tailwind-merge'
 import { nextId, normalizeToPixels } from './utils.ts'
 
 defineOptions({ inheritAttrs: false })
@@ -49,9 +50,17 @@ const msoWidth = computed(() => {
   return `__MAIZZLE_COLW_${colId}__`
 })
 
-const styles = computed(() =>
-  `display: inline-block; min-width: ${minWidth.value}; font-size: 16px; vertical-align: top;`
-)
+/**
+ * Baseline display/typography lives in classes — not inline `:style` —
+ * so the user can override any of them via tailwind utilities. Inline
+ * `display: inline-block` would silently shadow a class like
+ * `inline-table` during CSS inlining; routing both through twMerge lets
+ * the user's utility cleanly replace ours instead of being dropped.
+ */
+const baseClass = 'inline-block align-top text-base'
+const mergedClass = computed(() => twMerge(baseClass, (attrs.class as string) ?? ''))
+
+const styles = computed(() => `min-width: ${minWidth.value};`)
 
 const tdStyle = computed(() => {
   const parts = [`width: ${msoWidth.value}`, 'vertical-align: top']
@@ -73,7 +82,8 @@ const MsoAfter = () => createStaticVNode(
 <template>
   <MsoBefore />
   <div
-    v-bind="attrs"
+    v-bind="{ ...attrs, class: undefined }"
+    :class="mergedClass"
     :style="styles"
     :data-maizzle-cw-id="colId"
     :data-maizzle-cw-count="useMarker ? count : null"

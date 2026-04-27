@@ -25,12 +25,13 @@ describe('Column', () => {
   describe('styles', () => {
     it('renders as inline-block', () => {
       const wrapper = mount(Column)
-      expect(wrapper.find('div').attributes('style')).toContain('display: inline-block')
+      // Display lives in the class so users can twMerge-override it.
+      expect(wrapper.find('div').classes()).toContain('inline-block')
     })
 
-    it('resets font-size to 16px', () => {
+    it('resets font-size to base', () => {
       const wrapper = mount(Column)
-      expect(wrapper.find('div').attributes('style')).toContain('font-size: 16px')
+      expect(wrapper.find('div').classes()).toContain('text-base')
     })
 
     it('renders slot content', () => {

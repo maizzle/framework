@@ -5,6 +5,7 @@ const warnedLocations = new Set<string>()
 <script setup lang="ts">
 import { Comment, Text, computed, createStaticVNode, provide, useAttrs, useSlots, Fragment } from 'vue'
 import type { VNode } from 'vue'
+import { twMerge } from 'tailwind-merge'
 import Column from './Column.vue'
 import { hasWidthInStyle, hasWidthUtility, normalizeToPixels } from './utils.ts'
 
@@ -118,15 +119,20 @@ const colWidthSource = computed(() => {
 })
 
 const restAttrs = computed(() => {
-  const { style: _, 'data-maizzle-loc': __, ...rest } = attrs
+  const { style: _, class: __, 'data-maizzle-loc': ___, ...rest } = attrs
   return rest
 })
 
-const divStyle = computed(() => {
-  const parts: string[] = ['font-size: 0;']
-  if (userStyle.value) parts.push(userStyle.value)
-  return parts.join(' ')
-})
+/**
+ * `font-size: 0;` removes the whitespace gap between inline-block
+ * children. Lives in a class so users can override (e.g. via a custom
+ * `text-*`) and twMerge resolves the conflict cleanly instead of the
+ * inline declaration silently shadowing the user's class.
+ */
+const baseClass = 'text-0'
+const mergedClass = computed(() => twMerge(baseClass, (attrs.class as string) ?? ''))
+
+const divStyle = computed(() => userStyle.value || undefined)
 
 const MsoBefore = () => createStaticVNode(
   '<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width: 100%"><tr><![endif]-->',
@@ -153,6 +159,7 @@ if (hasMeaningfulContent(initialChildren) && !hasColumnChild(initialChildren)) {
   <MsoBefore />
   <div
     v-bind="restAttrs"
+    :class="mergedClass"
     :style="divStyle"
     :data-maizzle-cw="colWidthSource"
   >

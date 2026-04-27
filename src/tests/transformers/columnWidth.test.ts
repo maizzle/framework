@@ -42,6 +42,178 @@ describe('columnWidth', () => {
     expect(run(html)).toContain('min-width: 200px')
   })
 
+  describe('padding-aware width subtraction', () => {
+    it('subtracts intermediate ancestor horizontal padding from the source width', () => {
+      // <Container max-w-xl><Section style="padding: 0 36px"><Row>...
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 576px">`
+        + `<div style="padding: 0 36px">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}${col('c2', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      const out = run(html)
+      // (576 − 72) / 2 = 252
+      expect(out.match(/min-width: 252px/g)?.length).toBe(2)
+    })
+
+    it('reads padding from utility-class compiled output (px-9 → 36px each side)', () => {
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 576px">`
+        + `<div style="padding-left: 36px; padding-right: 36px">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}${col('c2', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      expect(run(html)).toContain('min-width: 252px')
+    })
+
+    it('subtracts the source\'s own horizontal padding too', () => {
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 600px; padding: 0 36px">`
+        + `${col('c1', 2)}${col('c2', 2)}`
+        + `</div>`
+      // (600 − 72) / 2 = 264
+      expect(run(html)).toContain('min-width: 264px')
+    })
+
+    it('handles padding shorthand with all four values', () => {
+      // padding: T R B L → uses R + L
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 600px">`
+        + `<div style="padding: 10px 20px 10px 30px">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      // 600 − (20 + 30) = 550 / 2 = 275
+      expect(run(html)).toContain('min-width: 275px')
+    })
+
+    it('longhand padding-left/right overrides shorthand when both present', () => {
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 600px">`
+        + `<div style="padding: 0 20px; padding-left: 50px">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      // 600 − (20 + 50) = 530 / 2 = 265
+      expect(run(html)).toContain('min-width: 265px')
+    })
+
+    it('skips percentage padding (cannot resolve against unknown container)', () => {
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 600px">`
+        + `<div style="padding: 0 5%">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      // % padding ignored → 600 / 2 = 300
+      expect(run(html)).toContain('min-width: 300px')
+    })
+
+    it('skips padding subtraction when the source width is a percentage', () => {
+      const html =
+        `<div data-maizzle-cw="100%">`
+        + `<div style="padding: 0 36px">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      // 100% / 2 = 50% (px padding can't be subtracted from %)
+      expect(run(html)).toContain('min-width: 50%')
+    })
+
+    it('subtracts horizontal borders from the source width', () => {
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 600px">`
+        + `<div style="border: 4px solid red">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}${col('c2', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      // 600 − (4 + 4) = 592 / 2 = 296
+      expect(run(html)).toContain('min-width: 296px')
+    })
+
+    it('combines padding and borders along the walk', () => {
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 600px; border: 2px solid red; padding: 0 10px">`
+        + `<div style="padding: 0 36px; border-left: 4px solid; border-right: 6px solid">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      // 600 − (2+2 + 10+10 + 36+36 + 4+6) = 600 − 106 = 494 / 2 = 247
+      expect(run(html)).toContain('min-width: 247px')
+    })
+
+    it('honors border-style: none / hidden as no-border', () => {
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 600px">`
+        + `<div style="border-width: 4px; border-style: none">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      // border-style: none zeroes the contribution → 600 / 2 = 300
+      expect(run(html)).toContain('min-width: 300px')
+    })
+
+    it('reads border-left-width / border-right-width longhands', () => {
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 600px">`
+        + `<div style="border-left-width: 8px; border-right-width: 12px; border-style: solid">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      // 600 − (8 + 12) = 580 / 2 = 290
+      expect(run(html)).toContain('min-width: 290px')
+    })
+
+    it('treats `border: solid red` (no width) as medium = 3px', () => {
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 600px">`
+        + `<div style="border: solid red">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      // 600 − (3 + 3) = 594 / 2 = 297
+      expect(run(html)).toContain('min-width: 297px')
+    })
+
+    it('treats `border: 0` as zero contribution', () => {
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 600px">`
+        + `<div style="border: 0">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      expect(run(html)).toContain('min-width: 300px')
+    })
+
+    it('propagates the padding-adjusted width to the MSO td placeholder', () => {
+      const colWithMso = (id: string, count: number) =>
+        `<!--[if mso]><td style="width: __MAIZZLE_COLW_${id}__"><![endif]-->`
+        + col(id, count)
+        + `<!--[if mso]></td><![endif]-->`
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 576px">`
+        + `<div style="padding: 0 36px">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${colWithMso('c1', 2)}${colWithMso('c2', 2)}</div>`
+        + `</div>`
+        + `</div>`
+      const out = run(html)
+      // MSO td width and visible div min-width should both reflect 252px
+      expect(out.match(/252px/g)?.length).toBeGreaterThanOrEqual(4)
+    })
+  })
+
+  it('falls through an unresolvable ancestor marker to the next sized one', () => {
+    // Row emits an empty data-maizzle-cw because a class like `w-typo`
+    // tripped the heuristic, but Tailwind dropped the bogus class so no
+    // width ends up in style. Columns should still resolve via Container.
+    const html =
+      `<div data-maizzle-cw="" style="max-width: 576px">`
+      + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}${col('c2', 2)}</div>`
+      + `</div>`
+    const out = run(html)
+    expect(out.match(/min-width: 288px/g)?.length).toBe(2)
+  })
+
   it('handles percentage widths via division', () => {
     const html = `<div data-maizzle-cw="100%">${col('c1', 4)}</div>`
     expect(run(html)).toContain('min-width: 25%')

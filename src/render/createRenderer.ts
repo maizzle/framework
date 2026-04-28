@@ -3,6 +3,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { isLaravel } from '../utils/detect.ts'
 import { rowSourceLocation } from './plugins/rowSourceLocation.ts'
+import { rawExtract } from './plugins/rawExtract.ts'
 import { createServer, mergeConfig, type InlineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Markdown from 'unplugin-vue-markdown/vite'
@@ -207,6 +208,7 @@ export async function createRenderer(
   const maizzleConfig: InlineConfig = {
     configFile: viteConfigFile ?? false,
     plugins: [
+      rawExtract(),
       codeBlockExtract(),
       markdownExtract(),
       rowSourceLocation(),

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { createStaticVNode, provide, useAttrs, useSlots } from 'vue'
 import type { PropType } from 'vue'
+import { outlookFallbackProp } from './utils.ts'
+import { useOutlookFallback } from '../composables/useOutlookFallback'
 
 defineOptions({ inheritAttrs: false })
 
@@ -65,8 +67,11 @@ const props = defineProps({
   xmlns: {
     type: [Boolean, String],
     default: true
-  }
+  },
+  outlookFallback: outlookFallbackProp,
 })
+
+const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 provide('htmlLang', props.lang)
 
@@ -80,7 +85,7 @@ const render = () => {
     `dir="${props.dir}"`,
   ]
 
-  if (props.xmlns !== false && props.xmlns !== 'false') {
+  if (outlookFallback && props.xmlns !== false && props.xmlns !== 'false') {
     parts.push(
       'xmlns:v="urn:schemas-microsoft-com:vml"',
       'xmlns:o="urn:schemas-microsoft-com:office:office"',

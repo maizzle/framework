@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { normalizeToPixels } from './utils.ts'
+import { normalizeToPixels, outlookFallbackProp } from './utils.ts'
+import { useOutlookFallback } from '../composables/useOutlookFallback'
 
 const props = defineProps({
   /** The type of spacer. */
@@ -22,8 +23,11 @@ const props = defineProps({
   msoHeight: {
     type: [String, Number],
     default: null
-  }
+  },
+  outlookFallback: outlookFallbackProp,
 })
+
+const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 function parsePixelValue(value: string | number): number {
   if (typeof value === 'number') return value
@@ -37,7 +41,7 @@ const verticalStyles = computed(() => {
     s.push(`line-height: ${normalizeToPixels(props.height)};`)
   }
 
-  if (props.msoHeight) {
+  if (outlookFallback && props.msoHeight) {
     s.push(`mso-line-height-alt: ${normalizeToPixels(props.msoHeight)};`)
   }
 
@@ -45,7 +49,8 @@ const verticalStyles = computed(() => {
 })
 
 const horizontalStyles = computed(() => {
-  return `display:inline-block; width: ${normalizeToPixels(props.width)}; font-size: 16px;${msoFontWidth.value}`
+  const mso = outlookFallback ? msoFontWidth.value : ''
+  return `display:inline-block; width: ${normalizeToPixels(props.width)}; font-size: 16px;${mso}`
 })
 
 const msoFontWidth = computed(() => {

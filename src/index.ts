@@ -28,6 +28,7 @@ export { useConfig } from './composables/useConfig.ts'
 export { useDoctype } from './composables/useDoctype.ts'
 export { useEvent } from './composables/useEvent.ts'
 export { useFont } from './composables/useFont.ts'
+export { useOutlookFallback } from './composables/useOutlookFallback.ts'
 export { usePlaintext } from './composables/usePlaintext.ts'
 export { useHead } from '@unhead/vue'
 

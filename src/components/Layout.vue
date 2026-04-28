@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, useAttrs, createStaticVNode, type PropType } from 'vue'
 import { twMerge } from 'tailwind-merge'
+import { outlookFallbackProp } from './utils.ts'
+import { useOutlookFallback } from '../composables/useOutlookFallback'
 
 defineOptions({ inheritAttrs: false })
 
@@ -52,27 +54,20 @@ const props = defineProps({
   ariaLabel: {
     type: String,
     default: undefined
-  }
+  },
+  outlookFallback: outlookFallbackProp,
 })
+
+const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 const attrs = useAttrs()
 const bodyMergedClass = computed(() => twMerge('m-0 p-0 size-full [word-break:break-word]', props.bodyClass))
 const articleMergedClass = computed(() => twMerge('[font-size:max(16px,1rem)] font-inter', attrs.class as string))
 
 const EmptyHead = () => createStaticVNode('<head></head>', 1)
-</script>
 
-<template>
-  <html :lang="lang" :dir="dir" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
-  <EmptyHead v-if="props.doubleHead === true || props.doubleHead === 'true'" />
-  <head>
-    <meta charset="utf-8">
-    <meta name="x-apple-disable-message-reformatting">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
-    <meta name="color-scheme" content="light dark">
-    <meta name="supported-color-schemes" content="light dark">
-    <!--[if mso]>
+const MsoHead = () => createStaticVNode(
+  `<!--[if mso]>
       <noscript>
         <xml>
           <o:OfficeDocumentSettings xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -84,7 +79,27 @@ const EmptyHead = () => createStaticVNode('<head></head>', 1)
         td,th,div,p,a,h1,h2,h3,h4,h5,h6 {font-family: "Segoe UI", sans-serif; mso-line-height-rule: exactly;}
         .mso-break-all {word-break: break-all;}
       </style>
-      <![endif]-->
+      <![endif]-->`,
+  1
+)
+
+const htmlXmlns = computed(() => outlookFallback ? {
+  'xmlns:v': 'urn:schemas-microsoft-com:vml',
+  'xmlns:o': 'urn:schemas-microsoft-com:office:office',
+} : {})
+</script>
+
+<template>
+  <html :lang="lang" :dir="dir" v-bind="htmlXmlns">
+  <EmptyHead v-if="props.doubleHead === true || props.doubleHead === 'true'" />
+  <head>
+    <meta charset="utf-8">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <MsoHead v-if="outlookFallback" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" media="screen">
@@ -96,7 +111,7 @@ const EmptyHead = () => createStaticVNode('<head></head>', 1)
       }
     </style>
   </head>
-  <body :xml:lang="lang" :class="bodyMergedClass">
+  <body :xml:lang="outlookFallback ? lang : null" :class="bodyMergedClass">
     <div
       role="article"
       aria-roledescription="email"

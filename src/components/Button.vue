@@ -3,6 +3,8 @@ import { computed, useAttrs } from 'vue'
 import type { PropType } from 'vue'
 import { twMerge } from 'tailwind-merge'
 import Outlook from './Outlook.vue'
+import { outlookFallbackProp } from './utils.ts'
+import { useOutlookFallback } from '../composables/useOutlookFallback'
 
 defineOptions({ inheritAttrs: false })
 
@@ -103,8 +105,11 @@ const props = defineProps({
   iconClass: {
     type: String,
     default: ''
-  }
+  },
+  outlookFallback: outlookFallbackProp,
 })
+
+const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 const parsedIconWidth = computed(() => parseInt(String(props.iconWidth), 10))
 
@@ -171,21 +176,21 @@ const mergedClass = computed(() => twMerge(defaultClasses.value, attrs.class as 
       :class="mergedClass"
     >
       <template v-if="!isLink">
-        <Outlook><i class="mso-font-width-[150%]" :style="`mso-text-raise: ${msoPb};`" hidden>&emsp;</i></Outlook>
+        <Outlook v-if="outlookFallback"><i class="mso-font-width-[150%]" :style="`mso-text-raise: ${msoPb};`" hidden>&emsp;</i></Outlook>
         <template v-if="icon && iconPosition === 'left'">
-          <span :style="`mso-text-raise: ${msoPt}`">
+          <span :style="outlookFallback ? `mso-text-raise: ${msoPt}` : undefined">
             <img :src="icon" :width="parsedIconWidth" :class="`align-baseline max-w-full ${iconClass}`" alt="">
           </span>
-          <Outlook><i class="mso-font-width-[30%]" hidden>&emsp;&#8203;</i></Outlook>
+          <Outlook v-if="outlookFallback"><i class="mso-font-width-[30%]" hidden>&emsp;&#8203;</i></Outlook>
         </template>
-        <span :class="icon ? (iconPosition === 'right' ? 'mr-2' : 'ml-2') : ''" :style="`mso-text-raise: ${msoPt}`"><slot /></span>
+        <span :class="icon ? (iconPosition === 'right' ? 'mr-2' : 'ml-2') : ''" :style="outlookFallback ? `mso-text-raise: ${msoPt}` : undefined"><slot /></span>
         <template v-if="icon && iconPosition === 'right'">
-          <Outlook><i class="mso-font-width-[30%]" hidden>&emsp;&#8203;</i></Outlook>
-          <span :style="`mso-text-raise: ${msoPt}`">
+          <Outlook v-if="outlookFallback"><i class="mso-font-width-[30%]" hidden>&emsp;&#8203;</i></Outlook>
+          <span :style="outlookFallback ? `mso-text-raise: ${msoPt}` : undefined">
             <img :src="icon" :width="parsedIconWidth" :class="`align-baseline max-w-full ${iconClass}`" alt="">
           </span>
         </template>
-        <Outlook><i class="mso-font-width-[150%]" hidden>&emsp;&#8203;</i></Outlook>
+        <Outlook v-if="outlookFallback"><i class="mso-font-width-[150%]" hidden>&emsp;&#8203;</i></Outlook>
       </template>
       <template v-else>
         <slot />

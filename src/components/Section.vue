@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, createStaticVNode, useAttrs } from 'vue'
-import { hasWidthInStyle, hasWidthUtility, nextId, normalizeToPixels } from './utils.ts'
+import { hasWidthInStyle, hasWidthUtility, nextId, normalizeToPixels, outlookFallbackProp } from './utils.ts'
+import { useOutlookFallback } from '../composables/useOutlookFallback'
 
 defineOptions({ inheritAttrs: false })
 
@@ -31,8 +32,11 @@ const props = defineProps({
   msoStyle: {
     type: String,
     default: undefined
-  }
+  },
+  outlookFallback: outlookFallbackProp,
 })
+
+const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 const userStyle = computed(() => {
   const s = attrs.style
@@ -47,7 +51,7 @@ const userHasWidth = computed(() => {
   return hasWidthUtility(cls) || hasWidthInStyle(userStyle.value)
 })
 
-const useMarker = props.width == null && userHasWidth.value
+const useMarker = outlookFallback && props.width == null && userHasWidth.value
 const msoId = useMarker ? nextId('s') : null
 
 const divStyle = computed(() => {
@@ -96,7 +100,7 @@ const MsoAfter = () => createStaticVNode(
 </script>
 
 <template>
-  <MsoBefore />
+  <MsoBefore v-if="outlookFallback" />
   <div
     v-bind="restAttrs"
     :style="divStyle"
@@ -106,5 +110,5 @@ const MsoAfter = () => createStaticVNode(
   >
     <slot />
   </div>
-  <MsoAfter />
+  <MsoAfter v-if="outlookFallback" />
 </template>

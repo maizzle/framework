@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, provide, createStaticVNode, useAttrs } from 'vue'
 import { twMerge } from 'tailwind-merge'
-import { hasWidthUtility, nextId, normalizeToPixels } from './utils.ts'
+import { hasWidthUtility, nextId, normalizeToPixels, outlookFallbackProp } from './utils.ts'
+import { useOutlookFallback } from '../composables/useOutlookFallback'
 
 defineOptions({ inheritAttrs: false })
 
@@ -33,12 +34,15 @@ const props = defineProps({
   msoWidth: {
     type: [String, Number],
     default: null
-  }
+  },
+  outlookFallback: outlookFallbackProp,
 })
+
+const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 provide('containerWidth', computed(() => props.width))
 
-const useMarker = props.width == null && props.msoWidth == null
+const useMarker = outlookFallback && props.width == null && props.msoWidth == null
 const msoId = useMarker ? nextId('c') : null
 
 const styles = computed(() => {
@@ -77,7 +81,7 @@ const MsoAfter = () => createStaticVNode(
 </script>
 
 <template>
-  <MsoBefore />
+  <MsoBefore v-if="outlookFallback" />
   <div
     v-bind="{ ...attrs, class: undefined }"
     :class="mergedClass"
@@ -87,5 +91,5 @@ const MsoAfter = () => createStaticVNode(
   >
     <slot />
   </div>
-  <MsoAfter />
+  <MsoAfter v-if="outlookFallback" />
 </template>

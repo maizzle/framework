@@ -324,4 +324,34 @@ describe('Layout', () => {
       expect(result.html).toContain('<![endif]-->')
     })
   })
+
+  describe('outlookFallback=false', () => {
+    it('omits the MSO head block and xmlns:v / xmlns:o on <html>', async () => {
+      const result = await render(`
+        <template>
+          <Layout :outlook-fallback="false">
+            <div>Test</div>
+          </Layout>
+        </template>
+      `)
+
+      expect(result.html).not.toContain('o:OfficeDocumentSettings')
+      expect(result.html).not.toContain('mso-line-height-rule')
+      expect(result.html).not.toContain('xmlns:v')
+      expect(result.html).not.toContain('xmlns:o')
+      expect(result.html).not.toContain('xml:lang')
+    })
+
+    it('propagates to descendant Container — no MSO ghost table', async () => {
+      const result = await render(`
+        <template>
+          <Layout :outlook-fallback="false">
+            <Container>Hi</Container>
+          </Layout>
+        </template>
+      `)
+
+      expect(result.html).not.toContain('<!--[if mso]>')
+    })
+  })
 })

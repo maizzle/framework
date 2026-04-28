@@ -6,8 +6,10 @@ import {
   hasWidthInStyle,
   hasWidthUtility,
   nextId,
-  normalizeToPixels
+  normalizeToPixels,
+  outlookFallbackProp
 } from './utils.ts'
+import { useOutlookFallback } from '../composables/useOutlookFallback'
 
 defineOptions({ inheritAttrs: false })
 
@@ -60,7 +62,10 @@ const props = defineProps({
     type: String,
     default: '0,-60px,0,0'
   },
+  outlookFallback: outlookFallbackProp,
 })
+
+const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 const userStyle = computed(() => {
   const s = attrs.style
@@ -132,9 +137,9 @@ const VmlAfter = () => createStaticVNode('<!--[if mso]></v:textbox></v:rect><![e
   <table style="max-height: 0; position: relative; opacity: 0.999;">
     <tr>
       <td :style="tdStyle">
-        <VmlBefore />
+        <VmlBefore v-if="outlookFallback" />
         <slot name="overlay" />
-        <VmlAfter />
+        <VmlAfter v-if="outlookFallback" />
       </td>
     </tr>
   </table>

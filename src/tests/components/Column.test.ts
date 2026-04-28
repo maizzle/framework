@@ -121,4 +121,12 @@ describe('Column', () => {
       expect(wrapper.find('div').attributes('style')).not.toContain('padding: 10px')
     })
   })
+
+  describe('outlookFallback=false', () => {
+    it('skips MSO td but keeps the visible div placeholder for column-width', () => {
+      const html = mount(Column, { props: { outlookFallback: false } }).html()
+      expect(html).not.toContain('<!--[if mso]>')
+      expect(html).toMatch(/min-width: __MAIZZLE_COLW_co\d+__/)
+    })
+  })
 })

@@ -2,7 +2,8 @@
 import { computed, createStaticVNode, inject, useAttrs } from 'vue'
 import type { ComputedRef } from 'vue'
 import { twMerge } from 'tailwind-merge'
-import { nextId, normalizeToPixels } from './utils.ts'
+import { nextId, normalizeToPixels, outlookFallbackProp } from './utils.ts'
+import { useOutlookFallback } from '../composables/useOutlookFallback'
 
 defineOptions({ inheritAttrs: false })
 
@@ -30,8 +31,11 @@ const props = defineProps({
   msoStyle: {
     type: String,
     default: undefined
-  }
+  },
+  outlookFallback: outlookFallbackProp,
 })
+
+const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 const columnCount = inject<ComputedRef<number> | null>('columnCount', null)
 
@@ -80,7 +84,7 @@ const MsoAfter = () => createStaticVNode(
 </script>
 
 <template>
-  <MsoBefore />
+  <MsoBefore v-if="outlookFallback" />
   <div
     v-bind="{ ...attrs, class: undefined }"
     :class="mergedClass"
@@ -90,5 +94,5 @@ const MsoAfter = () => createStaticVNode(
   >
     <slot />
   </div>
-  <MsoAfter />
+  <MsoAfter v-if="outlookFallback" />
 </template>

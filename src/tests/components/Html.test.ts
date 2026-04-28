@@ -58,4 +58,10 @@ describe('Html', () => {
     const html = await render({}, { class: 'test' })
     expect(html).toContain('class="test"')
   })
+
+  it('omits xmlns namespaces when outlookFallback is false', async () => {
+    const html = await render({ outlookFallback: false })
+    expect(html).not.toContain('xmlns:v')
+    expect(html).not.toContain('xmlns:o')
+  })
 })

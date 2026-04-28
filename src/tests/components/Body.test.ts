@@ -55,4 +55,9 @@ describe('Body', () => {
     const html = await render({}, { class: 'test' })
     expect(html).toContain('class="test"')
   })
+
+  it('omits xml:lang when outlookFallback is false', async () => {
+    const html = await render({ outlookFallback: false })
+    expect(html).not.toContain('xml:lang')
+  })
 })

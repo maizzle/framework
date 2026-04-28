@@ -124,4 +124,21 @@ describe('Spacer', () => {
       expect(wrapper.html()).toContain('mso-font-width: 450%')
     })
   })
+
+  describe('outlookFallback=false', () => {
+    it('omits mso-line-height-alt on vertical', () => {
+      const html = mount(Spacer, {
+        props: { outlookFallback: false, height: 32, msoHeight: 24 },
+      }).html()
+      expect(html).toContain('line-height: 32px')
+      expect(html).not.toContain('mso-line-height-alt')
+    })
+
+    it('omits mso-font-width on horizontal', () => {
+      const html = mount(Spacer, {
+        props: { outlookFallback: false, type: 'horizontal', width: 32 },
+      }).html()
+      expect(html).not.toContain('mso-font-width')
+    })
+  })
 })

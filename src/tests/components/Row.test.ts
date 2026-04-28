@@ -247,4 +247,26 @@ describe('Row', () => {
       expect(style).toContain('color: blue')
     })
   })
+
+  describe('outlookFallback=false', () => {
+    it('skips MSO comments', () => {
+      const html = mount(Row, {
+        props: { outlookFallback: false },
+        slots: { default: () => h(Column, () => 'x') },
+      }).html()
+      expect(html).not.toContain('<!--[if mso]>')
+    })
+
+    it('suppresses the missing-Column warning', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      mount(Row, {
+        props: { outlookFallback: false },
+        attrs: { 'data-maizzle-loc': '/silent.vue:1' },
+        slots: { default: () => 'no column inside' },
+      })
+      const maizzleWarns = warn.mock.calls.map(c => String(c[0])).filter(s => s.includes('[maizzle]'))
+      expect(maizzleWarns).toHaveLength(0)
+      warn.mockRestore()
+    })
+  })
 })

@@ -142,4 +142,16 @@ describe('Section', () => {
       expect(html).toMatch(/style="width: __MAIZZLE_MSOW_s\d+__"/)
     })
   })
+
+  describe('outlookFallback=false', () => {
+    it('skips MSO comments and width markers', () => {
+      const html = mount(Section, {
+        props: { outlookFallback: false },
+        attrs: { class: 'max-w-md' },
+      }).html()
+      expect(html).not.toContain('<!--[if mso]>')
+      expect(html).not.toContain('__MAIZZLE_MSOW_')
+      expect(html).not.toContain('data-maizzle-msow')
+    })
+  })
 })

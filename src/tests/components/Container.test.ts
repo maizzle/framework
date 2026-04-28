@@ -101,4 +101,24 @@ describe('Container', () => {
       expect(wrapper.find('div').attributes('style')).toContain('max-width: 500px')
     })
   })
+
+  describe('outlookFallback=false', () => {
+    it('skips MSO comments and width placeholder', () => {
+      const html = mount(Container, { props: { outlookFallback: false } }).html()
+      expect(html).not.toContain('<!--[if mso]>')
+      expect(html).not.toContain('__MAIZZLE_MSOW_')
+    })
+
+    it('preserves the visible div with default classes', () => {
+      const wrapper = mount(Container, { props: { outlookFallback: false } })
+      const div = wrapper.find('div')
+      expect(div.classes()).toContain('w-150')
+      expect(div.classes()).toContain('mx-auto')
+    })
+
+    it('still applies width prop to the visible div', () => {
+      const wrapper = mount(Container, { props: { outlookFallback: false, width: '600px' } })
+      expect(wrapper.find('div').attributes('style')).toContain('max-width: 600px')
+    })
+  })
 })

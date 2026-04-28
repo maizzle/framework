@@ -7,7 +7,8 @@ import { Comment, Text, computed, createStaticVNode, provide, useAttrs, useSlots
 import type { VNode } from 'vue'
 import { twMerge } from 'tailwind-merge'
 import Column from './Column.vue'
-import { hasWidthInStyle, hasWidthUtility, normalizeToPixels } from './utils.ts'
+import { hasWidthInStyle, hasWidthUtility, normalizeToPixels, outlookFallbackProp } from './utils.ts'
+import { useOutlookFallback } from '../composables/useOutlookFallback'
 
 defineOptions({ inheritAttrs: false })
 
@@ -36,8 +37,11 @@ const props = defineProps({
   cols: {
     type: Number,
     default: null
-  }
+  },
+  outlookFallback: outlookFallbackProp,
 })
+
+const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 const slots = useSlots()
 
@@ -145,7 +149,7 @@ const MsoAfter = () => createStaticVNode(
 )
 
 const initialChildren = slots.default?.() ?? []
-if (hasMeaningfulContent(initialChildren) && !hasColumnChild(initialChildren)) {
+if (outlookFallback && hasMeaningfulContent(initialChildren) && !hasColumnChild(initialChildren)) {
   const loc = (attrs['data-maizzle-loc'] as string | undefined) ?? '<unknown location>'
   if (!warnedLocations.has(loc)) {
     warnedLocations.add(loc)
@@ -156,7 +160,7 @@ if (hasMeaningfulContent(initialChildren) && !hasColumnChild(initialChildren)) {
 </script>
 
 <template>
-  <MsoBefore />
+  <MsoBefore v-if="outlookFallback" />
   <div
     v-bind="restAttrs"
     :class="mergedClass"
@@ -165,5 +169,5 @@ if (hasMeaningfulContent(initialChildren) && !hasColumnChild(initialChildren)) {
   >
     <slot />
   </div>
-  <MsoAfter />
+  <MsoAfter v-if="outlookFallback" />
 </template>

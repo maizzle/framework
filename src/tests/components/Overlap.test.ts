@@ -189,4 +189,13 @@ describe('Overlap', () => {
       expect(html).not.toContain('__MAIZZLE_OH_')
     })
   })
+
+  describe('outlookFallback=false', () => {
+    it('skips VML rectangle comments but keeps overlay table', () => {
+      const html = mount(Overlap, { props: { outlookFallback: false } }).html()
+      expect(html).not.toContain('<!--[if mso]>')
+      expect(html).not.toContain('v:rect')
+      expect(html).toContain('<table')
+    })
+  })
 })

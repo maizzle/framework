@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { createStaticVNode, inject, useAttrs, useSlots } from 'vue'
 import type { PropType } from 'vue'
+import { outlookFallbackProp } from './utils.ts'
+import { useOutlookFallback } from '../composables/useOutlookFallback'
 
 defineOptions({ inheritAttrs: false })
 
@@ -65,8 +67,11 @@ const props = defineProps({
   ariaLabel: {
     type: String,
     default: undefined
-  }
+  },
+  outlookFallback: outlookFallbackProp,
 })
+
+const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 const htmlLang = inject<string>('htmlLang', 'en')
 
@@ -78,10 +83,12 @@ const render = () => {
   const lang = props.xmlLang ?? htmlLang
 
   const parts = [
-    `xml:lang="${lang}"`,
     `dir="${props.dir}"`,
     'style="margin: 0; padding: 0; width: 100%; word-break: break-word;"',
   ]
+  if (outlookFallback) {
+    parts.unshift(`xml:lang="${lang}"`)
+  }
 
   if (extraAttrs) {
     parts.push(extraAttrs)

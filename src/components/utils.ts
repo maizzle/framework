@@ -43,3 +43,15 @@ export function hasHeightUtility(classStr: string): boolean {
 export function hasHeightInStyle(styleStr: string): boolean {
   return /(?:^|;\s*)(?:max-height|height)\s*:/i.test(styleStr)
 }
+
+/**
+ * Shared prop for components that emit MSO/VML fallback markup. The
+ * `null` default acts as the "unset" sentinel — `useOutlookFallback`
+ * treats `null` as inherit-from-ancestor (root default `true`),
+ * letting users override per-component without losing inheritance.
+ */
+export const outlookFallbackProp = {
+  type: Boolean,
+  default: null,
+} as const
+

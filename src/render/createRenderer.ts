@@ -15,7 +15,7 @@ import { unheadVueComposablesImports } from '@unhead/vue'
 import { defu as merge } from 'defu'
 import { createSSRApp } from 'vue'
 import { renderToString } from 'vue/server-renderer'
-import { createHead, renderSSRHead } from '@unhead/vue/server'
+import { createHead } from '@unhead/vue/server'
 import { MaizzleConfigKey } from '../composables/useConfig.ts'
 import { RenderContextKey } from '../composables/renderContext.ts'
 import type { Component, InjectionKey } from 'vue'
@@ -240,7 +240,7 @@ export async function createRenderer(
       const ssrContext: Record<string, any> = {}
       let html: string = await renderToString(app, ssrContext)
 
-      const { headTags, bodyTags, bodyTagsOpen, htmlAttrs, bodyAttrs } = await renderSSRHead(head)
+      const { headTags, bodyTags, bodyTagsOpen, htmlAttrs, bodyAttrs } = head.render()
 
       // Inject head entries into the rendered HTML
       if (htmlAttrs) {

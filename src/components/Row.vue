@@ -149,12 +149,13 @@ const MsoAfter = () => createStaticVNode(
 )
 
 const initialChildren = slots.default?.() ?? []
-if (outlookFallback && hasMeaningfulContent(initialChildren) && !hasColumnChild(initialChildren)) {
+if (hasMeaningfulContent(initialChildren) && !hasColumnChild(initialChildren)) {
   const loc = (attrs['data-maizzle-loc'] as string | undefined) ?? '<unknown location>'
   if (!warnedLocations.has(loc)) {
     warnedLocations.add(loc)
     const display = loc.split('/').pop() ?? loc
-    console.warn(`[maizzle] <Row> in ${display} has no <Column> inside it. Layout will break in Outlook.`)
+    const suffix = outlookFallback ? ' Layout will break in Outlook.' : ''
+    console.warn(`[maizzle] <Row> in ${display} has no <Column> inside it.${suffix}`)
   }
 }
 </script>

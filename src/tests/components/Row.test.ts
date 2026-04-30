@@ -257,15 +257,17 @@ describe('Row', () => {
       expect(html).not.toContain('<!--[if mso]>')
     })
 
-    it('suppresses the missing-Column warning', () => {
+    it('warns about missing Column without the Outlook suffix', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
       mount(Row, {
         props: { outlookFallback: false },
-        attrs: { 'data-maizzle-loc': '/silent.vue:1' },
+        attrs: { 'data-maizzle-loc': '/modern.vue:1' },
         slots: { default: () => 'no column inside' },
       })
       const maizzleWarns = warn.mock.calls.map(c => String(c[0])).filter(s => s.includes('[maizzle]'))
-      expect(maizzleWarns).toHaveLength(0)
+      expect(maizzleWarns).toHaveLength(1)
+      expect(maizzleWarns[0]).toContain('has no <Column> inside it.')
+      expect(maizzleWarns[0]).not.toContain('Outlook')
       warn.mockRestore()
     })
   })

@@ -1,6 +1,5 @@
 import { comb } from 'email-comb'
 import { defu as merge } from 'defu'
-import postcss from 'postcss'
 import safeParser from 'postcss-safe-parser'
 import { selectAll } from 'css-select'
 import type { ChildNode, Element } from 'domhandler'
@@ -122,7 +121,7 @@ function deepPurge(dom: ChildNode[], safelist: string[]): ChildNode[] {
     const textNode = el.children?.find((c: any) => c.type === 'text') as any
     if (!textNode?.data?.trim()) return
 
-    const root = postcss.parse(textNode.data, { parser: safeParser })
+    const root = safeParser(textNode.data)
 
     root.walkRules((rule) => {
       // Skip rules inside @media or other at-rules — those may target

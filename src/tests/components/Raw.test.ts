@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import Raw from '../../components/Raw.vue'
-import { render as renderTemplate, createRenderer } from '../../render/index.ts'
+import { render } from '../../render/index.ts'
 
 function renderProp(props: Record<string, string> = {}) {
   const app = createSSRApp({
@@ -30,53 +30,35 @@ describe('Raw component (direct prop)', () => {
 
 describe('Raw plugin extraction (full pipeline)', () => {
   it('preserves Vue mustache syntax in slot', async () => {
-    const renderer = await createRenderer()
-    try {
-      const sfc = `
+    const { html } = await render(`
 <template>
   <p>Hello <Raw>{{ unsub }}</Raw></p>
 </template>
-`
-      const { html } = await renderTemplate(sfc, { _renderer: renderer } as any)
-      expect(html).toContain('Hello {{ unsub }}')
-    } finally {
-      await renderer.close()
-    }
+`)
+    expect(html).toContain('Hello {{ unsub }}')
   })
 
   it('preserves multi-line content with dedent', async () => {
-    const renderer = await createRenderer()
-    try {
-      const sfc = `
+    const { html } = await render(`
 <template>
   <Raw>
     {{ name }} signed up on {{ date }}
   </Raw>
 </template>
-`
-      const { html } = await renderTemplate(sfc, { _renderer: renderer } as any)
-      expect(html).toContain('{{ name }} signed up on {{ date }}')
-    } finally {
-      await renderer.close()
-    }
+`)
+    expect(html).toContain('{{ name }} signed up on {{ date }}')
   })
 
   it('does not interfere with normal Vue interpolation outside Raw', async () => {
-    const renderer = await createRenderer()
-    try {
-      const sfc = `
+    const { html } = await render(`
 <script setup>
 const name = 'world'
 </script>
 <template>
   <p>{{ name }} <Raw>{{ raw }}</Raw></p>
 </template>
-`
-      const { html } = await renderTemplate(sfc, { _renderer: renderer } as any)
-      expect(html).toContain('world')
-      expect(html).toContain('{{ raw }}')
-    } finally {
-      await renderer.close()
-    }
+`)
+    expect(html).toContain('world')
+    expect(html).toContain('{{ raw }}')
   })
 })

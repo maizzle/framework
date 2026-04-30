@@ -4,17 +4,10 @@ import { runTransformers } from '../transformers/index.ts'
 import { createPlaintext } from '../plaintext.ts'
 import type { Component } from 'vue'
 import type { MaizzleConfig } from '../types/index.ts'
-import { createRenderer, type Renderer } from './createRenderer.ts'
+import { createRenderer } from './createRenderer.ts'
 
 export type { Renderer, RenderedTemplate, CreateRendererOptions } from './createRenderer.ts'
 export { createRenderer } from './createRenderer.ts'
-
-export interface RenderOptions {
-  /** Already-resolved or partial config. If not provided, resolves from disk + defaults. */
-  config?: Partial<MaizzleConfig>
-  /** Reuse an existing renderer (used internally by build/serve to avoid creating one per template) */
-  _renderer?: Renderer
-}
 
 export interface RenderResult {
   html: string
@@ -24,32 +17,41 @@ export interface RenderResult {
 
 /**
  * Render a Vue SFC email template to a fully-transformed HTML string.
- *
- * Accepts a file path, a raw SFC source string, or an imported Vue component.
- * Runs the full pipeline: SSR render → transformers → doctype.
+ * Accepts a file path or a raw SFC source string.
  */
 export async function render(
   template: string | Component,
-  options: RenderOptions = {},
+  config?: Partial<MaizzleConfig>,
 ): Promise<RenderResult> {
-  const config = await resolveConfig(options.config)
+  if (template == null) {
+    throw new Error(
+      `render() received ${template}. If you used \`import X from './x.vue'\`, Node cannot load .vue files natively — pass the path string instead: render('./x.vue').`,
+    )
+  }
+  if (typeof template !== 'string' && typeof template !== 'object' && typeof template !== 'function') {
+    throw new TypeError(
+      `render() expected a file path or SFC source string, got ${typeof template}.`,
+    )
+  }
 
-  // Reuse provided renderer or create a temporary one
-  const renderer = options._renderer ?? await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat(), vite: config.vite })
-  const ownsRenderer = !options._renderer
+  const resolvedConfig = await resolveConfig(config)
+  const renderer = await createRenderer({
+    markdown: resolvedConfig.markdown,
+    root: resolvedConfig.root,
+    componentDirs: [resolvedConfig.components?.source ?? []].flat(),
+    vite: resolvedConfig.vite,
+  })
 
   try {
     const isFile = typeof template === 'string'
       && ['.vue', '.md'].includes(extname(template))
       && !template.includes('\n')
 
-    const rendered = await renderer.render(isFile ? resolve(template) : template, config)
+    const rendered = await renderer.render(isFile ? resolve(template) : template, resolvedConfig)
     let html = rendered.html
 
-    // Prepend doctype
     const doctype = rendered.doctype ?? rendered.templateConfig.doctype ?? '<!DOCTYPE html>'
 
-    // Run transformers
     if (rendered.templateConfig.useTransformers !== false) {
       html = await runTransformers(html, rendered.templateConfig, isFile ? resolve(template) : undefined, doctype)
     }
@@ -67,8 +69,6 @@ export async function render(
 
     return { html, config: rendered.templateConfig, plaintext: plaintextResult }
   } finally {
-    if (ownsRenderer) {
-      await renderer.close()
-    }
+    await renderer.close()
   }
 }

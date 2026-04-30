@@ -124,9 +124,7 @@ describe('render', () => {
           <div>Test</div>
         </template>
       `, {
-        config: {
-          doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
-        },
+        doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
       })
 
       expect(result.html).toMatch(/^<!DOCTYPE html PUBLIC/)
@@ -155,9 +153,7 @@ describe('render', () => {
           <div>Test</div>
         </template>
       `, {
-        config: {
-          doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0//EN">',
-        },
+        doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0//EN">',
       })
 
       expect(result.html).toMatch(/^<!DOCTYPE html PUBLIC "-\/\/W3C\/\/DTD HTML 4\.01\/\/EN">/)
@@ -171,12 +167,10 @@ describe('render', () => {
           <div>Test</div>
         </template>
       `, {
-        config: {
-          css: { resolveCalc: false },
-        },
+        css: { safe: false },
       })
 
-      expect(result.config.css?.resolveCalc).toBe(false)
+      expect(result.config.css?.safe).toBe(false)
       // Defaults still present
       expect(result.config.css?.preferUnitless).toBe(true)
     })
@@ -207,9 +201,7 @@ describe('render', () => {
           <div>Test</div>
         </template>
       `, {
-        config: {
-          css: { inline: true },
-        },
+        css: { inline: true },
       })
 
       expect(result.config.css?.shorthand).toBe(true)
@@ -279,9 +271,7 @@ describe('render', () => {
       `)
 
       const result = await render(join(tempDir, 'emails/test.vue'), {
-        config: {
-          css: { inline: true },
-        },
+        css: { inline: true },
       })
 
       expect(result.html).toContain('style="color: red;"')
@@ -314,9 +304,7 @@ describe('render', () => {
           <div>Hello {name}</div>
         </template>
       `, {
-        config: {
-          replaceStrings: { '{name}': 'World' },
-        },
+        replaceStrings: { '{name}': 'World' },
       })
 
       expect(result.html).toContain('Hello World')
@@ -644,9 +632,7 @@ describe('render', () => {
           </html>
         </template>
       `, {
-        config: {
-          doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">',
-        },
+        doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">',
       })
 
       expect(result.html).toContain('<hr />')
@@ -664,10 +650,8 @@ describe('render', () => {
           </html>
         </template>
       `, {
-        config: {
-          doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
-          html: { format: true },
-        },
+        doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
+        html: { format: true },
       })
 
       expect(result.html).toContain('<br />')
@@ -686,9 +670,7 @@ describe('render', () => {
           </html>
         </template>
       `, {
-        config: {
-          html: { format: true },
-        },
+        html: { format: true },
       })
 
       expect(result.html).not.toContain('/>')
@@ -708,10 +690,8 @@ describe('render', () => {
           <div><MyButton /></div>
         </template>
       `, {
-        config: {
-          root: tempDir,
-          components: { source: ['custom-components'] },
-        },
+        root: tempDir,
+        components: { source: ['custom-components'] },
       })
 
       expect(result.html).toContain('Click me')
@@ -725,9 +705,7 @@ describe('render', () => {
         <template>
           <div><h1>Hello</h1><p>World</p></div>
         </template>
-      `, {
-        config: { plaintext: true },
-      })
+      `, { plaintext: true })
 
       expect(result.plaintext).toBeDefined()
       expect(result.plaintext).toContain('Hello')
@@ -765,9 +743,7 @@ describe('render', () => {
         <template>
           <div>Hello</div><br/>World
         </template>
-      `, {
-        config: { plaintext: { ignoreTags: ['br'] } },
-      })
+      `, { plaintext: { ignoreTags: ['br'] } })
 
       expect(result.plaintext).toContain('<br>')
     })
@@ -803,9 +779,7 @@ describe('render', () => {
         },
       })
 
-      const result = await render(EmailComponent, {
-        config: { css: { shorthand: true } },
-      })
+      const result = await render(EmailComponent, { css: { shorthand: true } })
 
       expect(result.html).toContain('padding: 10px 20px')
     })
@@ -1079,15 +1053,13 @@ describe('render', () => {
           <div>With Plugin</div>
         </template>
       `, {
-        config: {
-          vite: {
-            plugins: [{
-              name: 'test-plugin',
-              configResolved() {
-                pluginCalled = true
-              },
-            }],
-          },
+        vite: {
+          plugins: [{
+            name: 'test-plugin',
+            configResolved() {
+              pluginCalled = true
+            },
+          }],
         },
       })
 
@@ -1101,17 +1073,15 @@ describe('render', () => {
           <div>REPLACE_ME</div>
         </template>
       `, {
-        config: {
-          vite: {
-            plugins: [{
-              name: 'test-transform-plugin',
-              transform(code: string, id: string) {
-                if (id.endsWith('.vue') && code.includes('REPLACE_ME')) {
-                  return code.replace('REPLACE_ME', 'Transformed')
-                }
-              },
-            }],
-          },
+        vite: {
+          plugins: [{
+            name: 'test-transform-plugin',
+            transform(code: string, id: string) {
+              if (id.endsWith('.vue') && code.includes('REPLACE_ME')) {
+                return code.replace('REPLACE_ME', 'Transformed')
+              }
+            },
+          }],
         },
       })
 
@@ -1136,9 +1106,7 @@ describe('render', () => {
           <div>{{ loaded }}</div>
         </template>
       `, {
-        config: {
-          root: tempDir,
-        },
+        root: tempDir,
       })
 
       expect(result.html).toContain('yes')
@@ -1161,9 +1129,7 @@ describe('render', () => {
           <div>{{ val }}</div>
         </template>
       `, {
-        config: {
-          root: tempDir,
-        },
+        root: tempDir,
       })
 
       expect(result.html).toContain('loaded')
@@ -1177,15 +1143,13 @@ describe('render', () => {
           <div>Fallback</div>
         </template>
       `, {
-        config: {
-          vite: {
-            plugins: [{
-              name: 'fallback-plugin',
-              configResolved() {
-                pluginRan = true
-              },
-            }],
-          },
+        vite: {
+          plugins: [{
+            name: 'fallback-plugin',
+            configResolved() {
+              pluginRan = true
+            },
+          }],
         },
       })
 
@@ -1212,16 +1176,14 @@ describe('render', () => {
           <div>{{ source }}</div>
         </template>
       `, {
-        config: {
-          root: tempDir,
-          vite: {
-            plugins: [{
-              name: 'inline-plugin',
-              configResolved() {
-                inlinePluginCalled = true
-              },
-            }],
-          },
+        root: tempDir,
+        vite: {
+          plugins: [{
+            name: 'inline-plugin',
+            configResolved() {
+              inlinePluginCalled = true
+            },
+          }],
         },
       })
 
@@ -1241,15 +1203,13 @@ describe('render', () => {
           <div>With Plugin</div>
         </template>
       `, {
-        config: {
-          vue: {
-            plugins: [{
-              install(app: any) {
-                installCalled = true
-                app.config.globalProperties.$pluginValue = 'from-plugin'
-              },
-            }],
-          },
+        vue: {
+          plugins: [{
+            install(app: any) {
+              installCalled = true
+              app.config.globalProperties.$pluginValue = 'from-plugin'
+            },
+          }],
         },
       })
 
@@ -1263,14 +1223,12 @@ describe('render', () => {
           <div>{{ $greeting }}</div>
         </template>
       `, {
-        config: {
-          vue: {
-            plugins: [{
-              install(app: any) {
-                app.config.globalProperties.$greeting = 'Hello from plugin'
-              },
-            }],
-          },
+        vue: {
+          plugins: [{
+            install(app: any) {
+              app.config.globalProperties.$greeting = 'Hello from plugin'
+            },
+          }],
         },
       })
 
@@ -1283,13 +1241,11 @@ describe('render', () => {
           <div v-test-dir>Content</div>
         </template>
       `, {
-        config: {
-          vue: {
-            directives: {
-              'test-dir': {
-                getSSRProps() {
-                  return { 'data-directed': 'true' }
-                },
+        vue: {
+          directives: {
+            'test-dir': {
+              getSSRProps() {
+                return { 'data-directed': 'true' }
               },
             },
           },
@@ -1305,11 +1261,9 @@ describe('render', () => {
           <div>{{ $brand }}</div>
         </template>
       `, {
-        config: {
-          vue: {
-            globalProperties: {
-              $brand: 'Maizzle',
-            },
+        vue: {
+          globalProperties: {
+            $brand: 'Maizzle',
           },
         },
       })
@@ -1323,11 +1277,9 @@ describe('render', () => {
           <div>{{ $format('hello') }}</div>
         </template>
       `, {
-        config: {
-          vue: {
-            globalProperties: {
-              $format: (s: string) => s.toUpperCase(),
-            },
+        vue: {
+          globalProperties: {
+            $format: (s: string) => s.toUpperCase(),
           },
         },
       })
@@ -1343,23 +1295,21 @@ describe('render', () => {
           <div v-mark>{{ $label }}</div>
         </template>
       `, {
-        config: {
-          vue: {
-            plugins: [{
-              install() {
-                pluginInstalled = true
-              },
-            }],
-            directives: {
-              mark: {
-                getSSRProps() {
-                  return { 'data-marked': '' }
-                },
+        vue: {
+          plugins: [{
+            install() {
+              pluginInstalled = true
+            },
+          }],
+          directives: {
+            mark: {
+              getSSRProps() {
+                return { 'data-marked': '' }
               },
             },
-            globalProperties: {
-              $label: 'Everything works',
-            },
+          },
+          globalProperties: {
+            $label: 'Everything works',
           },
         },
       })

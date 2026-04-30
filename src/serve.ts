@@ -3,6 +3,7 @@ import { dirname, resolve, basename, matchesGlob } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import { createServer, createLogger, type ViteDevServer } from 'vite'
+import { renderUnicodeCompact } from 'uqr'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { glob } from 'tinyglobby'
@@ -620,6 +621,14 @@ export function printBanner(server: ViteDevServer, startupTime?: number) {
   info(`  \x1b[32m\x1b[1mMAIZZLE\x1b[0m\x1b[32m v6.0.0\x1b[0m  \x1b[2mready in\x1b[0m \x1b[1m${time}\x1b[0m ms`)
   info('')
   server.printUrls()
+
+  const networkUrl = server.resolvedUrls?.network[0]
+  if (networkUrl) {
+    const qr = renderUnicodeCompact(networkUrl, { border: 1 })
+    info('')
+    info(qr.split('\n').map(line => `  ${line}`).join('\n'))
+  }
+
   info('')
 }
 

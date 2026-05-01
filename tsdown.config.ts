@@ -11,6 +11,7 @@ export default defineConfig({
   format: 'esm',
   dts: true,
   unbundle: true,
+  outExtensions: () => ({ dts: '.d.ts' }),
   external: ['lightningcss'],
   outDir: 'dist',
   clean: true,

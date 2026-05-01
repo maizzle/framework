@@ -1,31 +1,9 @@
-import postcss from 'postcss'
-import tailwindcssPostcss from '@tailwindcss/postcss'
-import postcssCalc from 'postcss-calc'
-import resolveProps from '../plugins/postcss/resolveProps.ts'
-import pruneVars from '../plugins/postcss/pruneVars.ts'
-import safeParser from 'postcss-safe-parser'
-import { transform } from 'lightningcss'
 import { resolve, dirname, relative } from 'node:path'
 import type { ChildNode, Element } from 'domhandler'
 import { walk } from '../utils/ast/index.ts'
-import { tailwindCleanup } from '../plugins/postcss/tailwindCleanup.ts'
-import { mergeMediaQueries } from '../plugins/postcss/mergeMediaQueries.ts'
-import { quoteFontFamilies } from '../plugins/postcss/quoteFontFamilies.ts'
 import { decodeStyleEntities } from '../utils/decodeStyleEntities.ts'
+import { compileTailwindCss } from '../utils/compileTailwindCss.ts'
 import type { MaizzleConfig } from '../types/config.ts'
-
-function createProcessor(config: MaizzleConfig) {
-  return postcss([
-    tailwindcssPostcss({
-      base: config.css?.base,
-      transformAssetUrls: false,
-      optimize: false, // we run Lightning CSS manually
-    }),
-    resolveProps(),
-    postcssCalc({}),
-    pruneVars(),
-  ])
-}
 
 /**
  * Check if CSS content uses Tailwind features that require source scanning.
@@ -36,43 +14,6 @@ function createProcessor(config: MaizzleConfig) {
  */
 function usesTailwind(css: string): boolean {
   return /((@import|@reference)\s+["'](tailwindcss|@maizzle\/tailwindcss)|@tailwind\s)/.test(css)
-}
-
-/**
- * Lower modern CSS syntax using lightningcss.
- *
- * Targets IE 1 to maximize syntax lowering — converts modern features
- * like nesting, oklch(), color-mix(), @property, etc. into simple CSS
- * that email clients can understand.
- */
-function lowerSyntax(css: string): string {
-  const result = transform({
-    filename: 'email.css',
-    code: Buffer.from(css),
-    minify: false,
-    targets: {
-      ie: 4 << 5,
-    },
-  })
-
-  return result.code.toString()
-}
-
-/**
- * Run cleanup and media query merging on the compiled CSS.
- *
- * Removes unwanted selectors (:host, :lang) and at-rules (@layer, @property),
- * then sorts and merges media queries.
- */
-async function optimizeCss(css: string, config: MaizzleConfig): Promise<string> {
-  const plugins: postcss.Plugin[] = [...tailwindCleanup(config), quoteFontFamilies()]
-
-  const mediaPlugin = mergeMediaQueries(config)
-  if (mediaPlugin) plugins.push(mediaPlugin)
-
-  const result = await postcss(plugins).process(css, { from: undefined })
-
-  return result.css
 }
 
 /**
@@ -170,9 +111,6 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
     ? buildSourceDirectives(dom, config, fromDir)
     : ''
 
-  // Create processor once — reused for all style tags in this template
-  const processor = createProcessor(config)
-
   for (let i = 0; i < styleTags.length; i++) {
     const { node, cssContent } = styleTags[i]
 
@@ -184,16 +122,7 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
       : cssContent
 
     try {
-      const result = await processor.process(
-        fullCss,
-        {
-          from: `${fromPath}?style=${i}`,
-          parser: safeParser,
-        }
-      )
-
-      const lowered = lowerSyntax(result.css)
-      const optimized = await optimizeCss(lowered, config)
+      const optimized = await compileTailwindCss(fullCss, config, `${fromPath}?style=${i}`)
 
       // Replace the style tag's children with the compiled CSS
       node.children = [{

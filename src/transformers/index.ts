@@ -1,5 +1,6 @@
 import { parse, serialize } from '../utils/ast/index.ts'
 import { inlineLink } from './inlineLink.ts'
+import { tailwindComponent } from './tailwindComponent.ts'
 import { tailwindcss } from './tailwindcss.ts'
 import { safeClassNames } from './safeClassNames.ts'
 import { attributeToStyle } from './attributeToStyle.ts'
@@ -19,6 +20,7 @@ import { replaceStrings } from './replaceStrings.ts'
 import { format } from './format.ts'
 import { minify } from './minify.ts'
 import type { MaizzleConfig } from '../types/config.ts'
+import type { TailwindBlock } from '../composables/renderContext.ts'
 
 /**
  * Run all Maizzle transformers on the rendered HTML.
@@ -55,6 +57,7 @@ export async function runTransformers(
   config: MaizzleConfig,
   filePath?: string,
   doctype?: string,
+  tailwindBlocks?: TailwindBlock[],
 ): Promise<string> {
   // Strip Vue SSR fragment markers before parsing. They contain `-->`, which
   // prematurely terminates conditional comments like `<!--[if mso]>...<![endif]-->`
@@ -72,6 +75,11 @@ export async function runTransformers(
 
   // 0. Inline <link> stylesheets
   dom = await inlineLink(dom, filePath)
+
+  // 0.5. <Tailwind> component — compile per-block scoped CSS, inject into <head>
+  if (tailwindBlocks?.length) {
+    dom = await tailwindComponent(dom, tailwindBlocks, config, filePath)
+  }
 
   // 1. Tailwind CSS — always runs first
   dom = await tailwindcss(dom, config, filePath)

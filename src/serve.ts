@@ -338,7 +338,7 @@ async function serveRenderedTemplate(url: string, config: MaizzleConfig, rendere
     const templateConfig = rendered.templateConfig
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
 
-    html = await runTransformers(html, templateConfig, absolutePath, doctype)
+    html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
     html = `${doctype}\n${html}`
 
     res.setHeader('Content-Type', 'text/html')
@@ -384,7 +384,7 @@ async function serveHighlightedSource(url: string, config: MaizzleConfig, render
 
     const templateConfig = rendered.templateConfig
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
-    html = await runTransformers(html, templateConfig, absolutePath, doctype)
+    html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
 
     html = `${doctype}\n${html}`
 
@@ -464,7 +464,7 @@ async function servePlaintext(url: string, config: MaizzleConfig, renderer: Rend
     let html = rendered.html
     const templateConfig = rendered.templateConfig
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
-    html = await runTransformers(html, templateConfig, absolutePath, doctype)
+    html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
 
     const plaintext = createPlaintext(html)
 
@@ -516,7 +516,7 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
     let html = rendered.html
     const templateConfig = rendered.templateConfig
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
-    html = await runTransformers(html, templateConfig, absolutePath, doctype)
+    html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
 
     const sizeBytes = Buffer.byteLength(html, 'utf-8')
 
@@ -583,7 +583,7 @@ async function serveEmailEndpoint(url: string, req: any, res: any, config: Maizz
     let html = rendered.html
     const templateConfig = rendered.templateConfig
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
-    html = await runTransformers(html, templateConfig, absolutePath, doctype)
+    html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
     html = `${doctype}\n${html}`
 
     const text = createPlaintext(html)

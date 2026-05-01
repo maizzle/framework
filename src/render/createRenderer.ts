@@ -36,6 +36,7 @@ export interface RenderedTemplate {
   templateConfig: MaizzleConfig
   sfcEventHandlers: RenderContext['sfcEventHandlers']
   plaintext?: RenderContext['plaintext']
+  tailwindBlocks?: RenderContext['tailwindBlocks']
 }
 
 export interface Renderer {
@@ -321,6 +322,7 @@ export async function createRenderer(
         templateConfig: renderContext.sfcConfig ?? config,
         sfcEventHandlers: renderContext.sfcEventHandlers,
         plaintext: renderContext.plaintext,
+        tailwindBlocks: renderContext.tailwindBlocks,
       }
     },
 

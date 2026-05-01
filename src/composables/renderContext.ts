@@ -10,6 +10,12 @@ export interface FontRegistration {
   url: string
 }
 
+export interface TailwindBlock {
+  id: string
+  /** Optional raw CSS from the component's `#config` slot. */
+  css?: string
+}
+
 export interface RenderContext {
   doctype?: string
   preheader?: { text: string; fillerCount: number; shyCount: number }
@@ -17,6 +23,7 @@ export interface RenderContext {
   sfcEventHandlers: Array<{ name: EventName; handler: EventMap[EventName] }>
   plaintext?: UsePlaintextOptions
   fonts?: FontRegistration[]
+  tailwindBlocks?: TailwindBlock[]
 }
 
 export const RenderContextKey: InjectionKey<RenderContext> = Symbol('RenderContext')

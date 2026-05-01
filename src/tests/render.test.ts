@@ -231,6 +231,128 @@ describe('render', () => {
       expect(result.html).toContain('border: 1px solid red')
     })
 
+    it('Tailwind component compiles scoped CSS into <head> using bundled @maizzle/tailwindcss', async () => {
+      symlinkSync(join(originalCwd, 'node_modules'), join(tempDir, 'node_modules'))
+
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template>
+          <html>
+            <head>
+              <title>Test</title>
+            </head>
+            <body>
+              <Tailwind>
+                <div class="[border:1px_solid_red]">Inside</div>
+              </Tailwind>
+              <div class="[border:1px_solid_blue]">Outside</div>
+            </body>
+          </html>
+        </template>
+      `)
+
+      const result = await render(join(tempDir, 'emails/test.vue'))
+
+      expect(result.html).toContain('border: 1px solid red')
+      expect(result.html).not.toContain('mz-tw:')
+      expect(result.html).not.toContain('border: 1px solid blue')
+    })
+
+    it('Tailwind component reads CSS from #config slot', async () => {
+      symlinkSync(join(originalCwd, 'node_modules'), join(tempDir, 'node_modules'))
+
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template>
+          <html>
+            <head><title>Test</title></head>
+            <body>
+              <Tailwind>
+                <template #config>
+                  @import "tailwindcss/utilities";
+                </template>
+                <div class="[border:1px_solid_red]">Inside</div>
+              </Tailwind>
+            </body>
+          </html>
+        </template>
+      `)
+
+      const result = await render(join(tempDir, 'emails/test.vue'))
+
+      expect(result.html).toContain('border: 1px solid red')
+      expect(result.html).not.toContain('mz-tw:')
+    })
+
+    it('Tailwind component reproduces stack overflow', async () => {
+      symlinkSync(join(originalCwd, 'node_modules'), join(tempDir, 'node_modules'))
+
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template>
+          <Html>
+            <Head />
+            <Body>
+              <Tailwind>
+                <Container class="max-w-xl">
+                  <Text><strong>3 even cols</strong></Text>
+                  <Row>
+                    <Column class="w-1/3 bg-sky-200">
+                      <Section class="px-2 border-0">
+                        <Text>1/3</Text>
+                      </Section>
+                    </Column>
+                    <Column class="w-1/3 bg-sky-400">
+                      <Section class="px-2 border-0">
+                        <Text>1/3</Text>
+                      </Section>
+                    </Column>
+                    <Column class="w-1/3 bg-sky-600">
+                      <Section class="px-2 border-0">
+                        <Text>1/3</Text>
+                      </Section>
+                    </Column>
+                  </Row>
+                </Container>
+              </Tailwind>
+            </Body>
+          </Html>
+        </template>
+      `)
+
+      const result = await render(join(tempDir, 'emails/test.vue'))
+      expect(result.html).toContain('1/3')
+    })
+
+    it('Tailwind component flattens nested instances into the outermost block', async () => {
+      symlinkSync(join(originalCwd, 'node_modules'), join(tempDir, 'node_modules'))
+
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template>
+          <html>
+            <head><title>Test</title></head>
+            <body>
+              <Tailwind>
+                <div class="[border:1px_solid_red]">Outer</div>
+                <Tailwind>
+                  <div class="[border:1px_solid_green]">Inner</div>
+                </Tailwind>
+              </Tailwind>
+            </body>
+          </html>
+        </template>
+      `)
+
+      const result = await render(join(tempDir, 'emails/test.vue'))
+
+      // Both classes compile (inner classes flow up to the outermost block)
+      expect(result.html).toContain('border: 1px solid red')
+      expect(result.html).toContain('border: 1px solid green')
+      // Markers stripped
+      expect(result.html).not.toContain('mz-tw:')
+      // Only one <style> block from <Tailwind> (no duplication from a
+      // nested inner block compiling separately)
+      const matches = result.html.match(/border: 1px solid green/g)
+      expect(matches).toHaveLength(1)
+    })
+
     it('skips transformers when useTransformers is false', async () => {
       const result = await render(`
         <script setup>

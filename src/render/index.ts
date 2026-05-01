@@ -53,7 +53,7 @@ export async function render(
     const doctype = rendered.doctype ?? rendered.templateConfig.doctype ?? '<!DOCTYPE html>'
 
     if (rendered.templateConfig.useTransformers !== false) {
-      html = await runTransformers(html, rendered.templateConfig, isFile ? resolve(template) : undefined, doctype)
+      html = await runTransformers(html, rendered.templateConfig, isFile ? resolve(template) : undefined, doctype, rendered.tailwindBlocks)
     }
     html = `${doctype}\n${html}`
 

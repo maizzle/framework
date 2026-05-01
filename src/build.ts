@@ -72,7 +72,7 @@ export async function build(options: BuildOptions = {}): Promise<BuildResult> {
       const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
 
       if (templateConfig.useTransformers !== false) {
-        html = await runTransformers(html, templateConfig, absolutePath, doctype)
+        html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
       }
 
       html = await events.fireAfterTransform({ config, template, html })

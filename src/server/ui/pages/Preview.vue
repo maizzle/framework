@@ -56,6 +56,7 @@ const copied = ref(false)
 const iframeEl = ref<HTMLIFrameElement>()
 const compiledSourceEl = ref<HTMLElement>()
 const vueSourceEl = ref<HTMLElement>()
+const plaintextEl = ref<HTMLElement>()
 const containerEl = ref<HTMLElement>()
 const wrapperEl = ref<HTMLElement>()
 
@@ -429,25 +430,47 @@ watch(sourceView, (view) => {
   if (view === 'plaintext' && !plaintextContent.value) fetchPlaintext()
 })
 
+/**
+ * Preserve scrollTop across in-place content updates (HMR refetch).
+ * Vue's default `flush: 'pre'` runs the watcher BEFORE the DOM is
+ * updated — so we read the current scrollTop, then restore it on the
+ * next tick after the new content has rendered. Skip the case where
+ * the value transitions from empty (first paint / route change) so a
+ * fresh template doesn't snap to a stale offset.
+ */
+function viewportFor(el: HTMLElement | undefined): HTMLElement | null {
+  return (el?.closest('[data-slot="scroll-area-viewport"]') as HTMLElement | null) ?? null
+}
+
+function preserveScroll(getEl: () => HTMLElement | undefined) {
+  return async (newVal: string, oldVal: string) => {
+    if (!oldVal || !newVal) return
+    const vp = viewportFor(getEl())
+    if (!vp) return
+    const top = vp.scrollTop
+    await nextTick()
+    vp.scrollTop = top
+  }
+}
+
+watch(sourceHtml, preserveScroll(() => compiledSourceEl.value))
+watch(vueSourceHtml, preserveScroll(() => vueSourceEl.value))
+watch(plaintextContent, preserveScroll(() => plaintextEl.value))
+
 if ((import.meta as any).hot) {
   ;(import.meta as any).hot.on('maizzle:template-updated', () => {
     fetchCompatibility()
     fetchStats()
 
-    // Always clear all source views so they re-fetch
-    sourceHtml.value = ''
-    vueSourceHtml.value = ''
-    plaintextContent.value = ''
-
-    // Re-fetch the active source view immediately if currently visible
-    if (viewMode.value === 'source') {
-      if (sourceView.value === 'compiled') fetchSource()
-      if (sourceView.value === 'vue') fetchVueSource()
-      if (sourceView.value === 'plaintext') fetchPlaintext()
-    }
-
-    // Refresh preview, then warm the remaining source views
-    fetchTemplate().then(prefetchSources)
+    // Refetch in place — don't clear the previous values first. v-html
+    // replaces the highlighted block atomically when the new content
+    // arrives, and the ScrollArea viewport keeps its scrollTop as long
+    // as the new content's height is similar. Plaintext interpolation
+    // updates a single text node, so scroll is naturally preserved.
+    fetchTemplate()
+    fetchSource()
+    fetchVueSource()
+    fetchPlaintext()
   })
 
   // Keep the UI in sync with live config edits. Payload is the same shape
@@ -782,6 +805,7 @@ const stripeBg = {
         </ScrollArea>
         <ScrollArea v-show="sourceView === 'plaintext'" class="h-full [&_[data-slot=scroll-area-viewport]>div]:flex [&_[data-slot=scroll-area-viewport]>div]:flex-col [&_[data-slot=scroll-area-viewport]>div]:min-h-full">
           <pre
+            ref="plaintextEl"
             class="p-6 pt-14 text-sm leading-6 flex-1 text-gray-300 bg-[#27212e] dark:bg-gray-950 whitespace-pre-wrap break-words"
           >{{ plaintextContent }}</pre>
         </ScrollArea>

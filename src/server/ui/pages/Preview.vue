@@ -282,19 +282,52 @@ async function fetchTemplate() {
   }
 }
 
+const sourceLoading = ref(false)
+const vueSourceLoading = ref(false)
+const plaintextLoading = ref(false)
+
 async function fetchSource() {
-  const res = await fetch(`/__maizzle/source/${route.params.template}`)
-  sourceHtml.value = await res.text()
+  if (sourceLoading.value) return
+  sourceLoading.value = true
+  try {
+    const res = await fetch(`/__maizzle/source/${route.params.template}`)
+    sourceHtml.value = await res.text()
+  } finally {
+    sourceLoading.value = false
+  }
 }
 
 async function fetchVueSource() {
-  const res = await fetch(`/__maizzle/vue-source/${route.params.template}`)
-  vueSourceHtml.value = await res.text()
+  if (vueSourceLoading.value) return
+  vueSourceLoading.value = true
+  try {
+    const res = await fetch(`/__maizzle/vue-source/${route.params.template}`)
+    vueSourceHtml.value = await res.text()
+  } finally {
+    vueSourceLoading.value = false
+  }
 }
 
 async function fetchPlaintext() {
-  const res = await fetch(`/__maizzle/plaintext/${route.params.template}`)
-  plaintextContent.value = await res.text()
+  if (plaintextLoading.value) return
+  plaintextLoading.value = true
+  try {
+    const res = await fetch(`/__maizzle/plaintext/${route.params.template}`)
+    plaintextContent.value = await res.text()
+  } finally {
+    plaintextLoading.value = false
+  }
+}
+
+/**
+ * Warm the three source views in the background so switching from the
+ * preview is instant. Single-flight guards above prevent duplication
+ * with any in-flight fetch from a view-switch watcher.
+ */
+function prefetchSources() {
+  if (!sourceHtml.value) fetchSource()
+  if (!vueSourceHtml.value) fetchVueSource()
+  if (!plaintextContent.value) fetchPlaintext()
 }
 
 async function fetchStats() {
@@ -368,7 +401,7 @@ watch(() => route.params.template, () => {
   stats.value = null
   emailResult.value = null
   sourceView.value = 'compiled'
-  fetchTemplate()
+  fetchTemplate().then(prefetchSources)
   fetchCompatibility()
   fetchStats()
   fetchEmailConfig()
@@ -398,11 +431,10 @@ watch(sourceView, (view) => {
 
 if ((import.meta as any).hot) {
   ;(import.meta as any).hot.on('maizzle:template-updated', () => {
-    fetchTemplate()
     fetchCompatibility()
     fetchStats()
 
-    // Always clear all source views so they re-fetch when switched to
+    // Always clear all source views so they re-fetch
     sourceHtml.value = ''
     vueSourceHtml.value = ''
     plaintextContent.value = ''
@@ -413,6 +445,9 @@ if ((import.meta as any).hot) {
       if (sourceView.value === 'vue') fetchVueSource()
       if (sourceView.value === 'plaintext') fetchPlaintext()
     }
+
+    // Refresh preview, then warm the remaining source views
+    fetchTemplate().then(prefetchSources)
   })
 
   // Keep the UI in sync with live config edits. Payload is the same shape

@@ -68,7 +68,7 @@ export async function serve(options: ServeOptions = {}) {
       alias: [
         { find: '@', replacement: devUIDir },
         { find: 'vue', replacement: resolve(pkg('vue'), 'dist/vue.runtime.esm-bundler.js') },
-        ...['vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', 'lucide-vue-next', 'class-variance-authority', 'clsx', 'tailwind-merge']
+        ...['vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', 'lucide-vue-next', 'class-variance-authority', 'clsx', 'tailwind-merge', 'culori', 'postcss-safe-parser']
           .map(name => ({ find: name, replacement: pkg(name) })),
       ],
     },

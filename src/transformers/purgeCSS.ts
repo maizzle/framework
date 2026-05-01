@@ -75,9 +75,58 @@ export function purgeCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[] 
   const safelist = [...DEFAULT_SAFELIST, ...userSafelist]
   dom = deepPurge(dom, safelist)
 
+  /**
+   * Shield embed style tags from email-comb. Comb has no skip option,
+   * so it strips CSS comments and drops class refs it can't match
+   * against visible CSS. Swap each embed tag's body for a unique
+   * stub rule (`.maizzle-keep-N{}`) so comb keeps the tag, then
+   * whitelist that stub plus every selector from the original
+   * CSS so comb leaves matching refs alone elsewhere — and
+   * finally restore the original CSS once comb has run.
+   */
+  const stash: { token: string; original: string; textNode: any }[] = []
+  const extraWhitelist: string[] = []
+  walk(dom, (node) => {
+    const el = node as Element
+    if (el.name !== 'style' || !el.attribs) return
+    if (!('embed' in el.attribs) && !('data-embed' in el.attribs)) return
+    const textNode = el.children?.find((c: any) => c.type === 'text') as any
+    if (!textNode?.data) return
+    const idx = stash.length
+    const token = `.maizzle-keep-${idx}`
+    extraWhitelist.push(token)
+    for (const m of textNode.data.matchAll(/(?<![\w-])[.#][a-zA-Z_][\w-]*/g)) {
+      extraWhitelist.push(m[0])
+    }
+    stash.push({ token, original: textNode.data, textNode })
+    textNode.data = `${token}{}`
+  })
+
+  if (extraWhitelist.length) {
+    options.whitelist = [...(options.whitelist as string[] ?? []), ...extraWhitelist]
+  }
+
   const { result } = comb(serialize(dom), options)
 
+  /**
+   * Comb returns a fresh string, so we work off the post-parse tree:
+   * find each embed style tag whose body still starts with the stub
+   * token we planted earlier and swap the original CSS back in.
+   */
   let purgedDom = parse(result)
+
+  if (stash.length) {
+    walk(purgedDom, (node) => {
+      const el = node as Element
+      if (el.name !== 'style' || !el.attribs) return
+      if (!('embed' in el.attribs) && !('data-embed' in el.attribs)) return
+      const textNode = el.children?.find((c: any) => c.type === 'text') as any
+      if (!textNode?.data) return
+      const trimmed = textNode.data.trim()
+      const match = stash.find(s => trimmed === `${s.token}{}` || trimmed.startsWith(`${s.token}{`))
+      if (match) textNode.data = match.original
+    })
+  }
 
   // Clean up data-embed/embed attributes — no longer needed after purging
   walk(purgedDom, (node) => {

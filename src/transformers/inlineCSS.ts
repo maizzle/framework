@@ -125,13 +125,17 @@ export function inlineCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[]
     }
   })
 
-  // Restore data-embed from our marker, then remove the marker.
-  // The purge step will handle final data-embed/embed removal.
+  /**
+   * Restore `embed` from our marker so the purge step can detect
+   * these tags and skip them. Drop `data-embed` (juice's name)
+   * since it's redundant once `embed` is back, and let purge
+   * strip `embed` itself at the end of its run.
+   */
   walk(result, (node) => {
     const el = node as Element
     if (el.name === 'style' && el.attribs && 'data-maizzle-embed' in el.attribs) {
-      el.attribs['data-embed'] = ''
       el.attribs.embed = ''
+      delete el.attribs['data-embed']
       delete el.attribs['data-maizzle-embed']
     }
   })

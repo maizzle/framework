@@ -211,12 +211,12 @@ const commandGrouped = computed(() => {
 const { contains } = useFilter({ sensitivity: 'base' })
 
 const filteredTemplatesCount = computed(() => {
-  const q = commandSearch.value
-  if (!q) return 0
+  const tokens = commandSearch.value.split(/\s+/).filter(Boolean)
+  if (tokens.length === 0) return 0
   let count = 0
   for (const t of templates.value) {
     const haystack = `${getFileName(t.path)} ${t.path.split('/').join(' ')}`
-    if (contains(haystack, q)) count++
+    if (tokens.every(token => contains(haystack, token))) count++
   }
   return count
 })

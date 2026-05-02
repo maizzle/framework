@@ -44,9 +44,12 @@ function filterItems() {
   filterState.filtered.groups = new Set()
   let itemCount = 0
 
+  // Tokenize the search by whitespace so segments match in any order
+  const tokens = filterState.search.split(/\s+/).filter(Boolean)
+
   // Check which items should be included
   for (const [id, value] of allItems.value) {
-    const score = contains(value, filterState.search)
+    const score = tokens.every(token => contains(value, token))
     filterState.filtered.items.set(id, score ? 1 : 0)
     if (score)
       itemCount++

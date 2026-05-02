@@ -71,6 +71,10 @@ export async function createRenderer(
   const { dts = false, markdown: markdownOptionsRaw, root = process.cwd(), componentDirs = [], vite: userViteConfig } = options
   const { shikiTheme = 'github-light', ...markdownOptions } = markdownOptionsRaw ?? {}
 
+  // Absolute component dirs — used to skip auto-wrapping `.md` files that are
+  // imported as reusable components (vs. entry-point email templates).
+  const componentDirsAbs = [resolve(root, 'components'), ...componentDirs.map(d => resolve(root, d))]
+
   const dtsDir = isLaravel()
     ? resolve(process.cwd(), 'resources/js/types/maizzle')
     : resolve(root, '.maizzle')
@@ -109,6 +113,17 @@ export async function createRenderer(
         headEnabled: true,
         wrapperDiv: false,
         wrapperClasses: 'prose',
+        wrapperComponent: (id: string, raw: string) => {
+          const fm = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1]
+          const layout = fm?.match(/^[ \t]*layout[ \t]*:[ \t]*['"]?([A-Za-z][\w-]*|false|none)['"]?[ \t]*$/m)?.[1]
+          if (layout === 'false' || layout === 'none') return null
+          if (layout) return layout
+          // No `layout:` set — default to the built-in `MarkdownLayout` for
+          // entry-template `.md` files. Skip for `.md` files inside component
+          // dirs, which are reusable fragments imported into other templates.
+          const inComponentDir = componentDirsAbs.some(d => id === d || id.startsWith(`${d}/`))
+          return inComponentDir ? null : 'MarkdownLayout'
+        },
         markdownOptions: {
           async highlight(code: string, lang: string) {
             const { codeToHtml } = await import('shiki')

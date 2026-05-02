@@ -1520,6 +1520,96 @@ describe('render', () => {
       expect(result.html).toContain('--')
     })
 
+    it('wraps .md template in component named in `layout:` frontmatter', async () => {
+      writeSfc(tempDir, 'components/MdShell.vue', `
+        <template>
+          <section class="md-shell">
+            <slot />
+          </section>
+        </template>
+      `)
+
+      writeFileSync(join(tempDir, 'page.md'), [
+        '---',
+        'layout: MdShell',
+        '---',
+        '',
+        '# Hello',
+      ].join('\n'))
+
+      const result = await render(join(tempDir, 'page.md'), {
+        root: tempDir,
+        components: { source: ['components'] },
+      })
+
+      expect(result.html).toContain('class="md-shell"')
+      expect(result.html).toMatch(/<section[^>]*class="md-shell"[^>]*>[\s\S]*<h1[^>]*>Hello<\/h1>[\s\S]*<\/section>/)
+    })
+
+    it('wraps .md template in built-in MarkdownLayout by default when no layout frontmatter is set', async () => {
+      writeFileSync(join(tempDir, 'page.md'), '# Hello')
+
+      const result = await render(join(tempDir, 'page.md'))
+
+      expect(result.html).toContain('<h1')
+      // Built-in Layout output markers (MarkdownLayout wraps Layout)
+      expect(result.html).toContain('role="article"')
+      expect(result.html).toMatch(/<html[^>]*\blang="en"/)
+      // MarkdownLayout-specific: Container with max-w-xl wrapping the markdown
+      expect(result.html).toMatch(/role="article"[^>]*>[\s\S]*max-w-xl[\s\S]*<h1/)
+    })
+
+    it('passes frontmatter through MarkdownLayout to Layout (lang)', async () => {
+      writeFileSync(join(tempDir, 'page.md'), [
+        '---',
+        'lang: fr',
+        '---',
+        '',
+        '# Bonjour',
+      ].join('\n'))
+
+      const result = await render(join(tempDir, 'page.md'))
+
+      expect(result.html).toMatch(/<html[^>]*\blang="fr"/)
+    })
+
+    it('skips default Layout wrap when `.md` lives in a components dir', async () => {
+      writeSfc(tempDir, 'components/Promo.md', '# Promo content')
+
+      writeSfc(tempDir, 'emails/page.vue', `
+        <template>
+          <Layout>
+            <Promo />
+          </Layout>
+        </template>
+      `)
+
+      const result = await render(join(tempDir, 'emails/page.vue'), {
+        root: tempDir,
+        components: { source: ['components'] },
+      })
+
+      // Single Layout-rendered article (the parent), not a nested duplicate.
+      const articleCount = (result.html.match(/role="article"/g) ?? []).length
+      expect(articleCount).toBe(1)
+      expect(result.html).toContain('Promo content')
+    })
+
+    it('opts out of default wrap when frontmatter sets `layout: false`', async () => {
+      writeFileSync(join(tempDir, 'page.md'), [
+        '---',
+        'layout: false',
+        '---',
+        '',
+        '# Hello',
+      ].join('\n'))
+
+      const result = await render(join(tempDir, 'page.md'))
+
+      expect(result.html).toContain('<h1')
+      expect(result.html).not.toContain('role="article"')
+    })
+
     it('typographer is enabled by default', async () => {
       const result = await render(`
         <template>

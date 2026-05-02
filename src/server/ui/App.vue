@@ -24,6 +24,7 @@ import {
   CommandList,
   CommandShortcut,
 } from '@/components/ui/command'
+import { useFilter } from 'reka-ui'
 import {
   Sidebar,
   SidebarContent,
@@ -205,6 +206,19 @@ const commandGrouped = computed(() => {
   }
 
   return groups
+})
+
+const { contains } = useFilter({ sensitivity: 'base' })
+
+const filteredTemplatesCount = computed(() => {
+  const q = commandSearch.value
+  if (!q) return 0
+  let count = 0
+  for (const t of templates.value) {
+    const haystack = `${getFileName(t.path)} ${t.path.split('/').join(' ')}`
+    if (contains(haystack, q)) count++
+  }
+  return count
 })
 
 
@@ -512,6 +526,9 @@ onUnmounted(() => {
         <span class="inline-flex items-center gap-1">
           <Kbd>Esc</Kbd>
           Close
+        </span>
+        <span v-if="commandSearch" class="ml-auto">
+          {{ filteredTemplatesCount }} {{ filteredTemplatesCount === 1 ? 'result' : 'results' }}
         </span>
       </div>
     </CommandDialog>

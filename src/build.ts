@@ -63,6 +63,13 @@ export async function build(options: BuildOptions = {}): Promise<BuildResult> {
 
       const rendered = await renderer.render(absolutePath, config)
 
+      // Register SFC event handlers collected during render so they participate
+      // in the post-render events (afterRender / afterTransform). They're cleared
+      // at the end of the iteration so they don't leak into the next template.
+      for (const { name, handler } of rendered.sfcEventHandlers) {
+        events.on(name, handler)
+      }
+
       let html = await events.fireAfterRender({ config, template, html: rendered.html })
 
       // Use the per-template merged config (from defineConfig() in the SFC) so that
@@ -105,11 +112,6 @@ export async function build(options: BuildOptions = {}): Promise<BuildResult> {
 
         mkdirSync(dirname(ptOutputPath), { recursive: true })
         writeFileSync(ptOutputPath, plaintext)
-      }
-
-      // Register SFC event handlers that were collected during render
-      for (const { name, handler } of rendered.sfcEventHandlers) {
-        events.on(name, handler)
       }
 
       events.clearSfcHandlers()

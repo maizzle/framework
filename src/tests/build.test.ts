@@ -470,4 +470,84 @@ describe('build', () => {
     expect(existsSync(marker)).toBe(true)
     expect(readFileSync(marker, 'utf-8')).toContain('test.html')
   })
+
+  it('SFC useEvent(afterRender) fires for the template that registers it', async () => {
+    writeSfc(tempDir, 'emails/test.vue', `
+      <script setup>
+      useEvent('afterRender', ({ html }) => html.replace('FROM_SFC', 'AFTER_RENDER_RAN'))
+      </script>
+      <template><div>FROM_SFC</div></template>
+    `)
+
+    await build()
+
+    const html = readFileSync(join(tempDir, 'dist/test.html'), 'utf-8')
+    expect(html).toContain('AFTER_RENDER_RAN')
+    expect(html).not.toContain('FROM_SFC')
+  })
+
+  it('SFC useEvent(afterTransform) fires for the template that registers it', async () => {
+    writeSfc(tempDir, 'emails/test.vue', `
+      <script setup>
+      useEvent('afterTransform', ({ html }) => html.replace('FROM_SFC', 'AFTER_TRANSFORM_RAN'))
+      </script>
+      <template><div>FROM_SFC</div></template>
+    `)
+
+    await build()
+
+    const html = readFileSync(join(tempDir, 'dist/test.html'), 'utf-8')
+    expect(html).toContain('AFTER_TRANSFORM_RAN')
+    expect(html).not.toContain('FROM_SFC')
+  })
+
+  it('SFC useEvent(afterBuild) handlers from multiple templates all fire', async () => {
+    const markerA = join(tempDir, 'a.marker')
+    const markerB = join(tempDir, 'b.marker')
+
+    writeSfc(tempDir, 'emails/a.vue', `
+      <script setup>
+      import { writeFileSync } from 'node:fs'
+      useEvent('afterBuild', ({ files }) => {
+        writeFileSync('${markerA.replace(/\\/g, '\\\\')}', String(files.length))
+      })
+      </script>
+      <template><div>A</div></template>
+    `)
+    writeSfc(tempDir, 'emails/b.vue', `
+      <script setup>
+      import { writeFileSync } from 'node:fs'
+      useEvent('afterBuild', ({ files }) => {
+        writeFileSync('${markerB.replace(/\\/g, '\\\\')}', String(files.length))
+      })
+      </script>
+      <template><div>B</div></template>
+    `)
+
+    await build()
+
+    expect(existsSync(markerA)).toBe(true)
+    expect(existsSync(markerB)).toBe(true)
+  })
+
+  it('SFC useEvent handlers do not leak across templates', async () => {
+    // Template A registers an afterTransform handler that would mutate ANY html.
+    writeSfc(tempDir, 'emails/a.vue', `
+      <script setup>
+      useEvent('afterTransform', ({ html }) => html.replace('LEAK_TARGET', 'A_LEAKED'))
+      </script>
+      <template><div>marker-a</div></template>
+    `)
+    // Template B contains the LEAK_TARGET token. If A's handler leaks, B's
+    // output would contain 'A_LEAKED'.
+    writeSfc(tempDir, 'emails/b.vue', `
+      <template><div>LEAK_TARGET</div></template>
+    `)
+
+    await build()
+
+    const bHtml = readFileSync(join(tempDir, 'dist/b.html'), 'utf-8')
+    expect(bHtml).toContain('LEAK_TARGET')
+    expect(bHtml).not.toContain('A_LEAKED')
+  })
 })

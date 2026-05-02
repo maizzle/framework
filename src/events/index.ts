@@ -19,6 +19,10 @@ export interface EventMap {
  */
 export class EventManager {
   private handlers = new Map<EventName, EventMap[EventName][]>()
+  // Snapshot of config-handler counts per event, captured at registerConfig().
+  // clearSfcHandlers() truncates each list back to this count, dropping any
+  // SFC-registered handlers that were appended after.
+  private configHandlerCount = new Map<EventName, number>()
 
   /**
    * Register handlers from the Maizzle config.
@@ -31,6 +35,7 @@ export class EventManager {
       if (typeof handler === 'function') {
         this.on(name, handler as EventMap[typeof name])
       }
+      this.configHandlerCount.set(name, this.handlers.get(name)?.length ?? 0)
     }
   }
 
@@ -125,13 +130,20 @@ export class EventManager {
   }
 
   /**
-   * Clear all handlers (useful between builds or for per-template SFC handlers).
+   * Drop SFC-registered handlers, keep config-registered ones.
+   *
+   * Per default, only clears events whose scope is per-template
+   * (`beforeRender`, `afterRender`, `afterTransform`). Build-scoped events
+   * (`afterBuild`) accumulate across all templates and fire once at end of
+   * build. Pass an explicit list to override.
    */
-  clearSfcHandlers() {
-    // We keep the first handler per event (from config) and remove the rest (from SFCs)
-    for (const [name, handlers] of this.handlers) {
-      if (handlers.length > 1) {
-        this.handlers.set(name, [handlers[0]])
+  clearSfcHandlers(events: EventName[] = ['beforeRender', 'afterRender', 'afterTransform']) {
+    for (const name of events) {
+      const handlers = this.handlers.get(name)
+      if (!handlers) continue
+      const keep = this.configHandlerCount.get(name) ?? 0
+      if (handlers.length > keep) {
+        this.handlers.set(name, handlers.slice(0, keep))
       }
     }
   }

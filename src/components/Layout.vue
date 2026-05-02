@@ -86,6 +86,20 @@ const MsoHead = () => createStaticVNode(
   1
 )
 
+const MsoBody = () => createStaticVNode(
+  `<span class="hidden">
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+      <w:WordDocument>
+        <w:DontUseAdvancedTypographyReadingMail />
+      </w:WordDocument>
+    </xml>
+  </span>`,
+  1
+)
+
 const htmlXmlns = computed(() => outlookFallback ? {
   'xmlns:v': 'urn:schemas-microsoft-com:vml',
   'xmlns:o': 'urn:schemas-microsoft-com:office:office',
@@ -115,16 +129,7 @@ const htmlXmlns = computed(() => outlookFallback ? {
     </style>
   </head>
   <body :xml:lang="outlookFallback ? lang : null" :class="bodyMergedClass">
-    <span v-if="outlookFallback" class="hidden">
-      <xml>
-        <o:OfficeDocumentSettings>
-          <o:PixelsPerInch>96</o:PixelsPerInch>
-        </o:OfficeDocumentSettings>
-        <w:WordDocument>
-          <w:DontUseAdvancedTypographyReadingMail />
-        </w:WordDocument>
-      </xml>
-    </span>
+    <MsoBody v-if="outlookFallback" />
     <div
       role="article"
       aria-roledescription="email"

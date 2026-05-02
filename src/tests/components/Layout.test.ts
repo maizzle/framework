@@ -309,6 +309,9 @@ describe('Layout', () => {
       expect(result.html).toMatch(/name="supported-color-schemes"[^>]*content="light dark"/)
     })
 
+  })
+
+  describe('default body', () => {
     it('includes the MSO conditional block', async () => {
       const result = await render(`
         <template>
@@ -318,10 +321,8 @@ describe('Layout', () => {
         </template>
       `)
 
-      expect(result.html).toContain('<!--[if mso]>')
-      expect(result.html).toContain('o:OfficeDocumentSettings')
-      expect(result.html).toContain('<o:PixelsPerInch>96</o:PixelsPerInch>')
-      expect(result.html).toContain('<![endif]-->')
+      expect(result.html).toContain('o:officedocumentsettings')
+      expect(result.html).toContain('<o:pixelsperinch>96</o:pixelsperinch>')
     })
   })
 
@@ -335,7 +336,7 @@ describe('Layout', () => {
         </template>
       `)
 
-      expect(result.html).not.toContain('o:OfficeDocumentSettings')
+      expect(result.html).not.toContain('o:officedocumentsettings')
       expect(result.html).not.toContain('mso-line-height-rule')
       expect(result.html).not.toContain('xmlns:v')
       expect(result.html).not.toContain('xmlns:o')

@@ -30,6 +30,7 @@ export { useEvent } from './composables/useEvent.ts'
 export { useFont } from './composables/useFont.ts'
 export { useOutlookFallback } from './composables/useOutlookFallback.ts'
 export { usePlaintext } from './composables/usePlaintext.ts'
+export { useTransformers } from './composables/useTransformers.ts'
 export { useHead } from '@unhead/vue'
 
 // Types

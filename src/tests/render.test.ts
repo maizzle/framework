@@ -376,6 +376,27 @@ describe('render', () => {
       expect(result.html).toContain('<div class="test">Test</div>')
     })
 
+    it('skips transformers when useTransformers(false) is called from SFC', async () => {
+      const result = await render(`
+        <script setup>
+        useTransformers(false)
+        </script>
+        <template>
+          <html>
+            <head>
+              <style>.test { color: red; }</style>
+            </head>
+            <body>
+              <div class="test">Test</div>
+            </body>
+          </html>
+        </template>
+      `)
+
+      expect(result.html).toContain('<div class="test">Test</div>')
+      expect(result.html).toContain('<style>.test { color: red; }</style>')
+    })
+
     it('inlines CSS when enabled', async () => {
       symlinkSync(join(originalCwd, 'node_modules'), join(tempDir, 'node_modules'))
 

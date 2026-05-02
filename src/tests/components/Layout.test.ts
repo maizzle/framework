@@ -321,8 +321,9 @@ describe('Layout', () => {
         </template>
       `)
 
-      expect(result.html).toContain('o:officedocumentsettings')
-      expect(result.html).toContain('<o:pixelsperinch>96</o:pixelsperinch>')
+      expect(result.html).toContain('<o:OfficeDocumentSettings>')
+      expect(result.html).toContain('<o:PixelsPerInch>96</o:PixelsPerInch>')
+      expect(result.html).toContain('<w:DontUseAdvancedTypographyReadingMail />')
     })
   })
 
@@ -336,7 +337,7 @@ describe('Layout', () => {
         </template>
       `)
 
-      expect(result.html).not.toContain('o:officedocumentsettings')
+      expect(result.html).not.toContain('o:OfficeDocumentSettings')
       expect(result.html).not.toContain('mso-line-height-rule')
       expect(result.html).not.toContain('xmlns:v')
       expect(result.html).not.toContain('xmlns:o')

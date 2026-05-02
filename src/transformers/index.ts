@@ -139,9 +139,13 @@ export async function runTransformers(
   // 16. Minify
   result = minify(result, config)
 
-  // Strip self-closing slashes for HTML5 doctypes
+  // Strip self-closing slashes for HTML5 doctypes, but preserve content
+  // inside MSO conditional comments (which are XML-ish and case/syntax sensitive).
   if (!isXhtml) {
-    result = result.replace(/ \/>/g, '>')
+    result = result.replace(
+      /<!--\[if [^\]]*\]>[\s\S]*?<!\[endif\]-->|( \/>)/g,
+      (match, selfClose) => selfClose ? '>' : match,
+    )
   }
 
   return result

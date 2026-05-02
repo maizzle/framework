@@ -36,41 +36,25 @@ describe('Preheader', () => {
     })
   })
 
-  describe('filler entities', () => {
-    it('renders 150 filler pairs by default', async () => {
+  describe('spaces', () => {
+    it('renders 150 filler sequences by default', async () => {
       const html = await render()
 
-      const fillerCount = (html.match(/\u2007\u034F/g) || []).length
-      expect(fillerCount).toBe(150)
+      const count = (html.match(/ ﻿͏/g) || []).length
+      expect(count).toBe(150)
     })
 
-    it('accepts custom filler count', async () => {
-      const html = await render({ fillerCount: 5 })
+    it('accepts a custom count', async () => {
+      const html = await render({ spaces: 5 })
 
-      const fillerCount = (html.match(/\u2007\u034F/g) || []).length
-      expect(fillerCount).toBe(5)
+      const count = (html.match(/ ﻿͏/g) || []).length
+      expect(count).toBe(5)
     })
 
-    it('renders zero fillers when set to 0', async () => {
-      const html = await render({ fillerCount: 0 })
+    it('renders nothing when set to 0', async () => {
+      const html = await render({ spaces: 0 })
 
-      expect(html).not.toContain('\u2007\u034F')
-    })
-  })
-
-  describe('shy entities', () => {
-    it('renders 150 shy entities by default', async () => {
-      const html = await render()
-
-      const shyCount = (html.match(/\u00AD/g) || []).length
-      expect(shyCount).toBe(150)
-    })
-
-    it('accepts custom shy count', async () => {
-      const html = await render({ shyCount: 3 })
-
-      const shyCount = (html.match(/\u00AD/g) || []).length
-      expect(shyCount).toBe(3)
+      expect(html).not.toContain(' ﻿͏')
     })
   })
 
@@ -78,7 +62,7 @@ describe('Preheader', () => {
     it('ends with a non-breaking space before closing div', async () => {
       const html = await render()
 
-      expect(html).toContain('\u00A0</div>')
+      expect(html).toContain(' </div>')
     })
   })
 })

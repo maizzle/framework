@@ -494,6 +494,7 @@ onUnmounted(() => {
                 <path d="M14 2v4a2 2 0 0 0 2 2h4" />
               </svg>
               <span>{{ getFileName(t.path) }}</span>
+              <span class="sr-only">{{ ' ' + t.path.split('/').join(' ') }}</span>
             </CommandItem>
           </CommandGroup>
         </template>

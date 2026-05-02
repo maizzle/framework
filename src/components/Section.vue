@@ -33,6 +33,16 @@ const props = defineProps({
     type: String,
     default: undefined
   },
+  /**
+   * Toggle Outlook (MSO) and VML fallback markup for this
+   * component and all descendants.
+   *
+   * When `false`, skips MSO ghost tables, VML shapes,
+   * `xmlns:v`/`xmlns:o` attributes, and mso-specific CSS
+   * in all built-in components.
+   *
+   * @default true
+   */
   outlookFallback: outlookFallbackProp,
 })
 

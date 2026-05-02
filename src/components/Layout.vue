@@ -55,6 +55,16 @@ const props = defineProps({
     type: String,
     default: undefined
   },
+  /**
+   * Toggle Outlook (MSO) and VML fallback markup for this
+   * component and all descendants.
+   *
+   * When `false`, skips MSO ghost tables, VML shapes,
+   * `xmlns:v`/`xmlns:o` attributes, and mso-specific CSS
+   * in all built-in components.
+   *
+   * @default true
+   */
   outlookFallback: outlookFallbackProp,
 })
 
@@ -68,18 +78,11 @@ const EmptyHead = () => createStaticVNode('<head></head>', 1)
 
 const MsoHead = () => createStaticVNode(
   `<!--[if mso]>
-      <noscript>
-        <xml>
-          <o:OfficeDocumentSettings xmlns:o="urn:schemas-microsoft-com:office:office">
-            <o:PixelsPerInch>96</o:PixelsPerInch>
-          </o:OfficeDocumentSettings>
-        </xml>
-      </noscript>
-      <style>
-        td,th,div,p,a,h1,h2,h3,h4,h5,h6 {font-family: "Segoe UI", sans-serif; mso-line-height-rule: exactly;}
-        .mso-break-all {word-break: break-all;}
-      </style>
-      <![endif]-->`,
+    <style>
+      td,th,div,p,a,h1,h2,h3,h4,h5,h6 {font-family: "Segoe UI", sans-serif; mso-line-height-rule: exactly;}
+      .mso-break-all {word-break: break-all;}
+    </style>
+  <![endif]-->`,
   1
 )
 
@@ -112,6 +115,16 @@ const htmlXmlns = computed(() => outlookFallback ? {
     </style>
   </head>
   <body :xml:lang="outlookFallback ? lang : null" :class="bodyMergedClass">
+    <span v-if="outlookFallback" class="hidden">
+      <xml>
+        <o:OfficeDocumentSettings>
+          <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+        <w:WordDocument>
+          <w:DontUseAdvancedTypographyReadingMail />
+        </w:WordDocument>
+      </xml>
+    </span>
     <div
       role="article"
       aria-roledescription="email"

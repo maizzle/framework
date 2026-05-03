@@ -130,7 +130,7 @@ All built-in components are auto-imported, no import statements needed. See `ref
 | `<Link>` | Anchor element with email-safe defaults |
 | `<Button>` | Call-to-action button with bulletproof rendering |
 | `<Img>` | Image with dark mode and reduced motion variants |
-| `<Divider>` | Horizontal rule / visual separator |
+| `<Hr>` | Horizontal rule / visual separator |
 | `<Spacer>` | Vertical or horizontal spacing |
 | `<Preheader>` | Hidden preview text shown in inbox list view |
 
@@ -146,11 +146,14 @@ All built-in components are auto-imported, no import statements needed. See `ref
 
 | Component | Description |
 |-----------|-------------|
+| `<Font>` | Adds a Google Font (or custom font) via `<link>` + `@font-face`, with email-safe fallbacks |
+| `<Tailwind>` | Scopes a Tailwind/CSS block to its slot — per-template styles or scoped overrides |
 | `<WithUrl>` | Rewrites URLs in children — prepend base URL or append query params (UTM tracking) |
 | `<NoWidows>` | Replaces last space with `&nbsp;` to prevent orphaned words |
 | `<Outlook>` | Wraps content in Outlook conditional comments (shows only in Outlook) |
 | `<NotOutlook>` | Hides content from Outlook |
 | `<Vml>` | VML markup for Outlook-specific rendering (background images) |
+| `<Raw>` | Emits slot content verbatim — bypasses Vue compilation so `{{ }}` and ESP syntax pass through |
 
 ## Behavioral guidelines
 
@@ -180,6 +183,7 @@ If the user hasn't specified, ask about:
 ### Common mistakes to avoid
 
 - Do not use `<div>` directly for layout structure. Use the `<Container>`, `<Section>`, `<Row>` and `<Column>` components, which render email-safe markup.
+- Prefer `<Spacer>` over vertical margins for spacing between block elements — Outlook ignores margins on many elements. Margins are fine on text elements (`<p>`, `<Text>`, headings).
 - Do not use CSS `flexbox` or `grid` for layouts — poor email client support. `display:flex` can be used for simple horizontal alignment in some cases, but tables are always more reliable.
 - Do not use `position: absolute/relative` — not supported in most email clients.
 - Do not use custom fonts without a web-safe fallback. Most email clients ignore `@font-face`.

@@ -59,17 +59,6 @@ export async function runTransformers(
   doctype?: string,
   tailwindBlocks?: TailwindBlock[],
 ): Promise<string> {
-  // Strip Vue SSR fragment markers before parsing. They contain `-->`, which
-  // prematurely terminates conditional comments like `<!--[if mso]>...<![endif]-->`
-  // when htmlparser2 reads them, swallowing real markup into comment data.
-  html = html
-    .replaceAll('<!--[-->', '')
-    .replaceAll('<!--]-->', '')
-    .replaceAll('<!--teleport start anchor-->', '')
-    .replaceAll('<!--teleport anchor-->', '')
-    .replaceAll('<!--teleport start-->', '')
-    .replaceAll('<!--teleport end-->', '')
-
   // Per-transformer skip map — only honored when useTransformers is an object.
   // Whole-pipeline opt-out (`useTransformers === false`) is handled upstream
   // in build.ts / render so we never reach this function in that case.

@@ -152,7 +152,7 @@ describe('Layout', () => {
             <div>Test</div>
           </Layout>
         </template>
-      `)
+      `, { useTransformers: false })
 
       const bodyMatch = result.html.match(/<body[^>]*\bclass="([^"]*)"/)
       expect(bodyMatch).not.toBeNull()
@@ -170,7 +170,7 @@ describe('Layout', () => {
             <div>Test</div>
           </Layout>
         </template>
-      `)
+      `, { useTransformers: false })
 
       const bodyMatch = result.html.match(/<body[^>]*\bclass="([^"]*)"/)
       expect(bodyMatch).not.toBeNull()
@@ -186,7 +186,7 @@ describe('Layout', () => {
             <div>Test</div>
           </Layout>
         </template>
-      `)
+      `, { useTransformers: false })
 
       const bodyMatch = result.html.match(/<body[^>]*\bclass="([^"]*)"/)
       expect(bodyMatch).not.toBeNull()
@@ -232,7 +232,7 @@ describe('Layout', () => {
             <div>Test</div>
           </Layout>
         </template>
-      `)
+      `, { useTransformers: false })
 
       const articleMatch = result.html.match(/<div[^>]*role="article"[^>]*\bclass="([^"]*)"/)
       expect(articleMatch).not.toBeNull()
@@ -250,7 +250,7 @@ describe('Layout', () => {
             <div>Test</div>
           </Layout>
         </template>
-      `)
+      `, { useTransformers: false })
 
       const articleMatch = result.html.match(/<div[^>]*role="article"[^>]*\bclass="([^"]*)"/)
       expect(articleMatch).not.toBeNull()
@@ -266,7 +266,7 @@ describe('Layout', () => {
             <div>Test</div>
           </Layout>
         </template>
-      `)
+      `, { useTransformers: false })
 
       const articleMatch = result.html.match(/<div[^>]*role="article"[^>]*\bclass="([^"]*)"/)
       const articleClass = articleMatch![1]

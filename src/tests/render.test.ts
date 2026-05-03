@@ -103,7 +103,8 @@ describe('render', () => {
       `)
 
       expect(result.config.content).toEqual([resolve(tempDir, 'emails/**/*.{vue,md}').replace(/\\/g, '/')])
-      expect(result.config.css?.inline).toBe(undefined)
+      expect(result.config.css?.inline).toBe(true)
+      expect(result.config.css?.purge).toBe(true)
     })
   })
 
@@ -632,7 +633,7 @@ describe('render', () => {
             </body>
           </html>
         </template>
-      `)
+      `, { useTransformers: false })
 
       // Vue SSR places teleported content in the target with anchor comments,
       // which are stripped by the transformer pipeline
@@ -721,7 +722,7 @@ describe('render', () => {
             </body>
           </html>
         </template>
-      `)
+      `, { useTransformers: false })
 
       expect(result.html).toContain('Sidebar content')
       expect(result.html).toMatch(/<div class="sidebar">.*Sidebar content.*<\/div>/)
@@ -1022,7 +1023,7 @@ describe('render', () => {
             </body>
           </html>
         </template>
-      `)
+      `, { useTransformers: false })
 
       expect(result.html).toContain('display:none')
       expect(result.html).toContain('Welcome aboard!')
@@ -1042,7 +1043,7 @@ describe('render', () => {
             <body><p>Test</p></body>
           </html>
         </template>
-      `)
+      `, { useTransformers: false })
 
       expect(result.html).toContain('Hi')
       expect(result.html).toContain('display:none')
@@ -1596,7 +1597,7 @@ describe('render', () => {
     it('wraps .md template in built-in MarkdownLayout by default when no layout frontmatter is set', async () => {
       writeFileSync(join(tempDir, 'page.md'), '# Hello')
 
-      const result = await render(join(tempDir, 'page.md'))
+      const result = await render(join(tempDir, 'page.md'), { useTransformers: false })
 
       expect(result.html).toContain('<h1')
       // Built-in Layout output markers (MarkdownLayout wraps Layout)

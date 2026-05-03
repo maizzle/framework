@@ -15,6 +15,8 @@ export const defaults: MaizzleConfig = {
     watch: [],
   },
   css: {
+    inline: true,
+    purge: true,
     safe: true,
     preferUnitless: true,
   },

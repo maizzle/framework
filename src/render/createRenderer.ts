@@ -331,6 +331,18 @@ export async function createRenderer(
         html = html.replace(/<body([^>]*)>/, `<body$1>${previewHtml}`)
       }
 
+      // Strip Vue SSR fragment markers + teleport anchor comments. These are
+      // rendering hygiene, not transformer concerns — must run regardless of
+      // `useTransformers` state. Fragment markers contain `-->`, which would
+      // prematurely terminate MSO conditional comments downstream.
+      html = html
+        .replaceAll('<!--[-->', '')
+        .replaceAll('<!--]-->', '')
+        .replaceAll('<!--teleport start anchor-->', '')
+        .replaceAll('<!--teleport anchor-->', '')
+        .replaceAll('<!--teleport start-->', '')
+        .replaceAll('<!--teleport end-->', '')
+
       return {
         html,
         doctype: renderContext.doctype,

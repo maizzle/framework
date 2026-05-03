@@ -9,10 +9,6 @@ import { createRenderer } from './render/createRenderer.ts'
 import { createPlaintext } from './plaintext.ts'
 import type { MaizzleConfig } from './types/index.ts'
 
-export interface BuildOptions {
-  config?: Partial<MaizzleConfig> | string
-}
-
 export interface BuildResult {
   files: string[]
   config: MaizzleConfig
@@ -23,12 +19,16 @@ export interface BuildResult {
  *
  * Creates a single Renderer instance, then loops through each template
  * calling render → transformers → write to disk.
+ *
+ * Pass a `Partial<MaizzleConfig>` to override config inline, or a string
+ * to load config from a specific file path. Omit to load `maizzle.config`
+ * from the working directory.
  */
-export async function build(options: BuildOptions = {}): Promise<BuildResult> {
+export async function build(configInput?: Partial<MaizzleConfig> | string): Promise<BuildResult> {
   const start = Date.now()
   const spinner = ora({ text: 'Building templates...', spinner: 'circleHalves' }).start()
 
-  const config = await resolveConfig(options.config)
+  const config = await resolveConfig(configInput)
 
   const events = new EventManager()
   events.registerConfig(config)

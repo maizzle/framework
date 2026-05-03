@@ -88,9 +88,7 @@ describe('build', () => {
       </template>
     `)
 
-    const result = await build({
-      config: { output: { path: join(tempDir, 'custom-output') } },
-    })
+    const result = await build({ output: { path: join(tempDir, 'custom-output') } })
 
     expect(result.files[0]).toContain('custom-output')
   })
@@ -274,9 +272,7 @@ describe('build', () => {
         </template>
       `)
 
-      const result = await build({
-        config: { plaintext: true },
-      })
+      const result = await build({ plaintext: true })
 
       expect(result.files).toHaveLength(1)
 
@@ -298,9 +294,7 @@ describe('build', () => {
 
       const customPath = join(tempDir, 'plaintext-output')
 
-      const result = await build({
-        config: { plaintext: customPath },
-      })
+      const result = await build({ plaintext: customPath })
 
       expect(result.files).toHaveLength(1)
       expect(existsSync(join(customPath, 'test.txt'))).toBe(true)
@@ -313,9 +307,7 @@ describe('build', () => {
         </template>
       `)
 
-      const result = await build({
-        config: { plaintext: { ignoreTags: ['br'] } },
-      })
+      const result = await build({ plaintext: { ignoreTags: ['br'] } })
 
       const txtPath = result.files[0].replace(/\.html$/, '.txt')
       const txt = readFileSync(txtPath, 'utf-8')
@@ -423,10 +415,8 @@ describe('build', () => {
     writeFileSync(join(tempDir, 'public/images/logo.png'), 'fake-png-data')
 
     const result = await build({
-      config: {
-        static: {
-          source: [join(tempDir, 'public/**/*.*')],
-        },
+      static: {
+        source: [join(tempDir, 'public/**/*.*')],
       },
     })
 

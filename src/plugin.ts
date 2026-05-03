@@ -56,7 +56,7 @@ export function maizzle(configInput?: Partial<MaizzleConfig>): Plugin[] {
       if (this.meta.watchMode) return
 
       const { build } = await import('./build.ts')
-      await build({ config: configInput })
+      await build(configInput)
     },
 
     async buildEnd() {

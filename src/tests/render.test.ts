@@ -459,6 +459,21 @@ describe('render', () => {
       expect(result.html).toMatch(/<\/head>\n\s+<body>/)
     })
 
+    it('skips format when minify is enabled — minify would clobber the indentation anyway', async () => {
+      const result = await render(`
+        <script setup>
+        defineConfig({ html: { format: true, minify: true } })
+        </script>
+        <template>
+          <html><head></head><body><div>x</div></body></html>
+        </template>
+      `)
+
+      // Single-line output: minify ran, format was skipped (no indentation between html/head/body)
+      expect(result.html).not.toMatch(/<html>\n\s+<head>/)
+      expect(result.html).not.toMatch(/<\/head>\n\s+<body>/)
+    })
+
     it('granular toggle from useTransformers() composable opts out of a single pass', async () => {
       const result = await render(`
         <script setup>

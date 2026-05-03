@@ -157,8 +157,9 @@ export async function runTransformers(
   // 14. Replace strings
   if (enabled('replaceStrings')) result = replaceStrings(result, effective)
 
-  // 15. Format
-  if (enabled('prettify')) result = await format(result, effective)
+  // 15. Format — skipped when `minify` is enabled
+  const minifyWillRun = enabled('minify') && !!effective.html?.minify
+  if (enabled('prettify') && !minifyWillRun) result = await format(result, effective)
 
   // 16. Minify
   if (enabled('minify')) result = minify(result, effective)

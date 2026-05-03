@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
+import Layout from './Layout.vue'
+import Container from './Container.vue'
 
 defineOptions({ inheritAttrs: false })
 

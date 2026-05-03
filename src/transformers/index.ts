@@ -5,8 +5,7 @@ import { tailwindcss } from './tailwindcss.ts'
 import { safeClassNames } from './safeClassNames.ts'
 import { attributeToStyle } from './attributeToStyle.ts'
 import { inlineCSS } from './inlineCSS.ts'
-import { msoWidthFromClass } from './msoWidthFromClass.ts'
-import { msoTdStyleFromClass } from './msoTdStyleFromClass.ts'
+import { msoPlaceholders } from './msoPlaceholders.ts'
 import { columnWidth } from './columnWidth.ts'
 import { removeAttributes } from './removeAttributes.ts'
 import { shorthandCSS } from './shorthandCSS.ts'
@@ -94,11 +93,8 @@ export async function runTransformers(
   // 4. CSS inliner (serializes/parses internally around juice)
   dom = inlineCSS(dom, config.css)
 
-  // 4.5. Resolve MSO width placeholders from inlined max-width/width
-  dom = msoWidthFromClass(dom)
-
-  // 4.55. Resolve MSO td style placeholders from inlined padding + msoStyle prop
-  dom = msoTdStyleFromClass(dom)
+  // 4.5. Resolve MSO placeholders (table width + td style) from inlined CSS
+  dom = msoPlaceholders(dom)
 
   // 4.6. Resolve Column min-width placeholders from nearest sized ancestor
   dom = columnWidth(dom)

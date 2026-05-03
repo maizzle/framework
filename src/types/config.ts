@@ -373,8 +373,18 @@ export interface VueConfig {
 }
 
 /**
- * Per-transformer skip map for `useTransformers`. Only keys set to `false`
- * are skipped — missing keys keep their default (active) behavior.
+ * Per-transformer toggle map for `useTransformers`.
+ *
+ * - `false` skips the listed transformer.
+ * - `true` force-enables it for this run (only meaningful for boolean-driven
+ *   transformers: inlineCSS, purgeCSS, prettify, minify, shorthandCSS,
+ *   sixHex, safeClassNames, entities). Layers on the matching
+ *   `css.*` / `html.*` config slice.
+ * - missing keys keep their default behavior.
+ *
+ * Data-driven transformers (filters, baseURL, urlQuery, addAttributes,
+ * removeAttributes, replaceStrings, attributeToStyle) require actual
+ * config values — a bare `true` is a no-op for them.
  *
  * Transformers without a toggle (Tailwind, MSO placeholder resolution,
  * column width math, link inlining) always run; they're driven by markup

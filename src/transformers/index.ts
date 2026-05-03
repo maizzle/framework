@@ -62,8 +62,37 @@ export async function runTransformers(
   // Per-transformer skip map — only honored when useTransformers is an object.
   // Whole-pipeline opt-out (`useTransformers === false`) is handled upstream
   // in build.ts / render so we never reach this function in that case.
+  //
+  // A toggle set to `true` *force-enables* its transformer for this run by
+  // layering on the matching config slice (e.g. `prettify: true` sets
+  // `html.format = true`). This only applies to transformers whose
+  // enable flag is a plain boolean — data-driven ones (filters,
+  // baseURL, urlQuery, etc.) need actual config values, so a
+  // bare `true` for those is a no-op.
   const toggles = typeof config.useTransformers === 'object' ? config.useTransformers : null
   const enabled = (key: keyof NonNullable<typeof toggles>) => toggles?.[key] !== false
+
+  let effective = config
+  if (toggles) {
+    const cssOver: Record<string, unknown> = {}
+    const htmlOver: Record<string, unknown> = {}
+    if (toggles.inlineCSS === true) cssOver.inline = true
+    if (toggles.purgeCSS === true) cssOver.purge = true
+    if (toggles.safeClassNames === true) cssOver.safe = true
+    if (toggles.shorthandCSS === true) cssOver.shorthand = true
+    if (toggles.sixHex === true) cssOver.sixHex = true
+    if (toggles.prettify === true) htmlOver.format = true
+    if (toggles.minify === true) htmlOver.minify = true
+    if (toggles.entities === true) htmlOver.decodeEntities = true
+
+    if (Object.keys(cssOver).length || Object.keys(htmlOver).length) {
+      effective = {
+        ...config,
+        css: { ...config.css, ...cssOver },
+        html: { ...config.html, ...htmlOver },
+      }
+    }
+  }
 
   // Parse once — all DOM transformers share this array
   let dom = parse(html)
@@ -73,20 +102,20 @@ export async function runTransformers(
 
   // 0.5. <Tailwind> component — compile per-block scoped CSS, inject into <head>
   if (tailwindBlocks?.length) {
-    dom = await tailwindComponent(dom, tailwindBlocks, config, filePath)
+    dom = await tailwindComponent(dom, tailwindBlocks, effective, filePath)
   }
 
   // 1. Tailwind CSS — always runs first
-  dom = await tailwindcss(dom, config, filePath)
+  dom = await tailwindcss(dom, effective, filePath)
 
   // 2. Safe class names
-  if (enabled('safeClassNames')) dom = safeClassNames(dom, config.css)
+  if (enabled('safeClassNames')) dom = safeClassNames(dom, effective.css)
 
   // 3. Attribute to style
-  if (enabled('attributeToStyle')) dom = attributeToStyle(dom, config.css)
+  if (enabled('attributeToStyle')) dom = attributeToStyle(dom, effective.css)
 
   // 4. CSS inliner (serializes/parses internally around juice)
-  if (enabled('inlineCSS')) dom = inlineCSS(dom, config.css)
+  if (enabled('inlineCSS')) dom = inlineCSS(dom, effective.css)
 
   // 4.5. Resolve MSO placeholders (table width + td style) from inlined CSS
   dom = msoPlaceholders(dom)
@@ -95,44 +124,44 @@ export async function runTransformers(
   dom = columnWidth(dom)
 
   // 5. Remove attributes
-  if (enabled('removeAttributes')) dom = removeAttributes(dom, config.html?.attributes)
+  if (enabled('removeAttributes')) dom = removeAttributes(dom, effective.html?.attributes)
 
   // 6. Shorthand CSS
-  if (enabled('shorthandCSS')) dom = shorthandCSS(dom, config.css)
+  if (enabled('shorthandCSS')) dom = shorthandCSS(dom, effective.css)
 
   // 7. Six-digit HEX
-  if (enabled('sixHex')) dom = sixHex(dom, config.css)
+  if (enabled('sixHex')) dom = sixHex(dom, effective.css)
 
   // 8. Add attributes
-  if (enabled('addAttributes')) dom = addAttributes(dom, config.html?.attributes)
+  if (enabled('addAttributes')) dom = addAttributes(dom, effective.html?.attributes)
 
   // 9. Filters
-  if (enabled('filters')) dom = filters(dom, config.filters)
+  if (enabled('filters')) dom = filters(dom, effective.filters)
 
   // 10. Base URL (serializes/parses internally for VML/MSO regex passes)
-  if (enabled('baseURL')) dom = base(dom, config.url)
+  if (enabled('baseURL')) dom = base(dom, effective.url)
 
   // 11. URL query
-  if (enabled('urlQuery')) dom = urlQuery(dom, config.url)
+  if (enabled('urlQuery')) dom = urlQuery(dom, effective.url)
 
   // 12. Purge CSS (serializes/parses internally around email-comb)
-  if (enabled('purgeCSS')) dom = purgeCSS(dom, config.css)
+  if (enabled('purgeCSS')) dom = purgeCSS(dom, effective.css)
 
   // 13. Entities
-  if (enabled('entities')) dom = entities(dom, config.html?.decodeEntities)
+  if (enabled('entities')) dom = entities(dom, effective.html?.decodeEntities)
 
   // Serialize once — remaining transformers operate on the HTML string
   const isXhtml = doctype ? /xhtml/i.test(doctype) : false
   let result = serialize(dom, { selfClosingTags: isXhtml })
 
   // 14. Replace strings
-  if (enabled('replaceStrings')) result = replaceStrings(result, config)
+  if (enabled('replaceStrings')) result = replaceStrings(result, effective)
 
   // 15. Format
-  if (enabled('prettify')) result = await format(result, config)
+  if (enabled('prettify')) result = await format(result, effective)
 
   // 16. Minify
-  if (enabled('minify')) result = minify(result, config)
+  if (enabled('minify')) result = minify(result, effective)
 
   // Strip self-closing slashes for HTML5 doctypes, but preserve content
   // inside MSO conditional comments (which are XML-ish and case/syntax sensitive).

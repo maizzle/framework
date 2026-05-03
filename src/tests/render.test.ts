@@ -442,6 +442,21 @@ describe('render', () => {
       expect(result.html).not.toContain('<style>')
     })
 
+    it('useTransformers({ prettify: true }) force-enables format even without html.format set', async () => {
+      const result = await render(`
+        <script setup>
+        useTransformers({ prettify: true })
+        </script>
+        <template>
+          <html><head></head><body><div>x</div></body></html>
+        </template>
+      `)
+
+      // oxfmt re-indents — html/head/body get split onto their own lines with indentation
+      expect(result.html).toMatch(/<html>\n\s+<head>/)
+      expect(result.html).toMatch(/<\/head>\n\s+<body>/)
+    })
+
     it('granular toggle from useTransformers() composable opts out of a single pass', async () => {
       const result = await render(`
         <script setup>

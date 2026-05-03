@@ -346,7 +346,14 @@ export async function createRenderer(
       return {
         html,
         doctype: renderContext.doctype,
-        templateConfig: renderContext.sfcConfig ?? config,
+        // Layer sfcConfig over config — sfcConfig is a partial override
+        // emitted by composables (defineConfig, useTransformers, etc.).
+        // A naive replacement (`sfcConfig ?? config`) drops defaults from
+        // the resolved config when the SFC only sets a single key, since
+        // the composables' inject() of globalConfig can return `{}` in
+        // dev when ssrLoadModule and the SFC's auto-imported module
+        // resolve to different module instances (different Symbols).
+        templateConfig: renderContext.sfcConfig ? merge(renderContext.sfcConfig, config) : config,
         sfcEventHandlers: renderContext.sfcEventHandlers,
         plaintext: renderContext.plaintext,
         tailwindBlocks: renderContext.tailwindBlocks,

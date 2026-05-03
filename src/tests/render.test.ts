@@ -423,6 +423,25 @@ describe('render', () => {
       expect(result.html).not.toMatch(/style="[^"]*color:\s*red/)
     })
 
+    it('useTransformers({ ... }) preserves config defaults instead of replacing them', async () => {
+      // Repro for: SFC calling useTransformers with a partial override
+      // would drop defaults like css.inline / css.purge, because sfcConfig
+      // replaced the resolved config wholesale. Renderer must merge.
+      const result = await render(`
+        <script setup>
+        useTransformers({ prettify: true })
+        </script>
+        <template>
+          <html><head><style>.foo { color: red; }</style></head><body><div class="foo">hello</div></body></html>
+        </template>
+      `)
+
+      // inline default still applies → class becomes inline style
+      expect(result.html).toMatch(/style="[^"]*color:\s*red/)
+      // purge default still applies → empty <style> stripped
+      expect(result.html).not.toContain('<style>')
+    })
+
     it('granular toggle from useTransformers() composable opts out of a single pass', async () => {
       const result = await render(`
         <script setup>

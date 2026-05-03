@@ -372,6 +372,32 @@ export interface VueConfig {
   globalProperties?: Record<string, unknown>
 }
 
+/**
+ * Per-transformer skip map for `useTransformers`. Only keys set to `false`
+ * are skipped — missing keys keep their default (active) behavior.
+ *
+ * Transformers without a toggle (Tailwind, MSO placeholder resolution,
+ * column width math, link inlining) always run; they're driven by markup
+ * or framework state, not user opt-in.
+ */
+export interface TransformerToggles {
+  safeClassNames?: boolean
+  attributeToStyle?: boolean
+  inlineCSS?: boolean
+  removeAttributes?: boolean
+  shorthandCSS?: boolean
+  sixHex?: boolean
+  addAttributes?: boolean
+  filters?: boolean
+  baseURL?: boolean
+  urlQuery?: boolean
+  purgeCSS?: boolean
+  entities?: boolean
+  replaceStrings?: boolean
+  prettify?: boolean
+  minify?: boolean
+}
+
 export interface MaizzleConfig {
   /**
    * Root directory for the Maizzle email project.
@@ -526,9 +552,15 @@ export interface MaizzleConfig {
   /**
    * Enable the transformer pipeline (CSS inlining, purging, shorthand, etc).
    *
+   * Pass `false` to skip the entire pipeline. Pass an object to opt out of
+   * specific transformers while keeping the rest active — only keys set
+   * to `false` are skipped.
+   *
    * @default true
+   * @example
+   * useTransformers: { inlineCSS: false, minify: false }
    */
-  useTransformers?: boolean
+  useTransformers?: boolean | TransformerToggles
   /**
    * Replace strings in the final HTML output.
    *

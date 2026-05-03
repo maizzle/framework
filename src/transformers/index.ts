@@ -70,6 +70,12 @@ export async function runTransformers(
     .replaceAll('<!--teleport start-->', '')
     .replaceAll('<!--teleport end-->', '')
 
+  // Per-transformer skip map — only honored when useTransformers is an object.
+  // Whole-pipeline opt-out (`useTransformers === false`) is handled upstream
+  // in build.ts / render so we never reach this function in that case.
+  const toggles = typeof config.useTransformers === 'object' ? config.useTransformers : null
+  const enabled = (key: keyof NonNullable<typeof toggles>) => toggles?.[key] !== false
+
   // Parse once — all DOM transformers share this array
   let dom = parse(html)
 
@@ -85,13 +91,13 @@ export async function runTransformers(
   dom = await tailwindcss(dom, config, filePath)
 
   // 2. Safe class names
-  dom = safeClassNames(dom, config.css)
+  if (enabled('safeClassNames')) dom = safeClassNames(dom, config.css)
 
   // 3. Attribute to style
-  dom = attributeToStyle(dom, config.css)
+  if (enabled('attributeToStyle')) dom = attributeToStyle(dom, config.css)
 
   // 4. CSS inliner (serializes/parses internally around juice)
-  dom = inlineCSS(dom, config.css)
+  if (enabled('inlineCSS')) dom = inlineCSS(dom, config.css)
 
   // 4.5. Resolve MSO placeholders (table width + td style) from inlined CSS
   dom = msoPlaceholders(dom)
@@ -100,44 +106,44 @@ export async function runTransformers(
   dom = columnWidth(dom)
 
   // 5. Remove attributes
-  dom = removeAttributes(dom, config.html?.attributes)
+  if (enabled('removeAttributes')) dom = removeAttributes(dom, config.html?.attributes)
 
   // 6. Shorthand CSS
-  dom = shorthandCSS(dom, config.css)
+  if (enabled('shorthandCSS')) dom = shorthandCSS(dom, config.css)
 
   // 7. Six-digit HEX
-  dom = sixHex(dom, config.css)
+  if (enabled('sixHex')) dom = sixHex(dom, config.css)
 
   // 8. Add attributes
-  dom = addAttributes(dom, config.html?.attributes)
+  if (enabled('addAttributes')) dom = addAttributes(dom, config.html?.attributes)
 
   // 9. Filters
-  dom = filters(dom, config.filters)
+  if (enabled('filters')) dom = filters(dom, config.filters)
 
   // 10. Base URL (serializes/parses internally for VML/MSO regex passes)
-  dom = base(dom, config.url)
+  if (enabled('baseURL')) dom = base(dom, config.url)
 
   // 11. URL query
-  dom = urlQuery(dom, config.url)
+  if (enabled('urlQuery')) dom = urlQuery(dom, config.url)
 
   // 12. Purge CSS (serializes/parses internally around email-comb)
-  dom = purgeCSS(dom, config.css)
+  if (enabled('purgeCSS')) dom = purgeCSS(dom, config.css)
 
   // 13. Entities
-  dom = entities(dom, config.html?.decodeEntities)
+  if (enabled('entities')) dom = entities(dom, config.html?.decodeEntities)
 
   // Serialize once — remaining transformers operate on the HTML string
   const isXhtml = doctype ? /xhtml/i.test(doctype) : false
   let result = serialize(dom, { selfClosingTags: isXhtml })
 
   // 14. Replace strings
-  result = replaceStrings(result, config)
+  if (enabled('replaceStrings')) result = replaceStrings(result, config)
 
   // 15. Format
-  result = await format(result, config)
+  if (enabled('prettify')) result = await format(result, config)
 
   // 16. Minify
-  result = minify(result, config)
+  if (enabled('minify')) result = minify(result, config)
 
   // Strip self-closing slashes for HTML5 doctypes, but preserve content
   // inside MSO conditional comments (which are XML-ish and case/syntax sensitive).

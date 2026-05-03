@@ -36,6 +36,19 @@ const props = defineProps({
     default: null
   },
   /**
+   * Inline CSS applied only to the MSO `<td>` element.
+   *
+   * Use for Outlook-specific styling that shouldn't affect other clients.
+   * Appended after any padding propagated from the outer div's
+   * inlined style, so msoStyle wins on duplicate properties.
+   *
+   * @example 'padding: 10px 20px'
+   */
+  msoStyle: {
+    type: String,
+    default: undefined
+  },
+  /**
    * Toggle Outlook (MSO) and VML fallback markup for this
    * component and all descendants.
    *
@@ -54,6 +67,7 @@ provide('containerWidth', computed(() => props.width))
 
 const useMarker = outlookFallback && props.width == null && props.msoWidth == null
 const msoId = useMarker ? nextId('c') : null
+const tdId = outlookFallback ? nextId('ct') : null
 
 const styles = computed(() => {
   if (props.width == null) return undefined
@@ -79,8 +93,10 @@ const colWidthSource = computed(() =>
   props.width != null ? normalizeToPixels(props.width) : ''
 )
 
+const tdMarker = tdId ? `__MAIZZLE_MSOTDSTYLE_${tdId}__` : ''
+
 const MsoBefore = () => createStaticVNode(
-  `<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width: ${msoWidth.value}" align="center"><tr><td><![endif]-->`,
+  `<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width: ${msoWidth.value}" align="center"><tr><td${tdMarker}><![endif]-->`,
   1
 )
 
@@ -98,6 +114,8 @@ const MsoAfter = () => createStaticVNode(
     :style="styles"
     :data-maizzle-msow-id="msoId"
     :data-maizzle-cw="colWidthSource"
+    :data-maizzle-mso-td-id="tdId"
+    :data-maizzle-mso-style="tdId && props.msoStyle ? props.msoStyle : null"
   >
     <slot />
   </div>

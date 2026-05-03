@@ -100,6 +100,26 @@ describe('Container', () => {
       const wrapper = mount(Container, { props: { width: '500px', msoWidth: '720px' } })
       expect(wrapper.find('div').attributes('style')).toContain('max-width: 500px')
     })
+
+    it('emits an MSO td-style placeholder in the opening td', () => {
+      const html = mount(Container).html()
+      expect(html).toMatch(/<td__MAIZZLE_MSOTDSTYLE_ct\d+__>/)
+    })
+
+    it('exposes msoStyle on the div via data-maizzle-mso-style', () => {
+      const wrapper = mount(Container, { props: { msoStyle: 'padding: 20px' } })
+      expect(wrapper.find('div').attributes('data-maizzle-mso-style')).toBe('padding: 20px')
+    })
+
+    it('does not write msoStyle into the visible div style', () => {
+      const wrapper = mount(Container, { props: { msoStyle: 'padding: 20px' } })
+      expect(wrapper.find('div').attributes('style')).toBeUndefined()
+    })
+
+    it('emits the td placeholder even when width prop is set', () => {
+      const html = mount(Container, { props: { width: '600px' } }).html()
+      expect(html).toMatch(/<td__MAIZZLE_MSOTDSTYLE_ct\d+__>/)
+    })
   })
 
   describe('outlookFallback=false', () => {
@@ -107,6 +127,13 @@ describe('Container', () => {
       const html = mount(Container, { props: { outlookFallback: false } }).html()
       expect(html).not.toContain('<!--[if mso]>')
       expect(html).not.toContain('__MAIZZLE_MSOW_')
+      expect(html).not.toContain('__MAIZZLE_MSOTDSTYLE_')
+    })
+
+    it('omits td placeholder + mso-style data attr when disabled', () => {
+      const wrapper = mount(Container, { props: { outlookFallback: false, msoStyle: 'padding: 20px' } })
+      expect(wrapper.find('div').attributes('data-maizzle-mso-td-id')).toBeUndefined()
+      expect(wrapper.find('div').attributes('data-maizzle-mso-style')).toBeUndefined()
     })
 
     it('preserves the visible div with default classes', () => {

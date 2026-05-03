@@ -17,11 +17,13 @@ export const defaults: MaizzleConfig = {
   css: {
     inline: true,
     purge: true,
+    shorthand: true,
     safe: true,
     preferUnitless: true,
   },
   html: {
     decodeEntities: true,
+    format: true,
   },
   useTransformers: true,
 }

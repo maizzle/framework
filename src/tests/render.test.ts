@@ -105,6 +105,8 @@ describe('render', () => {
       expect(result.config.content).toEqual([resolve(tempDir, 'emails/**/*.{vue,md}').replace(/\\/g, '/')])
       expect(result.config.css?.inline).toBe(true)
       expect(result.config.css?.purge).toBe(true)
+      expect(result.config.css?.shorthand).toBe(true)
+      expect(result.config.html?.format).toBe(true)
     })
   })
 

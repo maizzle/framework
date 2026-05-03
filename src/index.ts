@@ -31,6 +31,8 @@ export { useFont } from './composables/useFont.ts'
 export { useOutlookFallback } from './composables/useOutlookFallback.ts'
 export { usePlaintext } from './composables/usePlaintext.ts'
 export { useTransformers } from './composables/useTransformers.ts'
+export { useBaseUrl } from './composables/useBaseUrl.ts'
+export { useUrlQuery } from './composables/useUrlQuery.ts'
 export { useHead } from '@unhead/vue'
 
 // Types

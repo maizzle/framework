@@ -1086,6 +1086,52 @@ describe('render', () => {
     })
   })
 
+  describe('useBaseUrl', () => {
+    it('prepends a base URL to relative href values', async () => {
+      const result = await render(`
+        <script setup>
+        useBaseUrl('https://cdn.example.com/')
+        </script>
+        <template>
+          <html><head></head><body><a href="page.html">link</a></body></html>
+        </template>
+      `)
+
+      expect(result.html).toMatch(/href="https:\/\/cdn\.example\.com\/page\.html"/)
+    })
+
+    it('accepts an object form for fine-grained control', async () => {
+      const result = await render(`
+        <script setup>
+        useBaseUrl({ url: 'https://cdn.example.com/', tags: ['a'] })
+        </script>
+        <template>
+          <html><head></head><body><a href="page.html">link</a><img src="logo.png"></body></html>
+        </template>
+      `)
+
+      expect(result.html).toMatch(/href="https:\/\/cdn\.example\.com\/page\.html"/)
+      // tags: ['a'] limits to anchors → img stays as-is
+      expect(result.html).toMatch(/src="logo\.png"/)
+    })
+  })
+
+  describe('useUrlQuery', () => {
+    it('appends query params to URLs', async () => {
+      const result = await render(`
+        <script setup>
+        useUrlQuery({ utm_source: 'maizzle', utm_campaign: 'newsletter' })
+        </script>
+        <template>
+          <html><head></head><body><a href="https://example.com/">link</a></body></html>
+        </template>
+      `)
+
+      expect(result.html).toMatch(/utm_source=maizzle/)
+      expect(result.html).toMatch(/utm_campaign=newsletter/)
+    })
+  })
+
   describe('useHead integration', () => {
     it('injects head tags from useHead()', async () => {
       const result = await render(`

@@ -408,6 +408,32 @@ export interface TransformerToggles {
   minify?: boolean
 }
 
+/**
+ * Plaintext generation options.
+ *
+ * Control where plaintext files are written, what extension they use,
+ * and the options forwarded to `string-strip-html`.
+ */
+export interface PlaintextConfig {
+  /**
+   * Output directory for plaintext files. When omitted, files are written
+   * next to their HTML counterpart in `build.output.path`.
+   */
+  destination?: string
+  /**
+   * File extension for plaintext files (without the leading dot).
+   *
+   * @default 'txt'
+   */
+  extension?: string
+  /**
+   * Options forwarded to `string-strip-html`.
+   *
+   * @see https://codsen.com/os/string-strip-html
+   */
+  options?: Record<string, unknown>
+}
+
 export interface MaizzleConfig {
   /**
    * Root directory for the Maizzle email project.
@@ -552,11 +578,18 @@ export interface MaizzleConfig {
   /**
    * Generate a plaintext version of the email.
    *
-   * Set to `true` to enable, or pass a string path or options object.
+   * Set to `true` to enable with defaults, or pass an object to configure
+   * destination directory, file extension, and `string-strip-html` options.
    *
    * @default false
+   * @example
+   * plaintext: {
+   *   destination: 'build_production/plaintext',
+   *   extension: 'txt',
+   *   options: { ignoreTags: ['br'] },
+   * }
    */
-  plaintext?: boolean | string | Record<string, unknown>
+  plaintext?: boolean | PlaintextConfig
   /** PostCSS processing options. */
   postcss?: PostcssConfig
   /**

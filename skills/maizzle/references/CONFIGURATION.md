@@ -324,13 +324,28 @@ Usage in templates:
 
 ## Plaintext
 
-- `plaintext` (Boolean | String | Object, default: `false`) — generate plaintext version. `true` outputs to same directory with `.txt` extension, string path redirects to a directory, object passes options to `string-strip-html`.
+- `plaintext` (Boolean | Object, default: `false`) — generate plaintext version. `true` enables with defaults (writes `.txt` next to HTML).
+- `plaintext.destination` (String, optional) — output directory for plaintext files. Defaults to the HTML output directory.
+- `plaintext.extension` (String, default: `'txt'`) — file extension (without leading dot).
+- `plaintext.options` (Object, optional) — forwarded to [`string-strip-html`](https://codsen.com/os/string-strip-html).
 
 ```ts
+// Enable with defaults
 export default defineConfig({
   plaintext: true,
 })
+
+// Customize
+export default defineConfig({
+  plaintext: {
+    destination: 'build_production/plaintext',
+    extension: 'txt',
+    options: { ignoreTags: ['br'] },
+  },
+})
 ```
+
+Per-template overrides via the [`usePlaintext()`](COMPOSABLES.md#useplaintext) composable take precedence over the global config.
 
 ---
 

@@ -95,17 +95,17 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
       const sfcPlaintext = rendered.plaintext
 
       if (globalPlaintext || sfcPlaintext) {
-        const stripOptions = typeof globalPlaintext === 'object' ? globalPlaintext : {}
-        const plaintext = createPlaintext(html, stripOptions)
-        const ptExtension = sfcPlaintext?.extension ?? 'txt'
+        const globalCfg = typeof globalPlaintext === 'object' ? globalPlaintext : {}
+        const plaintext = createPlaintext(html, globalCfg.options ?? {})
+        const ptExtension = sfcPlaintext?.extension ?? globalCfg.extension ?? 'txt'
 
         let ptOutputPath: string
 
         if (sfcPlaintext?.destination) {
           const name = basename(templatePath).replace(/\.(vue|md)$/, '')
           ptOutputPath = join(resolve(sfcPlaintext.destination), `${name}.${ptExtension}`)
-        } else if (typeof globalPlaintext === 'string') {
-          ptOutputPath = resolveOutputPath(templatePath, resolve(globalPlaintext), ptExtension, contentBase)
+        } else if (globalCfg.destination) {
+          ptOutputPath = resolveOutputPath(templatePath, resolve(globalCfg.destination), ptExtension, contentBase)
         } else {
           ptOutputPath = resolveOutputPath(templatePath, outputPath, ptExtension, contentBase)
         }

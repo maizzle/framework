@@ -429,6 +429,18 @@ export default defineConfig({
 })
 ```
 
+Pass an object to customize destination, extension, or `string-strip-html` options:
+
+```ts
+export default defineConfig({
+  plaintext: {
+    destination: 'build_production/plaintext',
+    extension: 'txt',
+    options: { ignoreTags: ['br'] },
+  }
+})
+```
+
 Or per-template using the `usePlaintext()` composable in `<script setup>` (see [references/COMPOSABLES.md](references/COMPOSABLES.md) for all composables):
 
 ```vue

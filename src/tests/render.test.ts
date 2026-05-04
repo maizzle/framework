@@ -980,12 +980,12 @@ describe('render', () => {
       expect(result.plaintext).not.toContain('<div>')
     })
 
-    it('passes strip options from config object', async () => {
+    it('passes strip options via plaintext.options', async () => {
       const result = await render(`
         <template>
           <div>Hello</div><br/>World
         </template>
-      `, { plaintext: { ignoreTags: ['br'] } })
+      `, { plaintext: { options: { ignoreTags: ['br'] } } })
 
       expect(result.plaintext).toContain('<br>')
     })

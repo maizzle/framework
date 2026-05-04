@@ -63,8 +63,8 @@ export async function render(
     let plaintextResult: string | undefined
 
     if (globalPlaintext || sfcPlaintext) {
-      const stripOptions = typeof globalPlaintext === 'object' ? globalPlaintext : {}
-      plaintextResult = createPlaintext(html, stripOptions)
+      const globalCfg = typeof globalPlaintext === 'object' ? globalPlaintext : {}
+      plaintextResult = createPlaintext(html, globalCfg.options ?? {})
     }
 
     return { html, config: rendered.templateConfig, plaintext: plaintextResult }

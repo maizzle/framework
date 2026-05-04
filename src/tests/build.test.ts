@@ -285,7 +285,7 @@ describe('build', () => {
       expect(txt).not.toContain('<div>')
     })
 
-    it('outputs to custom path with plaintext as string', async () => {
+    it('outputs to custom destination directory', async () => {
       writeSfc(tempDir, 'emails/test.vue', `
         <template>
           <div>Hello</div>
@@ -294,24 +294,37 @@ describe('build', () => {
 
       const customPath = join(tempDir, 'plaintext-output')
 
-      const result = await build({ plaintext: customPath })
+      const result = await build({ plaintext: { destination: customPath } })
 
       expect(result.files).toHaveLength(1)
       expect(existsSync(join(customPath, 'test.txt'))).toBe(true)
     })
 
-    it('passes options to string-strip-html with plaintext as object', async () => {
+    it('passes options to string-strip-html via plaintext.options', async () => {
       writeSfc(tempDir, 'emails/test.vue', `
         <template>
           <div>Hello</div><br/>World
         </template>
       `)
 
-      const result = await build({ plaintext: { ignoreTags: ['br'] } })
+      const result = await build({ plaintext: { options: { ignoreTags: ['br'] } } })
 
       const txtPath = result.files[0].replace(/\.html$/, '.txt')
       const txt = readFileSync(txtPath, 'utf-8')
       expect(txt).toContain('<br>')
+    })
+
+    it('uses custom extension from plaintext.extension', async () => {
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template>
+          <div>Hello</div>
+        </template>
+      `)
+
+      const result = await build({ plaintext: { extension: 'text' } })
+
+      const textPath = result.files[0].replace(/\.html$/, '.text')
+      expect(existsSync(textPath)).toBe(true)
     })
 
     it('does not generate .txt without plaintext config', async () => {

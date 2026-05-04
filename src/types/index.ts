@@ -1,1 +1,1 @@
-export type { MaizzleConfig, MarkdownConfig, HtmlConfig, UrlConfig, UrlQuery, UrlQueryOptions, CssConfig, AttributesConfig, EntitiesConfig, PostcssConfig, FilterFunction, FiltersConfig, CaniemailClient, ChecksConfig, TransformerToggles } from './config.ts'
+export type { MaizzleConfig, MarkdownConfig, HtmlConfig, UrlConfig, UrlQuery, UrlQueryOptions, CssConfig, AttributesConfig, EntitiesConfig, PostcssConfig, FilterFunction, FiltersConfig, CaniemailClient, ChecksConfig, TransformerToggles, PlaintextConfig } from './config.ts'

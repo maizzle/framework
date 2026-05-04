@@ -82,8 +82,8 @@ useDoctype('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http
 Enable plaintext generation for the current template. The plaintext version strips all HTML and places link URLs next to their anchor text.
 
 Options:
-- `extension` (String, optional) — file extension for the plaintext file
-- `destination` (String, optional) — custom output path
+- `extension` (String, optional) — file extension for the plaintext file. Overrides `plaintext.extension` from the global config.
+- `destination` (String, optional) — custom output directory. Overrides `plaintext.destination` from the global config.
 
 ```vue
 <script setup>
@@ -94,9 +94,11 @@ usePlaintext()
 usePlaintext({ extension: 'text' })
 
 // Custom destination
-usePlaintext({ destination: '/custom/path' })
+usePlaintext({ destination: 'build_production/plaintext' })
 </script>
 ```
+
+Strip-HTML options can only be set globally via `plaintext.options` in the config — see [CONFIGURATION.md#plaintext](CONFIGURATION.md#plaintext).
 
 ---
 

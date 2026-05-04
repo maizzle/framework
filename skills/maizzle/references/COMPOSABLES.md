@@ -84,6 +84,7 @@ Enable plaintext generation for the current template. The plaintext version stri
 Options:
 - `extension` (String, optional) — file extension for the plaintext file. Overrides `plaintext.extension` from the global config.
 - `destination` (String, optional) — custom output directory. Overrides `plaintext.destination` from the global config.
+- `options` (Object, optional) — forwarded to [`string-strip-html`](https://codsen.com/os/string-strip-html). Deep-merged over `plaintext.options` from the global config.
 
 ```vue
 <script setup>
@@ -95,10 +96,11 @@ usePlaintext({ extension: 'text' })
 
 // Custom destination
 usePlaintext({ destination: 'build_production/plaintext' })
+
+// Custom strip-HTML options
+usePlaintext({ options: { ignoreTags: ['br'] } })
 </script>
 ```
-
-Strip-HTML options can only be set globally via `plaintext.options` in the config — see [CONFIGURATION.md#plaintext](CONFIGURATION.md#plaintext).
 
 ---
 

@@ -2,6 +2,7 @@ import { resolve, extname } from 'node:path'
 import { resolveConfig } from '../config/index.ts'
 import { runTransformers } from '../transformers/index.ts'
 import { createPlaintext } from '../plaintext.ts'
+import defu from 'defu'
 import type { Component } from 'vue'
 import type { MaizzleConfig } from '../types/index.ts'
 import { createRenderer } from './createRenderer.ts'
@@ -64,7 +65,8 @@ export async function render(
 
     if (globalPlaintext || sfcPlaintext) {
       const globalCfg = typeof globalPlaintext === 'object' ? globalPlaintext : {}
-      plaintextResult = createPlaintext(html, globalCfg.options ?? {})
+      const stripOptions = defu(sfcPlaintext?.options, globalCfg.options)
+      plaintextResult = createPlaintext(html, stripOptions)
     }
 
     return { html, config: rendered.templateConfig, plaintext: plaintextResult }

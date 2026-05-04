@@ -989,6 +989,32 @@ describe('render', () => {
 
       expect(result.plaintext).toContain('<br>')
     })
+
+    it('passes strip options via usePlaintext({ options })', async () => {
+      const result = await render(`
+        <script setup>
+        usePlaintext({ options: { ignoreTags: ['br'] } })
+        </script>
+        <template>
+          <div>Hello</div><br/>World
+        </template>
+      `)
+
+      expect(result.plaintext).toContain('<br>')
+    })
+
+    it('SFC options override global options per-key', async () => {
+      const result = await render(`
+        <script setup>
+        usePlaintext({ options: { ignoreTags: ['br'] } })
+        </script>
+        <template>
+          <div>Hello</div><br/>World
+        </template>
+      `, { plaintext: { options: { ignoreTags: ['p'] } } })
+
+      expect(result.plaintext).toContain('<br>')
+    })
   })
 
   describe('component input', () => {

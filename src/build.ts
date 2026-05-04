@@ -7,6 +7,7 @@ import { EventManager } from './events/index.ts'
 import { runTransformers } from './transformers/index.ts'
 import { createRenderer } from './render/createRenderer.ts'
 import { createPlaintext } from './plaintext.ts'
+import defu from 'defu'
 import type { MaizzleConfig } from './types/index.ts'
 
 export interface BuildResult {
@@ -96,7 +97,8 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
 
       if (globalPlaintext || sfcPlaintext) {
         const globalCfg = typeof globalPlaintext === 'object' ? globalPlaintext : {}
-        const plaintext = createPlaintext(html, globalCfg.options ?? {})
+        const stripOptions = defu(sfcPlaintext?.options, globalCfg.options)
+        const plaintext = createPlaintext(html, stripOptions)
         const ptExtension = sfcPlaintext?.extension ?? globalCfg.extension ?? 'txt'
 
         let ptOutputPath: string

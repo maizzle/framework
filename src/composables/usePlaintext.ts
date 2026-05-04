@@ -4,6 +4,7 @@ import { RenderContextKey } from './renderContext.ts'
 export interface UsePlaintextOptions {
   extension?: string
   destination?: string
+  options?: Record<string, unknown>
 }
 
 /**
@@ -14,6 +15,7 @@ export interface UsePlaintextOptions {
  * usePlaintext()
  * usePlaintext({ extension: 'text' })
  * usePlaintext({ destination: '/custom/path' })
+ * usePlaintext({ options: { ignoreTags: ['br'] } })
  * ```
  */
 export function usePlaintext(options?: UsePlaintextOptions): void {

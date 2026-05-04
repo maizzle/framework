@@ -445,7 +445,7 @@ Or per-template using the `usePlaintext()` composable in `<script setup>` (see [
 
 ```vue
 <script setup>
-usePlaintext()
+  usePlaintext()
 </script>
 ```
 

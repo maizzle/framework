@@ -31,6 +31,8 @@ const pkg = (name: string) => {
 
 export interface ServeOptions {
   config?: Partial<MaizzleConfig> | string
+  /** Override the dev server port (takes precedence over config.server.port) */
+  port?: number
   /** Expose the server on the network (e.g. --host) */
   host?: boolean | string
   /** When true, suppresses the banner/URL output (used by the Vite plugin, which prints its own) */
@@ -50,7 +52,7 @@ export async function serve(options: ServeOptions = {}) {
   const start = performance.now()
 
   let config = await resolveConfig(options.config)
-  const port = config.server?.port ?? 3000
+  const port = options.port ?? config.server?.port ?? 3000
 
   // Create a renderer for SSR rendering email templates (with dts for dev)
   let renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat(), vite: config.vite })

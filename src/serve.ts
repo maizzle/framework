@@ -12,6 +12,7 @@ import { createPlaintext } from './plaintext.ts'
 import { resolveConfig } from './config/index.ts'
 import { runTransformers } from './transformers/index.ts'
 import { createRenderer, type Renderer } from './render/createRenderer.ts'
+import { setActiveRenderer } from './render/active.ts'
 import { serveCompatibility } from './server/compatibility.ts'
 import { serveLint } from './server/linter.ts'
 import { sendEmail } from './server/email.ts'
@@ -56,6 +57,11 @@ export async function serve(options: ServeOptions = {}) {
 
   // Create a renderer for SSR rendering email templates (with dts for dev)
   let renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat(), vite: config.vite })
+
+  // Register so user-land render() calls reuse this renderer instead of
+  // spinning up another Vite SSR server (which collides when the host app
+  // is itself a Vite dev process — e.g. TanStack Start).
+  setActiveRenderer(renderer)
 
   const server = await createServer({
     configFile: false,
@@ -104,6 +110,7 @@ export async function serve(options: ServeOptions = {}) {
   // Store renderer ref on server for cleanup
   const originalClose = server.close.bind(server)
   server.close = async () => {
+    setActiveRenderer(null)
     await renderer.close()
     return originalClose()
   }

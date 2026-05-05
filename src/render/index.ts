@@ -6,6 +6,7 @@ import defu from 'defu'
 import type { Component } from 'vue'
 import type { MaizzleConfig } from '../types/index.ts'
 import { createRenderer } from './createRenderer.ts'
+import { getActiveRenderer } from './active.ts'
 
 export type { Renderer, RenderedTemplate, CreateRendererOptions } from './createRenderer.ts'
 export { createRenderer } from './createRenderer.ts'
@@ -36,7 +37,12 @@ export async function render(
   }
 
   const resolvedConfig = await resolveConfig(config)
-  const renderer = await createRenderer({
+
+  // Reuse a renderer started by the Vite plugin when one is active. Spinning
+  // up a fresh Vite SSR server inside a host Vite dev process (e.g. TanStack
+  // Start) collides on env wiring and throws "outsideEmitter undefined".
+  const active = getActiveRenderer()
+  const renderer = active ?? await createRenderer({
     markdown: resolvedConfig.markdown,
     root: resolvedConfig.root,
     componentDirs: [resolvedConfig.components?.source ?? []].flat(),
@@ -71,6 +77,6 @@ export async function render(
 
     return { html, config: rendered.templateConfig, plaintext: plaintextResult }
   } finally {
-    await renderer.close()
+    if (!active) await renderer.close()
   }
 }

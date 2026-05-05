@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { createStaticVNode, provide, useAttrs, useSlots } from 'vue'
+import { createStaticVNode, inject, provide, useAttrs, useSlots } from 'vue'
 import type { PropType } from 'vue'
 import { outlookFallbackProp } from './utils.ts'
 import { useOutlookFallback } from '../composables/useOutlookFallback'
+import { RenderContextKey } from '../composables/renderContext.ts'
 
 defineOptions({ inheritAttrs: false })
 
@@ -79,9 +80,26 @@ const props = defineProps({
    * @default true
    */
   outlookFallback: outlookFallbackProp,
+  /**
+   * DOCTYPE declaration prepended to the rendered HTML.
+   *
+   * Overrides `doctype` in the Maizzle config and any value
+   * set via `useDoctype()` in the same template.
+   *
+   * @default '<!DOCTYPE html>'
+   */
+  doctype: {
+    type: String,
+    default: undefined,
+  },
 })
 
 const outlookFallback = useOutlookFallback(props.outlookFallback)
+
+if (props.doctype !== undefined) {
+  const ctx = inject(RenderContextKey, undefined)
+  if (ctx) ctx.doctype = props.doctype
+}
 
 provide('htmlLang', props.lang)
 

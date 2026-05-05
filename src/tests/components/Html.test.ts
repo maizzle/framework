@@ -64,4 +64,10 @@ describe('Html', () => {
     expect(html).not.toContain('xmlns:v')
     expect(html).not.toContain('xmlns:o')
   })
+
+  it('accepts doctype prop without emitting it inline', async () => {
+    const html = await render({ doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">' })
+    expect(html).toContain('<html')
+    expect(html).not.toContain('<!DOCTYPE')
+  })
 })

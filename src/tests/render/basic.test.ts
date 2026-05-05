@@ -150,6 +150,53 @@ describe('render', () => {
 
       expect(result.html).toMatch(/^<!DOCTYPE html PUBLIC "-\/\/W3C\/\/DTD HTML 4\.01\/\/EN">/)
     })
+
+    it('uses doctype prop on Html component', async () => {
+      const result = await render(`
+        <template>
+          <Html doctype='<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">'>
+            <Body>
+              <div>Test</div>
+            </Body>
+          </Html>
+        </template>
+      `)
+
+      expect(result.html).toMatch(/^<!DOCTYPE html PUBLIC "-\/\/W3C\/\/DTD HTML 4\.01 Transitional\/\/EN">/)
+    })
+
+    it('Html doctype prop overrides config doctype', async () => {
+      const result = await render(`
+        <template>
+          <Html doctype='<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">'>
+            <Body>
+              <div>Test</div>
+            </Body>
+          </Html>
+        </template>
+      `, {
+        doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0//EN">',
+      })
+
+      expect(result.html).toMatch(/^<!DOCTYPE html PUBLIC "-\/\/W3C\/\/DTD HTML 4\.01\/\/EN">/)
+    })
+
+    it('Html doctype prop overrides useDoctype()', async () => {
+      const result = await render(`
+        <script setup>
+        useDoctype('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0//EN">')
+        </script>
+        <template>
+          <Html doctype='<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">'>
+            <Body>
+              <div>Test</div>
+            </Body>
+          </Html>
+        </template>
+      `)
+
+      expect(result.html).toMatch(/^<!DOCTYPE html PUBLIC "-\/\/W3C\/\/DTD HTML 4\.01\/\/EN">/)
+    })
   })
 
   describe('component input', () => {

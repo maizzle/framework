@@ -3,10 +3,10 @@ import { mount } from '@vue/test-utils'
 import Container from '../../components/Container.vue'
 
 describe('Container', () => {
-  it('applies w-150 m-0 mx-auto by default when no width prop is set', () => {
+  it('applies max-w-150 m-0 mx-auto by default when no width prop is set', () => {
     const wrapper = mount(Container)
     const div = wrapper.find('div')
-    expect(div.classes()).toContain('w-150')
+    expect(div.classes()).toContain('max-w-150')
     expect(div.classes()).toContain('m-0')
     expect(div.classes()).toContain('mx-auto')
     expect(div.attributes('style')).toBeUndefined()
@@ -16,30 +16,30 @@ describe('Container', () => {
     const wrapper = mount(Container, { attrs: { class: 'w-[400px]' } })
     const div = wrapper.find('div')
     expect(div.classes()).toContain('w-[400px]')
-    expect(div.classes()).not.toContain('w-150')
+    expect(div.classes()).not.toContain('max-w-150')
     expect(div.classes()).toContain('mx-auto')
   })
 
-  it('drops the default w-150 when the user passes a max-w-* class', () => {
+  it('drops the default max-w-150 when the user passes a max-w-* class', () => {
     const wrapper = mount(Container, { attrs: { class: 'max-w-xl' } })
     const classes = wrapper.find('div').classes()
     expect(classes).toContain('max-w-xl')
-    expect(classes).not.toContain('w-150')
+    expect(classes).not.toContain('max-w-150')
     expect(classes).toContain('mx-auto')
   })
 
-  it('drops the default w-150 when the user passes a min-w-* class', () => {
+  it('drops the default max-w-150 when the user passes a min-w-* class', () => {
     const wrapper = mount(Container, { attrs: { class: 'min-w-0' } })
     const classes = wrapper.find('div').classes()
     expect(classes).toContain('min-w-0')
-    expect(classes).not.toContain('w-150')
+    expect(classes).not.toContain('max-w-150')
   })
 
-  it('drops the default w-150 when a width class has a variant prefix', () => {
+  it('drops the default max-w-150 when a width class has a variant prefix', () => {
     const wrapper = mount(Container, { attrs: { class: 'sm:max-w-xl' } })
     const classes = wrapper.find('div').classes()
     expect(classes).toContain('sm:max-w-xl')
-    expect(classes).not.toContain('w-150')
+    expect(classes).not.toContain('max-w-150')
   })
 
   it('accepts custom width as string', () => {
@@ -139,7 +139,7 @@ describe('Container', () => {
     it('preserves the visible div with default classes', () => {
       const wrapper = mount(Container, { props: { outlookFallback: false } })
       const div = wrapper.find('div')
-      expect(div.classes()).toContain('w-150')
+      expect(div.classes()).toContain('max-w-150')
       expect(div.classes()).toContain('mx-auto')
     })
 

@@ -16,11 +16,11 @@ const props = defineProps({
    * Also used as the width source for descendant `Row`/`Column`
    * components when computing column widths.
    *
-   * When not set, the div defaults to `w-150 mx-auto` (600px,
-   * centered) — overridable via Tailwind classes such as
-   * `w-[400px]` or `max-w-xl`. The MSO table width is auto-derived
-   * from the resolved width/max-width after CSS inlining, falling
-   * back to 600px when unresolvable.
+   * When not set, the div defaults to `max-w-150 mx-auto` (max
+   * 600px, centered, shrinks below) — overridable via Tailwind
+   * classes such as `w-[400px]` or `max-w-xl`. The MSO table
+   * width is auto-derived from the resolved width/max-width after
+   * CSS inlining, falling back to 600px when unresolvable.
    */
   width: {
     type: [String, Number],
@@ -79,7 +79,7 @@ const mergedClass = computed(() => {
   const userClass = (attrs.class as string) ?? ''
   const defaultClass = hasWidthUtility(userClass)
     ? 'm-0 mx-auto'
-    : 'w-150 m-0 mx-auto'
+    : 'max-w-150 m-0 mx-auto'
   return twMerge(defaultClass, userClass)
 })
 

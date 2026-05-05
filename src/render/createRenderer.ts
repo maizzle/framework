@@ -1,5 +1,4 @@
 import { dirname, resolve } from 'node:path'
-import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { isLaravel } from '../utils/detect.ts'
 import { rowSourceLocation } from './plugins/rowSourceLocation.ts'
@@ -82,13 +81,13 @@ export async function createRenderer(
   const VIRTUAL_SFC_ID = 'virtual:maizzle-sfc.vue'
   let virtualSfcSource = ''
 
-  // Check for a user vite.config file in the project root
-  const viteConfigFile = ['vite.config.ts', 'vite.config.js']
-    .map(f => resolve(root, f))
-    .find(f => existsSync(f))
-
+  // Never load the host project's vite.config.ts here. Doing so pulls every
+  // host plugin (Nitro, TanStack Start, the Maizzle plugin itself, …) into
+  // this isolated SSR pipeline, where they override env factories, re-trigger
+  // configureServer hooks, and break Vite's hot channel wiring. Users that
+  // need extra Vite plugins for SSR pass them explicitly via the `vite` option.
   const maizzleConfig: InlineConfig = {
-    configFile: viteConfigFile ?? false,
+    configFile: false,
     plugins: [
       rawExtract(),
       codeBlockExtract(),
@@ -194,7 +193,7 @@ export async function createRenderer(
   // mergeConfig(a, b) → b overrides a for scalars, arrays are concatenated.
   // This ensures Maizzle's critical settings (middlewareMode, appType, etc.) always win,
   // while user plugins and other options are included.
-  const finalConfig = userViteConfig && !viteConfigFile
+  const finalConfig = userViteConfig
     ? mergeConfig(userViteConfig, maizzleConfig)
     : maizzleConfig
 

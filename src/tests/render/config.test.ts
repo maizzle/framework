@@ -112,7 +112,7 @@ describe('render', () => {
       expect(result.html).not.toContain('REPLACE_ME')
     })
 
-    it('loads vite.config.ts from project root when present', async () => {
+    it('does not autoload vite.config.ts from project root', async () => {
       writeFileSync(join(tempDir, 'vite.config.ts'), `
         export default {
           define: {
@@ -132,10 +132,10 @@ describe('render', () => {
         root: tempDir,
       })
 
-      expect(result.html).toContain('yes')
+      expect(result.html).toContain('no')
     })
 
-    it('loads vite.config.js from project root when present', async () => {
+    it('does not autoload vite.config.js from project root', async () => {
       writeFileSync(join(tempDir, 'vite.config.js'), `
         export default {
           define: {
@@ -155,20 +155,20 @@ describe('render', () => {
         root: tempDir,
       })
 
-      expect(result.html).toContain('loaded')
+      expect(result.html).toContain('not loaded')
     })
 
-    it('uses config.vite as fallback when no vite.config file exists', async () => {
+    it('uses config.vite plugins for SSR', async () => {
       let pluginRan = false
 
       const result = await render(`
         <template>
-          <div>Fallback</div>
+          <div>Inline</div>
         </template>
       `, {
         vite: {
           plugins: [{
-            name: 'fallback-plugin',
+            name: 'inline-plugin',
             configResolved() {
               pluginRan = true
             },
@@ -176,11 +176,11 @@ describe('render', () => {
         },
       })
 
-      expect(result.html).toContain('Fallback')
+      expect(result.html).toContain('Inline')
       expect(pluginRan).toBe(true)
     })
 
-    it('ignores config.vite when vite.config file exists', async () => {
+    it('uses config.vite even when a vite.config file exists in project root', async () => {
       let inlinePluginCalled = false
 
       writeFileSync(join(tempDir, 'vite.config.ts'), `
@@ -210,10 +210,10 @@ describe('render', () => {
         },
       })
 
-      // File config loaded
-      expect(result.html).toContain('file')
-      // Inline config.vite plugins NOT merged when file exists
-      expect(inlinePluginCalled).toBe(false)
+      // File config NOT loaded (host vite.config.ts is never autoloaded)
+      expect(result.html).toContain('inline')
+      // Inline config.vite plugins always run
+      expect(inlinePluginCalled).toBe(true)
     })
   })
 

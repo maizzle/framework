@@ -1,8 +1,9 @@
 import queryString from 'query-string'
 import { selectAll } from 'css-select'
 import type { ChildNode, Element } from 'domhandler'
+import { parse, serialize } from '../utils/ast/index.ts'
 import { isAbsoluteUrl } from '../utils/url.ts'
-import type { UrlConfig, UrlQueryOptions } from '../types/config.ts'
+import type { UrlQueryOptions } from '../types/config.ts'
 
 const DEFAULT_ATTRIBUTES = ['src', 'href', 'poster', 'srcset', 'background']
 const DEFAULT_TAGS = ['a']
@@ -25,30 +26,46 @@ function appendParams(
 }
 
 /**
- * URL query transformer.
+ * Append query parameters to URLs found in matching attributes/elements.
  *
- * Appends query parameters to URLs found in specified attributes of
- * specified HTML tags.
+ * @param html    HTML string to transform.
+ * @param params  Query parameters to append (e.g. `{ utm_source: 'newsletter' }`).
+ * @param options Behaviour overrides — `tags` (CSS selectors, default `['a']`),
+ *                `attributes` (default `['src', 'href', 'poster', 'srcset', 'background']`),
+ *                `strict` (default `true`, only rewrites absolute URLs),
+ *                `qs` (forwarded to `query-string`, default `{ encode: false }`).
+ * @returns       The transformed HTML string.
  *
- * Reads config from the `config.url` object in `MaizzleConfig` (pass
- * `config.url` directly when calling as a standalone transformer).
- * The `_options` key inside `query` controls behaviour:
- * - `tags`       — CSS selectors for elements to process. Default: `['a']`
- * - `attributes` — attribute names to process. Default: `['src', 'href', 'poster', 'srcset', 'background']`
- * - `strict`     — only append to absolute URLs. Default: `true`
- * - `qs`         — options forwarded to query-string. Default: `{ encode: false }`
+ * @example
+ * import { urlQuery } from '@maizzle/framework'
  *
- * All non-`_options` keys inside `query` are treated as URL parameters to append.
+ * const out = urlQuery(
+ *   '<a href="https://example.com">x</a>',
+ *   { utm_source: 'newsletter' },
+ * )
+ *
+ * // Restrict to specific tags / attributes:
+ * urlQuery(html, { ref: 'email' }, { tags: ['a', 'img'], attributes: ['href', 'src'] })
  */
-export function urlQuery(dom: ChildNode[], config: UrlConfig = {}): ChildNode[] {
-  const queryConfig = config.query
+export function urlQuery(
+  html: string,
+  params: Record<string, unknown> = {},
+  options: UrlQueryOptions = {},
+): string {
+  return serialize(urlQueryDom(parse(html), params, options))
+}
 
-  if (!queryConfig || Object.keys(queryConfig).length === 0) return dom
-
-  const { _options, ...params } = queryConfig as Record<string, unknown>
-  const options = (_options ?? {}) as UrlQueryOptions
-
-  if (Object.keys(params).length === 0) return dom
+/**
+ * DOM-form of {@link urlQuery} used by the internal transformer pipeline.
+ * Takes a parsed DOM, returns a parsed DOM — avoids redundant
+ * serialize/parse round-trips when chained with other transformers.
+ */
+export function urlQueryDom(
+  dom: ChildNode[],
+  params: Record<string, unknown> = {},
+  options: UrlQueryOptions = {},
+): ChildNode[] {
+  if (!params || Object.keys(params).length === 0) return dom
 
   const tags = options.tags ?? DEFAULT_TAGS
   const attributes = options.attributes ?? DEFAULT_ATTRIBUTES

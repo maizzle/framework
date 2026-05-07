@@ -1,17 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { urlQuery } from '../../transformers/urlQuery.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
-import type { UrlConfig } from '../../types/config.ts'
+import type { UrlQueryOptions } from '../../types/config.ts'
 
 function run(
   html: string,
   params: Record<string, unknown> = { utm_source: 'maizzle' },
-  options?: Record<string, unknown>,
+  options?: UrlQueryOptions,
 ): string {
-  const config: UrlConfig = {
-    query: options ? { ...params, _options: options } : params,
-  }
-  return serialize(urlQuery(parse(html), config))
+  return urlQuery(html, params, options)
 }
 
 // ─── Core behaviour ─────────────────────────────────────────────────────────
@@ -153,20 +149,20 @@ describe('urlQuery — _options.qs', () => {
 
 // ─── Config: enabled / disabled ──────────────────────────────────────────────
 
-describe('urlQuery — config', () => {
-  it('returns html unchanged when query is not set', () => {
+describe('urlQuery — empty params', () => {
+  it('returns html unchanged when params arg is omitted', () => {
     const html = '<a href="https://example.com">x</a>'
-    expect(serialize(urlQuery(parse(html), {}))).toBe(html)
+    expect(urlQuery(html)).toBe(html)
   })
 
-  it('returns html unchanged when query is an empty object', () => {
+  it('returns html unchanged when params is an empty object', () => {
     const html = '<a href="https://example.com">x</a>'
-    expect(serialize(urlQuery(parse(html), { query: {} }))).toBe(html)
+    expect(urlQuery(html, {})).toBe(html)
   })
 
-  it('returns html unchanged when query only has _options (no params)', () => {
+  it('returns html unchanged when params is empty even with options set', () => {
     const html = '<a href="https://example.com">x</a>'
-    expect(serialize(urlQuery(parse(html), { query: { _options: { tags: ['a'] } } }))).toBe(html)
+    expect(urlQuery(html, {}, { tags: ['a'] })).toBe(html)
   })
 })
 

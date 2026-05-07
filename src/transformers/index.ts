@@ -14,7 +14,7 @@ import { addAttributes } from './addAttributes.ts'
 import { filtersDom } from './filters/index.ts'
 import { baseDom } from './base.ts'
 import { entities } from './entities.ts'
-import { urlQuery } from './urlQuery.ts'
+import { urlQueryDom } from './urlQuery.ts'
 import { purgeCssDom } from './purgeCss.ts'
 import { replaceStrings } from './replaceStrings.ts'
 import { format } from './format.ts'
@@ -153,7 +153,10 @@ export async function runTransformers(
   if (enabled('baseURL') && effective.url?.base) dom = baseDom(dom, effective.url.base)
 
   // 11. URL query
-  if (enabled('urlQuery')) dom = urlQuery(dom, effective.url)
+  if (enabled('urlQuery') && effective.url?.query && Object.keys(effective.url.query).length > 0) {
+    const { _options: queryOptions, ...queryParams } = effective.url.query as Record<string, unknown>
+    dom = urlQueryDom(dom, queryParams, (queryOptions ?? {}) as import('../types/config.ts').UrlQueryOptions)
+  }
 
   // 12. Remove unused CSS (serializes/parses internally around email-comb)
   if (enabled('purgeCss') && effective.css?.purge) {

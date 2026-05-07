@@ -3,7 +3,7 @@ import { inlineLink } from './inlineLink.ts'
 import { tailwindComponent } from './tailwindComponent.ts'
 import { tailwindcss } from './tailwindcss.ts'
 import { safeClassNames } from './safeClassNames.ts'
-import { attributeToStyle } from './attributeToStyle.ts'
+import { attributeToStyleDom } from './attributeToStyle.ts'
 import { inlineCssDom } from './inlineCss.ts'
 import { msoPlaceholders } from './msoPlaceholders.ts'
 import { columnWidth } from './columnWidth.ts'
@@ -112,7 +112,9 @@ export async function runTransformers(
   if (enabled('safeClassNames')) dom = safeClassNames(dom, effective.css)
 
   // 3. Attribute to style
-  if (enabled('attributeToStyle')) dom = attributeToStyle(dom, effective.css)
+  if (enabled('attributeToStyle') && typeof effective.css?.inline === 'object' && effective.css.inline.attributeToStyle) {
+    dom = attributeToStyleDom(dom, effective.css.inline.attributeToStyle)
+  }
 
   // 4. CSS inliner (serializes/parses internally around juice)
   if (enabled('inlineCss') && effective.css?.inline) {

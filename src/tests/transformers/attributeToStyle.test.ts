@@ -1,35 +1,31 @@
 import { describe, it, expect } from 'vitest'
-import { attributeToStyle as attributeToStyleTransformer } from '../../transformers/attributeToStyle.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
-import type { CssConfig } from '../../types/config.ts'
+import { attributeToStyle } from '../../transformers/attributeToStyle.ts'
 
-function run(html: string, attributeToStyle?: boolean | string[]): string {
-  return serialize(attributeToStyleTransformer(parse(html), {
-    inline: { attributeToStyle },
-  } satisfies CssConfig))
+function run(html: string, attributes?: boolean | string[]): string {
+  return attributeToStyle(html, attributes)
 }
 
 describe('attributeToStyle', () => {
-  describe('config: css.inline.attributeToStyle', () => {
-    it('returns unchanged when attributeToStyle is not set', () => {
-      const html = '<table width="100%"></table>'
-      expect(serialize(attributeToStyleTransformer(parse(html), {}))).toBe(html)
-    })
-
-    it('returns unchanged when attributeToStyle is false', () => {
+  describe('argument', () => {
+    it('returns unchanged when attributes is false', () => {
       const html = '<table width="100%"></table>'
       expect(run(html, false)).toBe(html)
     })
 
-    it('returns unchanged when attributeToStyle is an empty array', () => {
+    it('returns unchanged when attributes is an empty array', () => {
       const html = '<table width="100%"></table>'
       expect(run(html, [])).toBe(html)
     })
 
-    it('processes all default attributes when attributeToStyle is true', () => {
+    it('processes all defaults when attributes is true', () => {
       const html = '<table width="100%" height="200" bgcolor="#fff" background="image.jpg" align="center" valign="top"></table>'
       const result = run(html, true)
       expect(result).toContain('style="width: 100%; height: 200px; background-color: #fff; background-image: url(\'image.jpg\'); margin-left: auto; margin-right: auto; vertical-align: top"')
+    })
+
+    it('processes all defaults when attributes is omitted', () => {
+      const html = '<table bgcolor="#fff"></table>'
+      expect(attributeToStyle(html)).toContain('style="background-color: #fff"')
     })
   })
 

@@ -1,29 +1,28 @@
 import { crush } from 'html-crush'
 import { defu as merge } from 'defu'
-import type { Opts } from 'html-crush'
-import type { MaizzleConfig } from '../types/config.ts'
+import type { Opts as HtmlCrushOptions } from 'html-crush'
 
-const DEFAULT_OPTIONS = {
+export type { Opts as MinifyOptions } from 'html-crush'
+
+const DEFAULT_OPTIONS: Partial<HtmlCrushOptions> = {
   removeLineBreaks: true,
 }
 
 /**
- * Minify transformer.
+ * Minify an HTML string using `html-crush`. Maizzle's only default that
+ * differs from html-crush's own defaults is `removeLineBreaks: true`.
  *
- * Minifies HTML using the `html-crush` package.
- * Enabled by setting `minify: true` (or passing options object).
- * User options are merged on top of the defaults.
+ * @param html    HTML string to minify.
+ * @param options [html-crush options](https://codsen.com/os/html-crush) merged
+ *                on top of the Maizzle defaults.
+ * @returns       The minified HTML string.
  *
- * The only Maizzle default that differs from html-crush's own defaults
- * is `removeLineBreaks: true`.
+ * @example
+ * import { minify } from '@maizzle/framework'
+ *
+ * const tight = minify('<p>  hello  </p>', { removeIndentations: true })
  */
-export function minify(html: string, config: MaizzleConfig = {}): string {
-  const option = config.html?.minify
-
-  if (!option) return html
-
-  const userOptions = typeof option === 'object' ? option : {}
-  const options = merge(userOptions, DEFAULT_OPTIONS) as Partial<Opts>
-
-  return crush(html, options).result
+export function minify(html: string, options: Partial<HtmlCrushOptions> = {}): string {
+  const merged = merge(options, DEFAULT_OPTIONS) as Partial<HtmlCrushOptions>
+  return crush(html, merged).result
 }

@@ -182,7 +182,10 @@ export async function runTransformers(
   }
 
   // 16. Minify
-  if (enabled('minify')) result = minify(result, effective)
+  if (enabled('minify') && effective.html?.minify) {
+    const minifyOptions = typeof effective.html.minify === 'object' ? effective.html.minify : {}
+    result = minify(result, minifyOptions)
+  }
 
   // Strip self-closing slashes for HTML5 doctypes, but preserve content
   // inside MSO conditional comments (which are XML-ish and case/syntax sensitive).

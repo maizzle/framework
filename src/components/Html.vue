@@ -3,7 +3,7 @@ import { createStaticVNode, inject, provide, useAttrs, useSlots } from 'vue'
 import type { PropType } from 'vue'
 import { outlookFallbackProp } from './utils.ts'
 import { useOutlookFallback } from '../composables/useOutlookFallback'
-import { RenderContextKey } from '../composables/renderContext.ts'
+import { RenderContextKey } from '../composables/renderContext'
 
 defineOptions({ inheritAttrs: false })
 

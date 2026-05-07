@@ -9,11 +9,11 @@ import type { MaizzleConfig, TransformerToggles } from '../types/index.ts'
  * - `useTransformers(false)` skips the entire pipeline (CSS inlining,
  *   purging, shorthand, etc).
  * - `useTransformers(true)` (or no argument) keeps everything on.
- * - `useTransformers({ inlineCSS: false, minify: false })` runs the
+ * - `useTransformers({ inlineCss: false, minify: false })` runs the
  *   pipeline but skips the listed transformers.
  * - `useTransformers({ prettify: true, minify: true })` *enables*
  *   transformers that would otherwise no-op (boolean-driven ones:
- *   inlineCSS, purgeCSS, prettify, minify, shorthandCSS, sixHex,
+ *   inlineCss, purgeCss, prettify, minify, shorthandCSS, sixHex,
  *   safeClassNames, entities). Same effect as setting their config
  *   slice directly, scoped to one template.
  *
@@ -27,7 +27,7 @@ import type { MaizzleConfig, TransformerToggles } from '../types/index.ts'
  * Usage in SFC <script setup>:
  * ```ts
  * useTransformers(false)
- * useTransformers({ inlineCSS: false, minify: false })
+ * useTransformers({ inlineCss: false, minify: false })
  * useTransformers({ prettify: true })
  * ```
  */

@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { inlineCSS, type InlineCSSOptions } from '../../transformers/inlineCSS.ts'
+import { inlineCss, type InlineCssOptions } from '../../transformers/inlineCss.ts'
 
-function run(html: string, options?: InlineCSSOptions | boolean): string {
+function run(html: string, options?: InlineCssOptions | boolean): string {
   if (options === false) return html
   const opts = (options === true || options == null) ? {} : options
-  return inlineCSS(html, opts)
+  return inlineCss(html, opts)
 }
 
-describe('inlineCSS', () => {
+describe('inlineCss', () => {
   describe('basic', () => {
     it('inlines CSS into matching elements', () => {
       const html = '<style>.red { color: red; }</style><p class="red">Text</p>'
-      const result = inlineCSS(html)
+      const result = inlineCss(html)
       expect(result).toContain('style="color: red;"')
     })
   })

@@ -395,7 +395,7 @@ export interface VueConfig {
  *
  * - `false` skips the listed transformer.
  * - `true` force-enables it for this run (only meaningful for boolean-driven
- *   transformers: inlineCSS, purgeCSS, prettify, minify, shorthandCSS,
+ *   transformers: inlineCss, purgeCss, prettify, minify, shorthandCSS,
  *   sixHex, safeClassNames, entities). Layers on the matching
  *   `css.*` / `html.*` config slice.
  * - missing keys keep their default behavior.
@@ -411,7 +411,7 @@ export interface VueConfig {
 export interface TransformerToggles {
   safeClassNames?: boolean
   attributeToStyle?: boolean
-  inlineCSS?: boolean
+  inlineCss?: boolean
   removeAttributes?: boolean
   shorthandCSS?: boolean
   sixHex?: boolean
@@ -419,7 +419,7 @@ export interface TransformerToggles {
   filters?: boolean
   baseURL?: boolean
   urlQuery?: boolean
-  purgeCSS?: boolean
+  purgeCss?: boolean
   entities?: boolean
   replaceStrings?: boolean
   prettify?: boolean
@@ -619,7 +619,7 @@ export interface MaizzleConfig {
    *
    * @default true
    * @example
-   * useTransformers: { inlineCSS: false, minify: false }
+   * useTransformers: { inlineCss: false, minify: false }
    */
   useTransformers?: boolean | TransformerToggles
   /**

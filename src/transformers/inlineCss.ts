@@ -4,10 +4,10 @@ import type { ChildNode, Element } from 'domhandler'
 import type { Options as JuiceOptions } from 'juice'
 
 /**
- * Options for the `inlineCSS` transformer. Accepts every Juice option plus a
+ * Options for the `inlineCss` transformer. Accepts every Juice option plus a
  * handful of Maizzle-specific extras.
  */
-export interface InlineCSSOptions extends JuiceOptions {
+export interface InlineCssOptions extends JuiceOptions {
   /**
    * Convert `0px`, `0em` etc. to `0` in inline styles.
    *
@@ -65,22 +65,22 @@ export interface InlineCSSOptions extends JuiceOptions {
  * @returns       The transformed HTML string.
  *
  * @example
- * import { inlineCSS } from '@maizzle/framework'
+ * import { inlineCss } from '@maizzle/framework'
  *
- * const out = inlineCSS('<style>.red{color:red}</style><p class="red">x</p>', {
+ * const out = inlineCss('<style>.red{color:red}</style><p class="red">x</p>', {
  *   removeStyleTags: true,
  * })
  */
-export function inlineCSS(html: string, options: InlineCSSOptions = {}): string {
-  return serialize(inlineCSSDom(parse(html), options))
+export function inlineCss(html: string, options: InlineCssOptions = {}): string {
+  return serialize(inlineCssDom(parse(html), options))
 }
 
 /**
- * DOM-form of {@link inlineCSS} used by the internal transformer pipeline.
+ * DOM-form of {@link inlineCss} used by the internal transformer pipeline.
  * Takes a parsed DOM, returns a parsed DOM — avoids the redundant
  * serialize/parse round-trips when chained with other transformers.
  */
-export function inlineCSSDom(dom: ChildNode[], options: InlineCSSOptions = {}): ChildNode[] {
+export function inlineCssDom(dom: ChildNode[], options: InlineCssOptions = {}): ChildNode[] {
   const {
     preferUnitlessValues = true,
     safelist,

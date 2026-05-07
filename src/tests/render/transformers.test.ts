@@ -206,11 +206,11 @@ describe('render', () => {
       expect(result.html).toContain('<style>.test { color: red; }</style>')
     })
 
-    it('skips only inlineCSS when useTransformers is given a granular toggle', async () => {
+    it('skips only inlineCss when useTransformers is given a granular toggle', async () => {
       const result = await render(`
         <script setup>
         defineConfig({
-          useTransformers: { inlineCSS: false },
+          useTransformers: { inlineCss: false },
         })
         </script>
         <template>
@@ -225,7 +225,7 @@ describe('render', () => {
         </template>
       `)
 
-      // inlineCSS skipped → class stays on the div, rule stays inside <style>
+      // inlineCss skipped → class stays on the div, rule stays inside <style>
       expect(result.html).toContain('class="test"')
       expect(result.html).toMatch(/<style[^>]*>[\s\S]*\.test[\s\S]*color:\s*red[\s\S]*<\/style>/)
       expect(result.html).not.toMatch(/style="[^"]*color:\s*red/)
@@ -283,7 +283,7 @@ describe('render', () => {
     it('granular toggle from useTransformers() composable opts out of a single pass', async () => {
       const result = await render(`
         <script setup>
-        useTransformers({ inlineCSS: false })
+        useTransformers({ inlineCss: false })
         </script>
         <template>
           <html>

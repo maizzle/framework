@@ -4,7 +4,7 @@ import { tailwindComponent } from './tailwindComponent.ts'
 import { tailwindcss } from './tailwindcss.ts'
 import { safeClassNames } from './safeClassNames.ts'
 import { attributeToStyle } from './attributeToStyle.ts'
-import { inlineCSSDom } from './inlineCSS.ts'
+import { inlineCssDom } from './inlineCss.ts'
 import { msoPlaceholders } from './msoPlaceholders.ts'
 import { columnWidth } from './columnWidth.ts'
 import { removeAttributes } from './removeAttributes.ts'
@@ -76,8 +76,8 @@ export async function runTransformers(
   if (toggles) {
     const cssOver: Record<string, unknown> = {}
     const htmlOver: Record<string, unknown> = {}
-    if (toggles.inlineCSS === true) cssOver.inline = true
-    if (toggles.purgeCSS === true) cssOver.purge = true
+    if (toggles.inlineCss === true) cssOver.inline = true
+    if (toggles.purgeCss === true) cssOver.purge = true
     if (toggles.safeClassNames === true) cssOver.safe = true
     if (toggles.shorthandCSS === true) cssOver.shorthand = true
     if (toggles.sixHex === true) cssOver.sixHex = true
@@ -115,9 +115,9 @@ export async function runTransformers(
   if (enabled('attributeToStyle')) dom = attributeToStyle(dom, effective.css)
 
   // 4. CSS inliner (serializes/parses internally around juice)
-  if (enabled('inlineCSS') && effective.css?.inline) {
+  if (enabled('inlineCss') && effective.css?.inline) {
     const inlineOptions = typeof effective.css.inline === 'object' ? effective.css.inline : {}
-    dom = inlineCSSDom(dom, inlineOptions)
+    dom = inlineCssDom(dom, inlineOptions)
   }
 
   // 4.5. Resolve MSO placeholders (table width + td style) from inlined CSS
@@ -148,7 +148,7 @@ export async function runTransformers(
   if (enabled('urlQuery')) dom = urlQuery(dom, effective.url)
 
   // 12. Remove unused CSS (serializes/parses internally around email-comb)
-  if (enabled('purgeCSS') && effective.css?.purge) {
+  if (enabled('purgeCss') && effective.css?.purge) {
     const purgeOptions = typeof effective.css.purge === 'object' ? effective.css.purge : {}
     dom = purgeCssDom(dom, purgeOptions)
   }

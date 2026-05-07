@@ -1,14 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { sixHex } from '../../transformers/sixHex.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
-import type { CssConfig } from '../../types/config.ts'
 
-function run(html: string, config?: CssConfig): string {
-  return serialize(sixHex(parse(html), config))
-}
+const run = (html: string) => sixHex(html)
 
 describe('sixHex', () => {
-  describe('config: enabled (default)', () => {
+  describe('basic', () => {
     it('expands 3-digit hex in bgcolor', () => {
       expect(run('<td bgcolor="#fff"></td>')).toBe('<td bgcolor="#ffffff"></td>')
     })
@@ -34,13 +30,6 @@ describe('sixHex', () => {
     it('handles both attributes on same element', () => {
       expect(run('<font bgcolor="#abc" color="#def">test</font>'))
         .toBe('<font bgcolor="#aabbcc" color="#ddeeff">test</font>')
-    })
-  })
-
-  describe('config: disabled', () => {
-    it('returns unchanged when sixHex is false', () => {
-      const html = '<td bgcolor="#fff"></td>'
-      expect(run(html, { sixHex: false })).toBe(html)
     })
   })
 

@@ -9,7 +9,7 @@ import { msoPlaceholders } from './msoPlaceholders.ts'
 import { columnWidth } from './columnWidth.ts'
 import { removeAttributes } from './removeAttributes.ts'
 import { shorthandCssDom } from './shorthandCss.ts'
-import { sixHex } from './sixHex.ts'
+import { sixHexDom } from './sixHex.ts'
 import { addAttributes } from './addAttributes.ts'
 import { filters } from './filters/index.ts'
 import { base } from './base.ts'
@@ -136,7 +136,7 @@ export async function runTransformers(
   }
 
   // 7. Six-digit HEX
-  if (enabled('sixHex')) dom = sixHex(dom, effective.css)
+  if (enabled('sixHex') && effective.css?.sixHex !== false) dom = sixHexDom(dom)
 
   // 8. Add attributes
   if (enabled('addAttributes')) dom = addAttributes(dom, effective.html?.attributes)

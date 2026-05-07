@@ -1,27 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { inlineCSS } from '../../transformers/inlineCSS.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
-import type { CssConfig } from '../../types/config.ts'
+import { inlineCSS, type InlineCSSOptions } from '../../transformers/inlineCSS.ts'
 
-function run(html: string, inline?: boolean | Record<string, unknown>): string {
-  return serialize(inlineCSS(parse(html), { inline } as CssConfig))
+function run(html: string, options?: InlineCSSOptions | boolean): string {
+  if (options === false) return html
+  const opts = (options === true || options == null) ? {} : options
+  return inlineCSS(html, opts)
 }
 
 describe('inlineCSS', () => {
-  describe('config: css.inline', () => {
-    it('returns unchanged when inline is not set', () => {
+  describe('basic', () => {
+    it('inlines CSS into matching elements', () => {
       const html = '<style>.red { color: red; }</style><p class="red">Text</p>'
-      expect(serialize(inlineCSS(parse(html), {}))).toBe(html)
-    })
-
-    it('returns unchanged when inline is false', () => {
-      const html = '<style>.red { color: red; }</style><p class="red">Text</p>'
-      expect(run(html, false)).toBe(html)
-    })
-
-    it('inlines CSS when inline is true', () => {
-      const html = '<style>.red { color: red; }</style><p class="red">Text</p>'
-      const result = run(html, true)
+      const result = inlineCSS(html)
       expect(result).toContain('style="color: red;"')
     })
   })

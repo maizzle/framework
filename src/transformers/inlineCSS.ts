@@ -2,29 +2,85 @@ import juice from 'juice'
 import { walk, parse, serialize } from '../utils/ast/index.ts'
 import type { ChildNode, Element } from 'domhandler'
 import type { Options as JuiceOptions } from 'juice'
-import type { CssConfig } from '../types/config.ts'
 
 /**
- * Inline CSS transformer.
- *
- * Inlines CSS from `<style>` tags into inline style attributes on HTML elements.
- * This is important for email client compatibility (especially Outlook on Windows).
- *
- * Enabled when `css.inline` is set to `true` or an object with options.
- * All Juice options are supported and passed through directly.
+ * Options for the `inlineCSS` transformer. Accepts every Juice option plus a
+ * handful of Maizzle-specific extras.
  */
-export function inlineCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[] {
-  const inline = config.inline
+export interface InlineCSSOptions extends JuiceOptions {
+  /**
+   * Convert `0px`, `0em` etc. to `0` in inline styles.
+   *
+   * @default true
+   */
+  preferUnitlessValues?: boolean
+  /**
+   * CSS selectors to preserve in `<style>` tags, even after inlining.
+   * Mapped to Juice's `preservedSelectors` option.
+   *
+   * @default []
+   */
+  safelist?: string[]
+  /**
+   * Additional CSS string to inline alongside `<style>` tag contents.
+   * Mapped to Juice's `extraCss` option.
+   */
+  customCSS?: string
+  /**
+   * Duplicate CSS properties to HTML attributes.
+   * Mapped to Juice's static `styleToAttribute` property.
+   */
+  styleToAttribute?: Record<string, string>
+  /**
+   * CSS properties to exclude from inlining.
+   * Mapped to Juice's static `excludedProperties` property.
+   */
+  excludedProperties?: string[]
+  /**
+   * Elements that can receive `width` HTML attributes.
+   * Mapped to Juice's static `widthElements` property.
+   *
+   * @default ['img', 'video']
+   */
+  widthElements?: string[]
+  /**
+   * Elements that can receive `height` HTML attributes.
+   * Mapped to Juice's static `heightElements` property.
+   *
+   * @default ['img', 'video']
+   */
+  heightElements?: string[]
+  /**
+   * Template language code blocks to preserve during inlining.
+   * Mapped to Juice's static `codeBlocks` property.
+   */
+  codeBlocks?: Record<string, { start: string; end: string }>
+}
 
-  // Disabled when inline is falsy or not an object/truthy
-  if (!inline) {
-    return dom
-  }
+/**
+ * Inline CSS from `<style>` tags into `style` attributes on matching elements.
+ *
+ * @param html    HTML string to transform.
+ * @param options Juice options plus Maizzle-specific extras.
+ * @returns       The transformed HTML string.
+ *
+ * @example
+ * import { inlineCSS } from '@maizzle/framework'
+ *
+ * const out = inlineCSS('<style>.red{color:red}</style><p class="red">x</p>', {
+ *   removeStyleTags: true,
+ * })
+ */
+export function inlineCSS(html: string, options: InlineCSSOptions = {}): string {
+  return serialize(inlineCSSDom(parse(html), options))
+}
 
-  // Build options from config
-  const options = typeof inline === 'object' ? inline : {}
-
-  // Separate Maizzle-specific options from Juice options
+/**
+ * DOM-form of {@link inlineCSS} used by the internal transformer pipeline.
+ * Takes a parsed DOM, returns a parsed DOM — avoids the redundant
+ * serialize/parse round-trips when chained with other transformers.
+ */
+export function inlineCSSDom(dom: ChildNode[], options: InlineCSSOptions = {}): ChildNode[] {
   const {
     preferUnitlessValues = true,
     safelist,

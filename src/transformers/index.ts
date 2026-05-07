@@ -4,7 +4,7 @@ import { tailwindComponent } from './tailwindComponent.ts'
 import { tailwindcss } from './tailwindcss.ts'
 import { safeClassNames } from './safeClassNames.ts'
 import { attributeToStyle } from './attributeToStyle.ts'
-import { inlineCSS } from './inlineCSS.ts'
+import { inlineCSSDom } from './inlineCSS.ts'
 import { msoPlaceholders } from './msoPlaceholders.ts'
 import { columnWidth } from './columnWidth.ts'
 import { removeAttributes } from './removeAttributes.ts'
@@ -115,7 +115,10 @@ export async function runTransformers(
   if (enabled('attributeToStyle')) dom = attributeToStyle(dom, effective.css)
 
   // 4. CSS inliner (serializes/parses internally around juice)
-  if (enabled('inlineCSS')) dom = inlineCSS(dom, effective.css)
+  if (enabled('inlineCSS') && effective.css?.inline) {
+    const inlineOptions = typeof effective.css.inline === 'object' ? effective.css.inline : {}
+    dom = inlineCSSDom(dom, inlineOptions)
+  }
 
   // 4.5. Resolve MSO placeholders (table width + td style) from inlined CSS
   dom = msoPlaceholders(dom)

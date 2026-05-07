@@ -1,16 +1,40 @@
 import { readFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import type { ChildNode, Element } from 'domhandler'
-import { walk } from '../utils/ast/index.ts'
+import { parse, serialize, walk } from '../utils/ast/index.ts'
 
 /**
  * Inline `<link rel="stylesheet">` tags as `<style>` tags.
  *
- * - Local file paths are always inlined (resolved relative to the template)
- * - Remote URLs (http/https) are only inlined if the `inline` attribute is present
- * - Runs before the tailwindcss transformer so CSS is compiled normally
+ * - Local file paths are inlined when `filePath` is provided (resolved
+ *   relative to it).
+ * - Remote URLs (`http://` / `https://`) are only inlined when the link
+ *   carries an `inline` attribute, e.g. `<link rel="stylesheet" inline href="…">`.
+ *
+ * @param html     HTML string to transform.
+ * @param filePath Path of the source file the HTML came from, used as the
+ *                 base for resolving relative `href` values. Required for
+ *                 local-file inlining; remote `inline` links work without it.
+ * @returns        The transformed HTML string.
+ *
+ * @example
+ * import { inlineLink } from '@maizzle/framework'
+ *
+ * const out = await inlineLink(
+ *   '<link rel="stylesheet" href="./styles.css">',
+ *   '/path/to/template.html',
+ * )
  */
-export async function inlineLink(dom: ChildNode[], filePath?: string): Promise<ChildNode[]> {
+export async function inlineLink(html: string, filePath?: string): Promise<string> {
+  return serialize(await inlineLinkDom(parse(html), filePath))
+}
+
+/**
+ * DOM-form of {@link inlineLink} used by the internal transformer pipeline.
+ * Takes a parsed DOM, returns a parsed DOM — avoids redundant
+ * serialize/parse round-trips when chained with other transformers.
+ */
+export async function inlineLinkDom(dom: ChildNode[], filePath?: string): Promise<ChildNode[]> {
   const links: { node: Element; parent: ChildNode; index: number }[] = []
 
   walk(dom, (node) => {

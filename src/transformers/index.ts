@@ -1,5 +1,5 @@
 import { parse, serialize } from '../utils/ast/index.ts'
-import { inlineLink } from './inlineLink.ts'
+import { inlineLinkDom } from './inlineLink.ts'
 import { tailwindComponent } from './tailwindComponent.ts'
 import { tailwindcss } from './tailwindcss.ts'
 import { safeClassNames } from './safeClassNames.ts'
@@ -98,7 +98,7 @@ export async function runTransformers(
   let dom = parse(html)
 
   // 0. Inline <link> stylesheets
-  dom = await inlineLink(dom, filePath)
+  dom = await inlineLinkDom(dom, filePath)
 
   // 0.5. <Tailwind> component — compile per-block scoped CSS, inject into <head>
   if (tailwindBlocks?.length) {

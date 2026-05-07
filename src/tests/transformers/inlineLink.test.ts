@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { resolve } from 'node:path'
 import { inlineLink } from '../../transformers/inlineLink.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
 
 function run(html: string, filePath?: string): Promise<string> {
-  return inlineLink(parse(html), filePath).then(serialize)
+  return inlineLink(html, filePath)
 }
 
 const fixturesDir = resolve(import.meta.dirname, 'fixtures')

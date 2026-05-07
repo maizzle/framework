@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { entities } from '../../transformers/entities.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
 import type { EntitiesConfig } from '../../types/config.ts'
 
 function run(html: string, decodeEntities?: EntitiesConfig): string {
-  return serialize(entities(parse(html), decodeEntities))
+  return entities(html, decodeEntities)
 }
 
 describe('entities', () => {

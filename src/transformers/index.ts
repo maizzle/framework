@@ -13,7 +13,7 @@ import { sixHexDom } from './sixHex.ts'
 import { addAttributes } from './addAttributes.ts'
 import { filtersDom } from './filters/index.ts'
 import { baseDom } from './base.ts'
-import { entities } from './entities.ts'
+import { entitiesDom } from './entities.ts'
 import { urlQueryDom } from './urlQuery.ts'
 import { purgeCssDom } from './purgeCss.ts'
 import { replaceStrings } from './replaceStrings.ts'
@@ -165,7 +165,7 @@ export async function runTransformers(
   }
 
   // 13. Entities
-  if (enabled('entities')) dom = entities(dom, effective.html?.decodeEntities)
+  if (enabled('entities')) dom = entitiesDom(dom, effective.html?.decodeEntities)
 
   // Serialize once — remaining transformers operate on the HTML string
   const isXhtml = doctype ? /xhtml/i.test(doctype) : false

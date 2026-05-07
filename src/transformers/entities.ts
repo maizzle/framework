@@ -1,6 +1,6 @@
 import { defu as merge } from 'defu'
-import { walk } from '../utils/ast/index.ts'
 import type { ChildNode } from 'domhandler'
+import { parse, serialize, walk } from '../utils/ast/index.ts'
 import type { EntitiesConfig } from '../types/index.ts'
 
 const DEFAULT_ENTITIES: Record<string, string> = {
@@ -28,11 +28,43 @@ const DEFAULT_ENTITIES: Record<string, string> = {
   '\u203A': '&rsaquo;'
 }
 
-export function entities(dom: ChildNode[], config: EntitiesConfig = true): ChildNode[] {
-  if (!config) return dom
+/**
+ * Replace literal Unicode characters in text nodes with their HTML entity
+ * equivalents (zero-width joiners, non-breaking spaces, smart quotes,
+ * dashes, etc.) for better email-client rendering.
+ *
+ * @param html   HTML string to transform.
+ * @param custom Extra entries merged on top of the built-in entity map, or
+ *               `false` to disable the transform. Defaults to `true`
+ *               (built-ins only).
+ * @returns      The transformed HTML string.
+ *
+ * @example
+ * import { entities } from '@maizzle/framework'
+ *
+ * // Defaults only
+ * entities('hello world') // → 'hello&nbsp;world'
+ *
+ * // Add a custom mapping
+ * entities('© Maizzle', { '©': '&copy;' })
+ *
+ * // Disable the transform
+ * entities('hello world', false)
+ */
+export function entities(html: string, custom: EntitiesConfig = true): string {
+  return serialize(entitiesDom(parse(html), custom))
+}
 
-  const map = typeof config === 'object'
-    ? merge(config as Record<string, string>, DEFAULT_ENTITIES)
+/**
+ * DOM-form of {@link entities} used by the internal transformer pipeline.
+ * Takes a parsed DOM, returns a parsed DOM — avoids redundant
+ * serialize/parse round-trips when chained with other transformers.
+ */
+export function entitiesDom(dom: ChildNode[], custom: EntitiesConfig = true): ChildNode[] {
+  if (!custom) return dom
+
+  const map = typeof custom === 'object'
+    ? merge(custom as Record<string, string>, DEFAULT_ENTITIES)
     : DEFAULT_ENTITIES
 
   walk(dom, (node) => {

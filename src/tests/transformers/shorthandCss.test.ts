@@ -1,27 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { shorthandCSS } from '../../transformers/shorthandCSS.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
-import type { CssConfig } from '../../types/config.ts'
+import { shorthandCss, type ShorthandCssOptions } from '../../transformers/shorthandCss.ts'
 
-function run(html: string, shorthand?: boolean | { tags?: string[] }): string {
-  return serialize(shorthandCSS(parse(html), { shorthand } satisfies CssConfig))
+function run(html: string, options?: ShorthandCssOptions | boolean): string {
+  if (options === false) return html
+  const opts = (options === true || options == null) ? {} : options
+  return shorthandCss(html, opts)
 }
 
-describe('shorthandCSS', () => {
-  describe('config: css.shorthand', () => {
-    it('returns unchanged when shorthand is not set', () => {
-      const html = '<p style="margin-top: 4px; margin-bottom: 4px;">Text</p>'
-      expect(serialize(shorthandCSS(parse(html), {}))).toBe(html)
-    })
-
-    it('returns unchanged when shorthand is false', () => {
-      const html = '<p style="margin-top: 4px; margin-bottom: 4px;">Text</p>'
-      expect(run(html, false)).toBe(html)
-    })
-
-    it('converts longhand to shorthand when enabled', () => {
+describe('shorthandCss', () => {
+  describe('basic', () => {
+    it('converts longhand to shorthand', () => {
       const html = '<p style="margin-top: 4px; margin-bottom: 4px; margin-left: 2px; margin-right: 2px;">Text</p>'
-      const result = run(html, true)
+      const result = shorthandCss(html)
       expect(result).toContain('margin:')
       expect(result).not.toContain('margin-top:')
       expect(result).not.toContain('margin-bottom:')

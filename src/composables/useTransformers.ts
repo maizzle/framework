@@ -13,7 +13,7 @@ import type { MaizzleConfig, TransformerToggles } from '../types/index.ts'
  *   pipeline but skips the listed transformers.
  * - `useTransformers({ prettify: true, minify: true })` *enables*
  *   transformers that would otherwise no-op (boolean-driven ones:
- *   inlineCss, purgeCss, prettify, minify, shorthandCSS, sixHex,
+ *   inlineCss, purgeCss, prettify, minify, shorthandCss, sixHex,
  *   safeClassNames, entities). Same effect as setting their config
  *   slice directly, scoped to one template.
  *

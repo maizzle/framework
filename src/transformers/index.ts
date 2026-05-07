@@ -8,7 +8,7 @@ import { inlineCssDom } from './inlineCss.ts'
 import { msoPlaceholders } from './msoPlaceholders.ts'
 import { columnWidth } from './columnWidth.ts'
 import { removeAttributes } from './removeAttributes.ts'
-import { shorthandCSS } from './shorthandCSS.ts'
+import { shorthandCssDom } from './shorthandCss.ts'
 import { sixHex } from './sixHex.ts'
 import { addAttributes } from './addAttributes.ts'
 import { filters } from './filters/index.ts'
@@ -79,7 +79,7 @@ export async function runTransformers(
     if (toggles.inlineCss === true) cssOver.inline = true
     if (toggles.purgeCss === true) cssOver.purge = true
     if (toggles.safeClassNames === true) cssOver.safe = true
-    if (toggles.shorthandCSS === true) cssOver.shorthand = true
+    if (toggles.shorthandCss === true) cssOver.shorthand = true
     if (toggles.sixHex === true) cssOver.sixHex = true
     if (toggles.prettify === true) htmlOver.format = true
     if (toggles.minify === true) htmlOver.minify = true
@@ -130,7 +130,10 @@ export async function runTransformers(
   if (enabled('removeAttributes')) dom = removeAttributes(dom, effective.html?.attributes)
 
   // 6. Shorthand CSS
-  if (enabled('shorthandCSS')) dom = shorthandCSS(dom, effective.css)
+  if (enabled('shorthandCss') && effective.css?.shorthand) {
+    const shorthandOptions = typeof effective.css.shorthand === 'object' ? effective.css.shorthand : {}
+    dom = shorthandCssDom(dom, shorthandOptions)
+  }
 
   // 7. Six-digit HEX
   if (enabled('sixHex')) dom = sixHex(dom, effective.css)

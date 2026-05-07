@@ -395,7 +395,7 @@ export interface VueConfig {
  *
  * - `false` skips the listed transformer.
  * - `true` force-enables it for this run (only meaningful for boolean-driven
- *   transformers: inlineCss, purgeCss, prettify, minify, shorthandCSS,
+ *   transformers: inlineCss, purgeCss, prettify, minify, shorthandCss,
  *   sixHex, safeClassNames, entities). Layers on the matching
  *   `css.*` / `html.*` config slice.
  * - missing keys keep their default behavior.
@@ -413,7 +413,7 @@ export interface TransformerToggles {
   attributeToStyle?: boolean
   inlineCss?: boolean
   removeAttributes?: boolean
-  shorthandCSS?: boolean
+  shorthandCss?: boolean
   sixHex?: boolean
   addAttributes?: boolean
   filters?: boolean

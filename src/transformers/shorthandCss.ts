@@ -2,39 +2,53 @@ import postcss from 'postcss'
 import safeParser from 'postcss-safe-parser'
 import mergeLonghand from 'postcss-merge-longhand'
 import type { ChildNode, Element } from 'domhandler'
-import { walk } from '../utils/ast/index.ts'
-import type { CssConfig } from '../types/config.ts'
+import { parse, serialize, walk } from '../utils/ast/index.ts'
 
-interface ShorthandCssOptions {
+/**
+ * Options for the `shorthandCss` transformer.
+ */
+export interface ShorthandCssOptions {
+  /**
+   * Restrict the transform to a list of HTML tag names. Omit to apply to
+   * every element with a `style` attribute.
+   *
+   * @example ['td', 'div']
+   */
   tags?: string[]
 }
 
 /**
- * Shorthand CSS transformer.
- *
- * Rewrites longhand CSS inside `style` attributes with shorthand syntax.
- * Works with margin, padding, and border when all sides are specified.
+ * Rewrite longhand CSS inside inline `style` attributes with shorthand
+ * syntax. Works with margin, padding, and border when all sides are
+ * specified.
  *
  * For example:
  * `margin-left: 2px; margin-right: 2px; margin-top: 4px; margin-bottom: 4px`
  * becomes:
  * `margin: 4px 2px`
  *
- * Enabled via `css.shorthand`:
- * - `true`: enable for all tags
- * - `{ tags: ['td', 'div'] }`: enable only for specified tags
- * - `false` or omitted: disabled
+ * @param html    HTML string to transform.
+ * @param options Optional Maizzle options (`tags`).
+ * @returns       The transformed HTML string.
+ *
+ * @example
+ * import { shorthandCss } from '@maizzle/framework'
+ *
+ * const out = shorthandCss(
+ *   '<p style="margin-top: 4px; margin-right: 2px; margin-bottom: 4px; margin-left: 2px;">x</p>',
+ *   { tags: ['p'] },
+ * )
  */
-export function shorthandCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[] {
-  const option = config.shorthand
+export function shorthandCss(html: string, options: ShorthandCssOptions = {}): string {
+  return serialize(shorthandCssDom(parse(html), options))
+}
 
-  // Disabled by default
-  if (!option) {
-    return dom
-  }
-
-  // Parse options
-  const options: ShorthandCssOptions = typeof option === 'object' ? option : {}
+/**
+ * DOM-form of {@link shorthandCss} used by the internal transformer
+ * pipeline. Takes a parsed DOM, returns a parsed DOM — avoids redundant
+ * serialize/parse round-trips when chained with other transformers.
+ */
+export function shorthandCssDom(dom: ChildNode[], options: ShorthandCssOptions = {}): ChildNode[] {
   const allowedTags = options.tags ?? []
   const hasTagFilter = allowedTags.length > 0
 

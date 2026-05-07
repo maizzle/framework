@@ -131,33 +131,44 @@ const alignClass = computed(() => props.align ? ({
 
 const styles = computed(() => {
   if (props.variant === 'link') {
-    return 'text-decoration: none;'
+    return 'text-decoration: none; color: #4338ca;'
   }
 
-  return [
+  const base = [
     'display: inline-block;',
     'text-decoration: none;',
     'padding: 16px 24px;',
     'font-size: 16px;',
     'line-height: 1;',
     'border-radius: 4px;',
-  ].join('')
+  ]
+
+  if (props.variant === 'outline') {
+    base.push(
+      'background-color: transparent;',
+      'border: 1px solid #4338ca;',
+      'color: #4338ca;',
+    )
+  } else if (props.variant === 'ghost') {
+    base.push(
+      'background-color: transparent;',
+      'color: #4338ca;',
+    )
+  } else {
+    base.push(
+      'background-color: #4338ca;',
+      'color: #fffffe;',
+    )
+  }
+
+  return base.join('')
 })
 
 const isLink = computed(() => props.variant === 'link')
 
-const variantClasses = computed(() => {
-  switch (props.variant) {
-    case 'outline':
-      return 'border border-indigo-700 bg-transparent text-indigo-700'
-    case 'ghost':
-      return 'bg-transparent text-indigo-700 hover:bg-indigo-50'
-    case 'link':
-      return 'text-indigo-700'
-    default:
-      return 'bg-indigo-700 text-[#fffffe]'
-  }
-})
+const variantClasses = computed(() =>
+  props.variant === 'ghost' ? 'hover:bg-indigo-50' : '',
+)
 
 const mergedClass = computed(() => twMerge(variantClasses.value, attrs.class as string))
 
@@ -196,9 +207,9 @@ const MsoIconGap = () => createStaticVNode(
 <template>
   <div :class="alignClass">
     <a
-      v-bind="{ ...$attrs, class: undefined }"
+      v-bind="{ ...$attrs, class: undefined, style: undefined }"
       :href="href"
-      :style="styles"
+      :style="[styles, $attrs.style as any]"
       :class="mergedClass"
     >
       <template v-if="!isLink">

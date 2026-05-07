@@ -1,7 +1,8 @@
 import { format as oxfmt } from 'oxfmt'
 import { defu as merge } from 'defu'
 import type { FormatOptions } from 'oxfmt'
-import type { MaizzleConfig } from '../types/config.ts'
+
+export type { FormatOptions } from 'oxfmt'
 
 const DEFAULT_OPTIONS: FormatOptions = {
   printWidth: 320,
@@ -10,22 +11,22 @@ const DEFAULT_OPTIONS: FormatOptions = {
 }
 
 /**
- * Format transformer.
+ * Pretty-print an HTML string with `oxfmt`. Maizzle defaults
+ * (`printWidth: 320`, `htmlWhitespaceSensitivity: 'ignore'`,
+ * `embeddedLanguageFormatting: 'off'`) are merged underneath any options
+ * you pass.
  *
- * Formats the HTML string using `oxfmt`. Accepts all oxfmt `FormatOptions`.
+ * @param html    HTML string to format.
+ * @param options [oxfmt `FormatOptions`](https://github.com/oxc-project/oxfmt).
+ * @returns       The formatted HTML string.
  *
- * Enable by setting `html.format: true` (or passing options).
- * User options are merged on top of the defaults.
+ * @example
+ * import { format } from '@maizzle/framework'
+ *
+ * const pretty = await format(html, { useTabs: true, tabWidth: 4 })
  */
-export async function format(html: string, config: MaizzleConfig = {}): Promise<string> {
-  const option = config.html?.format
-
-  if (!option) return html
-
-  const userOptions: FormatOptions = typeof option === 'object' ? option : {}
-  const options = merge(userOptions, DEFAULT_OPTIONS)
-
-  const result = await oxfmt('input.html', html, options)
-
+export async function format(html: string, options: FormatOptions = {}): Promise<string> {
+  const merged = merge(options, DEFAULT_OPTIONS)
+  const result = await oxfmt('input.html', html, merged)
   return result.code
 }

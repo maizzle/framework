@@ -176,7 +176,10 @@ export async function runTransformers(
 
   // 15. Format — skipped when `minify` is enabled
   const minifyWillRun = enabled('minify') && !!effective.html?.minify
-  if (enabled('prettify') && !minifyWillRun) result = await format(result, effective)
+  if (enabled('prettify') && !minifyWillRun && effective.html?.format) {
+    const formatOptions = typeof effective.html.format === 'object' ? effective.html.format : {}
+    result = await format(result, formatOptions)
+  }
 
   // 16. Minify
   if (enabled('minify')) result = minify(result, effective)

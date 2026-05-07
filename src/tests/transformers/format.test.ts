@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { format } from '../../transformers/format.ts'
-import type { MaizzleConfig } from '../../types/config.ts'
+import { format, type FormatOptions } from '../../transformers/format.ts'
 
-async function run(html: string, option?: boolean | Record<string, unknown>): Promise<string> {
-  const config: MaizzleConfig = option === undefined ? {} : { html: { format: option } }
-  return format(html, config)
+async function run(html: string, option?: boolean | FormatOptions): Promise<string> {
+  if (option === false) return html
+  const opts = (option === true || option == null) ? {} : option
+  return format(html, opts)
 }
 
 // ---------------------------------------------------------------------------
@@ -73,18 +73,4 @@ describe('format', () => {
   // Disabled / short-circuit
   // ---------------------------------------------------------------------------
 
-  it('returns html unchanged when format is false', async () => {
-    const html = `<html><body><p>hi</p></body></html>`
-    expect(await run(html, false)).toBe(html)
-  })
-
-  it('returns html unchanged when format is not set', async () => {
-    const html = `<html><body><p>hi</p></body></html>`
-    expect(await run(html)).toBe(html)
-  })
-
-  it('returns html unchanged when config is not provided', async () => {
-    const html = `<html><body><p>hi</p></body></html>`
-    expect(await format(html)).toBe(html)
-  })
 })

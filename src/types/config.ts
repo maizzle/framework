@@ -346,9 +346,12 @@ export interface HtmlConfig {
   /**
    * Minify the HTML output.
    *
-   * Set to `true` to enable with defaults, or pass options.
+   * Set to `true` to enable with defaults, or pass `html-crush`
+   * options to customize.
+   *
+   * @see https://codsen.com/os/html-crush
    */
-  minify?: boolean | Record<string, unknown>
+  minify?: boolean | Partial<import('html-crush').Opts>
 }
 
 export type FilterFunction = (str: string, value: string) => string
@@ -431,7 +434,7 @@ export interface PlaintextConfig {
    *
    * @see https://codsen.com/os/string-strip-html
    */
-  options?: Record<string, unknown>
+  options?: Partial<import('string-strip-html').Opts>
 }
 
 export interface MaizzleConfig {

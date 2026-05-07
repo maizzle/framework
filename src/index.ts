@@ -42,6 +42,7 @@ export type { MaizzleConfig, HtmlConfig, UrlConfig, UrlQuery, UrlQueryOptions, C
 export { inlineLink } from './transformers/inlineLink.ts'
 export { urlQuery } from './transformers/urlQuery.ts'
 export { base } from './transformers/base.ts'
+export type { BaseUrlOptions } from './transformers/base.ts'
 export { entities } from './transformers/entities.ts'
 export { safeClassNames } from './transformers/safeClassNames.ts'
 export { attributeToStyle } from './transformers/attributeToStyle.ts'

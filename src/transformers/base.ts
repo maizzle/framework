@@ -4,13 +4,39 @@ import valueParser from 'postcss-value-parser'
 import { walk, serialize, parse } from '../utils/ast/index.ts'
 import { isAbsoluteUrl, defaultTags, processSrcset } from '../utils/url.ts'
 import type { ChildNode, Element } from 'domhandler'
-import type { UrlConfig } from '../types/config.ts'
 
-interface BaseUrlOptions {
+/**
+ * Options for the `base` transformer.
+ */
+export interface BaseUrlOptions {
+  /** Base URL to prepend to relative links. */
   url: string
+  /**
+   * Tag/attribute scope for prepending. Omit to use the built-in defaults
+   * (`a[href]`, `img[src]`, `link[href]`, etc.).
+   *
+   * - Array of tag names — restrict the built-in defaults to these tags.
+   * - Object — explicit per-tag attribute map. Each attribute value is
+   *   `true` (use the base url) or a string (use that string as the url
+   *   for this attribute only).
+   */
   tags?: string[] | Record<string, Record<string, string | boolean>>
+  /**
+   * Custom attributes to rewrite globally, regardless of tag. Each key
+   * is the attribute name; the value is the URL to prepend.
+   */
   attributes?: Record<string, string>
+  /**
+   * Rewrite `url()` references inside `<style>` tag contents.
+   *
+   * @default true
+   */
   styleTag?: boolean
+  /**
+   * Rewrite `url()` references inside inline `style` attributes.
+   *
+   * @default true
+   */
   inlineCss?: boolean
 }
 
@@ -71,26 +97,18 @@ function processInlineStyle(style: string, url: string): string {
   }
 }
 
-function getBaseUrl(config: UrlConfig): string | BaseUrlOptions | undefined {
-  const baseUrlConfig = config.base
-  if (!baseUrlConfig || baseUrlConfig === '') {
-    return undefined
+function resolveOptions(input: string | BaseUrlOptions | undefined | null | false): BaseUrlOptions | undefined {
+  if (!input) return undefined
+  if (typeof input === 'string') {
+    return { url: input, styleTag: true, inlineCss: true }
   }
-  return baseUrlConfig as string | BaseUrlOptions | undefined
-}
-
-function resolveOptions(baseUrlConfig: string | BaseUrlOptions | undefined): BaseUrlOptions | undefined {
-  if (!baseUrlConfig) return undefined
-  if (typeof baseUrlConfig === 'string') {
-    return { url: baseUrlConfig, styleTag: true, inlineCss: true }
-  }
-  if (typeof baseUrlConfig === 'object' && 'url' in baseUrlConfig) {
+  if (typeof input === 'object' && 'url' in input) {
     return {
-      url: baseUrlConfig.url ?? '',
-      tags: baseUrlConfig.tags,
-      attributes: baseUrlConfig.attributes,
-      styleTag: baseUrlConfig.styleTag ?? true,
-      inlineCss: baseUrlConfig.inlineCss ?? true,
+      url: input.url ?? '',
+      tags: input.tags,
+      attributes: input.attributes,
+      styleTag: input.styleTag ?? true,
+      inlineCss: input.inlineCss ?? true,
     }
   }
   return undefined
@@ -118,15 +136,44 @@ function getTagConfig(
   return undefined
 }
 
-export function base(dom: ChildNode[], config: UrlConfig = {}): ChildNode[] {
-  const baseUrlConfig = getBaseUrl(config)
-  const options = resolveOptions(baseUrlConfig)
+/**
+ * Prepend a base URL to relative `src`/`href`/etc. references throughout
+ * the document, including inside `<style>` blocks, inline `style`
+ * attributes, MSO conditional comments, and VML tags.
+ *
+ * @param html    HTML string to transform.
+ * @param options Either a base URL string, or a {@link BaseUrlOptions} object
+ *                for finer control.
+ * @returns       The transformed HTML string.
+ *
+ * @example
+ * import { base } from '@maizzle/framework'
+ *
+ * // Just a URL — applied with the built-in tag/attribute defaults.
+ * const out = base('<img src="/a.png">', 'https://cdn.example.com/')
+ *
+ * // Restrict to specific tags, opt out of style rewriting:
+ * const limited = base(html, {
+ *   url: 'https://cdn.example.com/',
+ *   tags: ['img'],
+ *   styleTag: false,
+ *   inlineCss: false,
+ * })
+ */
+export function base(html: string, options: string | BaseUrlOptions): string {
+  return serialize(baseDom(parse(html), options))
+}
 
-  if (!options || !options.url) {
-    return dom
-  }
+/**
+ * DOM-form of {@link base} used by the internal transformer pipeline.
+ * Takes a parsed DOM, returns a parsed DOM — avoids redundant
+ * serialize/parse round-trips when chained with other transformers.
+ */
+export function baseDom(dom: ChildNode[], options: string | BaseUrlOptions | undefined | null | false): ChildNode[] {
+  const resolved = resolveOptions(options)
+  if (!resolved || !resolved.url) return dom
 
-  const { url: baseUrl, styleTag = true, inlineCss = true, attributes = {} } = options
+  const { url: baseUrl, styleTag = true, inlineCss = true, attributes = {} } = resolved
 
   walk(dom, (node) => {
     const el = node as Element
@@ -149,9 +196,9 @@ export function base(dom: ChildNode[], config: UrlConfig = {}): ChildNode[] {
     if (!el.attribs) return
 
     // Process tag-specific attributes (respects tags filter)
-    const tagConfig = getTagConfig(el.name, options)
+    const tagConfig = getTagConfig(el.name, resolved)
 
-    if (tagConfig || options.tags === undefined) {
+    if (tagConfig || resolved.tags === undefined) {
       for (const [attr, value] of Object.entries(el.attribs)) {
         if (!value) continue
 

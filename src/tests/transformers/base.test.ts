@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { base } from '../../transformers/base.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
+import { base, type BaseUrlOptions } from '../../transformers/base.ts'
 import type { UrlConfig } from '../../types/config.ts'
 
 function run(html: string, config: { url?: UrlConfig } = {}): string {
-  return serialize(base(parse(html), config.url))
+  const baseOption = config.url?.base
+  if (!baseOption) return html
+  return base(html, baseOption as string | BaseUrlOptions)
 }
 
 describe('base URL', () => {

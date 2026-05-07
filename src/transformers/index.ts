@@ -12,7 +12,7 @@ import { shorthandCssDom } from './shorthandCss.ts'
 import { sixHexDom } from './sixHex.ts'
 import { addAttributes } from './addAttributes.ts'
 import { filtersDom } from './filters/index.ts'
-import { base } from './base.ts'
+import { baseDom } from './base.ts'
 import { entities } from './entities.ts'
 import { urlQuery } from './urlQuery.ts'
 import { purgeCssDom } from './purgeCss.ts'
@@ -150,7 +150,7 @@ export async function runTransformers(
   if (enabled('filters')) dom = filtersDom(dom, effective.filters)
 
   // 10. Base URL (serializes/parses internally for VML/MSO regex passes)
-  if (enabled('baseURL')) dom = base(dom, effective.url)
+  if (enabled('baseURL') && effective.url?.base) dom = baseDom(dom, effective.url.base)
 
   // 11. URL query
   if (enabled('urlQuery')) dom = urlQuery(dom, effective.url)

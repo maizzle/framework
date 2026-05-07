@@ -7,6 +7,7 @@ import { EventManager } from './events/index.ts'
 import { runTransformers } from './transformers/index.ts'
 import { createRenderer } from './render/createRenderer.ts'
 import { createPlaintext } from './plaintext.ts'
+import { stripForHtml, stripForPlaintext } from './utils/output-markers.ts'
 import defu from 'defu'
 import type { MaizzleConfig } from './types/index.ts'
 
@@ -86,9 +87,10 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
       html = await events.fireAfterTransform({ config, template, html })
       html = `${doctype}\n${html}`
 
+      const htmlOut = stripForHtml(html)
       const outputFilePath = resolveOutputPath(templatePath, outputPath, outputExtension, contentBase)
       mkdirSync(dirname(outputFilePath), { recursive: true })
-      writeFileSync(outputFilePath, html)
+      writeFileSync(outputFilePath, htmlOut)
       outputFiles.push(outputFilePath)
 
       // Generate plaintext version if configured
@@ -98,7 +100,7 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
       if (globalPlaintext || sfcPlaintext) {
         const globalCfg = typeof globalPlaintext === 'object' ? globalPlaintext : {}
         const stripOptions = defu(sfcPlaintext?.options, globalCfg.options)
-        const plaintext = createPlaintext(html, stripOptions)
+        const plaintext = createPlaintext(stripForPlaintext(html), stripOptions)
         const ptExtension = sfcPlaintext?.extension ?? globalCfg.extension ?? 'txt'
 
         let ptOutputPath: string

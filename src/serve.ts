@@ -9,6 +9,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { glob } from 'tinyglobby'
 import { createHighlighter, type Highlighter } from 'shiki'
 import { createPlaintext } from './plaintext.ts'
+import { stripForHtml, stripForPlaintext } from './utils/output-markers.ts'
 import { resolveConfig } from './config/index.ts'
 import { runTransformers } from './transformers/index.ts'
 import { createRenderer, type Renderer } from './render/createRenderer.ts'
@@ -351,7 +352,7 @@ async function serveRenderedTemplate(url: string, config: MaizzleConfig, rendere
     html = `${doctype}\n${html}`
 
     res.setHeader('Content-Type', 'text/html')
-    res.end(html)
+    res.end(stripForHtml(html))
   } catch (error: any) {
     res.statusCode = 500
     res.end(`<pre>${error.stack || error.message}</pre>`)
@@ -395,7 +396,7 @@ async function serveHighlightedSource(url: string, config: MaizzleConfig, render
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
     html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
 
-    html = `${doctype}\n${html}`
+    html = stripForHtml(`${doctype}\n${html}`)
 
     const hl = await getHighlighter()
     const highlighted = hl.codeToHtml(html, {
@@ -475,7 +476,7 @@ async function servePlaintext(url: string, config: MaizzleConfig, renderer: Rend
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
     html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
 
-    const plaintext = createPlaintext(html)
+    const plaintext = createPlaintext(stripForPlaintext(html))
 
     res.setHeader('Content-Type', 'text/plain')
     res.end(plaintext)
@@ -526,6 +527,7 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
     const templateConfig = rendered.templateConfig
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
     html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
+    html = stripForHtml(html)
 
     const sizeBytes = Buffer.byteLength(html, 'utf-8')
 
@@ -595,7 +597,8 @@ async function serveEmailEndpoint(url: string, req: any, res: any, config: Maizz
     html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
     html = `${doctype}\n${html}`
 
-    const text = createPlaintext(html)
+    const text = createPlaintext(stripForPlaintext(html))
+    html = stripForHtml(html)
 
     const result = await sendEmail(
       { to: payload.to, subject: payload.subject, html, text },

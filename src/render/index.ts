@@ -2,6 +2,7 @@ import { resolve, extname } from 'node:path'
 import { resolveConfig } from '../config/index.ts'
 import { runTransformers } from '../transformers/index.ts'
 import { createPlaintext } from '../plaintext.ts'
+import { stripForHtml, stripForPlaintext } from '../utils/output-markers.ts'
 import defu from 'defu'
 import type { Component } from 'vue'
 import type { MaizzleConfig } from '../types/index.ts'
@@ -72,10 +73,10 @@ export async function render(
     if (globalPlaintext || sfcPlaintext) {
       const globalCfg = typeof globalPlaintext === 'object' ? globalPlaintext : {}
       const stripOptions = defu(sfcPlaintext?.options, globalCfg.options)
-      plaintextResult = createPlaintext(html, stripOptions)
+      plaintextResult = createPlaintext(stripForPlaintext(html), stripOptions)
     }
 
-    return { html, config: rendered.templateConfig, plaintext: plaintextResult }
+    return { html: stripForHtml(html), config: rendered.templateConfig, plaintext: plaintextResult }
   } finally {
     if (!active) await renderer.close()
   }

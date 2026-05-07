@@ -3,8 +3,8 @@ import { defu as merge } from 'defu'
 import safeParser from 'postcss-safe-parser'
 import { selectAll } from 'css-select'
 import type { ChildNode, Element } from 'domhandler'
+import type { Opts as CombOptions } from 'email-comb'
 import { parse, serialize, walk } from '../utils/ast/index.ts'
-import type { CssConfig } from '../types/config.ts'
 
 const DEFAULT_SAFELIST: string[] = [
   '*body*', // Gmail
@@ -33,38 +33,54 @@ const DEFAULT_OPTIONS = {
 }
 
 /**
- * Remove unused CSS transformer.
- *
- * Uses `email-comb` to strip CSS selectors and corresponding class/id
- * references that are not matched anywhere in the HTML body.
- *
- * Enable by setting `css.purge: true` (or passing options).
- * The user-supplied options are merged on top of the defaults, so
- * `safelist` values are **appended** to the built-in safelist rather
- * than replacing it.
- *
- * Accepts `ChildNode[]` as input, serializes internally before passing
- * to email-comb (which requires a raw HTML string), then parses the
- * result back to `ChildNode[]` so it fits in the DOM pipeline.
+ * Options for the `purgeCss` transformer.
  */
-export function purgeCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[] {
-  const option = config.purge
+export interface PurgeCssOptions extends Partial<Omit<CombOptions, 'whitelist'>> {
+  /**
+   * Selectors to preserve regardless of whether they're matched in the
+   * markup. Appended to Maizzle's built-in safelist (Gmail, Apple Mail,
+   * Outlook.com hooks, etc). Mapped to email-comb's `whitelist` option.
+   */
+  safelist?: string[]
+}
 
-  if (!option) return dom
+/**
+ * Remove unused CSS from an HTML string.
+ *
+ * Uses `email-comb` together with a DOM-aware deep-purge step to strip
+ * CSS selectors and class/id references that are not matched anywhere
+ * in the document body.
+ *
+ * @param html    HTML string to transform.
+ * @param options Email-comb options plus a Maizzle `safelist`.
+ * @returns       The transformed HTML string.
+ *
+ * @example
+ * import { purgeCss } from '@maizzle/framework'
+ *
+ * const out = purgeCss('<style>.a{}.b{}</style><p class="a">x</p>', {
+ *   safelist: ['.keep'],
+ * })
+ */
+export function purgeCss(html: string, options: PurgeCssOptions = {}): string {
+  return serialize(purgeCssDom(parse(html), options))
+}
 
-  const userOptions = typeof option === 'object' ? option : {}
+/**
+ * DOM-form of {@link purgeCss} used by the internal transformer
+ * pipeline. Takes a parsed DOM, returns a parsed DOM — avoids redundant
+ * serialize/parse round-trips when chained with other transformers.
+ */
+export function purgeCssDom(dom: ChildNode[], options: PurgeCssOptions = {}): ChildNode[] {
+  const userSafelist = Array.isArray(options.safelist) ? options.safelist : []
+
+  const { safelist: _discard, ...restUserOptions } = options
 
   // Merge user options on top of defaults.
   // defu merges objects deeply; for arrays it appends user values.
   // We want the user safelist appended to the default safelist,
   // so we build whitelist manually.
-  const userSafelist = Array.isArray((userOptions as any).safelist)
-    ? (userOptions as any).safelist as string[]
-    : []
-
-  const { safelist: _discard, ...restUserOptions } = userOptions as any
-
-  const options = merge(
+  const combOptions = merge(
     { ...restUserOptions, whitelist: [...DEFAULT_SAFELIST, ...userSafelist] },
     DEFAULT_OPTIONS,
   )
@@ -103,10 +119,10 @@ export function purgeCSS(dom: ChildNode[], config: CssConfig = {}): ChildNode[] 
   })
 
   if (extraWhitelist.length) {
-    options.whitelist = [...(options.whitelist as string[] ?? []), ...extraWhitelist]
+    combOptions.whitelist = [...(combOptions.whitelist as string[] ?? []), ...extraWhitelist]
   }
 
-  const { result } = comb(serialize(dom), options)
+  const { result } = comb(serialize(dom), combOptions)
 
   /**
    * Comb returns a fresh string, so we work off the post-parse tree:

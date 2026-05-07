@@ -15,7 +15,7 @@ import { filters } from './filters/index.ts'
 import { base } from './base.ts'
 import { entities } from './entities.ts'
 import { urlQuery } from './urlQuery.ts'
-import { purgeCSS } from './purgeCSS.ts'
+import { purgeCssDom } from './purgeCss.ts'
 import { replaceStrings } from './replaceStrings.ts'
 import { format } from './format.ts'
 import { minify } from './minify.ts'
@@ -147,8 +147,11 @@ export async function runTransformers(
   // 11. URL query
   if (enabled('urlQuery')) dom = urlQuery(dom, effective.url)
 
-  // 12. Purge CSS (serializes/parses internally around email-comb)
-  if (enabled('purgeCSS')) dom = purgeCSS(dom, effective.css)
+  // 12. Remove unused CSS (serializes/parses internally around email-comb)
+  if (enabled('purgeCSS') && effective.css?.purge) {
+    const purgeOptions = typeof effective.css.purge === 'object' ? effective.css.purge : {}
+    dom = purgeCssDom(dom, purgeOptions)
+  }
 
   // 13. Entities
   if (enabled('entities')) dom = entities(dom, effective.html?.decodeEntities)

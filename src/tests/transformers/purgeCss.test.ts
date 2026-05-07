@@ -1,18 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { purgeCSS } from '../../transformers/purgeCSS.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
-import type { CssConfig } from '../../types/config.ts'
+import { purgeCss, type PurgeCssOptions } from '../../transformers/purgeCss.ts'
 
-function run(html: string, option?: CssConfig['purge']): string {
-  const config: CssConfig = option === undefined ? {} : { purge: option }
-  return serialize(purgeCSS(parse(html), config))
+function run(html: string, option?: PurgeCssOptions | boolean): string {
+  if (option === false) return html
+  const opts = (option === true || option == null) ? {} : option
+  return purgeCss(html, opts)
 }
 
 // ---------------------------------------------------------------------------
 // Core feature — removes unused CSS
 // ---------------------------------------------------------------------------
 
-describe('purgeCSS', () => {
+describe('purgeCss', () => {
   it('removes unused CSS class from <style> and class attribute', () => {
     // Note: do not use '.unused' — it is in the default safelist (Notes 8 client)
     const html = `<html><head><style>.used { color: red } .discarded { color: blue }</style></head><body><p class="used">hi</p></body></html>`
@@ -156,25 +155,6 @@ describe('purgeCSS', () => {
     const result = run(html, { uglify: true })
     // The original long name should be gone, replaced by a short one
     expect(result).not.toContain('a-very-long-class-name')
-  })
-
-  // ---------------------------------------------------------------------------
-  // Disabled / short-circuit
-  // ---------------------------------------------------------------------------
-
-  it('returns html unchanged when css.purge is false', () => {
-    const html = `<html><head><style>.unused { color: red }</style></head><body><p>hi</p></body></html>`
-    expect(run(html, false)).toBe(html)
-  })
-
-  it('returns html unchanged when css.purge is not set', () => {
-    const html = `<html><head><style>.unused { color: red }</style></head><body><p>hi</p></body></html>`
-    expect(run(html)).toBe(html)
-  })
-
-  it('returns html unchanged when config is not provided', () => {
-    const html = `<html><head><style>.unused { color: red }</style></head><body><p>hi</p></body></html>`
-    expect(serialize(purgeCSS(parse(html)))).toBe(html)
   })
 
   // ---------------------------------------------------------------------------

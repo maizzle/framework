@@ -7,7 +7,7 @@ import { attributeToStyleDom } from './attributeToStyle.ts'
 import { inlineCssDom } from './inlineCss.ts'
 import { msoPlaceholders } from './msoPlaceholders.ts'
 import { columnWidth } from './columnWidth.ts'
-import { removeAttributes } from './removeAttributes.ts'
+import { removeAttributesDom } from './removeAttributes.ts'
 import { shorthandCssDom } from './shorthandCss.ts'
 import { sixHexDom } from './sixHex.ts'
 import { addAttributes } from './addAttributes.ts'
@@ -129,7 +129,10 @@ export async function runTransformers(
   dom = columnWidth(dom)
 
   // 5. Remove attributes
-  if (enabled('removeAttributes')) dom = removeAttributes(dom, effective.html?.attributes)
+  if (enabled('removeAttributes')) {
+    const removeRules = effective.html?.attributes?.remove
+    dom = removeAttributesDom(dom, Array.isArray(removeRules) ? removeRules : [])
+  }
 
   // 6. Shorthand CSS
   if (enabled('shorthandCss') && effective.css?.shorthand) {

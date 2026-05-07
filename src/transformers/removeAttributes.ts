@@ -1,55 +1,61 @@
 import type { ChildNode, Element } from 'domhandler'
-import { walk } from '../utils/ast/index.ts'
-import type { AttributesConfig } from '../types/config.ts'
+import { parse, serialize, walk } from '../utils/ast/index.ts'
 
-interface RemoveAttributeConfig {
+/**
+ * Single attribute-removal rule.
+ */
+export interface RemoveAttributeRule {
+  /** Attribute name to match. */
   name: string
+  /**
+   * Match condition for the attribute's value:
+   * - `string` — remove when the value matches exactly.
+   * - `RegExp` — remove when the value matches the regex.
+   * - `boolean` / omitted — remove when the value is empty.
+   */
   value?: string | RegExp | boolean
 }
 
-type RemoveAttributeOption = string | RemoveAttributeConfig
+/**
+ * Entry passed to {@link removeAttributes}. A bare string targets the named
+ * attribute and removes it when its value is empty.
+ */
+export type RemoveAttributeOption = string | RemoveAttributeRule
 
 /**
- * Remove attributes transformer.
+ * Remove HTML attributes from elements.
  *
- * Removes specified HTML attributes from elements.
+ * Empty `style` and `class` attributes are always stripped, regardless of
+ * what you pass. Your entries are appended to those defaults.
  *
- * By default, removes empty `style` and `class` attributes.
+ * - `'data-src'` — remove when the value is empty.
+ * - `{ name: 'id', value: 'test' }` — remove when the value matches exactly.
+ * - `{ name: 'data-id', value: /\d/ }` — remove when the value matches the regex.
  *
- * Supports:
- * - String: removes attribute when empty (boolean or empty string)
- * - Object with name and value: removes when attribute matches exactly
- * - Object with name and RegExp value: removes when attribute value matches regex
+ * @param html       HTML string to transform.
+ * @param attributes Additional attribute-removal rules to apply on top of the defaults.
+ * @returns          The transformed HTML string.
  *
- * Configured via `remove` array:
- * ```js
- * {
- *   remove: [
- *     'data-src',                    // Remove empty data-src attributes
- *     { name: 'id', value: 'test' }, // Remove id="test" exactly
- *     { name: 'data-id', value: /\d/ } // Remove data-id when value contains digits
- *   ]
- * }
- * ```
+ * @example
+ * import { removeAttributes } from '@maizzle/framework'
+ *
+ * const out = removeAttributes('<p style="" data-x="">x</p>', [
+ *   'data-x',
+ *   { name: 'role', value: 'none' },
+ * ])
  */
-export function removeAttributes(dom: ChildNode[], config: AttributesConfig = {}): ChildNode[] {
-  const removeOptions = config.remove
+export function removeAttributes(html: string, attributes: RemoveAttributeOption[] = []): string {
+  return serialize(removeAttributesDom(parse(html), attributes))
+}
 
-  // Always remove empty style and class attributes by default
-  const alwaysRemove: RemoveAttributeOption[] = ['style', 'class']
-
-  // Parse user options
-  let userOptions: RemoveAttributeOption[] = []
-  if (Array.isArray(removeOptions)) {
-    userOptions = removeOptions as RemoveAttributeOption[]
-  }
-
-  // Combine default and user options
-  const attributesToRemove: RemoveAttributeOption[] = [...alwaysRemove, ...userOptions]
-
-  if (attributesToRemove.length === 0) {
-    return dom
-  }
+/**
+ * DOM-form of {@link removeAttributes} used by the internal transformer
+ * pipeline. Takes a parsed DOM, returns a parsed DOM — avoids redundant
+ * serialize/parse round-trips when chained with other transformers.
+ */
+export function removeAttributesDom(dom: ChildNode[], attributes: RemoveAttributeOption[] = []): ChildNode[] {
+  // Empty style/class are always stripped; user entries are appended.
+  const attributesToRemove: RemoveAttributeOption[] = ['style', 'class', ...attributes]
 
   walk(dom, (node) => {
     const el = node as Element

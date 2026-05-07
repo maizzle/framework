@@ -1,10 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { removeAttributes } from '../../transformers/removeAttributes.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
-import type { AttributesConfig } from '../../types/config.ts'
+import { removeAttributes, type RemoveAttributeOption } from '../../transformers/removeAttributes.ts'
 
-function run(html: string, remove?: Array<string | { name: string; value?: string | RegExp }>): string {
-  return serialize(removeAttributes(parse(html), { remove } satisfies AttributesConfig))
+function run(html: string, remove?: RemoveAttributeOption[]): string {
+  return removeAttributes(html, remove)
 }
 
 describe('removeAttributes', () => {
@@ -116,10 +114,9 @@ describe('removeAttributes', () => {
   })
 
   describe('edge cases', () => {
-    it('returns original HTML when no config', () => {
+    it('returns original HTML when no rules and no empty style/class', () => {
       const html = '<div data-test="value">Content</div>'
-      // No attributes configured for removal, and no empty style/class
-      expect(serialize(removeAttributes(parse(html), {}))).toBe(html)
+      expect(removeAttributes(html)).toBe(html)
     })
 
     it('handles HTML without attributes', () => {

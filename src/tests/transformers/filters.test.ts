@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { filters } from '../../transformers/filters/index.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
 import type { FiltersConfig } from '../../transformers/filters/index.ts'
 
 function run(html: string, config?: FiltersConfig): string {
-  return serialize(filters(parse(html), config))
+  return filters(html, config)
 }
 
 describe('filters', () => {

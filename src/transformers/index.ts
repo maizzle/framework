@@ -11,7 +11,7 @@ import { removeAttributesDom } from './removeAttributes.ts'
 import { shorthandCssDom } from './shorthandCss.ts'
 import { sixHexDom } from './sixHex.ts'
 import { addAttributes } from './addAttributes.ts'
-import { filters } from './filters/index.ts'
+import { filtersDom } from './filters/index.ts'
 import { base } from './base.ts'
 import { entities } from './entities.ts'
 import { urlQuery } from './urlQuery.ts'
@@ -147,7 +147,7 @@ export async function runTransformers(
   if (enabled('addAttributes')) dom = addAttributes(dom, effective.html?.attributes)
 
   // 9. Filters
-  if (enabled('filters')) dom = filters(dom, effective.filters)
+  if (enabled('filters')) dom = filtersDom(dom, effective.filters)
 
   // 10. Base URL (serializes/parses internally for VML/MSO regex passes)
   if (enabled('baseURL')) dom = base(dom, effective.url)

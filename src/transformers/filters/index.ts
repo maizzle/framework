@@ -20,22 +20,46 @@ function walkBottomUp(nodes: ChildNode[], callback: (node: ChildNode) => void): 
 }
 
 /**
- * Filters transformer.
+ * Apply transformation functions to the content of elements that have
+ * matching filter attributes. Multiple filters on the same element are
+ * executed in the order the attributes are defined.
  *
- * Applies transformation functions to the content of elements that
- * have matching filter attributes. Multiple filters on the same element
- * are executed in the order the attributes are defined.
+ * Default filters include string manipulation (`uppercase`, `lowercase`,
+ * `trim`, etc.), math operations (`plus`, `minus`, `multiply`, etc.),
+ * and more.
  *
- * Default filters include string manipulation (uppercase, lowercase, trim, etc.),
- * math operations (plus, minus, multiply, etc.), and more.
+ * @param html    HTML string to transform.
+ * @param custom  Custom filters to merge with the defaults. Pass `false`
+ *                to disable all filters (including the defaults).
+ * @returns       The transformed HTML string.
  *
- * Custom filters can be added via config, and will be merged with defaults.
- * Set config to `false` to disable all filters.
+ * @example
+ * import { filters } from '@maizzle/framework'
+ *
+ * // Defaults only
+ * const out = filters('<p uppercase>foo</p>') // → '<p>FOO</p>'
+ *
+ * // Add a custom filter
+ * filters('<p suffix=" world">hello</p>', {
+ *   suffix: (s, v) => s + v,
+ * })
+ *
+ * // Disable all filters
+ * filters('<p uppercase>foo</p>', false)
  */
-export function filters(dom: ChildNode[], config: FiltersConfig = {}): ChildNode[] {
-  if (config === false) return dom
+export function filters(html: string, custom: FiltersConfig = {}): string {
+  return serialize(filtersDom(parse(html), custom))
+}
 
-  const allFilters = { ...defaults, ...config }
+/**
+ * DOM-form of {@link filters} used by the internal transformer pipeline.
+ * Takes a parsed DOM, returns a parsed DOM — avoids redundant
+ * serialize/parse round-trips when chained with other transformers.
+ */
+export function filtersDom(dom: ChildNode[], custom: FiltersConfig = {}): ChildNode[] {
+  if (custom === false) return dom
+
+  const allFilters = { ...defaults, ...custom }
   const filterNames = new Set(Object.keys(allFilters))
 
   walkBottomUp(dom, (node) => {

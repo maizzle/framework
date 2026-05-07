@@ -187,9 +187,9 @@ export interface CssConfig {
     sort?: 'mobile-first' | 'desktop-first' | ((a: string, b: string) => number)
   }
   /**
-   * Convert unitless CSS values to their unitless equivalents.
+   * Strip units from zero values in inlined styles.
    *
-   * For example, `line-height: 24px` with a `16px` font becomes `line-height: 1.5`.
+   * For example, `padding: 0px 16px` becomes `padding: 0 16px`.
    *
    * @default true
    */
@@ -228,7 +228,11 @@ export interface CssConfig {
    */
   removeDeclarations?: Record<string, import('../plugins/postcss/removeDeclarations.ts').RemoveValue>
   /**
-   * File paths to exclude from CSS processing.
+   * Glob patterns or paths excluded from Tailwind's `@source` scanner.
+   *
+   * Tailwind won't generate utilities for classes used in these files.
+   * Useful for ignoring AMP variants or any templates whose classes
+   * shouldn't end up in the output CSS.
    *
    * @example
    * css: {
@@ -258,12 +262,23 @@ export interface AttributesConfig {
    */
   add?: false | Record<string, false | Record<string, false | string | boolean | number>>
   /**
-   * Remove attributes from HTML elements by name or name-value pair.
+   * Remove attributes from HTML elements.
+   *
+   * Empty `style` and `class` attributes are always stripped, regardless
+   * of config. Entries added here are appended to those defaults.
+   *
+   * - String — remove when the attribute's value is empty.
+   * - `{ name, value: 'literal' }` — remove when the value matches exactly.
+   * - `{ name, value: /regex/ }` — remove when the value matches the regex.
    *
    * @example
    * html: {
    *   attributes: {
-   *     remove: ['data-test', { name: 'class', value: /^js-/ }],
+   *     remove: [
+   *       'data-foo',
+   *       { name: 'role', value: 'none' },
+   *       { name: 'class', value: /^js-/ },
+   *     ],
    *   }
    * }
    */

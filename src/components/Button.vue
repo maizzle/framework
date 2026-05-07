@@ -37,24 +37,6 @@ const props = defineProps({
     default: null
   },
   /**
-   * Background color for `solid` and `outline` variants.
-   * Also used as the text color for `outline` and `ghost` variants when `color` is not set.
-   * @default '#4338ca'
-   */
-  bgColor: {
-    type: String,
-    default: '#4338ca'
-  },
-  /**
-   * Explicit text color. When omitted, `solid` buttons use `#fffffe`
-   * and all other variants fall back to `bgColor`.
-   * @default null
-   */
-  color: {
-    type: String,
-    default: null
-  },
-  /**
    * `mso-text-raise` value applied to the inner `<span>` elements.
    * Controls vertical text alignment inside the button in old Outlook.
    * @default '16px'
@@ -147,52 +129,37 @@ const alignClass = computed(() => props.align ? ({
   right: 'text-right',
 })[props.align] || '' : '')
 
-const textColor = computed(() => {
-  if (props.color) return props.color
-
-  return props.variant === 'solid' ? '#fffffe' : props.bgColor
-})
-
 const styles = computed(() => {
   if (props.variant === 'link') {
-    return [
-      'text-decoration: none;',
-      `color: ${textColor.value};`,
-    ].join('')
+    return 'text-decoration: none;'
   }
 
-  const base = [
+  return [
     'display: inline-block;',
     'text-decoration: none;',
     'padding: 16px 24px;',
     'font-size: 16px;',
     'line-height: 1;',
     'border-radius: 4px;',
-    `color: ${textColor.value};`,
-  ]
-
-  if (props.variant === 'outline') {
-    base.push(
-      'background-color: transparent;',
-      `border: 1px solid ${props.bgColor};`,
-    )
-  } else if (props.variant === 'ghost') {
-    base.push('background-color: transparent;')
-  } else {
-    base.push(`background-color: ${props.bgColor};`)
-  }
-
-  return base.join('')
+  ].join('')
 })
 
 const isLink = computed(() => props.variant === 'link')
 
-const defaultClasses = computed(() => {
-  if (props.variant === 'ghost') return 'hover:bg-indigo-50'
-  return ''
+const variantClasses = computed(() => {
+  switch (props.variant) {
+    case 'outline':
+      return 'border border-indigo-700 bg-transparent text-indigo-700'
+    case 'ghost':
+      return 'bg-transparent text-indigo-700 hover:bg-indigo-50'
+    case 'link':
+      return 'text-indigo-700'
+    default:
+      return 'bg-indigo-700 text-[#fffffe]'
+  }
 })
 
-const mergedClass = computed(() => twMerge(defaultClasses.value, attrs.class as string))
+const mergedClass = computed(() => twMerge(variantClasses.value, attrs.class as string))
 
 const textSpanStyle = computed(() =>
   outlookFallback ? `mso-text-raise: ${props.msoPt};` : undefined,

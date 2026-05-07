@@ -2,6 +2,8 @@
 import { computed, useAttrs } from 'vue'
 import { normalizeToPixels } from './utils.ts'
 
+defineOptions({ inheritAttrs: false })
+
 const attrs = useAttrs()
 
 const props = defineProps({
@@ -13,17 +15,6 @@ const props = defineProps({
   height: {
     type: [String, Number],
     default: '1px'
-  },
-  /**
-   * Background color of the divider line.
-   *
-   * Defaults to `#cbd5e1` when no Tailwind `bg-*` class is used.
-   *
-   * @example '#e2e8f0'
-   */
-  color: {
-    type: String,
-    default: null
   },
   /**
    * Vertical spacing (margin) above and below the divider.
@@ -67,24 +58,13 @@ const props = defineProps({
   }
 })
 
-const hasBgClass = computed(() =>
-  typeof attrs.class === 'string' &&
-  attrs.class.split(' ').some(c => c.startsWith('bg-'))
-)
-
 const styles = computed(() => {
-  const s = []
+  const s: string[] = []
   const height = normalizeToPixels(props.height || '1px')
 
   s.push(`height: ${height};`)
   s.push(`line-height: ${height};`)
-
-  // Color
-  if (props.color) {
-    s.push(`background-color: ${props.color};`)
-  } else if (!hasBgClass.value) {
-    s.push('background-color: #cbd5e1;')
-  }
+  s.push('background-color: #cbd5e1;')
 
   // Margins reset
   if (
@@ -129,5 +109,10 @@ const styles = computed(() => {
 </script>
 
 <template>
-  <div role="separator" :style="styles">&zwj;</div>
+  <div
+    role="separator"
+    v-bind="{ ...$attrs, class: undefined, style: undefined }"
+    :style="[styles, $attrs.style as any]"
+    :class="attrs.class as string"
+  >&zwj;</div>
 </template>

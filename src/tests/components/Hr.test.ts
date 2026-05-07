@@ -46,14 +46,6 @@ describe('Hr', () => {
     })
   })
 
-  describe('color prop', () => {
-    it('overrides the default background color', () => {
-      const wrapper = mount(Hr, { props: { color: '#ff0000' } })
-      expect(wrapper.html()).toContain('background-color: #ff0000')
-      expect(wrapper.html()).not.toContain('background-color: #cbd5e1')
-    })
-  })
-
   describe('spacing props', () => {
     it('spaceY sets top and bottom margins', () => {
       const wrapper = mount(Hr, { props: { spaceY: '16px' } })
@@ -118,15 +110,17 @@ describe('Hr', () => {
     })
   })
 
-  describe('bg class detection', () => {
-    it('omits default background-color when a bg- class is present', () => {
+  describe('user class and style', () => {
+    it('passes through class', () => {
       const wrapper = mount(Hr, { attrs: { class: 'bg-red-500' } })
-      expect(wrapper.html()).not.toContain('background-color: #cbd5e1')
+      expect(wrapper.html()).toContain('class="bg-red-500"')
     })
 
-    it('applies default background-color when no bg- class is present', () => {
-      const wrapper = mount(Hr, { attrs: { class: 'text-red-500' } })
-      expect(wrapper.html()).toContain('background-color: #cbd5e1')
+    it('user inline style overrides the default background color', () => {
+      const wrapper = mount(Hr, { attrs: { style: 'background-color: red' } })
+      const html = wrapper.html()
+      expect(html).toContain('background-color: red')
+      expect(html).not.toContain('background-color: #cbd5e1')
     })
   })
 })

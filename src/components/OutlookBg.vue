@@ -4,7 +4,7 @@ import type { PropType } from 'vue'
 import { normalizeToPixels } from './utils.ts'
 
 export default {
-  name: 'Vml',
+  name: 'OutlookBg',
   props: {
     /**
      * Width of the VML rectangle.

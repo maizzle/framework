@@ -152,7 +152,7 @@ All built-in components are auto-imported, no import statements needed. See `ref
 | `<NoWidows>` | Replaces last space with `&nbsp;` to prevent orphaned words |
 | `<Outlook>` | Wraps content in Outlook conditional comments (shows only in Outlook) |
 | `<NotOutlook>` | Hides content from Outlook |
-| `<Vml>` | VML markup for Outlook-specific rendering (background images) |
+| `<OutlookBg>` | VML markup for Outlook-specific rendering (background images) |
 | `<Raw>` | Emits slot content verbatim — bypasses Vue compilation so `{{ }}` and ESP syntax pass through |
 
 ## Behavioral guidelines

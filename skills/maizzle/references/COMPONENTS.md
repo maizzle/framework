@@ -28,7 +28,7 @@ All components are auto-imported. No `import` statements needed in templates.
 - `<NoWidows>` — Replaces last space with `&nbsp;` to prevent orphaned words
 - `<Outlook>` — Wraps content in Outlook conditional comments (shows only in Outlook)
 - `<NotOutlook>` — Hides content from Outlook
-- `<Vml>` — VML markup for Outlook-specific rendering (background images)
+- `<OutlookBg>` — VML markup for Outlook-specific rendering (background images)
 
 ---
 
@@ -846,7 +846,7 @@ Usage:
 
 ---
 
-## Vml
+## OutlookBg
 
 VML markup for Outlook-specific rendering, primarily used for background images in Outlook (which doesn't support CSS `background-image`). Wraps slot content in a `v:rect` with a `v:fill` and `v:textbox`.
 
@@ -873,16 +873,16 @@ Usage:
 <template>
   <!-- Background image for Outlook -->
   <Section class="bg-[url('/hero.jpg')] bg-cover bg-center">
-    <Vml src="/hero.jpg" width="600px" height="400px" background-position="center,center">
+    <OutlookBg src="/hero.jpg" width="600px" height="400px" background-position="center,center">
       <Container>
         <Heading class="text-white text-3xl">Hello</Heading>
       </Container>
-    </Vml>
+    </OutlookBg>
   </Section>
 
   <!-- With fallback color -->
-  <Vml src="/pattern.png" width="600px" type="tile" fillcolor="#1e293b">
+  <OutlookBg src="/pattern.png" width="600px" type="tile" fillcolor="#1e293b">
     <Text class="text-white">Content over tiled background</Text>
-  </Vml>
+  </OutlookBg>
 </template>
 ```

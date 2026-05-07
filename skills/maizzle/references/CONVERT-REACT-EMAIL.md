@@ -52,7 +52,7 @@ Guide for converting React Email (JSX/TSX) templates and components to Maizzle 6
 | `<WithUrl>` | Scoped URL rewriting (base URL, UTM params) on all children. |
 | `<NoWidows>` | Prevents orphaned last words in text. |
 | `<Outlook>` / `<NotOutlook>` | Conditional content for Outlook versions. |
-| `<Vml>` | VML background images for Outlook. |
+| `<OutlookBg>` | VML background images for Outlook. |
 | `<Overlap>` | Faux absolute positioning with VML fallback. |
 | `<Img dark-src="...">` | Dark mode image variant via `<picture>`. |
 | `<Img motion-src="...">` | Reduced motion image variant. |

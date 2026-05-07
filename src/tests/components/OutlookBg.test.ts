@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
-import Vml from '../../components/Vml.vue'
+import OutlookBg from '../../components/OutlookBg.vue'
 
 function render(props: Record<string, unknown> = {}, slotFn?: () => any) {
   const app = createSSRApp({
-    render: () => h(Vml, props, {
+    render: () => h(OutlookBg, props, {
       default: slotFn ?? (() => h('p', 'Test')),
     }),
   })
@@ -13,7 +13,7 @@ function render(props: Record<string, unknown> = {}, slotFn?: () => any) {
   return renderToString(app)
 }
 
-describe('Vml', () => {
+describe('OutlookBg', () => {
   describe('defaults', () => {
     it('wraps slot content in VML conditional comments', async () => {
       const html = await render()

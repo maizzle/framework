@@ -35,7 +35,7 @@ Vue templates need a colon prefix to bind dynamic values (`:href="resetUrl"`); s
 | `<Button href="..." className="... block text-center no-underline box-border">` | `<Button href="..." class="...">` | Drop `box-border block text-center no-underline` — handled internally. Use `class` for colors. Variants: `solid` (default), `outline`, `ghost`, `link`. Optional `align`, `icon`, `icon-position`. |
 | `<Link>` | `<Link>` | Defaults to `no-underline`. |
 | `<Img src="..." width="150">` | `<Img src="..." width="150">` | `width` is required. Adds `dark-src` and `motion-src` for variant images via `<picture>`. |
-| `<Hr>` | `<Hr>` | Maizzle's `<Hr>` is a styled `<div>` with default 1px gray bg + 24px vertical margin. Override with Tailwind classes (`bg-gray-200 my-8`) or props: `height`, `space-y`, `space-x`, `top`, `bottom`, `left`, `right`. Drop React Email's `border-solid border-*`. |
+| `<Hr>` | `<Hr>` | Maizzle's `<Hr>` is a styled `<div>` with defaults `h-px leading-px my-6 bg-slate-300`. Override via class: `bg-*`, `m*-*`, and `h-*` or `leading-*`. Drop React Email's `border-solid border-*`. |
 | `<CodeBlock code language="js" theme={dracula}>` | `<CodeBlock code="..." language="js" theme="github-light">` | Theme is a Shiki theme name (string), not an imported object. |
 | `<CodeInline>` | `<CodeInline>` | Same. |
 | `<Markdown>{content}</Markdown>` | `<Markdown>content</Markdown>` | Also accepts `src` for `.md` files. |
@@ -46,7 +46,7 @@ Vue templates need a colon prefix to bind dynamic values (`:href="resetUrl"`); s
 | Component | Purpose |
 |---|---|
 | `<Layout>` | Full document scaffold: `html` + `head` (charset/viewport/format-detection meta, MSO font reset, Tailwind import, Inter font, color-scheme meta) + `body` + `<div role="article">`. Replaces the `Html > Tailwind > Head + Body` chain. Props: `lang`, `dir`, `body-class`, `aria-label`, `double-head`, `outlook-fallback`. |
-| `<Spacer>` | Vertical or horizontal spacer. Props: `type` (`vertical`/`horizontal`), `height`, `width` (default 16), `mso-height`. Horizontal renders MSO-safe `mso-font-width` `<i>`. |
+| `<Spacer>` | Vertical or horizontal spacer. Props: `type` (`vertical`/`horizontal`), `width` (default 16, horizontal-only), `outlook-fallback`. Vertical sizing via class: `leading-*` or `h-*`; Outlook fine-tune via `mso-line-height-alt-*` utilities. Horizontal renders MSO-safe `mso-font-width` `<i>`. |
 | `<WithUrl>` | Scoped URL rewriting (base URL, UTM params) for descendant `href`/`src` attributes. |
 | `<NoWidows>` | Prevents orphaned last words in text. |
 | `<Outlook>` / `<NotOutlook>` | Render content only in (or only outside) Outlook. Outlook supports version filtering. |
@@ -182,8 +182,7 @@ export default defineConfig({
 
 ```vue
 <Hr class="bg-gray-200 my-5" />
-<!-- or with props -->
-<Hr space-y="20px" />
+<Hr class="h-0.5 bg-blue-300" />
 ```
 
 ### 9. Preheader

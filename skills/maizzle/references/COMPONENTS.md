@@ -297,40 +297,39 @@ Props:
 
 ## Hr
 
-Horizontal rule. Renders `<div role="separator">` with default 1px height, `#cbd5e1` background, 24px vertical margin.
+Horizontal rule. Renders `<div role="separator">` with defaults `h-px leading-px my-6 bg-slate-300`.
 
-Customize the color with a Tailwind `bg-*` class or inline `background-color` — there is **no** `color` prop.
-
-Props:
-- `height` (string | number, default `'1px'`).
-- `spaceY` (string | number, default `'24px'`) — vertical margin.
-- `spaceX` (string | number) — horizontal margin.
-- `top`, `bottom`, `left`, `right` (string | number) — override individual sides.
+Override defaults by passing the matching utility class:
+- Height: pass `h-*` or `leading-*`.
+- Margins: pass `m-*`, `mx-*`, `my-*`, `mt-*`, `mb-*`, `ml-*`, `mr-*`.
+- Color: pass `bg-*`.
 
 ```vue
 <Hr />
-<Hr class="bg-blue-200" height="2" />
-<Hr space-y="32px" />
-<Hr top="16" bottom="32" />
+<Hr class="bg-blue-200 h-0.5" />
+<Hr class="my-8" />
+<Hr class="mt-4 mb-8" />
+<Hr class="h-[3px]" />
 ```
 
 ## Spacer
 
 Vertical or horizontal spacer.
 
-- Vertical: `<div role="separator">` with `line-height` (and `mso-line-height-alt` when `msoHeight` is set). Without `height`, collapses to a zero-width joiner (line-break).
+- Vertical: `<div role="separator">` containing a zero-width joiner. Size with `h-*` or `leading-*`.
 - Horizontal: `<i>` with em-space chars and `mso-font-width` for accurate Outlook sizing.
 
 Props:
 - `type` (`'vertical'` | `'horizontal'`, default `'vertical'`).
-- `height` (string | number) — vertical only.
 - `width` (string | number, default `16`) — horizontal only, in px.
-- `msoHeight` (string | number) — Outlook override via `mso-line-height-alt`.
-- `outlookFallback` (bool, default `true`).
+- `outlookFallback` (bool, default `true`) — horizontal `mso-font-width`.
+
+Vertical sizing is class-driven: pass `leading-*` directly, or `h-*`. For Outlook adjustments, use `mso-line-height-alt-*` utilities.
 
 ```vue
-<Spacer height="32px" />
-<Spacer height="40px" mso-height="32px" />
+<Spacer class="leading-8" />
+<Spacer class="h-10" />
+<Spacer class="leading-10 mso-line-height-alt-8" />
 <Spacer type="horizontal" :width="24" />
 ```
 

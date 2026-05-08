@@ -142,10 +142,12 @@ Keep contrast above WCAG AA (4.5:1 for body text).
 
 ## Spacing & Dividers
 
-- `<Spacer height="32px" />` for vertical space (uses `mso-line-height-alt` on Outlook).
-- `<Hr />` for visible separators — defaults to 1 px / `#cbd5e1` / 24 px vertical margin. Override color via Tailwind `bg-*`:
+
+- `<Spacer class="leading-8" />` for vertical space. Pass `leading-*` or `h-*`. For Outlook fine-tune use `mso-line-height-alt-*`.
+- `<Hr />` for visible separators — defaults `h-px leading-px my-6 bg-slate-300`. Pass `h-*`, `bg-*`, `m*-*` to override:
   ```vue
   <Hr class="bg-gray-200 my-8" />
+  <Hr class="h-0.5 bg-indigo-300" />
   ```
 
 ## Responsive

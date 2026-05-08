@@ -1,348 +1,78 @@
 # Maizzle Transformers Reference
 
-Transformers post-process rendered HTML. They run automatically when `useTransformers` is `true` (default). Each transformer is controlled by its config option — most are opt-in (`false` by default), some are always-on.
+After Vue SSR renders a template, Maizzle pipes the HTML through a fixed sequence of transformers before writing the file. Order matters: CSS is compiled, inlined, then purged; HTML formatting/minification runs last.
 
-Pipeline order matters: CSS is compiled first, then inlined, then purged, then HTML is formatted/minified last.
+Disable the whole pipeline with `useTransformers: false` (config or composable). Toggle individual transformers with `useTransformers: { inlineCss: false, minify: true }`. See `CONFIGURATION.md` for the full surface.
 
----
+## Defaults at a Glance
+
+On by default: `css.inline`, `css.purge`, `css.shorthand`, `css.safe`, `css.preferUnitless`, `css.sixHex`, `html.decodeEntities`, `html.format`, `addAttributes` (table + img defaults).
+
+Off by default: `html.minify`, `attributeToStyle`, `url.base`, `url.query`, `replaceStrings`, custom `filters`, custom `removeAttributes`.
 
 ## Pipeline Order
 
-1. Inline Link — inlines `<link>` stylesheets into `<style>` tags
-2. Tailwind CSS — compile styles, lower modern CSS
-3. Safe Class Names — rename email-unsafe selectors
-4. Attribute to Style — convert HTML attributes to inline CSS
-5. Inline CSS — inline `<style>` into elements
-6. Remove Attributes — strip specified attributes
-7. Shorthand CSS — merge longhand to shorthand
-8. Six-Digit HEX — expand 3-digit HEX colors
-9. Add Attributes — add default attributes to elements
-10. Filters — apply text transformation filters
-11. Base URL — prepend base URL to relative paths
-12. URL Query — append query parameters to URLs
-13. Purge CSS — remove unused CSS
-14. Entities — convert Unicode to HTML entities
-15. Replace Strings — regex-based string replacements
-16. Format — pretty-print HTML
-17. Minify — minify HTML
+The DOM is parsed once, walked by all DOM-based transformers, then serialized; string-only transformers run last.
 
----
+| # | Stage | Driven by | Default |
+|---|---|---|---|
+| 0 | Inline `<link>` stylesheets | always-on | — |
+| 0.5 | `<Tailwind>` block compile | presence of component | — |
+| 1 | Tailwind CSS compile + lower | always-on | — |
+| 2 | Safe class names | `css.safe` | on |
+| 3 | Attribute → style | `css.inline.attributeToStyle` | off |
+| 4 | CSS inline (Juice) | `css.inline` | on |
+| 4.5 | MSO placeholder resolution | always-on | — |
+| 4.6 | Column min-width resolution | always-on | — |
+| 5 | Remove attributes | `html.attributes.remove` | always strips empty `style`/`class` |
+| 6 | Shorthand CSS | `css.shorthand` | on |
+| 7 | Six-digit HEX | `css.sixHex` | on |
+| 8 | Add attributes | `html.attributes.add` | on (table + img defaults) |
+| 9 | Filters | `filters` | on (built-ins) |
+| 10 | Base URL | `url.base` | off |
+| 11 | URL query | `url.query` | off |
+| 12 | Purge CSS | `css.purge` | on |
+| 13 | Entities | `html.decodeEntities` | on |
+| 14 | Replace strings | `replaceStrings` | off |
+| 15 | Format | `html.format` | on (skipped when minify is on) |
+| 16 | Minify | `html.minify` | off |
 
-## Inline Link
+## Per-Transformer Notes
 
-Replaces `<link rel="stylesheet">` tags with inlined `<style>` tags. Always runs — no config option.
+**Inline `<link>`** — local `href` paths are always inlined; remote URLs only when the `<link>` carries an `inline` attribute. `<style>` tags marked `raw`, `embed`, or `data-embed` are skipped (raw drops the marker; embed/data-embed are preserved for the inliner).
 
-- Local file paths: always inlined, resolved relative to template directory
-- Remote URLs (http/https): only inlined if the `<link>` has an `inline` attribute
+**Tailwind CSS** — compiles utilities found in the rendered DOM. Lowers modern CSS (nesting, `oklch`, `color-mix`, `@property`) via lightningcss with an IE 1 target so most clients render it. Merges duplicate `@media` queries. Honors `css.base` and `css.exclude`.
 
-```html
-<!-- local: always inlined -->
-<link rel="stylesheet" href="./styles.css">
+**Safe class names** — defaults rewrite `:` `/` `%` `.` `!` `&` `@` and remove brackets/braces from class names and selectors. Pass a `Record<string,string>` to extend; `false` to disable.
 
-<!-- remote: only with `inline` attribute -->
-<link rel="stylesheet" href="https://example.com/styles.css" inline>
-```
+**Attribute to style** — `true` covers all supported attrs, `string[]` narrows it. Maps: `width`/`height` → px (auto-detected unit), `bgcolor` → `background-color`, `background` → `background-image: url(...)`, `align` → `text-align` (or `float`/`margin` on tables), `valign` → `vertical-align`.
 
----
+**CSS inline (Juice)** — Maizzle adds: `preferUnitlessValues` (default `true`, e.g. `0px` → `0`), `safelist`, `customCSS`, `styleToAttribute`, `widthElements` (default `['img','video']`), `heightElements`, `excludedProperties` (default `['--tw-shadow']`), `codeBlocks` (EJS/HBS preserved). Juice keys passed through include `removeStyleTags`, `removeInlinedSelectors` (default `true`), `applyWidth/HeightAttributes`, `inlineDuplicateProperties`.
 
-## Tailwind CSS
+**MSO placeholder resolution** — internal step that pins `<Container>`'s MSO `<table>` width and `msoStyle` from the inlined CSS once it's known.
 
-Compiles Tailwind CSS in `<style>` tags, lowers modern CSS syntax (nesting, oklch, color-mix, @property), and optimizes output.
+**Column min-width resolution** — internal step that resolves each `<Column>`'s `min-width` (and matching MSO `<td>` width) from the nearest sized ancestor (`Container`/`Section`/`Row`/`Column` width) — see `PATTERNS.md`.
 
-Config: `css.base`, `css.exclude`
+**Remove attributes** — array entries are `string` (remove when empty), `{ name, value: 'literal' }`, or `{ name, value: /regex/ }`. Empty `style`/`class` are stripped unconditionally.
 
-Behavior:
-- Processes all `<style>` tags except those with `raw`, `embed`, or `data-embed` attributes
-- `raw` attribute: skips processing but removes the attribute
-- `embed`/`data-embed`: preserved for the CSS inliner
-- Builds `@source` directives from all class attributes in the rendered HTML
-- Lowers CSS to maximum email client compatibility (lightningcss with IE 1 target)
-- Runs PostCSS plugins for custom properties, calc(), var() pruning
-- Merges duplicate media queries
+**Shorthand CSS** — `postcss-merge-longhand` against inline `style` attrs. Pass `{ tags: ['table','td'] }` to scope it.
 
----
+**Six-digit HEX** — `bgcolor`/`color` HTML attributes only (Outlook chokes on 3-digit hex in attributes).
 
-## Safe Class Names
+**Add attributes** — selectors include tag (`div`), class (`.cta`), id (`#x`), attribute (`[role]`/`[role=alert]`), tag+attribute (`a[target=_blank]`), and comma lists. `class` merges with what's already there (deduped); other attrs only land if missing. Defaults: `table` → `cellpadding=0 cellspacing=0 role=none`; `img` → `alt=""`. Set the whole map / a selector / a single attribute to `false` to skip.
 
-Replaces unsafe characters in CSS selectors and class attributes for email client compatibility.
+**Filters** — bottom-up walk; multiple filters on one element run in attribute order. 31 built-ins across string, math, text, and URL categories (see `CONFIGURATION.md` for the full list). Pass `false` to disable all; user filters merge on top.
 
-Config: `css.safe` (default: `true`)
+**Base URL** — string form rewrites `a[href]`, `img[src,srcset]`, `video[src,poster]`, `source[src,srcset]`, `track[src]`, plus VML `v:image`/`v:fill` and URLs inside MSO conditional comments. Object form takes `url`, `tags`, `attributes`, `styleTag` (default `true`), `inlineCss` (default `true`).
 
-- `true` — use default replacements
-- `false` — disable
-- `Record<string, string>` — custom replacements merged with defaults
+**URL query** — non-`_options` keys are appended as query params. `_options.tags` (default `['a']`), `_options.attributes` (default `['src','href','poster','srcset','background']`), `_options.strict` (default `true` — absolute URLs only), `_options.qs` (default `{ encode: false }`).
 
-Default replacements (key characters): `:` → `-`, `/` → `-`, `%` → `pc`, `.` → `_`, `!` → `-i`, `&` → `and-`, `@` → `at-`, `[`, `]`, `(`, `)`, `{`, `}` → removed.
+**Purge CSS** — two passes: deep-purge removes rules whose selectors don't match anything in the DOM (skipping rules inside `@media`/`@keyframes`), then `email-comb` mops up orphan classes/IDs. Preserves pseudo-elements and functional pseudos (`:not()`, `:is()`, `:where()`, `:has()`). Built-in safelist covers Gmail/Apple/Outlook/Open-Xchange/Thunderbird; user `safelist[]` is appended. Strips trailing `data-embed`/`embed` markers afterwards.
 
----
+**Entities** — defaults map ` ` → `&nbsp;`, `‍` → `&zwj;`, `­` → `&shy;`, `—` → `&mdash;`, curly quotes, bullets, and similar (~20 entries). Pass `Record<string,string>` to extend, `false` to disable.
 
-## Attribute to Style
+**Replace strings** — keys are treated as case-insensitive global regex patterns (the `gi` flags are added internally). Escape character classes in keys (`\\s` for `\s`).
 
-Converts HTML attributes to inline CSS styles.
+**Format** — `oxfmt` with defaults `printWidth: 320`, `htmlWhitespaceSensitivity: 'ignore'`, `embeddedLanguageFormatting: 'off'`. Auto-skipped when `html.minify` is on.
 
-Config: `css.inline.attributeToStyle` (default: `false`)
-
-- `true` — process all supported attributes
-- `string[]` — process only specified attributes
-
-Supported attributes:
-- `width` → `width: ${value}px` (auto-detects unit)
-- `height` → `height: ${value}px`
-- `bgcolor` → `background-color: ${value}`
-- `background` → `background-image: url('${value}')`
-- `align` → `text-align` (or `float`/`margin` on tables)
-- `valign` → `vertical-align: ${value}`
-
----
-
-## Inline CSS
-
-Inlines CSS from `<style>` tags into element `style` attributes using the Juice library.
-
-Config: `css.inline` (default: `false`)
-
-- `true` — enable with defaults
-- Object — Juice options plus Maizzle-specific extensions
-
-Maizzle-specific options (on the `css.inline` object):
-
-- `preferUnitlessValues` (Boolean, default: `true`) — convert `0px` → `0`
-- `safelist` (String[]) — CSS selectors to preserve in `<style>` tags
-- `customCSS` (String) — additional CSS to inline alongside `<style>` contents
-- `styleToAttribute` (Record) — duplicate CSS properties to HTML attributes (e.g. `{ 'background-color': 'bgcolor' }`)
-- `widthElements` (String[], default: `['img', 'video']`) — elements that receive `width` HTML attributes
-- `heightElements` (String[], default: `['img', 'video']`) — elements that receive `height` HTML attributes
-- `excludedProperties` (String[], default: `['--tw-shadow']`) — CSS properties to exclude from inlining
-- `codeBlocks` (Record, default: `{ EJS: {...}, HBS: {...} }`) — template syntax blocks to preserve
-
-Juice options passed through:
-
-- `removeStyleTags` (Boolean, default: `false`)
-- `removeInlinedSelectors` (Boolean, default: `true`)
-- `applyWidthAttributes` (Boolean, default: `true`)
-- `applyHeightAttributes` (Boolean, default: `true`)
-- `inlineDuplicateProperties` (Boolean, default: `true`)
-
----
-
-## Remove Attributes
-
-Removes specified HTML attributes from elements.
-
-Config: `html.attributes.remove` (default: `[]`)
-
-Always removes empty `style` and empty `class` attributes regardless of config.
-
-Accepts an array of:
-- `string` — remove attribute when empty
-- `{ name: string, value: string }` — remove when value matches exactly
-- `{ name: string, value: RegExp }` — remove when value matches regex
-
-```ts
-html: {
-  attributes: {
-    remove: ['data-src', { name: 'id', value: 'test' }, { name: 'data-id', value: /\d/ }],
-  },
-}
-```
-
----
-
-## Shorthand CSS
-
-Rewrites longhand CSS in `style` attributes to shorthand.
-
-Config: `css.shorthand` (default: `false`)
-
-- `true` — apply to all elements
-- `{ tags: string[] }` — apply only to specified tags
-
-Example: `margin-top: 4px; margin-right: 2px; margin-bottom: 4px; margin-left: 2px` → `margin: 4px 2px`
-
-Uses `postcss-merge-longhand` internally.
-
----
-
-## Six-Digit HEX
-
-Converts 3-digit HEX color codes to 6-digit for email client compatibility.
-
-Config: `css.sixHex` (default: `true`)
-
-Applies to `bgcolor` and `color` HTML attributes only. Example: `#fff` → `#ffffff`.
-
----
-
-## Add Attributes
-
-Automatically adds attributes to HTML elements based on CSS selectors.
-
-Config: `html.attributes.add` (default: `{ table: { cellpadding: 0, cellspacing: 0, role: 'none' }, img: { alt: '' } }`)
-
-Set to `false` to disable entirely.
-
-Selector support: tag (`div`), class (`.name`), ID (`#id`), attribute (`[attr]`, `[attr=value]`), tag+attribute (`div[role=alert]`), comma-separated (`div, p`).
-
-`class` attributes are merged (deduplicated). Other attributes are only added if not already present.
-
-```ts
-html: {
-  attributes: {
-    add: {
-      table: { cellpadding: 0, cellspacing: 0, role: 'none' },
-      img: { alt: '' },
-      '.cta': { role: 'button' },
-    },
-  },
-}
-```
-
----
-
-## Filters
-
-Text transformation functions applied to element content via custom HTML attributes.
-
-Config: `filters` (default: built-in set)
-
-- `false` — disable all filters
-- `Record<string, FilterFunction>` — custom filters merged with built-in defaults
-
-Processes elements bottom-up (children before parents). Multiple filters on same element execute in attribute order.
-
-Built-in filters (31):
-
-**String**: `append`, `prepend`, `uppercase`, `lowercase`, `capitalize`, `trim`, `lstrip`, `rstrip`, `escape`, `escape-once`, `remove`, `remove-first`, `replace`, `replace-first`, `size`
-
-**Math**: `ceil`, `floor`, `round`, `plus`, `minus`, `multiply`, `times`, `divide`, `divide-by`, `modulo`
-
-**Text**: `slice`, `truncate`, `truncate-words`, `newline-to-br`, `strip-newlines`
-
-**URL**: `url-encode`, `url-decode`
-
-```html
-<span uppercase>hello</span>              <!-- HELLO -->
-<span truncate="5,…">hello world</span>   <!-- hello… -->
-<span append=", world">hello</span>       <!-- hello, world -->
-```
-
----
-
-## Base URL
-
-Prepends a base URL to relative paths in HTML attributes and CSS.
-
-Config: `url.base` (default: undefined)
-
-- `string` — base URL applied to all default tags
-- Object for fine-grained control:
-  - `url` (String) — the base URL
-  - `tags` (String[] | Record) — tags or tag-attribute map to process
-  - `attributes` (Record) — custom attribute → base URL map
-  - `styleTag` (Boolean, default: `true`) — process URLs in `<style>` tags
-  - `inlineCss` (Boolean, default: `true`) — process URLs in inline styles
-
-Default tags processed: `a[href]`, `img[src, srcset]`, `video[src, poster]`, `source[src, srcset]`, `track[src]`.
-
-Also rewrites VML elements (`v:image`, `v:fill`) and URLs inside MSO conditional comments.
-
----
-
-## URL Query
-
-Appends query parameters to URLs.
-
-Config: `url.query` (default: undefined)
-
-Non-`_options` keys are the URL parameters. The `_options` key controls behavior:
-
-- `tags` (String[], default: `['a']`) — CSS selectors for elements to process
-- `attributes` (String[], default: `['src', 'href', 'poster', 'srcset', 'background']`) — attributes containing URLs
-- `strict` (Boolean, default: `true`) — only append to absolute URLs
-- `qs` (Object, default: `{ encode: false }`) — query-string library options
-
-```ts
-url: {
-  query: {
-    utm_source: 'maizzle',
-    utm_medium: 'email',
-    _options: { tags: ['a', 'img'], strict: false },
-  },
-}
-```
-
----
-
-## Purge CSS
-
-Removes unused CSS using the email-comb library.
-
-Config: `css.purge` (default: `false`)
-
-Two passes:
-1. **Deep purge**: removes CSS rules without matching selectors in the DOM (skips rules inside @media/@keyframes)
-2. **email-comb**: cleans orphaned classes and IDs
-
-Preserves pseudo-elements (`::before`) and functional pseudos (`:not()`, `:is()`, `:where()`, `:has()`).
-
-Options:
-- `safelist` (String[]) — patterns to preserve, appended to built-in email client safelist
-
-Built-in safelist includes patterns for: Gmail (`*body*`, `.gmail*`), Apple Mail (`.apple*`, `.ios*`), Outlook (`.outlook*`), Open-Xchange (`.ox-*`), Thunderbird (`.moz-text-html`), and others.
-
-Also removes `data-embed`/`embed` attributes after purging.
-
----
-
-## Entities
-
-Converts Unicode characters to HTML entities for email client compatibility.
-
-Config: `html.decodeEntities` (default: `true`)
-
-- `true` — use default character map
-- `Record<string, string>` — custom map merged with defaults
-
-Key default mappings: `\u00A0` → `&nbsp;`, `\u200D` → `&zwj;`, `\u00AD` → `&shy;`, `\u2014` → `&mdash;`, `\u201C`/`\u201D` → `&ldquo;`/`&rdquo;`, and 16 more.
-
----
-
-## Replace Strings
-
-Regex-based find-and-replace on the final HTML string.
-
-Config: `replaceStrings` (default: undefined)
-
-Keys are treated as regex patterns (case-insensitive, global flag). Values are replacement strings.
-
-```ts
-replaceStrings: {
-  '{{ year }}': new Date().getFullYear().toString(),
-}
-```
-
----
-
-## Format
-
-Pretty-prints the HTML output using oxfmt.
-
-Config: `html.format` (default: `false`)
-
-- `true` — enable with defaults
-- Object — oxfmt FormatOptions merged on top of defaults
-
-Defaults when enabled: `printWidth: 320`, `htmlWhitespaceSensitivity: 'ignore'`, `embeddedLanguageFormatting: 'off'`.
-
----
-
-## Minify
-
-Minifies HTML using the html-crush library.
-
-Config: `html.minify` (default: `false`)
-
-- `true` — enable with defaults
-- Object — html-crush options merged on top of defaults
-
-Default when enabled: `removeLineBreaks: true`.
+**Minify** — `html-crush` with `{ removeLineBreaks: true }` baseline. Use for production sends — Gmail clips at ~102 KB.

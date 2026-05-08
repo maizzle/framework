@@ -1,155 +1,162 @@
 # Maizzle Composables Reference
 
-All composables are auto-imported. No import statements needed in `<script setup>`.
-
-## Available Composables
-
-- `defineConfig()` — define or override Maizzle config per-template
-- `useConfig()` — read the resolved Maizzle config
-- `useDoctype()` — set a custom doctype for the template
-- `usePlaintext()` — enable plaintext generation for the template
-- `usePreheader()` — set the preview/preheader text programmatically
-- `useEvent()` — register event handlers from within a template
-
----
+All composables auto-import in `<script setup>` — no imports needed.
 
 ## defineConfig
 
-Define or override Maizzle config for the current template. Merges with the global `maizzle.config.ts` config and provides the result to child components.
-
-Also used in `maizzle.config.ts` as a typed identity function.
+Per-template config override. Deep-merged with `maizzle.config.ts`. Also used in the config file as a typed identity function.
 
 ```vue
 <script setup>
-// Override config for this template
 defineConfig({
-  css: {
-    inline: true,
-    purge: true,
-    shorthand: true,
-  },
-  url: {
-    base: 'https://cdn.example.com/emails/',
-  },
+  css: { inline: false },
+  url: { base: 'https://cdn.example.com/emails/' },
 })
 </script>
 ```
 
-In `maizzle.config.ts`:
-
-```ts
-import { defineConfig } from '@maizzle/framework'
-
-export default defineConfig({
-  css: {
-    inline: true,
-    purge: true,
-  },
-})
-```
-
----
-
 ## useConfig
 
-Read the resolved Maizzle config. Returns the merged config (global + any per-template overrides from `defineConfig()`).
+Read the resolved config (global + any per-template `defineConfig` overrides up the tree). Useful inside child components for accessing custom data passed through the config.
 
 ```vue
 <script setup>
 const config = useConfig()
-// Access any config value
-const baseUrl = config.url?.base
 </script>
+
+<template>
+  <Text>&copy; {{ new Date().getFullYear() }} {{ config.company?.name }}</Text>
+</template>
 ```
 
----
+## useTransformers
 
-## useDoctype
+Per-template counterpart of the `useTransformers` config option.
 
-Set a custom doctype for the current template. By default, Maizzle uses `<!DOCTYPE html>`.
+- `useTransformers(false)` — skip the entire pipeline (CSS inlining, purging, …).
+- `useTransformers(true)` (or no arg) — keep everything on.
+- `useTransformers({ inlineCss: false, minify: true })` — granular toggle.
+
+Force-enable (`true`) only works for boolean-driven transformers (`inlineCss`, `purgeCss`, `prettify`, `minify`, `shorthandCss`, `sixHex`, `safeClassNames`, `entities`). Data-driven ones (`filters`, `baseURL`, `urlQuery`, `addAttributes`, `removeAttributes`, `replaceStrings`, `attributeToStyle`) need real values.
+
+## useBaseUrl
+
+SFC-scoped equivalent of `config.url.base`.
 
 ```vue
 <script setup>
-// HTML 4.01 Transitional (some email senders require this)
-useDoctype('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">')
+useBaseUrl('https://cdn.example.com/emails/')
+// or fine-grained:
+useBaseUrl({ url: 'https://cdn.example.com/', styleTag: true })
 </script>
 ```
 
----
+## useUrlQuery
 
-## usePlaintext
-
-Enable plaintext generation for the current template. The plaintext version strips all HTML and places link URLs next to their anchor text.
-
-Options:
-- `extension` (String, optional) — file extension for the plaintext file. Overrides `plaintext.extension` from the global config.
-- `destination` (String, optional) — custom output directory. Overrides `plaintext.destination` from the global config.
-- `options` (Object, optional) — forwarded to [`string-strip-html`](https://codsen.com/os/string-strip-html). Deep-merged over `plaintext.options` from the global config.
+SFC-scoped equivalent of `config.url.query`. Common use: per-template UTM params.
 
 ```vue
 <script setup>
-// Default plaintext
-usePlaintext()
-
-// Custom extension
-usePlaintext({ extension: 'text' })
-
-// Custom destination
-usePlaintext({ destination: 'build_production/plaintext' })
-
-// Custom strip-HTML options
-usePlaintext({ options: { ignoreTags: ['br'] } })
+useUrlQuery({
+  utm_source: 'maizzle',
+  utm_campaign: 'newsletter',
+  _options: { tags: ['a', 'img'], strict: false },
+})
 </script>
 ```
-
----
-
-## usePreheader
-
-Set the preview/preheader text programmatically. Injects a hidden `<div>` at the start of `<body>` with the text, followed by filler characters. Alternative to using the `<Preheader>` component.
-
-Options:
-- `fillerCount` (Number, default: `150`) — number of filler pairs
-- `shyCount` (Number, default: `150`) — number of `&shy;` entities
-
-```vue
-<script setup>
-usePreheader('Thanks for signing up!')
-
-// Custom filler counts
-usePreheader('Welcome!', { fillerCount: 200, shyCount: 200 })
-</script>
-```
-
----
 
 ## useEvent
 
-Register event handlers from within a template's `<script setup>`. Handlers run after config-level handlers, in registration order.
+Register lifecycle handlers from `<script setup>`. Config handlers run first, then SFC handlers in registration order. SFC handlers are cleared between template renders, so they only apply to the template that registered them.
 
-Available events:
+Events:
 
-- `beforeCreate` — runs before the template is created. Receives `{ config }`.
-- `beforeRender` — runs before SSR render. Receives `{ config, template }`. Return a string to replace the template.
-- `afterRender` — runs after SSR render, before transformers. Receives `{ config, template, html }`. Return a string to replace the HTML.
-- `afterTransform` — runs after all transformers. Receives `{ config, template, html }`. Return a string to replace the HTML.
-- `afterBuild` — runs after all templates are built. Receives `{ files, config }`.
+| Event | Receives | Returns |
+|---|---|---|
+| `beforeCreate` | `{ config }` | — |
+| `beforeRender` | `{ config, template }` | string \| void (replace template source) |
+| `afterRender` | `{ config, template, html }` | string \| void (replace HTML, before transformers) |
+| `afterTransform` | `{ config, template, html }` | string \| void (replace HTML, after transformers) |
+| `afterBuild` | `{ files, config }` | — |
 
 ```vue
 <script setup>
-// Modify HTML after rendering
+// Inject content before transformers (still inlined/purged)
 useEvent('afterRender', ({ html }) => {
-  return html.replace('{{unsubscribe}}', 'https://example.com/unsubscribe')
+  return html.replace('<body', '<body><div class="bg-blue-500 p-4">Banner</div>')
 })
 
-// Modify HTML after all transformers
+// Tracking pixel after transformers
 useEvent('afterTransform', ({ html }) => {
-  return html.replace('</body>', '<script>tracking()<\/script></body>')
+  return html.replace('</body>', '<img src="https://track.example.com/p.gif" width="1" height="1" alt=""></body>')
 })
+</script>
+```
 
-// Access config before rendering
-useEvent('beforeCreate', ({ config }) => {
-  console.log('Building with config:', config)
+## useDoctype
+
+Override the default `<!DOCTYPE html>`. Maizzle adapts void-element serialization to match: HTML5 emits `<br>` / `<img>`, XHTML emits `<br />` / `<img />`.
+
+```vue
+<script setup>
+useDoctype('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">')
+</script>
+```
+
+Common doctypes:
+
+- `<!DOCTYPE html>` — HTML5 (default, recommended).
+- `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">`
+- `<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">`
+
+## usePlaintext
+
+Generate a plaintext version of the current template. With `render()`, the result is returned in the result object; during build, a `.txt` is written next to the HTML.
+
+Options:
+
+- `extension` (string, default `'txt'`) — file extension.
+- `destination` (string) — output dir override.
+- `options` (object) — forwarded to [`string-strip-html`](https://codsen.com/os/string-strip-html), deep-merged over global `plaintext.options`.
+
+```vue
+<script setup>
+usePlaintext()
+usePlaintext({ extension: 'text', destination: 'dist/plaintext', options: { ignoreTags: ['br'] } })
+</script>
+```
+
+## usePreheader
+
+Hidden preview text injected at `<body>` start. Script equivalent of the `<Preheader>` component.
+
+Options:
+
+- `fillerCount` (number, default `150`) — `&#8199;&#65279;&#847;` filler pairs that push body text out of the preview area.
+- `shyCount` (number, default `150`) — `&shy;` entities.
+
+```vue
+<script setup>
+usePreheader('Check out our latest deals — up to 50% off everything.')
+usePreheader('Short preview.', { fillerCount: 200, shyCount: 200 })
+</script>
+```
+
+## useHead
+
+Re-export of [`useHead`](https://unhead.unjs.io/docs/head/api/composables/use-head) from `@unhead/vue`. Tags are SSR-rendered into the final HTML.
+
+```vue
+<script setup>
+useHead({
+  title: 'Order Confirmation',
+  meta: [{ name: 'color-scheme', content: 'light dark' }],
+  link: [
+    { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+    { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap' },
+  ],
+  htmlAttrs: { lang: 'de' },
+  bodyAttrs: { class: 'bg-white' },
 })
 </script>
 ```

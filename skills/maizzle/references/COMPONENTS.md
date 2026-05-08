@@ -2,887 +2,516 @@
 
 All components are auto-imported. No `import` statements needed in templates.
 
-## Available Components
+## Index
 
-- `<Layout>` — Opinionated wrapper, renders full HTML document structure
-- `<Html>` — The `<html>` element with lang and dir attributes
-- `<Head>` — The `<head>` element, includes default meta tags for email
-- `<Body>` — The `<body>` element with email-safe defaults
-- `<Container>` — Centered wrapper with optional fixed width or Tailwind classes
-- `<Section>` — Full-width content block with padding
-- `<Row>` — Table row for multi-column layouts
-- `<Column>` — Table cell inside a `<Row>`
-- `<Overlap>` — Stacked/overlapping content sections (faux absolute)
-- `<Heading>` — Heading element (h1-h6) via `level` prop
-- `<Text>` — Paragraph or span text
-- `<Link>` — Anchor element with email-safe defaults
-- `<Button>` — Call-to-action button with bulletproof rendering
-- `<Img>` — Image with dark mode and reduced motion variants
-- `<Divider>` — Horizontal rule / visual separator
-- `<Spacer>` — Vertical or horizontal spacing
-- `<Preheader>` — Hidden preview text shown in inbox list view
-- `<CodeBlock>` — Syntax-highlighted code block
-- `<CodeInline>` — Inline code snippet
-- `<Markdown>` — Renders Markdown content
-- `<WithUrl>` — Rewrites URLs in children — prepend base URL or append query params (UTM tracking)
-- `<NoWidows>` — Replaces last space with `&nbsp;` to prevent orphaned words
-- `<Outlook>` — Wraps content in Outlook conditional comments (shows only in Outlook)
-- `<NotOutlook>` — Hides content from Outlook
-- `<OutlookBg>` — VML markup for Outlook-specific rendering (background images)
+**Document scaffolding:** `<Layout>`, `<Html>`, `<Head>`, `<Body>`, `<Tailwind>`, `<Font>`, `<Preheader>`
+
+**Layout primitives:** `<Container>`, `<Section>`, `<Row>`, `<Column>`, `<Overlap>`
+
+**Content:** `<Heading>`, `<Text>`, `<Link>`, `<Button>`, `<Img>`, `<Hr>`, `<Spacer>`, `<Markdown>`, `<CodeBlock>`, `<CodeInline>`, `<QrCode>`
+
+**Conditionals & escape hatches:** `<Outlook>`, `<NotOutlook>`, `<OutlookBg>`, `<Plaintext>`, `<NotPlaintext>`, `<Raw>`, `<NoWidows>`, `<WithUrl>`
 
 ---
 
 ## Layout
 
-Root component for email templates. Renders full HTML document: `<html>`, `<head>`, `<body>`.
+Full HTML document scaffold: `<html>` (with VML/Office namespaces) + `<head>` (charset, viewport, format-detection, color-scheme meta, MSO font reset, Tailwind import, Inter font from Google Fonts) + `<body>` + accessible `<div role="article">` wrapper.
 
-Includes by default:
-- Tailwind CSS via `@import "@maizzle/tailwindcss"` in a `<style>` tag
-- Email-safe meta tags (viewport, format-detection, color-scheme)
-- Outlook VML namespaces and MSO font reset
-- Inter font from Google Fonts
-- Accessible `<div role="article">` inner wrapper
+Replaces the `<Html> + <Head> + <Tailwind> + <Body>` chain. Use `<Html>` directly when you want manual control.
 
 Props:
-- `bodyClass` (String, default: `''`) — classes added to `<body>`
-- `lang` (String, default: `'en'`) — sets `lang` and `xml:lang` on `<html>` and `<body>`
-- `dir` (`'ltr'` | `'rtl'`, default: `'ltr'`) — text direction
-- `ariaLabel` (String, optional) — `aria-label` on the inner `<div role="article">`
-
-Usage:
-
-```vue
-<template>
-  <Layout>
-    <!-- email content -->
-  </Layout>
-</template>
-```
-
-With props:
+- `lang` (string, default `'en'`).
+- `dir` (`'ltr'` | `'rtl'`, default `'ltr'`).
+- `bodyClass` (string) — classes added to `<body>`.
+- `ariaLabel` (string) — `aria-label` on the inner article div.
+- `doubleHead` (bool | string) — render an empty `<head>` first (Yahoo! Mail Android workaround).
+- `outlookFallback` (bool, default `true`) — when `false`, skips MSO ghost tables, VML, `xmlns:v/o`, mso-only CSS for this component and all descendants.
 
 ```vue
-<template>
-  <Layout lang="ro" dir="ltr" aria-label="Order confirmation" body-class="bg-slate-100">
-    <!-- email content -->
-  </Layout>
-</template>
+<Layout lang="ro" dir="ltr" body-class="bg-slate-100" aria-label="Order confirmation">
+  <!-- email content -->
+</Layout>
 ```
-
-Source template of `<Layout>`:
-
-```xml
-<html :lang="lang" :dir="dir" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
-  <head>
-    <meta charset="utf-8">
-    <meta name="x-apple-disable-message-reformatting">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
-    <meta name="color-scheme" content="light dark">
-    <meta name="supported-color-schemes" content="light dark">
-    <!--[if mso]>
-      <noscript>
-        <xml>
-          <o:OfficeDocumentSettings xmlns:o="urn:schemas-microsoft-com:office:office">
-            <o:PixelsPerInch>96</o:PixelsPerInch>
-          </o:OfficeDocumentSettings>
-        </xml>
-      </noscript>
-      <style>
-        td,th,div,p,a,h1,h2,h3,h4,h5,h6 {font-family: "Segoe UI", sans-serif; mso-line-height-rule: exactly;}
-        .mso-break-all {word-break: break-all;}
-      </style>
-      <![endif]-->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" media="screen">
-    <style>
-      @import "@maizzle/tailwindcss";
-
-      img {
-        @apply max-w-full align-middle;
-      }
-    </style>
-  </head>
-  <body :xml:lang="lang" :class="['m-0 p-0 size-full [word-break:break-word]', bodyClass]">
-    <div
-      role="article"
-      aria-roledescription="email"
-      :aria-label="ariaLabel"
-      :lang="lang"
-      :dir="dir"
-      style="font-size: medium;"
-      :class="['[font-size:max(16px,1rem)]', $attrs.class]"
-    >
-      <slot />
-    </div>
-  </body>
-  </html>
-```
-
----
 
 ## Html
 
-The `<html>` element. Use when building the document structure manually (without `<Layout>`).
+The `<html>` element with `lang`, `dir`, and (by default) Outlook VML/Office XML namespaces. Use when manually composing the document instead of `<Layout>`.
 
-Renders `<html>` with `lang`, `dir`, and Outlook VML/Office XML namespaces by default. Provides `lang` to child `<Body>` component for `xml:lang`.
-
-Props:
-- `lang` (String, default: `'en'`) — language code for the `lang` attribute. Accepts any ISO 639-1 code.
-- `dir` (`'ltr'` | `'rtl'`, default: `'ltr'`) — text direction
-- `xmlns` (Boolean | String, default: `true`) — include VML and Office XML namespace declarations (`xmlns:v`, `xmlns:o`). Set to `false` to omit them.
-
-Usage:
+Props: `lang`, `dir`, `xmlns` (bool, default `true`).
 
 ```vue
-<template>
-  <Html lang="ro" dir="ltr">
-    <Head>
-      <style>
-        @import "@maizzle/tailwindcss";
-      </style>
-    </Head>
-    <Body>
-      <!-- email content -->
-    </Body>
-  </Html>
-</template>
+<Html lang="fr" dir="ltr">
+  <Head>
+    <style>@import "@maizzle/tailwindcss";</style>
+  </Head>
+  <Body>
+    <!-- content -->
+  </Body>
+</Html>
 ```
-
----
 
 ## Head
 
-The `<head>` element with email-safe defaults. Includes `charset`, Apple reformatting prevention, and viewport meta tags automatically.
+The `<head>` element with email-safe defaults (charset, x-apple-disable-message-reformatting, viewport meta).
 
 Props:
-- `double` (Boolean | String, default: `false`) — renders an empty `<head></head>` before the real one. Workaround for Yahoo! Mail on Android, which strips styles from the first `<head>` element.
-
-Usage:
+- `double` (bool | string, default `false`) — renders an empty `<head></head>` first; Yahoo! Mail Android workaround.
 
 ```vue
-<template>
-    <Head>
-      <style>
-        @import "@maizzle/tailwindcss";
-      </style>
-    </Head>
-</template>
+<Head>
+  <style>@import "@maizzle/tailwindcss";</style>
+</Head>
 ```
-
-With the Yahoo! Mail workaround:
-
-```vue
-<template>
-    <Head :double="true">
-      <style>
-        @import "@maizzle/tailwindcss";
-      </style>
-    </Head>
-</template>
-```
-
----
 
 ## Body
 
-The `<body>` element with email-safe defaults. Wraps slot content in an accessible `<div role="article">` wrapper.
+The `<body>` element with accessible `<div role="article">` wrapper.
 
-Props:
-- `xmlLang` (String, optional) — override `xml:lang` on `<body>`. If not set, inherits from parent `<Html>` component's `lang` prop.
-- `dir` (`'ltr'` | `'rtl'`, default: `'ltr'`) — text direction
-- `ariaLabel` (String, optional) — `aria-label` on the inner `<div role="article">`
+Props: `xmlLang`, `dir`, `ariaLabel`.
 
-Usage:
+## Tailwind
+
+Compile Tailwind from the classes used inside the wrapped block and inject it into `<head>`. Required only if not using `<Layout>` (which already includes the import). A `<Head />` component must be present in the template — error otherwise.
+
+Slots:
+- `default` — content rendered into the document; classes are scanned for utility generation.
+- `config` — raw CSS replacing the default `@import "@maizzle/tailwindcss";` seed. Read at setup, never rendered.
 
 ```vue
-<template>
-    <Html lang="fr">
-      <Head>
-        <style>@import "@maizzle/tailwindcss";</style>
-      </Head>
-      <Body aria-label="Order confirmation" class="bg-slate-50">
-        <!-- email content -->
-      </Body>
-    </Html>
-</template>
+<Tailwind>
+  <template #config>
+    @import "@maizzle/tailwindcss";
+    @theme {
+      --color-brand: #6366f1;
+      --font-display: "Inter", sans-serif;
+    }
+  </template>
+
+  <Body>
+    <h1 class="font-display text-brand">Hello</h1>
+  </Body>
+</Tailwind>
 ```
 
----
+Multiple sibling blocks share class names (later block wins after inlining). Nested `<Tailwind>` is flattened: inner classes flow up to the outer stylesheet, inner `#config` is ignored.
+
+## Font
+
+Load a web font and register a Tailwind utility (`font-{slug}`) for it. Auto-emits a `<link>` and a `--font-{slug}` token merged into the Tailwind compile pass.
+
+Props:
+- `family` (string, required) — single family, e.g. `"Open Sans"`.
+- `weights` (number[], default `[400]`).
+- `styles` (`('normal' | 'italic')[]`, default `['normal']`) — including `'italic'` switches the URL to `ital,wght`.
+- `display` (`'auto'` | `'block'` | `'swap'` | `'fallback'` | `'optional'`, default `'swap'`).
+- `provider` (`'google'` | `'bunny'`, default `'google'`).
+- `url` (string) — pre-built stylesheet URL. When set, `provider`/`weights`/`styles`/`display` are ignored.
+- `fallback` (string) — custom fallback stack. Default is category-aware (sans-serif / serif / monospace / display / handwriting).
+
+```vue
+<Font family="Roboto" :weights="[400, 600]" :styles="['normal', 'italic']" />
+<Font family="Open Sans" provider="bunny" />
+<Font family="Acme Sans" url="https://cdn.example.com/fonts/acme-sans.css" />
+```
+
+Equivalent script form: `useFont({ family: 'Roboto', weights: [400, 600] })`. Fonts are deduplicated by family — first registration wins.
+
+## Preheader
+
+Hidden preview text teleported to the start of `<body>`, followed by filler characters that prevent clients from pulling other text into the inbox preview.
+
+Props:
+- `fillerCount` (number, default `150`) — `&#8199;&#65279;&#847;` filler pairs.
+- `shyCount` (number, default `150`) — `&shy;` entities.
+
+```vue
+<Preheader>Your order has shipped!</Preheader>
+```
+
+Script alternative: `usePreheader('text', { fillerCount, shyCount })`.
 
 ## Container
 
-Centered wrapper. Renders a `<div>` with `margin: 0 auto`, wrapped in an MSO conditional table for Outlook support.
+Centered wrapper. Renders a `<div>` (with `margin: 0 auto`) wrapped in an MSO conditional `<table>` for Outlook.
 
 Two modes:
-- **Prop mode**: set `width` prop for fixed width with auto column `min-width` calculation (columns stack naturally without media queries)
-- **Tailwind mode**: omit `width` prop and use Tailwind classes like `max-w-xl mx-auto` for class-based control. MSO table defaults to 600px.
+- **Prop mode**: set `width` for fixed width. Provides the resolved width to descendant Rows/Columns for auto `min-width` + natural stacking.
+- **Tailwind mode**: omit `width`, use classes (e.g. `max-w-xl mx-auto`). MSO width is auto-derived from the resolved CSS, defaulting to 600px.
 
-When `width` is set, it provides the value to child `<Row>` and `<Column>` components for automatic column width calculation.
+Without any width hint at all, the div defaults to `max-w-150 mx-auto` (600px).
 
 Props:
-- `width` (String | Number, optional) — max width of the container. Applied as `max-width` on the div and `width` on the MSO table. When not set, no inline `max-width` is applied — use Tailwind classes instead. The MSO table defaults to 600px.
-
-Usage:
+- `width` (string | number) — `max-width` on the div + `width` on the MSO table.
+- `msoWidth` (string | number) — override only the MSO table width.
+- `msoStyle` (string) — inline CSS applied only to the MSO `<td>`.
+- `outlookFallback` (bool, default `true`).
 
 ```vue
-<!-- Tailwind mode: use classes for width -->
-<Container class="max-w-xl mx-auto">
-  <!-- width controlled by Tailwind, MSO table defaults to 600px -->
-</Container>
-
-<!-- Prop mode: fixed width with auto column widths -->
-<Container width="600px">
-  <!-- columns auto-calculate min-width and stack naturally -->
-</Container>
-
-<Container :width="552">
-  <!-- numeric width, treated as pixels -->
-</Container>
+<Container class="max-w-xl mx-auto"><!-- Tailwind mode --></Container>
+<Container width="600px"><!-- Prop mode: auto column min-widths --></Container>
 ```
-
----
 
 ## Section
 
-Full-width content block. Renders a `<div>` wrapped in an MSO conditional table for Outlook.
+Full-width content block. Renders a `<div>` wrapped in an MSO `<table>` for Outlook.
 
 Props:
-- `width` (String | Number, default: `'100%'`) — applied as `max-width` on the div and `width` on the MSO table
-- `msoStyle` (String, optional) — inline CSS applied only to the MSO `<td>` element, for Outlook-specific styling
-
-Usage:
+- `width` (string | number) — `max-width` on the div + `width` on the MSO table. Without it, MSO width auto-derives from a width utility/inline style, falling back to `100%`.
+- `msoStyle` (string).
+- `outlookFallback` (bool, default `true`).
 
 ```vue
 <Section class="px-6 py-4 bg-white">
   <Heading level="1">Hello</Heading>
-  <Text>Content here</Text>
-</Section>
-
-<Section width="480px" mso-style="padding: 10px 20px">
-  <!-- narrower section with Outlook-specific padding -->
+  <Text>Content</Text>
 </Section>
 ```
-
----
 
 ## Row
 
-Table row for multi-column layouts. Wraps children in an MSO table row for Outlook. Auto-detects the number of child `<Column>` components and provides width calculations to them.
+Multi-column row. Auto-detects the number of `<Column>` children and feeds widths into them.
 
 Props:
-- `width` (String | Number, optional) — override the inherited container width used for column width calculation. Defaults to parent `<Container>` width.
-- `cols` (Number, optional) — override the auto-detected column count. Useful with `v-if` or `v-for` where auto-detection may not match the rendered output.
-
----
+- `width` (string | number) — override the inherited container width used for column math.
+- `cols` (number) — explicit column count, useful with `v-for` / `v-if` where auto-detection misses children.
 
 ## Column
 
-Table cell inside a `<Row>`. Renders as `display: inline-block`, wrapped in an MSO `<td>` with auto-calculated percentage width.
+Renders an inline-block `<div>` (`vertical-align: top`, `font-size: 16px` reset), wrapped in an MSO `<td>` with calculated width.
 
-Two modes depending on the parent `<Container>`:
-- **With Container `width` prop**: auto-calculates `min-width` from container width / column count. Columns stack naturally on small viewports without media queries.
-- **Without Container `width` prop** (Tailwind mode): no `min-width` is set. Use Tailwind classes like `w-1/2 xs:w-full` to control width and stacking.
-
-The `width` prop always takes precedence and sets `min-width` explicitly.
-
-Provides its own width as container width for nested `<Row>` components.
+- **With Container `width` prop**: auto-calculates `min-width` from `containerWidth ÷ columns`. Stacks naturally without media queries.
+- **Tailwind mode** (no Container `width`): use `w-1/2 xs:w-full`-style classes.
 
 Props:
-- `width` (String | Number, optional) — explicit column width, applied as `min-width`
-- `msoStyle` (String, optional) — inline CSS applied only to the MSO `<td>` element
+- `width` (string | number) — explicit `min-width` (also sets MSO `<td>` width).
+- `msoStyle` (string).
+- `outlookFallback` (bool, default `true`).
 
-Usage:
+For full layout patterns (equal columns, percentage widths, equal-height, reverse stack on mobile, gutters, nested rows), see `PATTERNS.md`.
 
 ```vue
-<template>
-    <!-- Tailwind mode: control width with classes -->
-    <Container class="max-w-xl mx-auto">
-      <Row>
-        <Column class="w-1/2 xs:w-full">Left</Column>
-        <Column class="w-1/2 xs:w-full">Right</Column>
-      </Row>
-    </Container>
-
-    <!-- Prop mode: auto min-width, natural stacking -->
-    <Container width="600px">
-      <Row>
-        <Column>Left (300px min-width)</Column>
-        <Column>Right (300px min-width)</Column>
-      </Row>
-    </Container>
-
-    <!-- Three columns with explicit count for v-for -->
-    <Row :cols="items.length">
-      <Column v-for="item in items" class="w-1/3 xs:w-full">
-        {{ item }}
-      </Column>
-    </Row>
-
-    <!-- Custom column widths via prop -->
-    <Row>
-      <Column width="200px">
-        <Section class="p-4">Sidebar</Section>
-      </Column>
-      <Column width="400px">
-        <Section class="p-4">Main</Section>
-      </Column>
-    </Row>
-
-    <!-- Center a stacked column on mobile -->
-    <Row class="xs:text-center">
-      <Column class="w-1/2 xs:w-full xs:text-left">Left</Column>
-      <Column class="w-1/2 xs:w-full xs:text-center">Right</Column>
-    </Row>
-</template>
+<Container class="max-w-xl mx-auto">
+  <Row>
+    <Column class="w-1/2 xs:w-full">Left</Column>
+    <Column class="w-1/2 xs:w-full">Right</Column>
+  </Row>
+</Container>
 ```
-
----
 
 ## Overlap
 
-Stacked/overlapping content sections (faux absolute positioning). Places overlay content on top of a background layer using a `position: relative` table trick, with VML fallback for Outlook.
+Faux absolute positioning: stacks an overlay on top of a background layer using `position: relative` table tricks, with VML fallback for Outlook.
 
-Two slots:
-- **default** — background layer content (constrained by `height`)
-- **overlay** — content rendered on top of the background
+Slots:
+- default — background layer (constrained by `height`).
+- `overlay` — content rendered on top.
 
 Props:
-- `height` (String | Number, **required**) — max height of the background layer
-- `width` (String | Number, optional) — width of the overlay table and VML rectangle. Inherits from parent `<Container>` width if not set.
-- `msoHeight` (String | Number, optional) — override VML rectangle height for Outlook. Defaults to `height`.
-- `msoInset` (String, default: `'0,-60px,0,0'`) — VML textbox inset (`top,right,bottom,left`). Use negative values to shift overlay content upward.
-
-Usage:
+- `height` (string | number, **required**) — max height of the background layer.
+- `width` (string | number) — overlay table / VML rectangle width. Inherits Container width otherwise.
+- `msoHeight` (string | number) — Outlook VML rectangle height override.
+- `msoInset` (string, default `'0,-60px,0,0'`) — VML textbox inset (`top,right,bottom,left`). Negative values shift overlay content.
 
 ```vue
-<template>
-  <!-- width inherited from Container -->
-  <Container>
-    <Overlap height="200px">
-      <Img src="/banner.jpg" alt="Banner" />
-
-      <template #overlay>
-        <Img src="/avatar.png" alt="Avatar" width="80" />
-      </template>
-    </Overlap>
-  </Container>
-
-  <!-- explicit width -->
-  <Overlap height="200px" width="400px">
-    <Img src="/banner.jpg" alt="Banner" />
-
-    <template #overlay>
-      <Img src="/avatar.png" alt="Avatar" width="80" />
-    </template>
-  </Overlap>
-
-  <!-- responsive -->
-  <Overlap height="200px" class="sm:max-h-10">
-    <Img width="552" src="/banner.jpg" alt="Banner" />
-
-    <template #overlay>
-        <Section class="text-center mb-40 sm:mb-10">
-        <Img src="/logo.png" alt="Avatar" width="80" />
-        </Section>
-    </template>
-    </Overlap>
-</template>
+<Overlap height="200px">
+  <Img src="/banner.jpg" alt="Banner" width="600" />
+  <template #overlay>
+    <Img src="/avatar.png" alt="Avatar" width="80" />
+  </template>
+</Overlap>
 ```
-
----
 
 ## Heading
 
-Heading element (h1-h6). Resets margin to 0 by default.
+`<h1>`–`<h6>` element, `m-0` by default.
 
 Props:
-- `level` (String | Number, default: `1`) — heading level, 1-6
-
-Usage:
+- `level` (string | number 1–6, default `1`).
 
 ```vue
-<template>
-  <Heading>Default h1</Heading>
-  <Heading level="2" class="text-xl font-semibold text-slate-800">Subheading</Heading>
-  <Heading :level="3" class="text-lg">Section title</Heading>
-</template>
+<Heading>Default h1</Heading>
+<Heading level="2" class="text-xl font-semibold">Subheading</Heading>
 ```
-
----
 
 ## Text
 
-Paragraph or inline text. Renders `<p>` by default with `m-0 my-4 text-base`, or `<span>` with `text-base`.
+Renders `<p>` (default) or `<span>`.
 
 Props:
-- `as` (`'p'` | `'span'`, default: `'p'`) — HTML element to render
-
-Usage:
+- `as` (`'p'` | `'span'`, default `'p'`).
 
 ```vue
-<template>
-  <Text>Default paragraph with vertical margin.</Text>
-  <Text class="text-gray-600 text-sm">Styled paragraph with <Text as="span" class="font-bold">inline text.</Text>.</Text>
-</template>
+<Text>Paragraph.</Text>
+<Text as="span" class="font-bold">Inline</Text>
 ```
-
----
 
 ## Link
 
-Anchor element. Resets to `no-underline` by default.
+`<a>` with `text-decoration: none` by default.
 
 Props:
-- `href` (String, **required**) — URL the link points to
-
-Usage:
-
-```vue
-<template>
-  <Link href="https://maizzle.com">Maizzle</Link>
-  <Link href="https://example.com" class="text-blue-600 underline">Styled link</Link>
-</template>
-```
-
----
+- `href` (string, required).
 
 ## Button
 
-Call-to-action button with bulletproof Outlook rendering. Renders an `<a>` tag styled as a button, with MSO spacer elements for consistent padding in old Outlooks that use the Word rendering engine.
+Bulletproof CTA `<a>` styled as a button, with MSO spacer `<i>` elements for Outlook padding. Defaults: solid indigo (`#4338ca`) bg, white text, 16/24px padding, 4px radius.
+
+Override colors with Tailwind classes (`class="bg-blue-600 text-white"`) or inline `style` — there is **no** `bgColor` / `color` prop.
 
 Props:
-- `href` (String, **required**) — URL the button links to
-- `variant` (`'solid'` | `'outline'` | `'ghost'` | `'link'`, default: `'solid'`) — button style
-- `align` (`'left'` | `'center'` | `'right'`, optional) — horizontal alignment of the button wrapper
-- `bgColor` (String, default: `'#4338ca'`) — background color for `solid`, border color for `outline`, text color fallback for `outline`/`ghost`
-- `color` (String, optional) — explicit text color. Defaults to `#fffffe` for `solid`, `bgColor` for others.
-- `msoPt` (String, default: `'16px'`) — `mso-text-raise` for text vertical alignment in Outlook
-- `msoPb` (String, default: `'31px'`) — `mso-text-raise` for bottom spacer in Outlook
-- `icon` (String, optional) — URL or path to an icon image
-- `iconWidth` (String | Number, default: `12`) — icon width in pixels
-- `iconPosition` (`'left'` | `'right'`, default: `'right'`) — icon placement relative to label
-- `iconClass` (String, default: `''`) — classes on the icon `<img>`
-
-Usage:
+- `href` (string, required).
+- `variant` (`'solid'` | `'outline'` | `'ghost'` | `'link'`, default `'solid'`).
+- `align` (`'left'` | `'center'` | `'right'`).
+- `icon` (string) — icon image URL.
+- `iconWidth` (string | number, default `12`).
+- `iconPosition` (`'left'` | `'right'`, default `'right'`).
+- `iconClass` (string).
+- `iconAlt` (string).
+- `msoPt` (string, default `'16px'`) — `mso-text-raise` on inner `<span>` (top alignment).
+- `msoPb` (string, default `'31px'`) — `mso-text-raise` on the bottom spacer.
+- `msoPx` (string | number, default `150`) — horizontal padding via `mso-font-width`. Bare numbers → `%`.
+- `outlookFallback` (bool, default `true`).
 
 ```vue
-<template>
-  <Button href="https://example.com">Get started</Button>
-
-  <Button href="https://example.com" variant="outline" bg-color="#facade" align="center">
-    Outline centered
-  </Button>
-
-  <Button href="https://example.com" variant="ghost">Ghost</Button>
-
-<Button href="https://example.com" variant="link" color="#0ea5e9">Plain link</Button>
-
-  <Button href="https://example.com" icon="/arrow-right.png" icon-width="14">
-    With icon
-  </Button>
-
-  <Button href="https://example.com" icon="/arrow-left.png" icon-position="left">
-    Icon on left
-  </Button>
-
-  <!-- Override default styles with Tailwind classes -->
-  <Button href="https://example.com" class="rounded-full px-8 py-3 text-sm font-semibold">
-    Pill button
-  </Button>
-</template>
+<Button href="https://example.com">Get started</Button>
+<Button href="https://example.com" variant="outline" align="center">Outline</Button>
+<Button href="https://example.com" class="bg-blue-600 text-white rounded-full px-8">Custom</Button>
+<Button href="https://example.com" icon="/arrow.png" icon-position="left">With icon</Button>
 ```
-
----
 
 ## Img
 
-Image with optional dark mode and reduced motion variants. Renders a plain `<img>` by default, or wraps in `<picture>` when `darkSrc` or `motionSrc` is provided. Sets `max-width: 100%; vertical-align: middle;` by default (responsive and no bottom gap).
+Plain `<img>`, or `<picture>` when `darkSrc` / `motionSrc` is set. Defaults: `max-width: 100%`, `vertical-align: middle`. `width` is required and renders unitless.
 
 Props:
-- `src` (String, **required**) — image source URL. When `motionSrc` is used, this becomes the static fallback.
-- `alt` (String, default: `''`) — alt text
-- `width` (String | Number, **required**) — rendered as unitless `width` attribute
-- `darkSrc` (String, optional) — alternative image for dark mode via `prefers-color-scheme: dark`
-- `motionSrc` (String, optional) — animated image shown when user has no reduced motion preference. MIME type is auto-detected from the file extension.
-
-Usage:
+- `src` (string, required) — when `motionSrc` is set, `src` is the static fallback.
+- `alt` (string, default `''`).
+- `width` (string | number, required).
+- `darkSrc` (string) — `prefers-color-scheme: dark` variant.
+- `motionSrc` (string) — `prefers-reduced-motion: no-preference` variant. MIME type auto-derived from extension.
 
 ```vue
-<template>
-  <Img src="/logo.png" alt="Logo" width="70" />
-
-  <!-- Dark mode variant -->
-  <Img src="/logo.png" dark-src="/logo-dark.png" alt="Logo" width="70" />
-
-  <!-- src is the static fallback, motionSrc is the animated version -->
-  <Img src="/hero.png" motion-src="/hero.gif" alt="Hero" width="600" />
-
-  <!-- All variants with Tailwind styling -->
-  <Img
-    alt="Logo"
-    width="120"
-    src="/logo.png"
-    dark-src="/logo-dark.png"
-    motion-src="/logo-animated.gif"
-    class="rounded-lg shadow-sm sm:w-full"
-  />
-</template>
+<Img src="/logo.png" dark-src="/logo-dark.png" motion-src="/logo.gif" alt="Logo" width="120" />
 ```
 
----
+## Hr
 
-## Divider
+Horizontal rule. Renders `<div role="separator">` with default 1px height, `#cbd5e1` background, 24px vertical margin.
 
-Horizontal rule / visual separator. Renders a `<div role="separator">` with configurable thickness, color, and spacing.
-
-Defaults to 1px height, `#cbd5e1` color, and 24px vertical margin. Color falls back to the `color` prop, then any Tailwind `bg-*` class, then `#cbd5e1`.
+Customize the color with a Tailwind `bg-*` class or inline `background-color` — there is **no** `color` prop.
 
 Props:
-- `height` (String | Number, default: `'1px'`) — thickness of the divider line
-- `color` (String, optional) — background color. Ignored if a `bg-*` class is used.
-- `spaceY` (String | Number, default: `'24px'`) — vertical margin above and below
-- `spaceX` (String | Number, optional) — horizontal margin on both sides
-- `top` (String | Number, optional) — margin above, overrides `spaceY`
-- `bottom` (String | Number, optional) — margin below, overrides `spaceY`
-- `left` (String | Number, optional) — margin left, overrides `spaceX`
-- `right` (String | Number, optional) — margin right, overrides `spaceX`
-
-Usage:
+- `height` (string | number, default `'1px'`).
+- `spaceY` (string | number, default `'24px'`) — vertical margin.
+- `spaceX` (string | number) — horizontal margin.
+- `top`, `bottom`, `left`, `right` (string | number) — override individual sides.
 
 ```vue
-<template>
-  <Divider />
-
-  <Divider height="2px" color="#e2e8f0" />
-
-  <Divider class="bg-indigo-500" space-y="32px" />
-
-  <Divider :space-y="0" space-x="24px" />
-
-  <Divider top="16px" bottom="32px" />
-</template>
+<Hr />
+<Hr class="bg-blue-200" height="2" />
+<Hr space-y="32px" />
+<Hr top="16" bottom="32" />
 ```
-
----
 
 ## Spacer
 
-Vertical or horizontal spacing. Vertical spacers render an invisible `<div>` with `line-height`. Horizontal spacers render an `<i>` with em-space characters and `mso-font-width` for accurate Outlook sizing.
+Vertical or horizontal spacer.
+
+- Vertical: `<div role="separator">` with `line-height` (and `mso-line-height-alt` when `msoHeight` is set). Without `height`, collapses to a zero-width joiner (line-break).
+- Horizontal: `<i>` with em-space chars and `mso-font-width` for accurate Outlook sizing.
 
 Props:
-- `type` (`'vertical'` | `'horizontal'`, default: `'vertical'`) — spacer direction
-- `height` (String | Number, optional) — height for vertical spacers. Without it, the spacer collapses to a zero-width joiner (useful as a line break).
-- `width` (String | Number, default: `16`) — width for horizontal spacers, in pixels
-- `msoHeight` (String | Number, optional) — alternative height for Outlook via `mso-line-height-alt`
-
-Usage:
-
-```vue
-<template>
-  <!-- Vertical spacing -->
-  <Spacer height="32px" />
-
-  <!-- Vertical with different Outlook height -->
-  <Spacer height="40px" mso-height="32px" />
-
-  <!-- Horizontal spacing between inline elements -->
-  <Text as="span">Left</Text>
-  <Spacer type="horizontal" :width="24" />
-  <Text as="span">Right</Text>
-
-  <!-- Responsive vertical spacing -->
-  <Spacer height="48px" class="sm:leading-6" />
-</template>
-```
-
----
-
-## Preheader
-
-Hidden preview text shown in inbox list views. Teleported to the start of `<body>` so it's the first text email clients read. Followed by filler characters that prevent email clients from pulling in other text after the preheader.
-
-Props:
-- `fillerCount` (Number, default: `150`) — number of `&#8199;&#847;` filler pairs to render
-- `shyCount` (Number, default: `150`) — number of `&shy;` entities to render
-
-Usage:
+- `type` (`'vertical'` | `'horizontal'`, default `'vertical'`).
+- `height` (string | number) — vertical only.
+- `width` (string | number, default `16`) — horizontal only, in px.
+- `msoHeight` (string | number) — Outlook override via `mso-line-height-alt`.
+- `outlookFallback` (bool, default `true`).
 
 ```vue
-<template>
-  <Layout>
-    <Preheader>Your order has been confirmed and is on its way!</Preheader>
-    <!-- rest of email -->
-  </Layout>
-</template>
+<Spacer height="32px" />
+<Spacer height="40px" mso-height="32px" />
+<Spacer type="horizontal" :width="24" />
 ```
-
----
-
-## CodeBlock
-
-Syntax-highlighted code block using Shiki. Wrapped in a table for Outlook compatibility. Code can be passed via the `code` prop or as slot content.
-
-Props:
-- `code` (String, default: `''`) — code to highlight. Falls back to slot content.
-- `language` (String, default: `'html'`) — language for syntax highlighting (any Shiki-supported language)
-- `theme` (String, default: `'github-light'`) — Shiki theme
-- `tdClass` (String, default: `'max-w-0 mso-padding-alt-4'`) — classes on the wrapping table cell
-
-Usage:
-
-```vue
-<template>
-  <CodeBlock language="js" code="const name = 'Maizzle'" />
-
-  <CodeBlock theme="github-dark" class="text-sm rounded-lg">
-    <div class="text-center">Hello</div>
-  </CodeBlock>
-</template>
-```
-
----
-
-## CodeInline
-
-Inline code snippet. Renders a `<code>` element with a light gray background and border. Code is HTML-escaped automatically.
-
-Props:
-- `code` (String, default: `''`) — code text. Falls back to slot content.
-
-Usage:
-
-```vue
-<template>
-  <Text>Use the <CodeInline code="render()" /> function to compile templates.</Text>
-
-  <Text>Install with <CodeInline>npm install @maizzle/framework</CodeInline>.</Text>
-</template>
-```
-
----
 
 ## Markdown
 
-Renders Markdown content using `markdown-exit` with Shiki syntax highlighting for fenced code blocks. Content can come from a `content` prop, a `src` file path, or slot content.
+Renders Markdown via `markdown-exit` with Shiki syntax highlighting. Source can come from `content`, `src`, or slot.
 
 Props:
-- `content` (String, default: `''`) — Markdown string. Overrides slot content.
-- `src` (String, default: `''`) — path to a Markdown file, resolved at build time
-- `shikiTheme` (String, default: `'github-dark-high-contrast'`) — Shiki theme for fenced code blocks
-- `wrapper` (Boolean, default: `false`) — wrap output in a `<div>` element
-- `config` (Object, optional) — `markdown-exit` configuration options, merged with defaults
-
-Usage:
+- `content` (string) — Markdown string. Overrides slot.
+- `src` (string) — path to a `.md` file, resolved at build time.
+- `shikiTheme` (string, default `'github-dark-high-contrast'`).
+- `wrapper` (bool, default `false`) — wrap output in a `<div>`.
+- `config` (object) — extra `markdown-exit` options.
 
 ```vue
-<template>
-  <!-- Inline Markdown -->
-  <Markdown>
-    ## Welcome
+<Markdown>
+  ## Welcome
+  This is a **bold** statement with a [link](https://maizzle.com).
+</Markdown>
 
-    This is a **bold** statement with a [link](https://maizzle.com).
-  </Markdown>
-
-  <!-- From a file -->
-  <Markdown src="./content/welcome.md" />
-
-  <!-- With wrapper and styling -->
-  <Markdown wrapper class="text-gray-700 text-sm" content="**Hello** from Markdown" />
-</template>
+<Markdown src="./content/welcome.md" />
+<Markdown wrapper class="prose" content="**Hello**" />
 ```
 
-With `@maizzle/tailwindcss/prose` for typographic defaults (opt-in, must be imported):
+For typographic defaults, opt into `@import "@maizzle/tailwindcss/prose"` and add `class="prose"` (with `wrapper`).
 
-```vue
-<template>
-  <Html>
-      <Head>
-        <style>
-          @import "@maizzle/tailwindcss";
-          @import "@maizzle/tailwindcss/prose";
-        </style>
-      </Head>
-      <Body>
-          <Markdown wrapper class="prose">
-            ## Welcome
-      
-            This is a **bold** statement with a [link](https://maizzle.com).
-          </Markdown>
-      </Body>
-  </Html>
-</template>
-```
+## CodeBlock
 
----
-
-## WithUrl
-
-Rewrites URL attributes in all child elements. Prepends a base URL to relative paths and/or appends query parameters. Works on both HTML elements and Vue component props.
-
-Handles: `href`, `src`, `srcset`, `poster`, `data` on `a`, `img`, `video`, `source`, `link`, `script`, `object`, `embed`, `iframe`, `v:image`, `v:fill`. Skips absolute URLs, data URIs, protocol-relative URLs, and fragment links.
+Syntax-highlighted code block via Shiki, wrapped in an Outlook-safe table. Source via `code` prop or slot.
 
 Props:
-- `base` (String, optional) — base URL prepended to all relative URLs. Slash normalization is handled automatically.
-- `parameters` (String, optional) — query string appended to all URLs, e.g. `"utm_source=foo&bar=baz"`
-
-Usage:
+- `code` (string) — falls back to slot content.
+- `language` (string, default `'html'`).
+- `theme` (string, default `'github-light'`) — any Shiki theme name.
+- `tdClass` (string, default `'max-w-0 mso-padding-alt-4'`).
 
 ```vue
-<template>
-  <!-- Base URL for all images -->
-  <WithUrl base="https://cdn.example.com/emails/">
-    <Img src="/logo.png" alt="Logo" width="70" />
-    <Img src="/banner.jpg" alt="Banner" width="600" />
-  </WithUrl>
-
-  <!-- UTM tracking on links -->
-  <WithUrl parameters="utm_source=newsletter&utm_medium=email">
-    <Button href="https://example.com/pricing">View pricing</Button>
-    <Link href="https://example.com/docs">Documentation</Link>
-  </WithUrl>
-
-  <!-- Both base URL and query parameters -->
-  <WithUrl base="https://cdn.example.com/" parameters="v=2">
-    <Img src="/hero.png" alt="Hero" width="600" />
-    <Link href="https://example.com">Visit</Link>
-  </WithUrl>
-</template>
+<CodeBlock language="js" code="const name = 'Maizzle'" />
+<CodeBlock theme="github-dark" class="text-sm rounded-lg">
+  &lt;div&gt;Hello&lt;/div&gt;
+</CodeBlock>
 ```
 
----
+## CodeInline
 
-## NoWidows
-
-Replaces the last space with `&nbsp;` in text nodes to prevent orphaned words (widows). Recursively walks all child elements. Skips template expressions (`{{ }}`, `{% %}`, `<%= %>`, etc.).
+Inline `<code>` with light gray bg + border. Content is HTML-escaped automatically.
 
 Props:
-- `minWords` (String | Number, default: `4`) — minimum word count for widow prevention to apply. Text with fewer words is left unchanged.
-
-Usage:
+- `code` (string) — falls back to slot.
 
 ```vue
-<template>
-  <NoWidows>
-    <Heading>This heading will not have widows</Heading>
-    <Text>This paragraph also gets widow prevention applied to it.</Text>
-  </NoWidows>
-
-  <!-- Higher threshold -->
-  <NoWidows :min-words="6">
-    <Text>Short text is left alone.</Text>
-    <Text>But this longer sentence will have its last space replaced.</Text>
-  </NoWidows>
-</template>
+<Text>Use <CodeInline code="render()" /> to compile.</Text>
 ```
 
----
+## QrCode
+
+Scannable QR code rendered as a table of `<tr>`/`<td>` cells — no SVG, no image. Sized via Tailwind utilities (`size-*`/`w-*`/`h-*`); default 120 px (`size-30`).
+
+Props:
+- `value` (string, required) — data to encode (URL, text, MECARD, vCard, Wi-Fi, etc.).
+- `ecc` (`'L'` | `'M'` | `'Q'` | `'H'`, default `'M'`) — error correction (~7/15/25/30 % recovery).
+- `border` (number, default `1`) — quiet zone in modules.
+- `alt` (string) — `aria-label` on the table.
+
+Colors:
+- `bg-*` / `dark:bg-*` paint the table background (light cells stay transparent).
+- `qr:` variant paints data modules. Composes with `dark:` (`dark:qr:bg-*`). Provided by `@maizzle/tailwindcss`; otherwise register `@custom-variant qr (& td.qd);`.
+
+```vue
+<QrCode value="https://maizzle.com" class="size-40" alt="Scan me" />
+<QrCode value="..." class="bg-teal-300 qr:bg-teal-900 dark:bg-teal-800 dark:qr:bg-teal-200" />
+<QrCode value="..." ecc="H" :border="4" />
+```
+
+QR HTML can grow to tens of KB — avoid duplicating the same code in one email (Gmail clipping). Outlook on Windows ignores media queries, so codes always render light there.
 
 ## Outlook
 
-Wraps content in Outlook conditional comments. Without props, targets all MSO versions (`<!--[if mso]>`). Use props to target specific versions.
+Wrap content in MSO conditional comments. Default targets all MSO versions.
 
-Supported Outlook versions: `2003`, `2007`, `2010`, `2013`, `2016`, `2019`.
+Props (all comma-separated, e.g. `"2013,2016"`):
+- `only` — show only in those versions.
+- `not` — show in all versions except those.
+- `lt` / `lte` / `gt` / `gte` — version comparisons.
 
-Props:
-- `only` (String, optional) — comma-separated years. Shows content only in those versions.
-- `not` (String, optional) — comma-separated years. Shows content in all versions except those.
-- `lt` (String, optional) — versions lower than the specified year
-- `lte` (String, optional) — versions lower than or equal to
-- `gt` (String, optional) — versions greater than
-- `gte` (String, optional) — versions greater than or equal to
-
-Usage:
+Versions: `2003`, `2007`, `2010`, `2013`, `2016`, `2019`.
 
 ```vue
-<template>
-  <!-- All Outlook versions -->
-  <Outlook>
-    <p>Outlook only content</p>
-  </Outlook>
-
-  <!-- Specific versions -->
-  <Outlook only="2013,2016">
-    <p>Only Outlook 2013 and 2016</p>
-  </Outlook>
-
-  <!-- Exclude versions -->
-  <Outlook not="2007">
-    <p>All Outlook except 2007</p>
-  </Outlook>
-
-  <!-- Version ranges -->
-  <Outlook gte="2013">
-    <p>Outlook 2013 and newer</p>
-  </Outlook>
-
-  <Outlook lt="2013">
-    <p>Older than Outlook 2013</p>
-  </Outlook>
-</template>
+<Outlook>Outlook only</Outlook>
+<Outlook only="2013,2016">Just 2013/2016</Outlook>
+<Outlook gte="2013">2013 and newer</Outlook>
 ```
-
----
 
 ## NotOutlook
 
-Hides content from all Outlook versions. Wraps in `<!--[if !mso]><!-->...<!--<![endif]-->`.
-
-No props.
-
-Usage:
+Hide content from all Outlook versions (`<!--[if !mso]><!-->...<!--<![endif]-->`). No props.
 
 ```vue
-<template>
-  <NotOutlook>
-    <Img src="/webp-hero.webp" alt="Hero" width="600" />
-  </NotOutlook>
-  <Outlook>
-    <Img src="/hero-fallback.png" alt="Hero" width="600" />
-  </Outlook>
-</template>
+<NotOutlook><Img src="/hero.webp" alt="" width="600" /></NotOutlook>
+<Outlook><Img src="/hero.png" alt="" width="600" /></Outlook>
 ```
-
----
 
 ## OutlookBg
 
-VML markup for Outlook-specific rendering, primarily used for background images in Outlook (which doesn't support CSS `background-image`). Wraps slot content in a `v:rect` with a `v:fill` and `v:textbox`.
+VML markup for Outlook background images (Outlook ignores CSS `background-image`). Wraps slot in a `v:rect` with `v:fill` and `v:textbox`.
 
 Props:
-- `width` (String | Number, default: `'600px'`) — width of the VML rectangle
-- `height` (String | Number, optional) — height. Auto-sizes to content if not set.
-- `src` (String, default: `'https://via.placeholder.com/600x400'`) — background image URL
-- `type` (`'frame'` | `'tile'` | `'pattern'` | `'solid'` | `'gradient'` | `'gradientradial'`, default: `'frame'`) — VML fill type
-- `backgroundPosition` (String, optional) — `'vertical,horizontal'` e.g. `'top,center'`. Convenience prop that maps to VML `origin` and `position`.
-- `origin` (String, optional) — fill origin offset as comma-separated fractions. Overridden by `backgroundPosition`.
-- `position` (String, optional) — fill position offset as comma-separated fractions. Overridden by `backgroundPosition`.
-- `sizes` (String, optional) — fill image dimensions, e.g. `'300px,200px'`
-- `aspect` (`'atleast'` | `'atmost'`, optional) — aspect ratio constraint
-- `color` (String, optional) — fill color for `solid`/`gradient` types
-- `fillcolor` (String, default: `'none'`) — rectangle background color (fallback when image fails)
-- `fill` (Boolean | String, default: `true`) — whether the rectangle has a fill
-- `stroke` (Boolean | String, default: `false`) — whether the rectangle has a border
-- `strokecolor` (String, optional) — border color (also enables stroke)
-- `inset` (String, default: `'0,0,0,0'`) — textbox padding as `top,right,bottom,left`
-
-Usage:
+- `width` (string | number, default `'600px'`).
+- `height` (string | number) — auto-sizes if absent.
+- `src` (string) — background image URL.
+- `type` (`'frame'` | `'tile'` | `'pattern'` | `'solid'` | `'gradient'` | `'gradientradial'`, default `'frame'`).
+- `backgroundPosition` (string, e.g. `'top,center'`) — convenience for `origin`/`position`.
+- `origin`, `position`, `sizes`, `aspect` — VML fill internals.
+- `color`, `fillcolor` (default `'none'`), `fill` (default `true`), `stroke` (default `false`), `strokecolor`.
+- `inset` (string, default `'0,0,0,0'`) — textbox padding `top,right,bottom,left`.
 
 ```vue
-<template>
-  <!-- Background image for Outlook -->
-  <Section class="bg-[url('/hero.jpg')] bg-cover bg-center">
-    <OutlookBg src="/hero.jpg" width="600px" height="400px" background-position="center,center">
-      <Container>
-        <Heading class="text-white text-3xl">Hello</Heading>
-      </Container>
-    </OutlookBg>
-  </Section>
-
-  <!-- With fallback color -->
-  <OutlookBg src="/pattern.png" width="600px" type="tile" fillcolor="#1e293b">
-    <Text class="text-white">Content over tiled background</Text>
+<Section class="bg-[url('/hero.jpg')] bg-cover bg-center">
+  <OutlookBg src="/hero.jpg" width="600px" height="400px" background-position="center,center">
+    <Container>
+      <Heading class="text-white text-3xl">Hello</Heading>
+    </Container>
   </OutlookBg>
-</template>
+</Section>
+```
+
+## Plaintext
+
+Routes slot content to the plaintext output only — removed from HTML. Pair with `<NotPlaintext>` to do the inverse. Both no-op until `plaintext` is enabled in config (or via `usePlaintext()`).
+
+```vue
+<Plaintext>Only in .txt</Plaintext>
+<NotPlaintext>Only in .html</NotPlaintext>
+```
+
+## NotPlaintext
+
+Routes slot content to the HTML output only — removed from plaintext. See `<Plaintext>`.
+
+## Raw
+
+Emit content verbatim, bypassing Vue's template parser. Use for ESP/Handlebars/Liquid `{{ ... }}` syntax that would otherwise be parsed as Vue expressions.
+
+Props:
+- `content` (string) — auto-populated from slot. Set explicitly when rendering a string variable; the slot is then ignored.
+
+```vue
+<Text>Hi <Raw>{{ first_name }}</Raw>,</Text>
+<Text>Order <Raw :content="liquidSnippet" /></Text>
+```
+
+## NoWidows
+
+Replaces the last space with `&nbsp;` in text nodes to prevent orphans. Walks all children recursively. Skips template expressions (`{{ }}`, `{% %}`, `<%= %>`, …).
+
+Props:
+- `minWords` (string | number, default `4`) — leave shorter text alone.
+
+```vue
+<NoWidows>
+  <Heading>This heading will not have widows</Heading>
+  <Text>This paragraph also gets widow prevention.</Text>
+</NoWidows>
+```
+
+## WithUrl
+
+Rewrites URL attributes in descendants. Prepends a base URL to relative paths and/or appends query parameters. Works on HTML attrs and Vue component props.
+
+Affected attrs: `href`, `src`, `srcset`, `poster`, `data` on `a`, `img`, `video`, `source`, `link`, `script`, `object`, `embed`, `iframe`, `v:image`, `v:fill`. Skips absolute URLs, data URIs, protocol-relative, and fragment links.
+
+Props:
+- `base` (string) — base URL prepended to relative paths (slashes normalized).
+- `parameters` (string) — query string appended, e.g. `"utm_source=foo&bar=baz"`.
+
+```vue
+<WithUrl base="https://cdn.example.com/emails/">
+  <Img src="/logo.png" alt="Logo" width="70" />
+</WithUrl>
+
+<WithUrl parameters="utm_source=newsletter&utm_medium=email">
+  <Button href="https://example.com/pricing">View pricing</Button>
+</WithUrl>
 ```

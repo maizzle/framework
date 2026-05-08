@@ -9,118 +9,93 @@ describe('Hr', () => {
       expect(wrapper.html()).toContain('role="separator"')
     })
 
-    it('uses 1px height by default', () => {
+    it('applies default Tailwind classes', () => {
       const wrapper = mount(Hr)
-      expect(wrapper.html()).toContain('height: 1px')
-      expect(wrapper.html()).toContain('line-height: 1px')
-    })
-
-    it('uses default background color', () => {
-      const wrapper = mount(Hr)
-      expect(wrapper.html()).toContain('background-color: #cbd5e1')
-    })
-
-    it('applies default spaceY margins', () => {
-      const wrapper = mount(Hr)
-      // happy-dom collapses margin-top/bottom into shorthand
-      expect(wrapper.html()).toContain('margin: 24px 0px')
+      const html = wrapper.html()
+      expect(html).toContain('h-px')
+      expect(html).toContain('leading-px')
+      expect(html).toContain('my-6')
+      expect(html).toContain('bg-slate-300')
     })
 
     it('contains zero-width joiner', () => {
       const wrapper = mount(Hr)
-      expect(wrapper.text()).toContain('\u200D')
+      expect(wrapper.text()).toContain('‍')
     })
   })
 
-  describe('height prop', () => {
-    it('accepts a string value', () => {
-      const wrapper = mount(Hr, { props: { height: '2px' } })
-      expect(wrapper.html()).toContain('height: 2px')
-      expect(wrapper.html()).toContain('line-height: 2px')
-    })
-
-    it('accepts a number and adds px suffix', () => {
-      const wrapper = mount(Hr, { props: { height: 3 } })
-      expect(wrapper.html()).toContain('height: 3px')
-      expect(wrapper.html()).toContain('line-height: 3px')
-    })
-  })
-
-  describe('spacing props', () => {
-    it('spaceY sets top and bottom margins', () => {
-      const wrapper = mount(Hr, { props: { spaceY: '16px' } })
-      expect(wrapper.html()).toContain('margin: 16px 0px')
-    })
-
-    it('spaceY accepts a number', () => {
-      const wrapper = mount(Hr, { props: { spaceY: 10 } })
-      expect(wrapper.html()).toContain('margin: 10px 0px')
-    })
-
-    it('spaceY of 0 outputs 0px', () => {
-      const wrapper = mount(Hr, { props: { spaceY: 0 } })
-      expect(wrapper.html()).toContain('margin: 0px')
-    })
-
-    it('spaceX sets left and right margins', () => {
-      const wrapper = mount(Hr, { props: { spaceX: '32px' } })
-      // spaceY default (24px) still applies alongside spaceX
-      expect(wrapper.html()).toContain('margin: 24px 32px')
-    })
-
-    it('spaceX of 0 outputs 0px for horizontal margins', () => {
-      const wrapper = mount(Hr, { props: { spaceX: 0 } })
-      // spaceY default (24px) still applies
-      expect(wrapper.html()).toContain('margin: 24px 0px')
-    })
-  })
-
-  describe('individual margin props', () => {
-    it('top sets margin-top', () => {
-      const wrapper = mount(Hr, { props: { top: '8px' } })
-      expect(wrapper.html()).toContain('8px')
-    })
-
-    it('bottom sets margin-bottom', () => {
-      const wrapper = mount(Hr, { props: { bottom: '12px' } })
-      expect(wrapper.html()).toContain('12px')
-    })
-
-    it('left sets margin-left', () => {
-      const wrapper = mount(Hr, { props: { left: '4px' } })
-      expect(wrapper.html()).toContain('4px')
-    })
-
-    it('right sets margin-right', () => {
-      const wrapper = mount(Hr, { props: { right: '4px' } })
-      expect(wrapper.html()).toContain('4px')
-    })
-
-    it('individual margins accept numbers', () => {
-      const wrapper = mount(Hr, { props: { top: 5, bottom: 10 } })
+  describe('user class overrides', () => {
+    it('h-* overrides default height and mirrors line-height', () => {
+      const wrapper = mount(Hr, { attrs: { class: 'h-4' } })
       const html = wrapper.html()
-      expect(html).toContain('5px')
-      expect(html).toContain('10px')
+      expect(html).toContain('h-4')
+      expect(html).toContain('leading-4')
+      expect(html).not.toContain('h-px')
+      expect(html).not.toContain('leading-px')
     })
 
-    it('individual margin overrides spaceY', () => {
-      const wrapper = mount(Hr, { props: { spaceY: '24px', top: '8px' } })
-      // margin shorthand: top=8px right=0 bottom=24px
-      expect(wrapper.html()).toContain('margin: 8px 0px 24px')
+    it('mirrors arbitrary height values to line-height', () => {
+      const wrapper = mount(Hr, { attrs: { class: 'h-[3px]' } })
+      const html = wrapper.html()
+      expect(html).toContain('h-[3px]')
+      expect(html).toContain('leading-[3px]')
     })
-  })
 
-  describe('user class and style', () => {
-    it('passes through class', () => {
+    it('mirrors h-full to leading-full', () => {
+      const wrapper = mount(Hr, { attrs: { class: 'h-full' } })
+      const html = wrapper.html()
+      expect(html).toContain('h-full')
+      expect(html).toContain('leading-full')
+      expect(html).not.toContain('leading-px')
+    })
+
+    it('explicit leading-* wins, no mirroring', () => {
+      const wrapper = mount(Hr, { attrs: { class: 'h-4 leading-none' } })
+      const html = wrapper.html()
+      expect(html).toContain('h-4')
+      expect(html).toContain('leading-none')
+      expect(html).not.toContain('leading-4')
+      expect(html).not.toContain('leading-px')
+    })
+
+    it('leading-* alone overrides default line-height', () => {
+      const wrapper = mount(Hr, { attrs: { class: 'leading-none' } })
+      const html = wrapper.html()
+      expect(html).toContain('leading-none')
+      expect(html).not.toContain('leading-px')
+    })
+
+    it('my-* overrides vertical margin', () => {
+      const wrapper = mount(Hr, { attrs: { class: 'my-2' } })
+      const html = wrapper.html()
+      expect(html).toContain('my-2')
+      expect(html).not.toContain('my-6')
+    })
+
+    it('mx-* adds horizontal margin', () => {
+      const wrapper = mount(Hr, { attrs: { class: 'mx-4' } })
+      expect(wrapper.html()).toContain('mx-4')
+    })
+
+    it('mt-*/mb-*/ml-*/mr-* apply individually', () => {
+      const wrapper = mount(Hr, { attrs: { class: 'mt-2 mb-4 ml-1 mr-3' } })
+      const html = wrapper.html()
+      expect(html).toContain('mt-2')
+      expect(html).toContain('mb-4')
+      expect(html).toContain('ml-1')
+      expect(html).toContain('mr-3')
+    })
+
+    it('bg-* overrides default background', () => {
       const wrapper = mount(Hr, { attrs: { class: 'bg-red-500' } })
-      expect(wrapper.html()).toContain('class="bg-red-500"')
+      const html = wrapper.html()
+      expect(html).toContain('bg-red-500')
+      expect(html).not.toContain('bg-slate-300')
     })
 
-    it('user inline style overrides the default background color', () => {
+    it('inline style passes through', () => {
       const wrapper = mount(Hr, { attrs: { style: 'background-color: red' } })
-      const html = wrapper.html()
-      expect(html).toContain('background-color: red')
-      expect(html).not.toContain('background-color: #cbd5e1')
+      expect(wrapper.html()).toContain('background-color: red')
     })
   })
 })

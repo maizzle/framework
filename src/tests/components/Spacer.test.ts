@@ -3,61 +3,64 @@ import { mount } from '@vue/test-utils'
 import Spacer from '../../components/Spacer.vue'
 
 describe('Spacer', () => {
-  describe('defaults', () => {
+  describe('vertical', () => {
     it('renders a div with role="separator"', () => {
       const wrapper = mount(Spacer)
       expect(wrapper.html()).toContain('role="separator"')
     })
 
-    it('renders without style attribute when no height is set', () => {
+    it('renders without inline style by default', () => {
       const wrapper = mount(Spacer)
-      expect(wrapper.html()).not.toContain('line-height:')
+      expect(wrapper.html()).not.toContain('style=')
     })
 
     it('contains zero-width joiner', () => {
       const wrapper = mount(Spacer)
       expect(wrapper.text()).toContain('\u200D')
     })
-  })
 
-  describe('height prop', () => {
-    it('sets line-height when provided as string', () => {
-      const wrapper = mount(Spacer, { props: { height: '32px' } })
-      expect(wrapper.html()).toContain('line-height: 32px')
+    it('passes through user leading-* class', () => {
+      const wrapper = mount(Spacer, { attrs: { class: 'leading-8' } })
+      expect(wrapper.html()).toContain('leading-8')
     })
 
-    it('accepts a number and adds px suffix', () => {
-      const wrapper = mount(Spacer, { props: { height: 24 } })
-      expect(wrapper.html()).toContain('line-height: 24px')
+    it('passes through arbitrary mso-line-height-alt class', () => {
+      const wrapper = mount(Spacer, {
+        attrs: { class: 'leading-8 [mso-line-height-alt:40px]' },
+      })
+      const html = wrapper.html()
+      expect(html).toContain('leading-8')
+      expect(html).toContain('[mso-line-height-alt:40px]')
     })
 
-    it('preserves non-numeric string values', () => {
-      const wrapper = mount(Spacer, { props: { height: '2rem' } })
-      expect(wrapper.html()).toContain('line-height: 2rem')
-    })
-  })
-
-  describe('msoHeight prop', () => {
-    it('sets mso-line-height-alt', () => {
-      const wrapper = mount(Spacer, { props: { height: '32px', msoHeight: '40px' } })
-      expect(wrapper.html()).toContain('mso-line-height-alt: 40px')
+    it('rewrites h-* to leading-*', () => {
+      const wrapper = mount(Spacer, { attrs: { class: 'h-4' } })
+      const html = wrapper.html()
+      expect(html).toContain('leading-4')
+      expect(html).not.toContain('h-4')
     })
 
-    it('accepts a number and adds px suffix', () => {
-      const wrapper = mount(Spacer, { props: { height: '32px', msoHeight: 48 } })
-      expect(wrapper.html()).toContain('mso-line-height-alt: 48px')
-    })
-  })
-
-  describe('conditional rendering', () => {
-    it('renders with style when height is provided', () => {
-      const wrapper = mount(Spacer, { props: { height: '16px' } })
-      expect(wrapper.html()).toContain('style=')
+    it('rewrites arbitrary h-[3px] to leading-[3px]', () => {
+      const wrapper = mount(Spacer, { attrs: { class: 'h-[3px]' } })
+      const html = wrapper.html()
+      expect(html).toContain('leading-[3px]')
+      expect(html).not.toContain('h-[3px]')
     })
 
-    it('renders without style when no height is provided', () => {
-      const wrapper = mount(Spacer)
-      expect(wrapper.html()).not.toContain('style=')
+    it('drops h-* when leading-* also passed', () => {
+      const wrapper = mount(Spacer, { attrs: { class: 'h-4 leading-none' } })
+      const html = wrapper.html()
+      expect(html).toContain('leading-none')
+      expect(html).not.toContain('h-4')
+      expect(html).not.toContain('leading-4')
+    })
+
+    it('preserves other classes alongside h-* rewrite', () => {
+      const wrapper = mount(Spacer, { attrs: { class: 'h-4 my-2' } })
+      const html = wrapper.html()
+      expect(html).toContain('my-2')
+      expect(html).toContain('leading-4')
+      expect(html).not.toContain('h-4')
     })
   })
 
@@ -126,14 +129,6 @@ describe('Spacer', () => {
   })
 
   describe('outlookFallback=false', () => {
-    it('omits mso-line-height-alt on vertical', () => {
-      const html = mount(Spacer, {
-        props: { outlookFallback: false, height: 32, msoHeight: 24 },
-      }).html()
-      expect(html).toContain('line-height: 32px')
-      expect(html).not.toContain('mso-line-height-alt')
-    })
-
     it('omits mso-font-width on horizontal', () => {
       const html = mount(Spacer, {
         props: { outlookFallback: false, type: 'horizontal', width: 32 },

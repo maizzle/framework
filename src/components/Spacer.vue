@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, h, useAttrs } from 'vue'
 import { normalizeToPixels, outlookFallbackProp } from './utils.ts'
 import { useOutlookFallback } from '../composables/useOutlookFallback'
+
+defineOptions({ inheritAttrs: false })
 
 const props = defineProps({
   /** The type of spacer. */
@@ -9,44 +11,37 @@ const props = defineProps({
     type: String as () => 'vertical' | 'horizontal',
     default: 'vertical'
   },
-  /** The height of the spacer (vertical). */
-  height: {
-    type: [String, Number],
-    default: null
-  },
   /** The width of the spacer (horizontal). */
   width: {
     type: [String, Number],
     default: 16
   },
-  /** The alternative height to use in Outlook. */
-  msoHeight: {
-    type: [String, Number],
-    default: null
-  },
   outlookFallback: outlookFallbackProp,
 })
 
+const attrs = useAttrs()
 const outlookFallback = useOutlookFallback(props.outlookFallback)
+
+const HEIGHT_RE = /(?:^|\s)h-([\w./\-[\]%]+)/g
+const LEADING_RE = /(?:^|\s)leading-/
+
+const verticalClass = computed(() => {
+  const userClass = (attrs.class as string) || ''
+  if (!userClass) return ''
+
+  const heights = [...userClass.matchAll(HEIGHT_RE)]
+  const stripped = userClass.replace(HEIGHT_RE, ' ').replace(/\s+/g, ' ').trim()
+
+  if (!heights.length) return stripped
+  if (LEADING_RE.test(stripped)) return stripped
+
+  return `${stripped} leading-${heights[heights.length - 1][1]}`.trim()
+})
 
 function parsePixelValue(value: string | number): number {
   if (typeof value === 'number') return value
   return Number.parseFloat(value) || 0
 }
-
-const verticalStyles = computed(() => {
-  const s = []
-
-  if (props.height) {
-    s.push(`line-height: ${normalizeToPixels(props.height)};`)
-  }
-
-  if (outlookFallback && props.msoHeight) {
-    s.push(`mso-line-height-alt: ${normalizeToPixels(props.msoHeight)};`)
-  }
-
-  return s.join('')
-})
 
 const horizontalStyles = computed(() => {
   const mso = outlookFallback ? msoFontWidth.value : ''
@@ -71,14 +66,20 @@ const emspCount = computed(() => {
 })
 
 const emsps = computed(() => '\u2003'.repeat(emspCount.value))
+
+const HorizontalSpacer = () =>
+  h('i', { ...attrs, style: horizontalStyles.value }, emsps.value)
 </script>
 
 <template>
   <template v-if="type === 'horizontal'">
-    <i :style="horizontalStyles">{{ emsps }}</i>
+    <HorizontalSpacer />
   </template>
   <template v-else>
-    <div v-if="height" role="separator" :style="verticalStyles">&zwj;</div>
-    <div v-else role="separator">&zwj;</div>
+    <div
+      role="separator"
+      v-bind="{ ...$attrs, class: undefined }"
+      :class="verticalClass"
+    >&zwj;</div>
   </template>
 </template>

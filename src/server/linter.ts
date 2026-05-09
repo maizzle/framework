@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { parseSfcBlocks, findComponentTags, buildComponentMap } from './sfc-utils.ts'
+import { parseSfcBlocks, findComponentTags, buildComponentMap, isFrameworkComponent } from './sfc-utils.ts'
 import type { MaizzleConfig } from '../types/index.ts'
 import type { NormalizedComponentSource } from '../utils/componentSources.ts'
 
@@ -67,7 +67,8 @@ export async function serveLint(url: string, res: any, config: MaizzleConfig, co
 
   try {
     const absolutePath = resolve(filePath)
-    const issues = await scanLint(absolutePath, config, componentDirs)
+    const issues = (await scanLint(absolutePath, config, componentDirs))
+      .filter(i => !isFrameworkComponent(i.file))
 
     // Sort: errors first, then warnings, then by line
     issues.sort((a, b) => {

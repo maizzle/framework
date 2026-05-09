@@ -5,7 +5,7 @@ import safeParser from 'postcss-safe-parser'
 import valueParser from 'postcss-value-parser'
 import { Parser } from 'htmlparser2'
 import { DomHandler, type ChildNode, type Element } from 'domhandler'
-import { parseSfcBlocks, findComponentTags, buildComponentMap, type SfcBlock } from './sfc-utils.ts'
+import { parseSfcBlocks, findComponentTags, buildComponentMap, isFrameworkComponent, type SfcBlock } from './sfc-utils.ts'
 import { scanLint } from './linter.ts'
 import { tailwindcss as compileWithPipeline } from '../transformers/tailwindcss.ts'
 import type { MaizzleConfig } from '../types/index.ts'
@@ -915,6 +915,7 @@ export async function serveCompatibility(
     })
 
     let issues: Issue[] = [...compatIssues, ...lintAsIssues]
+    issues = issues.filter((i) => !isFrameworkComponent(i.file))
     if (checksCfg.level) issues = issues.filter((i) => passesLevelFilter(i, checksCfg.level))
     issues.sort((a, b) => {
       const c = CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category)

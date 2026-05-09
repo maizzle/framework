@@ -6,6 +6,17 @@ import { componentNameFromPath, type NormalizedComponentSource } from '../utils/
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
+/**
+ * Built-in framework components Maizzle ships internally. Issues raised
+ * against these files are framework-owned, not the user's responsibility,
+ * so the dev UI's Checks tab filters them out.
+ */
+const FRAMEWORK_COMPONENTS_DIR = resolve(__dirname, '../components').replace(/\\/g, '/') + '/'
+
+export function isFrameworkComponent(file: string): boolean {
+  return file.replace(/\\/g, '/').startsWith(FRAMEWORK_COMPONENTS_DIR)
+}
+
 export interface SfcBlock {
   content: string
   offset: number

@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { rmSync } from 'node:fs'
+import { rmSync, readFileSync, existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { render } from '../../render/index.ts'
+import { createRenderer } from '../../render/createRenderer.ts'
+import { normalizeComponentSources } from '../../utils/componentSources.ts'
 import { createTempProject, writeSfc } from './_helpers.ts'
 
 describe('render', () => {
@@ -401,6 +404,156 @@ describe('render', () => {
 
       expect(result.html).toContain('Click me')
       expect(result.html).toContain('<a href="#">')
+    })
+
+    it('namespaces nested components by folder so identical names dont collide', async () => {
+      writeSfc(tempDir, 'components/card/Header.vue', `
+        <template><div class="card-header">Card</div></template>
+      `)
+      writeSfc(tempDir, 'components/alert/Header.vue', `
+        <template><div class="alert-header">Alert</div></template>
+      `)
+
+      const result = await render(`
+        <template>
+          <div>
+            <CardHeader />
+            <AlertHeader />
+          </div>
+        </template>
+      `, { root: tempDir })
+
+      expect(result.html).toContain('class="card-header"')
+      expect(result.html).toContain('class="alert-header"')
+    })
+
+    it('collapses same-prefix when filename already starts with folder name', async () => {
+      writeSfc(tempDir, 'components/card/CardFooter.vue', `
+        <template><div class="card-footer">Footer</div></template>
+      `)
+
+      const result = await render(`
+        <template><CardFooter /></template>
+      `, { root: tempDir })
+
+      expect(result.html).toContain('class="card-footer"')
+    })
+
+    it('supports object source with custom prefix', async () => {
+      writeSfc(tempDir, 'widgets/Button.vue', `
+        <template><button class="w-btn">Buy</button></template>
+      `)
+
+      const result = await render(`
+        <template><WButton /></template>
+      `, {
+        root: tempDir,
+        components: { source: [{ path: 'widgets', prefix: 'W' }] },
+      })
+
+      expect(result.html).toContain('class="w-btn"')
+    })
+
+    it('respects pathPrefix: false to flatten nested folders', async () => {
+      writeSfc(tempDir, 'icons/social/Twitter.vue', `
+        <template><svg class="i-twitter"></svg></template>
+      `)
+      writeSfc(tempDir, 'icons/ui/Chevron.vue', `
+        <template><svg class="i-chevron"></svg></template>
+      `)
+
+      const result = await render(`
+        <template>
+          <div>
+            <IconTwitter />
+            <IconChevron />
+          </div>
+        </template>
+      `, {
+        root: tempDir,
+        components: { source: [{ path: 'icons', prefix: 'Icon', pathPrefix: false }] },
+      })
+
+      expect(result.html).toContain('class="i-twitter"')
+      expect(result.html).toContain('class="i-chevron"')
+    })
+
+    it('emits a prefixed-components.d.ts with all prefixed entries when dts: true', async () => {
+      writeSfc(tempDir, 'customs/card/Header.vue', '<template><div /></template>')
+      writeSfc(tempDir, 'customs/alert/Header.vue', '<template><div /></template>')
+
+      const renderer = await createRenderer({
+        dts: true,
+        root: tempDir,
+        componentDirs: normalizeComponentSources(
+          [{ path: 'customs', prefix: 'Custom' }],
+          tempDir,
+        ),
+      })
+
+      try {
+        const dtsPath = join(tempDir, '.maizzle/prefixed-components.d.ts')
+        expect(existsSync(dtsPath)).toBe(true)
+
+        const content = readFileSync(dtsPath, 'utf-8')
+        expect(content).toContain(`export interface GlobalComponents`)
+        expect(content).toContain(`/* prettier-ignore */`)
+        expect(content).toMatch(/CustomCardHeader: typeof import\('\.\.\/customs\/card\/Header\.vue'\)\['default'\]/)
+        expect(content).toMatch(/CustomAlertHeader: typeof import\('\.\.\/customs\/alert\/Header\.vue'\)\['default'\]/)
+      } finally {
+        await renderer.close()
+      }
+    })
+
+    it('user component overrides a built-in with the same name', async () => {
+      // Heading is a built-in framework component; the user's local one
+      // should win without any "naming conflict" warning surfacing.
+      writeSfc(tempDir, 'components/Heading.vue', `
+        <template><span class="user-heading">override</span></template>
+      `)
+
+      const warn = console.warn
+      const captured: string[] = []
+      console.warn = (...args: any[]) => { captured.push(args.join(' ')) }
+
+      try {
+        const result = await render(`<template><Heading /></template>`, { root: tempDir })
+        expect(result.html).toContain('class="user-heading"')
+        expect(result.html).toContain('override')
+        expect(captured.join('\n')).not.toMatch(/naming conflicts/)
+      } finally {
+        console.warn = warn
+      }
+    })
+
+    it('throws on name collision when pathPrefix: false flattens conflicting filenames', async () => {
+      writeSfc(tempDir, 'icons/social/Twitter.vue', '<template><svg /></template>')
+      writeSfc(tempDir, 'icons/brand/Twitter.vue', '<template><svg /></template>')
+
+      await expect(createRenderer({
+        root: tempDir,
+        componentDirs: normalizeComponentSources(
+          [{ path: 'icons', prefix: 'Icon', pathPrefix: false }],
+          tempDir,
+        ),
+      })).rejects.toThrow(/Component name collision: "IconTwitter"/)
+    })
+
+    it('removes a stale prefixed d.ts when no prefixed sources are configured', async () => {
+      // Seed a leftover file as if a previous run had prefixed sources.
+      writeSfc(tempDir, '.maizzle/prefixed-components.d.ts', 'stale')
+
+      const renderer = await createRenderer({
+        dts: true,
+        root: tempDir,
+        componentDirs: [],
+      })
+
+      try {
+        expect(existsSync(join(tempDir, '.maizzle/prefixed-components.d.ts'))).toBe(false)
+      } finally {
+        await renderer.close()
+      }
     })
   })
 })

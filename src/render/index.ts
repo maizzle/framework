@@ -8,6 +8,7 @@ import type { Component } from 'vue'
 import type { MaizzleConfig } from '../types/index.ts'
 import { createRenderer } from './createRenderer.ts'
 import { getActiveRenderer } from './active.ts'
+import { normalizeComponentSources } from '../utils/componentSources.ts'
 
 export type { Renderer, RenderedTemplate, CreateRendererOptions } from './createRenderer.ts'
 export { createRenderer } from './createRenderer.ts'
@@ -46,7 +47,7 @@ export async function render(
   const renderer = active ?? await createRenderer({
     markdown: resolvedConfig.markdown,
     root: resolvedConfig.root,
-    componentDirs: [resolvedConfig.components?.source ?? []].flat(),
+    componentDirs: normalizeComponentSources(resolvedConfig.components?.source, process.cwd()),
     vite: resolvedConfig.vite,
   })
 

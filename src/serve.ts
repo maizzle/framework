@@ -17,6 +17,7 @@ import { setActiveRenderer } from './render/active.ts'
 import { serveCompatibility } from './server/compatibility.ts'
 import { serveLint } from './server/linter.ts'
 import { sendEmail } from './server/email.ts'
+import { normalizeComponentSources } from './utils/componentSources.ts'
 import type { MaizzleConfig } from './types/index.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -57,7 +58,7 @@ export async function serve(options: ServeOptions = {}) {
   const port = options.port ?? config.server?.port ?? 3000
 
   // Create a renderer for SSR rendering email templates (with dts for dev)
-  let renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat(), vite: config.vite })
+  let renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
 
   // Register so user-land render() calls reuse this renderer instead of
   // spinning up another Vite SSR server (which collides when the host app
@@ -191,7 +192,7 @@ function maizzleDevPlugin(
 
           // Recreate the renderer so config changes (e.g. markdown.shikiTheme) take effect
           await renderer.close()
-          renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat(), vite: config.vite })
+          renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
 
           // Push UI-relevant config bits so the dev UI reacts to live edits
           // without a page reload. Uses the same shape as the initial inject.
@@ -227,11 +228,11 @@ function maizzleDevPlugin(
         }
 
         if (url.startsWith('/__maizzle/compatibility/')) {
-          return await serveCompatibility(url, res, config, [config.components?.source ?? []].flat())
+          return await serveCompatibility(url, res, config, normalizeComponentSources(config.components?.source, process.cwd()))
         }
 
         if (url.startsWith('/__maizzle/lint/')) {
-          return await serveLint(url, res, config, [config.components?.source ?? []].flat())
+          return await serveLint(url, res, config, normalizeComponentSources(config.components?.source, process.cwd()))
         }
 
         if (url.startsWith('/__maizzle/vue-source/')) {

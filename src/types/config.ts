@@ -452,6 +452,37 @@ export interface PlaintextConfig {
   options?: Partial<import('string-strip-html').Opts>
 }
 
+/**
+ * Source directory entry for component auto-import.
+ *
+ * String → folder name becomes a namespace prefix automatically
+ * (e.g. `widgets/Button.vue` → `<WidgetsButton />`).
+ *
+ * Object → custom prefix overrides the folder-derived name. With
+ * `pathPrefix: false`, intermediate subfolders are dropped from the
+ * resolved name (useful for icon sets organized by category).
+ */
+export type ComponentSource =
+  | string
+  | {
+    /** Directory to scan, resolved relative to `cwd`. */
+    path: string
+    /**
+     * Custom prefix prepended to every resolved component name.
+     * Empty string disables the auto folder-name prefix.
+     */
+    prefix?: string
+    /**
+     * Include intermediate subfolder names in the resolved component
+     * name. Defaults to `true`.
+     *
+     * @example
+     * // pathPrefix: true  → icons/social/twitter.vue → <IconSocialTwitter />
+     * // pathPrefix: false → icons/social/twitter.vue → <IconTwitter />
+     */
+    pathPrefix?: boolean
+  }
+
 export interface MaizzleConfig {
   /**
    * Root directory for the Maizzle email project.
@@ -521,12 +552,20 @@ export interface MaizzleConfig {
      * Resolved relative to `cwd` (not `root`), so paths outside the
      * email root directory work as expected.
      *
+     * String entries use the folder name as a namespace prefix
+     * automatically (e.g. `widgets/Button.vue` → `<WidgetsButton />`).
+     * Object entries override that with a custom prefix.
+     *
      * @example
      * components: {
-     *   source: ['resources/js/components/email'],
+     *   source: [
+     *     'resources/js/components/email',
+     *     { path: 'src/widgets', prefix: 'W' },
+     *     { path: 'src/icons', prefix: 'Icon', pathPrefix: false },
+     *   ],
      * }
      */
-    source?: string | string[]
+    source?: ComponentSource | ComponentSource[]
   }
   /** Dev server configuration. */
   server?: {

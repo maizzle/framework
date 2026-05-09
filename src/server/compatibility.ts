@@ -9,6 +9,7 @@ import { parseSfcBlocks, findComponentTags, buildComponentMap, type SfcBlock } f
 import { scanLint } from './linter.ts'
 import { tailwindcss as compileWithPipeline } from '../transformers/tailwindcss.ts'
 import type { MaizzleConfig } from '../types/index.ts'
+import type { NormalizedComponentSource } from '../utils/componentSources.ts'
 
 const API_URL = 'https://www.caniemail.com/api/data.json'
 const DEFAULT_CLIENTS = new Set(['gmail', 'apple-mail', 'outlook', 'yahoo'])
@@ -716,7 +717,7 @@ function labelFor(idx: Indexes, level: SupportLevel): string {
 async function scan(
   rootFile: string,
   config: MaizzleConfig,
-  componentDirs: string[],
+  componentDirs: NormalizedComponentSource[],
   allowedClients: Set<string> | 'all',
 ): Promise<Issue[]> {
   const idx = await initCompatibility()
@@ -878,7 +879,7 @@ export async function serveCompatibility(
   url: string,
   res: any,
   config: MaizzleConfig,
-  componentDirs: string[],
+  componentDirs: NormalizedComponentSource[],
 ) {
   const filePath = url.replace('/__maizzle/compatibility/', '').replace(/\?.*$/, '')
   const checksCfg = resolveChecksConfig(config)

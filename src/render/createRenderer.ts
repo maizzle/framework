@@ -1,22 +1,25 @@
-import { dirname, resolve } from 'node:path'
+import { dirname, relative as relPath, resolve } from 'node:path'
+import { mkdirSync, writeFileSync, existsSync, rmSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { isLaravel } from '../utils/detect.ts'
 import { rowSourceLocation } from './plugins/rowSourceLocation.ts'
 import { rawExtract } from './plugins/rawExtract.ts'
 import { codeBlockExtract } from './plugins/codeBlockExtract.ts'
 import { markdownExtract } from './plugins/markdownExtract.ts'
-import { createServer, mergeConfig, type InlineConfig } from 'vite'
+import { createServer, mergeConfig, type InlineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Markdown from 'unplugin-vue-markdown/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { unheadVueComposablesImports } from '@unhead/vue'
 import { defu as merge } from 'defu'
+import { glob, globSync } from 'tinyglobby'
 import { createSSRApp } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { createHead } from '@unhead/vue/server'
 import { MaizzleConfigKey } from '../composables/useConfig.ts'
 import { RenderContextKey } from '../composables/renderContext.ts'
+import { componentNameFromPath, type NormalizedComponentSource } from '../utils/componentSources.ts'
 import type { Component, InjectionKey } from 'vue'
 import type { MaizzleConfig, MarkdownConfig } from '../types/index.ts'
 import type { MarkdownExit } from 'markdown-exit'
@@ -52,8 +55,11 @@ export interface CreateRendererOptions {
   markdown?: MarkdownConfig
   /** Root directory for resolving user component dirs and .d.ts output */
   root?: string
-  /** Additional component directories to register for auto-import */
-  componentDirs?: string[]
+  /**
+   * Additional component sources to register for auto-import. Already
+   * normalized — pass through `normalizeComponentSources()` first.
+   */
+  componentDirs?: NormalizedComponentSource[]
   /** User Vite config options to merge into the internal SSR server */
   vite?: InlineConfig
 }
@@ -70,13 +76,135 @@ export async function createRenderer(
   const { dts = false, markdown: markdownOptionsRaw, root = process.cwd(), componentDirs = [], vite: userViteConfig } = options
   const { shikiTheme = 'github-light', ...markdownOptions } = markdownOptionsRaw ?? {}
 
+  // Sources without an explicit prefix get registered via unplugin's `dirs`
+  // (folder name auto-namespaces). Sources with an explicit `prefix` are
+  // registered through a custom resolver below so we can fully control naming.
+  const dirSources = componentDirs.filter(s => s.prefix === undefined)
+  const prefixedSources = componentDirs.filter(s => s.prefix !== undefined)
+
   // Absolute component dirs — used to skip auto-wrapping `.md` files that are
   // imported as reusable components (vs. entry-point email templates).
-  const componentDirsAbs = [resolve(root, 'components'), ...componentDirs.map(d => resolve(root, d))]
+  const componentDirsAbs = [resolve(root, 'components'), ...componentDirs.map(s => s.path)]
 
   const dtsDir = isLaravel()
     ? resolve(process.cwd(), 'resources/js/types/maizzle')
     : resolve(root, '.maizzle')
+
+  // Built-in framework components live at this path. When a user provides a
+  // top-level file with the same (PascalCased) basename, drop the built-in
+  // from unplugin's scan so the user's component is the only candidate. This
+  // avoids the "naming conflicts" warning and the alphabetical-glob ordering
+  // pitfall that decides who wins when both are present in `dirs`.
+  const frameworkComponentsDir = resolve(__dirname, '../components')
+
+  function topLevelBasenamesLower(dir: string): Set<string> {
+    if (!existsSync(dir)) return new Set()
+    const files = globSync(['*.vue', '*.md'], { cwd: dir, absolute: false })
+    return new Set(files.map(f => f.replace(/\.(vue|md)$/, '').toLowerCase()))
+  }
+
+  const frameworkFiles = globSync(['*.vue', '*.md'], { cwd: frameworkComponentsDir, absolute: false })
+  const frameworkByLower = new Map(
+    frameworkFiles.map(f => [f.replace(/\.(vue|md)$/, '').toLowerCase(), f]),
+  )
+
+  const shadowedNames = new Set<string>()
+  for (const dir of [resolve(root, 'components'), ...dirSources.map(s => s.path)]) {
+    for (const lower of topLevelBasenamesLower(dir)) {
+      if (frameworkByLower.has(lower)) shadowedNames.add(lower)
+    }
+  }
+
+  const frameworkExcludes = [...shadowedNames]
+    .map(lower => `${frameworkComponentsDir}/${frameworkByLower.get(lower)}`)
+
+  // Pre-scanned name → absolute-path map for prefixed sources. Rebuilt on
+  // file add/unlink via the watcher hook plugin further down. Powers the
+  // runtime resolver and the d.ts file we write for IDE autocompletion.
+  const prefixedNameMap = new Map<string, string>()
+
+  async function scanPrefixedSources(): Promise<void> {
+    prefixedNameMap.clear()
+    const seen = new Map<string, string>()
+    for (const source of prefixedSources) {
+      const files = await glob(['**/*.vue', '**/*.md'], { cwd: source.path, absolute: true })
+      for (const file of files) {
+        const name = componentNameFromPath({
+          filePath: file,
+          dirRoot: source.path,
+          prefix: source.prefix,
+          pathPrefix: source.pathPrefix,
+        })
+        const existing = seen.get(name)
+        if (existing && existing !== file) {
+          throw new Error(
+            `[maizzle] Component name collision: "${name}" resolved from both "${existing}" and "${file}". `
+            + 'Rename one of the files or split them into separate sources with distinct prefixes.',
+          )
+        }
+        seen.set(name, file)
+        prefixedNameMap.set(name, file)
+      }
+    }
+  }
+
+  await scanPrefixedSources()
+
+  const prefixedResolver = (name: string) => prefixedNameMap.get(name)
+
+  // unplugin-vue-components' own d.ts only covers components found via `dirs`;
+  // its `types` option emits named-import entries which break for SFC `default`
+  // exports. Write a sibling d.ts for prefixed sources so editors get correct
+  // autocompletion via TypeScript interface merging on `vue.GlobalComponents`.
+  const prefixedDtsPath = resolve(dtsDir, 'prefixed-components.d.ts')
+
+  function writePrefixedDts(): void {
+    if (!dts) return
+    if (prefixedNameMap.size === 0) {
+      if (existsSync(prefixedDtsPath)) rmSync(prefixedDtsPath)
+      return
+    }
+    const dtsBase = dirname(prefixedDtsPath)
+    mkdirSync(dtsBase, { recursive: true })
+    const lines = Array.from(prefixedNameMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([name, file]) => {
+        const relativePath = relPath(dtsBase, file).replace(/\\/g, '/')
+        const importPath = relativePath.startsWith('.') ? relativePath : `./${relativePath}`
+        return `    ${name}: typeof import('${importPath}')['default']`
+      })
+      .join('\n')
+    writeFileSync(
+      prefixedDtsPath,
+      `/* eslint-disable */\n// @ts-nocheck\n// biome-ignore lint: disable\n// oxlint-disable\n// Generated by Maizzle for prefixed component sources\n\nexport {}\n\n/* prettier-ignore */\ndeclare module 'vue' {\n  export interface GlobalComponents {\n${lines}\n  }\n}\n`,
+    )
+  }
+
+  writePrefixedDts()
+
+  /**
+   * Watches prefixed source dirs and rebuilds {@link prefixedNameMap} when
+   * files are added/removed. Vite's watcher already covers `dirSources`
+   * via unplugin-vue-components' own filesystem hooks.
+   */
+  const prefixedSourceWatcher: Plugin | null = prefixedSources.length > 0
+    ? {
+      name: 'maizzle:prefixed-component-watcher',
+      configureServer(server) {
+        for (const source of prefixedSources) {
+          server.watcher.add(source.path)
+        }
+        const refresh = async (file: string) => {
+          if (!prefixedSources.some(s => file.startsWith(`${s.path}/`))) return
+          if (!/\.(vue|md)$/.test(file)) return
+          await scanPrefixedSources()
+          writePrefixedDts()
+        }
+        server.watcher.on('add', refresh)
+        server.watcher.on('unlink', refresh)
+      },
+    }
+    : null
 
   const VIRTUAL_SFC_ID = 'virtual:maizzle-sfc.vue'
   let virtualSfcSource = ''
@@ -156,12 +284,20 @@ export async function createRenderer(
         extensions: ['vue', 'md'],
         include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
         dirs: [
-          resolve(__dirname, '../components'),
+          frameworkComponentsDir,
           resolve(root, 'components'),
-          ...componentDirs,
+          ...dirSources.map(s => s.path),
         ],
+        // Drop built-in component files whose name the user has shadowed.
+        // This makes the user's version the only match — no "naming
+        // conflicts" warning, no glob-ordering games.
+        globsExclude: frameworkExcludes,
+        directoryAsNamespace: true,
+        collapseSamePrefixes: true,
+        resolvers: prefixedSources.length > 0 ? [prefixedResolver] : undefined,
         dts: dts ? resolve(dtsDir, 'components.d.ts') : false,
       }),
+      ...(prefixedSourceWatcher ? [prefixedSourceWatcher] : []),
     ],
     resolve: {
       alias: {
@@ -179,7 +315,7 @@ export async function createRenderer(
       // detect added/removed component files and rewrite their .d.ts on the fly.
       // (We only render via SSR — HMR is off, but chokidar still drives the plugins.)
       fs: {
-        allow: [process.cwd(), root, ...componentDirs, vuePkgDir, vueServerRendererPkgDir, unheadVuePkgDir, vueRouterPkgDir],
+        allow: [process.cwd(), root, ...componentDirs.map(s => s.path), vuePkgDir, vueServerRendererPkgDir, unheadVuePkgDir, vueRouterPkgDir],
       },
     },
     appType: 'custom',
@@ -374,6 +510,15 @@ export async function createRenderer(
 
     async close(): Promise<void> {
       await server.close()
+      // unplugin-auto-import schedules a 500ms-throttled, fire-and-forget
+      // d.ts write on its first scan. server.close() doesn't drain that
+      // pending write, so callers tearing down the working dir right after
+      // close (tests, ephemeral build pipelines) can race the mkdir against
+      // a missing parent directory. Wait one throttle window past close so
+      // that lingering write resolves while the dir still exists.
+      if (dts) {
+        await new Promise(resolve => setTimeout(resolve, 600))
+      }
     },
   }
 }

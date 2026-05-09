@@ -1,7 +1,8 @@
 import { existsSync } from 'node:fs'
-import { resolve, dirname, basename } from 'node:path'
+import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { glob } from 'tinyglobby'
+import { componentNameFromPath, type NormalizedComponentSource } from '../utils/componentSources.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -75,20 +76,35 @@ export function findComponentTags(templateContent: string): string[] {
   return [...tags]
 }
 
-export async function buildComponentMap(root: string, componentDirs: string[]): Promise<Map<string, string>> {
+export async function buildComponentMap(
+  root: string,
+  componentDirs: NormalizedComponentSource[],
+): Promise<Map<string, string>> {
   const map = new Map<string, string>()
 
-  const dirs = [
+  // Built-in framework components + the user's default `components/` dir use
+  // unplugin's directoryAsNamespace + collapseSamePrefixes behavior — i.e.
+  // no explicit prefix, folder name becomes the namespace.
+  const implicitDirs = [
     resolve(__dirname, '../components'),
     resolve(root, 'components'),
-    ...componentDirs,
-  ].filter(d => existsSync(d))
+  ].filter(existsSync)
 
-  for (const dir of dirs) {
-    const files = await glob(['**/*.vue'], { cwd: dir, absolute: true })
+  const allSources: NormalizedComponentSource[] = [
+    ...implicitDirs.map(path => ({ path, prefix: undefined, pathPrefix: true })),
+    ...componentDirs.filter(s => existsSync(s.path)),
+  ]
+
+  for (const source of allSources) {
+    const files = await glob(['**/*.vue'], { cwd: source.path, absolute: true })
     for (const file of files) {
-      const name = basename(file, '.vue')
-      // Store lowercased for case-insensitive matching
+      const name = componentNameFromPath({
+        filePath: file,
+        dirRoot: source.path,
+        prefix: source.prefix,
+        pathPrefix: source.pathPrefix,
+      })
+      // Lowercased for case-insensitive lookups in the linter/compat scanners.
       map.set(name.toLowerCase(), file)
     }
   }

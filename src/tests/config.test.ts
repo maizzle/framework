@@ -123,6 +123,25 @@ describe('resolveConfig', () => {
     ])
   })
 
+  it('resolves components.source object entries while preserving prefix options', async () => {
+    const config = await resolveConfig({
+      root: 'project',
+      components: {
+        source: [
+          'shared',
+          { path: 'widgets', prefix: 'W' },
+          { path: 'icons', prefix: 'Icon', pathPrefix: false },
+        ],
+      },
+    }, tempDir)
+
+    expect(config.components?.source).toEqual([
+      resolve(tempDir, 'shared'),
+      { path: resolve(tempDir, 'widgets'), prefix: 'W' },
+      { path: resolve(tempDir, 'icons'), prefix: 'Icon', pathPrefix: false },
+    ])
+  })
+
   it('passes through arbitrary user data', async () => {
     writeFileSync(
       join(tempDir, 'maizzle.config.js'),

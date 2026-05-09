@@ -68,15 +68,22 @@ export async function resolveConfig(
   }
 
   // Resolve components.source paths relative to cwd (not root),
-  // since extra component dirs often live outside the root directory
+  // since extra component dirs often live outside the root directory.
+  // String entries → resolve in-place. Object entries → resolve `path`,
+  // preserve `prefix`/`pathPrefix`.
   if (merged.components?.source) {
     const dirs = Array.isArray(merged.components.source)
       ? merged.components.source
       : [merged.components.source]
 
-    merged.components.source = dirs.map(p => {
-      if (p.startsWith('/')) return p
-      return resolve(cwd, p)
+    merged.components.source = dirs.map(entry => {
+      if (typeof entry === 'string') {
+        return entry.startsWith('/') ? entry : resolve(cwd, entry)
+      }
+      return {
+        ...entry,
+        path: entry.path.startsWith('/') ? entry.path : resolve(cwd, entry.path),
+      }
     })
   }
 

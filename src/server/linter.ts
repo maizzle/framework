@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parseSfcBlocks, findComponentTags, buildComponentMap } from './sfc-utils.ts'
 import type { MaizzleConfig } from '../types/index.ts'
+import type { NormalizedComponentSource } from '../utils/componentSources.ts'
 
 export interface LintIssue {
   type: 'error' | 'warning'
@@ -45,7 +46,7 @@ function tableRoleAutoAdded(config: MaizzleConfig): boolean {
 export async function scanLint(
   rootFile: string,
   config: MaizzleConfig,
-  componentDirs: string[],
+  componentDirs: NormalizedComponentSource[],
 ): Promise<LintIssue[]> {
   const root = config.root ?? process.cwd()
   const componentMap = await buildComponentMap(root, componentDirs)
@@ -61,7 +62,7 @@ export async function scanLint(
   return issues
 }
 
-export async function serveLint(url: string, res: any, config: MaizzleConfig, componentDirs: string[]) {
+export async function serveLint(url: string, res: any, config: MaizzleConfig, componentDirs: NormalizedComponentSource[]) {
   const filePath = url.replace('/__maizzle/lint/', '').replace(/\?.*$/, '')
 
   try {

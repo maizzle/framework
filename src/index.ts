@@ -6,6 +6,8 @@ export { render } from './render/index.ts'
 export type { RenderResult } from './render/index.ts'
 export type { Renderer, RenderedTemplate, CreateRendererOptions } from './render/createRenderer.ts'
 export { createRenderer } from './render/createRenderer.ts'
+export { normalizeComponentSources } from './utils/componentSources.ts'
+export type { NormalizedComponentSource } from './utils/componentSources.ts'
 
 // Build
 export { build } from './build.ts'
@@ -36,7 +38,7 @@ export { useUrlQuery } from './composables/useUrlQuery.ts'
 export { useHead } from '@unhead/vue'
 
 // Types
-export type { MaizzleConfig, HtmlConfig, UrlConfig, UrlQuery, UrlQueryOptions, CssConfig, AttributesConfig, EntitiesConfig, FilterFunction, FiltersConfig, PlaintextConfig } from './types/index.ts'
+export type { MaizzleConfig, HtmlConfig, UrlConfig, UrlQuery, UrlQueryOptions, CssConfig, AttributesConfig, EntitiesConfig, FilterFunction, FiltersConfig, PlaintextConfig, ComponentSource } from './types/index.ts'
 
 // Transformers
 export { inlineLink } from './transformers/inlineLink.ts'

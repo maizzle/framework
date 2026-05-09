@@ -8,6 +8,7 @@ import { runTransformers } from './transformers/index.ts'
 import { createRenderer } from './render/createRenderer.ts'
 import { createPlaintext } from './plaintext.ts'
 import { stripForHtml, stripForPlaintext } from './utils/output-markers.ts'
+import { normalizeComponentSources } from './utils/componentSources.ts'
 import defu from 'defu'
 import type { MaizzleConfig } from './types/index.ts'
 
@@ -53,7 +54,7 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
     rmSync(outputPath, { recursive: true, force: true })
   }
 
-  const renderer = await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: [config.components?.source ?? []].flat(), vite: config.vite })
+  const renderer = await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
   const outputFiles: string[] = []
 
   try {

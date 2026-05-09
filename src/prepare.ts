@@ -3,6 +3,7 @@ import ora from 'ora'
 import { resolveConfig } from './config/index.ts'
 import { createRenderer } from './render/createRenderer.ts'
 import { isLaravel } from './utils/detect.ts'
+import { normalizeComponentSources } from './utils/componentSources.ts'
 
 export interface PrepareOptions {
   /** Path to a Maizzle config file. */
@@ -26,7 +27,7 @@ export async function prepare(options: PrepareOptions = {}): Promise<void> {
     dts: true,
     markdown: config.markdown,
     root: config.root,
-    componentDirs: [config.components?.source ?? []].flat(),
+    componentDirs: normalizeComponentSources(config.components?.source, process.cwd()),
     vite: config.vite,
   })
 

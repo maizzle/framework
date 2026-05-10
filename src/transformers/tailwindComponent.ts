@@ -5,7 +5,7 @@ import { compileTailwindCss } from '../utils/compileTailwindCss.ts'
 import type { TailwindBlock } from '../composables/renderContext.ts'
 import type { MaizzleConfig } from '../types/config.ts'
 
-const DEFAULT_SEED = '@import "@maizzle/tailwindcss";'
+const DEFAULT_SEED = '@import "@maizzle/tailwindcss" source(none);'
 
 interface BlockMeta {
   id: string

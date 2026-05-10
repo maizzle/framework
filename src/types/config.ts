@@ -714,6 +714,28 @@ export interface MaizzleConfig {
    */
   vue?: VueConfig
 
+  /**
+   * Experimental, opt-in features. APIs may change without notice.
+   */
+  experimental?: {
+    /**
+     * Enable parallel build mode.
+     *
+     * Skips the Vite SSR server, precompiles all templates with Rolldown
+     * into a single bundle, then renders them in a Piscina worker pool.
+     * Significantly faster for large template counts; adds bundle/worker
+     * spawn overhead for small ones.
+     *
+     * Limitations:
+     *   - per-template config event handlers (beforeRender / afterRender /
+     *     afterTransform) do not fire (functions can't cross worker threads)
+     *   - SFC `useEvent('afterBuild', ...)` handlers do not fire either
+     *
+     * @default false
+     */
+    parallel?: boolean
+  }
+
   // Events
 
   /** Called before any templates are processed. */

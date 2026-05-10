@@ -1,5 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync, rmSync } from 'node:fs'
 import { resolve, dirname, basename, relative, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { availableParallelism } from 'node:os'
 import { glob } from 'tinyglobby'
 import ora from 'ora'
 import { resolveConfig } from './config/index.ts'
@@ -11,6 +13,10 @@ import { stripForHtml, stripForPlaintext } from './utils/output-markers.ts'
 import { normalizeComponentSources } from './utils/componentSources.ts'
 import defu from 'defu'
 import type { MaizzleConfig } from './types/index.ts'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const __ext = __filename.endsWith('.js') ? '.js' : '.ts'
 
 export interface BuildResult {
   files: string[]
@@ -54,8 +60,15 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
     rmSync(outputPath, { recursive: true, force: true })
   }
 
+  if (config.experimental?.parallel) {
+    return await buildParallel({ config, templateFiles, outputPath, outputExtension, contentBase, events, spinner, start })
+  }
+
   const renderer = await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
   const outputFiles: string[] = []
+  // Build-scoped SFC handlers (e.g. afterBuild) accumulate across templates
+  // and fire once at the end of the build.
+  const buildScopedSfcHandlers: import('./events/index.ts').SfcHandlerEntry[] = []
 
   try {
     for (const templatePath of templateFiles) {
@@ -66,14 +79,11 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
 
       const rendered = await renderer.render(absolutePath, config)
 
-      // Register SFC event handlers collected during render so they participate
-      // in the post-render events (afterRender / afterTransform). They're cleared
-      // at the end of the iteration so they don't leak into the next template.
-      for (const { name, handler } of rendered.sfcEventHandlers) {
-        events.on(name, handler)
+      for (const entry of rendered.sfcEventHandlers) {
+        if (entry.name === 'afterBuild') buildScopedSfcHandlers.push(entry)
       }
 
-      let html = await events.fireAfterRender({ config, template, html: rendered.html })
+      let html = await events.fireAfterRender({ config, template, html: rendered.html }, rendered.sfcEventHandlers)
 
       // Use the per-template merged config (from defineConfig() in the SFC) so that
       // template-level overrides like css.safe: false are respected by transformers.
@@ -85,7 +95,7 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
         html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
       }
 
-      html = await events.fireAfterTransform({ config, template, html })
+      html = await events.fireAfterTransform({ config, template, html }, rendered.sfcEventHandlers)
       html = `${doctype}\n${html}`
 
       const htmlOut = stripForHtml(html)
@@ -118,12 +128,10 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
         mkdirSync(dirname(ptOutputPath), { recursive: true })
         writeFileSync(ptOutputPath, plaintext)
       }
-
-      events.clearSfcHandlers()
     }
 
     await copyStatic(config, outputPath)
-    await events.fireAfterBuild({ files: outputFiles, config })
+    await events.fireAfterBuild({ files: outputFiles, config }, buildScopedSfcHandlers)
   } finally {
     await renderer.close()
   }
@@ -136,6 +144,138 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
   })
 
   return { files: outputFiles, config }
+}
+
+/**
+ * Experimental parallel build path.
+ *
+ * Skips the Vite SSR server entirely:
+ *   1. Rolldown bundles all SFCs into one ESM file
+ *   2. Piscina pool of N workers each imports the bundle once
+ *   3. Workers render + transform + write per-template, in parallel
+ *
+ * Limitations vs the default path:
+ *   - Per-template config event handlers (beforeRender/afterRender/afterTransform)
+ *     do NOT fire — functions don't cross worker thread boundaries.
+ *   - SFC-registered `useEvent('afterBuild', ...)` handlers do NOT fire — they
+ *     live in worker scope and can't be shipped back to main.
+ */
+async function buildParallel(args: {
+  config: MaizzleConfig
+  templateFiles: string[]
+  outputPath: string
+  outputExtension: string
+  contentBase: string
+  events: EventManager
+  spinner: ReturnType<typeof ora>
+  start: number
+}): Promise<BuildResult> {
+  const { config, templateFiles, outputPath, outputExtension, contentBase, events, spinner, start } = args
+  const threads = availableParallelism()
+
+  spinner.text = `Building ${templateFiles.length} templates (using ${threads} thread${threads !== 1 ? 's' : ''})`
+
+  // Warn about silently dropped per-template config event handlers
+  const droppedConfigHandlers: string[] = []
+  for (const ev of ['beforeRender', 'afterRender', 'afterTransform'] as const) {
+    if (typeof config[ev] === 'function') droppedConfigHandlers.push(ev)
+  }
+  if (droppedConfigHandlers.length > 0) {
+    spinner.warn(`experimental.parallel: ${droppedConfigHandlers.join(', ')} handler(s) on the config will not run in parallel mode`)
+    spinner.start(`Building ${templateFiles.length} templates (using ${threads} thread${threads !== 1 ? 's' : ''})`)
+  }
+
+  const { Worker } = await import('node:worker_threads')
+  const { default: Piscina } = await import('piscina')
+
+  function runBundleInWorker(opts: import('./render/bundleEmails.ts').BundleEmailsOptions): Promise<void> {
+    const workerPath = resolve(__dirname, `render/bundleWorker${__ext}`)
+    return new Promise((res, rej) => {
+      const worker = new Worker(workerPath, { workerData: opts })
+      worker.once('message', () => res())
+      worker.once('error', rej)
+      worker.once('exit', (code) => {
+        if (code !== 0) rej(new Error(`Bundle worker exited ${code}`))
+      })
+    })
+  }
+
+  const absTemplates = templateFiles.map(t => resolve(t))
+  const cacheDir = resolve(process.cwd(), 'node_modules/.cache/maizzle')
+  const bundlePath = resolve(cacheDir, 'bundle.mjs')
+
+  await runBundleInWorker({
+    templates: absTemplates,
+    root: config.root ?? process.cwd(),
+    componentDirs: normalizeComponentSources(config.components?.source, process.cwd()),
+    outFile: bundlePath,
+    markdown: config.markdown,
+  })
+
+  // Strip non-cloneable fields (functions) from config before sending to workers
+  const workerConfig = stripFunctions(config)
+
+  const pool = new Piscina({
+    filename: resolve(__dirname, `render/buildWorker${__ext}`),
+    maxThreads: threads,
+  })
+
+  const outputFiles: string[] = []
+  let totalDroppedAfterBuild = 0
+
+  try {
+    const results = await Promise.all(
+      absTemplates.map(templatePath =>
+        pool.run({
+          bundlePath,
+          templatePath,
+          config: workerConfig,
+          outputPath,
+          outputExtension,
+          contentBase,
+        }),
+      ),
+    )
+    for (const r of results as Array<{ outputFile: string; droppedAfterBuildHandlers: number }>) {
+      outputFiles.push(r.outputFile)
+      totalDroppedAfterBuild += r.droppedAfterBuildHandlers
+    }
+  } finally {
+    await pool.destroy()
+  }
+
+  if (totalDroppedAfterBuild > 0) {
+    spinner.warn(`experimental.parallel: dropped ${totalDroppedAfterBuild} SFC afterBuild handler(s) — register them via config instead`)
+    spinner.start(`Building ${templateFiles.length} templates (using ${threads} thread${threads !== 1 ? 's' : ''})`)
+  }
+
+  await copyStatic(config, outputPath)
+  await events.fireAfterBuild({ files: outputFiles, config })
+
+  const duration = ((Date.now() - start) / 1000).toFixed(2)
+  const count = outputFiles.length
+  spinner.stopAndPersist({
+    symbol: '✅',
+    text: `Built ${count} template${count !== 1 ? 's' : ''} in ${duration}s (used ${threads} thread${threads !== 1 ? 's' : ''})`,
+  })
+
+  return { files: outputFiles, config }
+}
+
+function stripFunctions<T>(value: T, seen = new WeakSet()): T {
+  if (typeof value === 'function') return undefined as any
+  if (value === null || typeof value !== 'object') return value
+  if (seen.has(value as any)) return undefined as any
+  seen.add(value as any)
+  if (Array.isArray(value)) {
+    return value.map(v => stripFunctions(v, seen)).filter(v => v !== undefined) as any
+  }
+  const out: any = {}
+  for (const [k, v] of Object.entries(value as any)) {
+    const stripped = stripFunctions(v, seen)
+    if (stripped !== undefined) out[k] = stripped
+  }
+  return out
 }
 
 /**

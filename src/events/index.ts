@@ -10,19 +10,21 @@ export interface EventMap {
   afterBuild: (params: { files: string[]; config: MaizzleConfig }) => void | Promise<void>
 }
 
+export type SfcHandlerEntry = { name: EventName; handler: EventMap[EventName] }
+
 /**
- * Central event manager that collects handlers from config and useEvent() calls.
+ * Central event manager that holds config-registered handlers.
  *
- * Handlers are run in order: config handler first, then SFC handlers in registration order.
- * For events that return a value (beforeRender, afterRender, afterTransform),
- * the returned value replaces the corresponding input for the next handler.
+ * SFC handlers are NOT stored on the manager — they're passed per-fire as
+ * `extraHandlers`, so concurrent renders can each carry their own handler
+ * set without racing on shared state.
+ *
+ * Order: config handlers first, then per-call SFC handlers (in registration
+ * order). For events that return a value (beforeRender, afterRender,
+ * afterTransform), the returned value replaces the input for the next handler.
  */
 export class EventManager {
   private handlers = new Map<EventName, EventMap[EventName][]>()
-  // Snapshot of config-handler counts per event, captured at registerConfig().
-  // clearSfcHandlers() truncates each list back to this count, dropping any
-  // SFC-registered handlers that were appended after.
-  private configHandlerCount = new Map<EventName, number>()
 
   /**
    * Register handlers from the Maizzle config.
@@ -35,12 +37,11 @@ export class EventManager {
       if (typeof handler === 'function') {
         this.on(name, handler as EventMap[typeof name])
       }
-      this.configHandlerCount.set(name, this.handlers.get(name)?.length ?? 0)
     }
   }
 
   /**
-   * Register a handler for an event (used by useEvent composable).
+   * Register a config-level handler (build-scoped, persistent).
    */
   on<K extends EventName>(name: K, handler: EventMap[K]) {
     if (!this.handlers.has(name)) {
@@ -50,28 +51,35 @@ export class EventManager {
     this.handlers.get(name)!.push(handler)
   }
 
+  private collect<K extends EventName>(name: K, extraHandlers?: SfcHandlerEntry[]): EventMap[K][] {
+    const config = (this.handlers.get(name) ?? []) as EventMap[K][]
+    if (!extraHandlers || extraHandlers.length === 0) return config
+    const sfc = extraHandlers
+      .filter(e => e.name === name)
+      .map(e => e.handler as EventMap[K])
+    return [...config, ...sfc]
+  }
+
   /**
    * Fire beforeCreate — runs all handlers, config is mutated in place.
    */
   async fireBeforeCreate(params: { config: MaizzleConfig }) {
-    const handlers = this.handlers.get('beforeCreate') ?? []
-
-    for (const handler of handlers) {
-      await (handler as EventMap['beforeCreate'])(params)
+    for (const handler of this.collect('beforeCreate')) {
+      await handler(params)
     }
   }
 
   /**
    * Fire beforeRender — if a handler returns a string, it replaces `template`.
    */
-  async fireBeforeRender(params: { config: MaizzleConfig; template: string }): Promise<string> {
-    const handlers = this.handlers.get('beforeRender') ?? []
-
+  async fireBeforeRender(
+    params: { config: MaizzleConfig; template: string },
+    extraHandlers?: SfcHandlerEntry[],
+  ): Promise<string> {
     let { template } = params
 
-    for (const handler of handlers) {
-      const result = await (handler as EventMap['beforeRender'])({ config: params.config, template })
-
+    for (const handler of this.collect('beforeRender', extraHandlers)) {
+      const result = await handler({ config: params.config, template })
       if (typeof result === 'string') {
         template = result
       }
@@ -83,14 +91,14 @@ export class EventManager {
   /**
    * Fire afterRender — if a handler returns a string, it replaces `html`.
    */
-  async fireAfterRender(params: { config: MaizzleConfig; template: string; html: string }): Promise<string> {
-    const handlers = this.handlers.get('afterRender') ?? []
-
+  async fireAfterRender(
+    params: { config: MaizzleConfig; template: string; html: string },
+    extraHandlers?: SfcHandlerEntry[],
+  ): Promise<string> {
     let { html } = params
 
-    for (const handler of handlers) {
-      const result = await (handler as EventMap['afterRender'])({ config: params.config, template: params.template, html })
-
+    for (const handler of this.collect('afterRender', extraHandlers)) {
+      const result = await handler({ config: params.config, template: params.template, html })
       if (typeof result === 'string') {
         html = result
       }
@@ -102,14 +110,14 @@ export class EventManager {
   /**
    * Fire afterTransform — if a handler returns a string, it replaces `html`.
    */
-  async fireAfterTransform(params: { config: MaizzleConfig; template: string; html: string }): Promise<string> {
-    const handlers = this.handlers.get('afterTransform') ?? []
-
+  async fireAfterTransform(
+    params: { config: MaizzleConfig; template: string; html: string },
+    extraHandlers?: SfcHandlerEntry[],
+  ): Promise<string> {
     let { html } = params
 
-    for (const handler of handlers) {
-      const result = await (handler as EventMap['afterTransform'])({ config: params.config, template: params.template, html })
-
+    for (const handler of this.collect('afterTransform', extraHandlers)) {
+      const result = await handler({ config: params.config, template: params.template, html })
       if (typeof result === 'string') {
         html = result
       }
@@ -121,30 +129,12 @@ export class EventManager {
   /**
    * Fire afterBuild — runs all handlers with the file list.
    */
-  async fireAfterBuild(params: { files: string[]; config: MaizzleConfig }) {
-    const handlers = this.handlers.get('afterBuild') ?? []
-
-    for (const handler of handlers) {
-      await (handler as EventMap['afterBuild'])(params)
-    }
-  }
-
-  /**
-   * Drop SFC-registered handlers, keep config-registered ones.
-   *
-   * Per default, only clears events whose scope is per-template
-   * (`beforeRender`, `afterRender`, `afterTransform`). Build-scoped events
-   * (`afterBuild`) accumulate across all templates and fire once at end of
-   * build. Pass an explicit list to override.
-   */
-  clearSfcHandlers(events: EventName[] = ['beforeRender', 'afterRender', 'afterTransform']) {
-    for (const name of events) {
-      const handlers = this.handlers.get(name)
-      if (!handlers) continue
-      const keep = this.configHandlerCount.get(name) ?? 0
-      if (handlers.length > keep) {
-        this.handlers.set(name, handlers.slice(0, keep))
-      }
+  async fireAfterBuild(
+    params: { files: string[]; config: MaizzleConfig },
+    extraHandlers?: SfcHandlerEntry[],
+  ) {
+    for (const handler of this.collect('afterBuild', extraHandlers)) {
+      await handler(params)
     }
   }
 

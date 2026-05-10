@@ -8,7 +8,7 @@ import type { EventName, EventMap } from '../events/index.ts'
  * Usage:
  * ```ts
  * useEvent('beforeRender', ({ config, template }) => {
- *   return template.replace('foo', 'bar')
+ *   return template.source.replace('foo', 'bar')
  * })
  * ```
  */

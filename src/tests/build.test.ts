@@ -128,8 +128,12 @@ describe('build', () => {
     writeFileSync(join(tempDir, 'maizzle.config.js'), `
       export default {
         beforeRender({ template, config }) {
-          // Event fires with template content and config
-          globalThis.__beforeRenderFired = { template, hasConfig: !!config }
+          globalThis.__beforeRenderFired = {
+            source: template.source,
+            name: template.path.name,
+            ext: template.path.ext,
+            hasConfig: !!config,
+          }
         }
       }
     `)
@@ -138,7 +142,9 @@ describe('build', () => {
 
     const data = (globalThis as any).__beforeRenderFired
     expect(data).toBeDefined()
-    expect(data.template).toContain('Hello')
+    expect(data.source).toContain('Hello')
+    expect(data.name).toBe('test')
+    expect(data.ext).toBe('.vue')
     expect(data.hasConfig).toBe(true)
     delete (globalThis as any).__beforeRenderFired
   })

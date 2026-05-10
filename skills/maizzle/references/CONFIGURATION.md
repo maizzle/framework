@@ -251,10 +251,12 @@ export default defineConfig({
 Hooks run during the build. Define at the config level or per-template via `useEvent()`. Config handlers run before SFC handlers; for events that return a value, the return replaces the input for the next handler.
 
 - `beforeCreate({ config })` — once before any templates are processed.
-- `beforeRender({ config, template })` — return a string to replace template source.
+- `beforeRender({ config, template })` — return a string to replace `template.source`.
 - `afterRender({ config, template, html })` — after render, before transformers. Return to replace HTML.
 - `afterTransform({ config, template, html })` — after transformers. Return to replace HTML.
 - `afterBuild({ files, config })` — once after all templates are built.
+
+In per-template events, `template` is `{ source: string, path: ParsedPath }` where `path` is `path.parse(absolutePath)` — `{ root, dir, base, ext, name }`. The same `ParsedPath` is also available via `useCurrentTemplate()` (handy inside SFC `<script setup>`).
 
 ```ts
 export default defineConfig({

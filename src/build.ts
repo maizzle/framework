@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync, rmSync } from 'node:fs'
-import { resolve, dirname, basename, relative, join } from 'node:path'
+import { resolve, dirname, basename, relative, join, parse as parsePath } from 'node:path'
 import { glob } from 'tinyglobby'
 import ora from 'ora'
 import { resolveConfig } from './config/index.ts'
@@ -9,6 +9,7 @@ import { createRenderer } from './render/createRenderer.ts'
 import { createPlaintext } from './plaintext.ts'
 import { stripForHtml, stripForPlaintext } from './utils/output-markers.ts'
 import { normalizeComponentSources } from './utils/componentSources.ts'
+import { _setCurrentTemplate } from './composables/useCurrentTemplate.ts'
 import defu from 'defu'
 import type { MaizzleConfig } from './types/index.ts'
 
@@ -60,66 +61,72 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
   try {
     for (const templatePath of templateFiles) {
       const absolutePath = resolve(templatePath)
-      let template = readFileSync(absolutePath, 'utf-8')
+      const parsedPath = parsePath(absolutePath)
+      const template = { source: readFileSync(absolutePath, 'utf-8'), path: parsedPath }
 
-      template = await events.fireBeforeRender({ config, template })
+      _setCurrentTemplate(parsedPath)
 
-      const rendered = await renderer.render(absolutePath, config)
+      try {
+        await events.fireBeforeRender({ config, template })
 
-      // Register SFC event handlers collected during render so they participate
-      // in the post-render events (afterRender / afterTransform). They're cleared
-      // at the end of the iteration so they don't leak into the next template.
-      for (const { name, handler } of rendered.sfcEventHandlers) {
-        events.on(name, handler)
-      }
+        const rendered = await renderer.render(absolutePath, config)
 
-      let html = await events.fireAfterRender({ config, template, html: rendered.html })
-
-      // Use the per-template merged config (from defineConfig() in the SFC) so that
-      // template-level overrides like css.safe: false are respected by transformers.
-      const templateConfig = rendered.templateConfig
-
-      const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
-
-      if (templateConfig.useTransformers !== false) {
-        html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
-      }
-
-      html = await events.fireAfterTransform({ config, template, html })
-      html = `${doctype}\n${html}`
-
-      const htmlOut = stripForHtml(html)
-      const outputFilePath = resolveOutputPath(templatePath, outputPath, outputExtension, contentBase)
-      mkdirSync(dirname(outputFilePath), { recursive: true })
-      writeFileSync(outputFilePath, htmlOut)
-      outputFiles.push(outputFilePath)
-
-      // Generate plaintext version if configured
-      const globalPlaintext = templateConfig.plaintext
-      const sfcPlaintext = rendered.plaintext
-
-      if (globalPlaintext || sfcPlaintext) {
-        const globalCfg = typeof globalPlaintext === 'object' ? globalPlaintext : {}
-        const stripOptions = defu(sfcPlaintext?.options, globalCfg.options)
-        const plaintext = createPlaintext(stripForPlaintext(html), stripOptions)
-        const ptExtension = sfcPlaintext?.extension ?? globalCfg.extension ?? 'txt'
-
-        let ptOutputPath: string
-
-        if (sfcPlaintext?.destination) {
-          const name = basename(templatePath).replace(/\.(vue|md)$/, '')
-          ptOutputPath = join(resolve(sfcPlaintext.destination), `${name}.${ptExtension}`)
-        } else if (globalCfg.destination) {
-          ptOutputPath = resolveOutputPath(templatePath, resolve(globalCfg.destination), ptExtension, contentBase)
-        } else {
-          ptOutputPath = resolveOutputPath(templatePath, outputPath, ptExtension, contentBase)
+        // Register SFC event handlers collected during render so they participate
+        // in the post-render events (afterRender / afterTransform). They're cleared
+        // at the end of the iteration so they don't leak into the next template.
+        for (const { name, handler } of rendered.sfcEventHandlers) {
+          events.on(name, handler)
         }
 
-        mkdirSync(dirname(ptOutputPath), { recursive: true })
-        writeFileSync(ptOutputPath, plaintext)
-      }
+        let html = await events.fireAfterRender({ config, template, html: rendered.html })
 
-      events.clearSfcHandlers()
+        // Use the per-template merged config (from defineConfig() in the SFC) so that
+        // template-level overrides like css.safe: false are respected by transformers.
+        const templateConfig = rendered.templateConfig
+
+        const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
+
+        if (templateConfig.useTransformers !== false) {
+          html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
+        }
+
+        html = await events.fireAfterTransform({ config, template, html })
+        html = `${doctype}\n${html}`
+
+        const htmlOut = stripForHtml(html)
+        const outputFilePath = resolveOutputPath(templatePath, outputPath, outputExtension, contentBase)
+        mkdirSync(dirname(outputFilePath), { recursive: true })
+        writeFileSync(outputFilePath, htmlOut)
+        outputFiles.push(outputFilePath)
+
+        // Generate plaintext version if configured
+        const globalPlaintext = templateConfig.plaintext
+        const sfcPlaintext = rendered.plaintext
+
+        if (globalPlaintext || sfcPlaintext) {
+          const globalCfg = typeof globalPlaintext === 'object' ? globalPlaintext : {}
+          const stripOptions = defu(sfcPlaintext?.options, globalCfg.options)
+          const plaintext = createPlaintext(stripForPlaintext(html), stripOptions)
+          const ptExtension = sfcPlaintext?.extension ?? globalCfg.extension ?? 'txt'
+
+          let ptOutputPath: string
+
+          if (sfcPlaintext?.destination) {
+            const name = basename(templatePath).replace(/\.(vue|md)$/, '')
+            ptOutputPath = join(resolve(sfcPlaintext.destination), `${name}.${ptExtension}`)
+          } else if (globalCfg.destination) {
+            ptOutputPath = resolveOutputPath(templatePath, resolve(globalCfg.destination), ptExtension, contentBase)
+          } else {
+            ptOutputPath = resolveOutputPath(templatePath, outputPath, ptExtension, contentBase)
+          }
+
+          mkdirSync(dirname(ptOutputPath), { recursive: true })
+          writeFileSync(ptOutputPath, plaintext)
+        }
+      } finally {
+        _setCurrentTemplate(undefined)
+        events.clearSfcHandlers()
+      }
     }
 
     await copyStatic(config, outputPath)

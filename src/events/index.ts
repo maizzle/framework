@@ -1,12 +1,23 @@
+import type { ParsedPath } from 'node:path'
 import type { MaizzleConfig } from '../types/index.ts'
 
 export type EventName = 'beforeCreate' | 'beforeRender' | 'afterRender' | 'afterTransform' | 'afterBuild'
 
+/**
+ * Info about the template currently being processed, passed to per-template
+ * event handlers. `source` is the SFC file contents; `path` is the result of
+ * `path.parse(absolutePath)` — `{ root, dir, base, ext, name }`.
+ */
+export interface TemplateInfo {
+  source: string
+  path: ParsedPath
+}
+
 export interface EventMap {
   beforeCreate: (params: { config: MaizzleConfig }) => void | Promise<void>
-  beforeRender: (params: { config: MaizzleConfig; template: string }) => string | void | Promise<string | void>
-  afterRender: (params: { config: MaizzleConfig; template: string; html: string }) => string | void | Promise<string | void>
-  afterTransform: (params: { config: MaizzleConfig; template: string; html: string }) => string | void | Promise<string | void>
+  beforeRender: (params: { config: MaizzleConfig; template: TemplateInfo }) => string | void | Promise<string | void>
+  afterRender: (params: { config: MaizzleConfig; template: TemplateInfo; html: string }) => string | void | Promise<string | void>
+  afterTransform: (params: { config: MaizzleConfig; template: TemplateInfo; html: string }) => string | void | Promise<string | void>
   afterBuild: (params: { files: string[]; config: MaizzleConfig }) => void | Promise<void>
 }
 
@@ -62,28 +73,27 @@ export class EventManager {
   }
 
   /**
-   * Fire beforeRender — if a handler returns a string, it replaces `template`.
+   * Fire beforeRender — if a handler returns a string, it replaces
+   * `template.source` for subsequent handlers and the renderer.
    */
-  async fireBeforeRender(params: { config: MaizzleConfig; template: string }): Promise<string> {
+  async fireBeforeRender(params: { config: MaizzleConfig; template: TemplateInfo }): Promise<string> {
     const handlers = this.handlers.get('beforeRender') ?? []
 
-    let { template } = params
-
     for (const handler of handlers) {
-      const result = await (handler as EventMap['beforeRender'])({ config: params.config, template })
+      const result = await (handler as EventMap['beforeRender'])(params)
 
       if (typeof result === 'string') {
-        template = result
+        params.template.source = result
       }
     }
 
-    return template
+    return params.template.source
   }
 
   /**
    * Fire afterRender — if a handler returns a string, it replaces `html`.
    */
-  async fireAfterRender(params: { config: MaizzleConfig; template: string; html: string }): Promise<string> {
+  async fireAfterRender(params: { config: MaizzleConfig; template: TemplateInfo; html: string }): Promise<string> {
     const handlers = this.handlers.get('afterRender') ?? []
 
     let { html } = params
@@ -102,7 +112,7 @@ export class EventManager {
   /**
    * Fire afterTransform — if a handler returns a string, it replaces `html`.
    */
-  async fireAfterTransform(params: { config: MaizzleConfig; template: string; html: string }): Promise<string> {
+  async fireAfterTransform(params: { config: MaizzleConfig; template: TemplateInfo; html: string }): Promise<string> {
     const handlers = this.handlers.get('afterTransform') ?? []
 
     let { html } = params

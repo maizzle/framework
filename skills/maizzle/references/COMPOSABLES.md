@@ -74,10 +74,12 @@ Events:
 | Event | Receives | Returns |
 |---|---|---|
 | `beforeCreate` | `{ config }` | — |
-| `beforeRender` | `{ config, template }` | string \| void (replace template source) |
+| `beforeRender` | `{ config, template }` | string \| void (replace `template.source`) |
 | `afterRender` | `{ config, template, html }` | string \| void (replace HTML, before transformers) |
 | `afterTransform` | `{ config, template, html }` | string \| void (replace HTML, after transformers) |
 | `afterBuild` | `{ files, config }` | — |
+
+`template` is `{ source: string, path: ParsedPath }` — `path` is the result of Node's `path.parse(absolutePath)` (`{ root, dir, base, ext, name }`). Inside `<script setup>`, you can also call `useCurrentTemplate()` to read the same `ParsedPath` directly.
 
 ```vue
 <script setup>

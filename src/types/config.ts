@@ -2,6 +2,7 @@ import type { InlineConfig } from 'vite'
 import type { Plugin, Directive } from 'vue'
 import type { Options as MarkdownPluginOptions } from 'unplugin-vue-markdown/types'
 import type { Options as JuiceOptions } from 'juice'
+import type { TemplateInfo } from '../events/index.ts'
 
 export interface UrlQueryOptions {
   /**
@@ -718,12 +719,12 @@ export interface MaizzleConfig {
 
   /** Called before any templates are processed. */
   beforeCreate?: (params: { config: MaizzleConfig }) => void | Promise<void>
-  /** Called before each template is rendered. Return a string to replace the template source. */
-  beforeRender?: (params: { config: MaizzleConfig; template: string }) => string | void | Promise<string | void>
+  /** Called before each template is rendered. Return a string to replace `template.source`. */
+  beforeRender?: (params: { config: MaizzleConfig; template: TemplateInfo }) => string | void | Promise<string | void>
   /** Called after each template is rendered but before transformers run. Return a string to replace the output HTML. */
-  afterRender?: (params: { config: MaizzleConfig; template: string; html: string }) => string | void | Promise<string | void>
+  afterRender?: (params: { config: MaizzleConfig; template: TemplateInfo; html: string }) => string | void | Promise<string | void>
   /** Called after transformers have run on each template. Return a string to replace the output HTML. */
-  afterTransform?: (params: { config: MaizzleConfig; template: string; html: string }) => string | void | Promise<string | void>
+  afterTransform?: (params: { config: MaizzleConfig; template: TemplateInfo; html: string }) => string | void | Promise<string | void>
   /** Called after all templates have been built. */
   afterBuild?: (params: { files: string[]; config: MaizzleConfig }) => void | Promise<void>
 

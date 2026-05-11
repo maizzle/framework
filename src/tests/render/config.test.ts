@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { render } from '../../render/index.ts'
+import { createRenderer } from '../../render/createRenderer.ts'
+import { resolveConfig } from '../../config/index.ts'
 import { createTempProject } from './_helpers.ts'
 
 describe('render', () => {
@@ -340,6 +342,84 @@ describe('render', () => {
       expect(pluginInstalled).toBe(true)
       expect(result.html).toContain('data-marked')
       expect(result.html).toContain('Everything works')
+    })
+
+    it('accepts plugins as a factory and calls it on every render', async () => {
+      const resolvedConfig = await resolveConfig({
+        root: tempDir,
+      })
+
+      const renderer = await createRenderer({ root: tempDir })
+
+      try {
+        let factoryCalls = 0
+        const seenLabels: string[] = []
+
+        const config = {
+          ...resolvedConfig,
+          vue: {
+            plugins: () => {
+              factoryCalls++
+              return [{
+                install(app: any) {
+                  app.config.globalProperties.$label = `instance-${factoryCalls}`
+                },
+              }]
+            },
+          },
+        }
+
+        const a = await renderer.render(`<template><div>{{ $label }}</div></template>`, config)
+        const b = await renderer.render(`<template><div>{{ $label }}</div></template>`, config)
+
+        expect(factoryCalls).toBe(2)
+        seenLabels.push(a.html, b.html)
+        expect(seenLabels[0]).toContain('instance-1')
+        expect(seenLabels[1]).toContain('instance-2')
+      } finally {
+        await renderer.close()
+      }
+    })
+
+    it('isolates stateful plugins across renders (no shared state leak)', async () => {
+      const resolvedConfig = await resolveConfig({
+        root: tempDir,
+      })
+
+      const renderer = await createRenderer({ root: tempDir })
+
+      try {
+        // A stateful plugin: each instance owns its own mutable counter
+        // exposed via $counter. If the framework reused one instance
+        // across renders, the second render would observe `1` instead of `0`.
+        const config = {
+          ...resolvedConfig,
+          vue: {
+            plugins: () => {
+              const state = { value: 0 }
+              return [{
+                install(app: any) {
+                  app.config.globalProperties.$counter = state
+                  app.config.globalProperties.$bump = () => { state.value++ }
+                },
+              }]
+            },
+          },
+        }
+
+        const first = await renderer.render(`
+          <template><div>{{ ($bump(), $counter.value) }}</div></template>
+        `, config)
+
+        const second = await renderer.render(`
+          <template><div>{{ $counter.value }}</div></template>
+        `, config)
+
+        expect(first.html).toContain('>1<')
+        expect(second.html).toContain('>0<')
+      } finally {
+        await renderer.close()
+      }
     })
   })
 })

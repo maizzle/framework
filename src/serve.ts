@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { dirname, resolve, basename, matchesGlob } from 'node:path'
+import { dirname, resolve, relative, basename, matchesGlob } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import { createServer, createLogger, type ViteDevServer } from 'vite'
@@ -166,7 +166,15 @@ function maizzleDevPlugin(
 
       const userWatchPaths = config.server?.watch ?? []
       const watchPaths = [...defaultWatchPaths, ...userWatchPaths]
-      const isWatchedFile = (file: string) => watchPaths.some(p => matchesGlob(file, p))
+      // Strip a leading "./" so chokidar-style relative globs match correctly.
+      const normalizePattern = (p: string) => p.replace(/^\.\//, '')
+      // Chokidar emits absolute paths on change. Match against project-relative
+      // form so relative globs like "locales/**" actually hit.
+      const cwd = config.root ?? process.cwd()
+      const isWatchedFile = (file: string) => {
+        const rel = relative(cwd, file).replace(/\\/g, '/')
+        return watchPaths.some(p => matchesGlob(rel, normalizePattern(p)))
+      }
 
       for (const watchPath of watchPaths) {
         server.watcher.add(watchPath)

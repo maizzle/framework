@@ -376,7 +376,10 @@ export async function createRenderer(
 
       // Register user Vue plugins, directives, and global properties
       if (config.vue) {
-        for (const plugin of config.vue.plugins ?? []) {
+        const plugins = typeof config.vue.plugins === 'function'
+          ? config.vue.plugins()
+          : config.vue.plugins ?? []
+        for (const plugin of plugins) {
           app.use(plugin)
         }
         for (const [name, directive] of Object.entries(config.vue.directives ?? {})) {

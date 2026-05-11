@@ -383,8 +383,15 @@ export interface MarkdownConfig extends MarkdownPluginOptions {
 }
 
 export interface VueConfig {
-  /** Vue plugins to register on the app instance before rendering. */
-  plugins?: Plugin[]
+  /**
+   * Vue plugins to register on the app instance before rendering.
+   *
+   * Pass a factory (`() => Plugin[]`) for stateful plugins like vue-i18n
+   * or Pinia to get a fresh instance per render — otherwise state leaks
+   * across templates (e.g. one template setting `locale.value = 'fr'`
+   * affects the next render).
+   */
+  plugins?: Plugin[] | (() => Plugin[])
   /** Custom Vue directives to register globally. */
   directives?: Record<string, Directive>
   /** Properties added to `app.config.globalProperties`, available in all templates. */
@@ -708,7 +715,9 @@ export interface MaizzleConfig {
    *
    * @example
    * vue: {
-   *   plugins: [createI18n({ locale: 'en', messages })],
+   *   // Use a factory for stateful plugins (vue-i18n, Pinia, vue-router)
+   *   // so each render gets a fresh instance.
+   *   plugins: () => [createI18n({ locale: 'en', messages })],
    *   directives: { focus: vFocus },
    *   globalProperties: { $format: dateFormat },
    * }

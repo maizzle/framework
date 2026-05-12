@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { useSlots, computed } from 'vue'
 
+const props = defineProps({
+  /**
+   * Explicit number of filler sequences to render. When omitted, the count
+   * is auto-derived to fill our default 200-char inbox preview budget.
+   */
+  spaces: {
+    type: Number,
+    default: undefined,
+  },
+})
+
 const slots = useSlots()
 
 function vnodesToText(nodes: unknown): string {
@@ -18,7 +29,11 @@ function vnodesToText(nodes: unknown): string {
 const PREVIEW_LENGTH = 200
 
 const text = computed(() => vnodesToText(slots.default?.()))
-const fillerCount = computed(() => Math.max(0, PREVIEW_LENGTH - text.value.length))
+const fillerCount = computed(() =>
+  props.spaces !== undefined
+    ? Math.max(0, props.spaces)
+    : Math.max(0, PREVIEW_LENGTH - text.value.length),
+)
 </script>
 
 <template>

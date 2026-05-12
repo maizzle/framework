@@ -3,9 +3,9 @@ import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import Preheader from '../../components/Preheader.vue'
 
-function render(slot?: unknown) {
+function render(slot?: unknown, props: Record<string, unknown> = {}) {
   const app = createSSRApp({
-    render: () => h(Preheader, null, slot ? { default: () => slot } : undefined),
+    render: () => h(Preheader, props, slot ? { default: () => slot } : undefined),
   })
 
   const ctx: Record<string, any> = {}
@@ -73,6 +73,29 @@ describe('Preheader', () => {
 
     it('renders no fillers when slot text exceeds 200 chars', async () => {
       const html = await render('a'.repeat(250))
+      expect(FILLER_RE.test(html)).toBe(false)
+    })
+  })
+
+  describe('spaces prop', () => {
+    it('uses the explicit count when spaces prop is set', async () => {
+      const html = await render('Hello', { spaces: 5 })
+      expect((html.match(FILLER_RE) || []).length).toBe(5)
+    })
+
+    it('overrides the auto calculation', async () => {
+      // Auto would be 200; explicit 50 wins.
+      const html = await render(undefined, { spaces: 50 })
+      expect((html.match(FILLER_RE) || []).length).toBe(50)
+    })
+
+    it('renders nothing when spaces is 0', async () => {
+      const html = await render('Hello', { spaces: 0 })
+      expect(FILLER_RE.test(html)).toBe(false)
+    })
+
+    it('clamps negative values to 0', async () => {
+      const html = await render('Hello', { spaces: -10 })
       expect(FILLER_RE.test(html)).toBe(false)
     })
   })

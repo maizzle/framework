@@ -404,7 +404,7 @@ export interface VueConfig {
  * - `false` skips the listed transformer.
  * - `true` force-enables it for this run (only meaningful for boolean-driven
  *   transformers: inlineCss, purgeCss, prettify, minify, shorthandCss,
- *   sixHex, safeClassNames, entities). Layers on the matching
+ *   sixHex, safeSelectors, entities). Layers on the matching
  *   `css.*` / `html.*` config slice.
  * - missing keys keep their default behavior.
  *
@@ -417,7 +417,7 @@ export interface VueConfig {
  * or framework state, not user opt-in.
  */
 export interface TransformerToggles {
-  safeClassNames?: boolean
+  safeSelectors?: boolean
   attributeToStyle?: boolean
   inlineCss?: boolean
   removeAttributes?: boolean

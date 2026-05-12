@@ -37,7 +37,7 @@ Per-template counterpart of the `useTransformers` config option.
 - `useTransformers(true)` (or no arg) — keep everything on.
 - `useTransformers({ inlineCss: false, minify: true })` — granular toggle.
 
-Force-enable (`true`) only works for boolean-driven transformers (`inlineCss`, `purgeCss`, `prettify`, `minify`, `shorthandCss`, `sixHex`, `safeClassNames`, `entities`). Data-driven ones (`filters`, `baseURL`, `urlQuery`, `addAttributes`, `removeAttributes`, `replaceStrings`, `attributeToStyle`) need real values.
+Force-enable (`true`) only works for boolean-driven transformers (`inlineCss`, `purgeCss`, `prettify`, `minify`, `shorthandCss`, `sixHex`, `safeSelectors`, `entities`). Data-driven ones (`filters`, `baseURL`, `urlQuery`, `addAttributes`, `removeAttributes`, `replaceStrings`, `attributeToStyle`) need real values.
 
 ## useBaseUrl
 

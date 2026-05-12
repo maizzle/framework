@@ -184,7 +184,7 @@ export default defineConfig({
 
 - `useTransformers` (bool | object, default `true`) — toggle the transformer pipeline. `false` returns raw Vue SSR output.
 
-Pass an object to toggle individual transformers. Keys: `inlineCss`, `purgeCss`, `safeClassNames`, `shorthandCss`, `sixHex`, `prettify`, `minify`, `addAttributes`, `removeAttributes`, `attributeToStyle`, `baseURL`, `urlQuery`, `entities`, `replaceStrings`, `filters`. Force-enable (`true`) only works for boolean-driven transformers — data-driven ones (`filters`, `baseURL`, `urlQuery`, `addAttributes`, `removeAttributes`, `replaceStrings`, `attributeToStyle`) need actual config values.
+Pass an object to toggle individual transformers. Keys: `inlineCss`, `purgeCss`, `safeSelectors`, `shorthandCss`, `sixHex`, `prettify`, `minify`, `addAttributes`, `removeAttributes`, `attributeToStyle`, `baseURL`, `urlQuery`, `entities`, `replaceStrings`, `filters`. Force-enable (`true`) only works for boolean-driven transformers — data-driven ones (`filters`, `baseURL`, `urlQuery`, `addAttributes`, `removeAttributes`, `replaceStrings`, `attributeToStyle`) need actual config values.
 
 Per-template via `useTransformers(false)` or `useTransformers({ inlineCss: false, minify: true })` in `<script setup>`.
 

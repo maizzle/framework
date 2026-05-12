@@ -2,7 +2,7 @@ import { parse, serialize } from '../utils/ast/index.ts'
 import { inlineLinkDom } from './inlineLink.ts'
 import { tailwindComponent } from './tailwindComponent.ts'
 import { tailwindcss } from './tailwindcss.ts'
-import { safeClassNamesDom } from './safeClassNames.ts'
+import { safeSelectorsDom } from './safeSelectors.ts'
 import { attributeToStyleDom } from './attributeToStyle.ts'
 import { inlineCssDom } from './inlineCss.ts'
 import { msoPlaceholders } from './msoPlaceholders.ts'
@@ -78,7 +78,7 @@ export async function runTransformers(
     const htmlOver: Record<string, unknown> = {}
     if (toggles.inlineCss === true) cssOver.inline = true
     if (toggles.purgeCss === true) cssOver.purge = true
-    if (toggles.safeClassNames === true) cssOver.safe = true
+    if (toggles.safeSelectors === true) cssOver.safe = true
     if (toggles.shorthandCss === true) cssOver.shorthand = true
     if (toggles.sixHex === true) cssOver.sixHex = true
     if (toggles.prettify === true) htmlOver.format = true
@@ -109,7 +109,7 @@ export async function runTransformers(
   dom = await tailwindcss(dom, effective, filePath)
 
   // 2. Safe class names
-  if (enabled('safeClassNames')) dom = safeClassNamesDom(dom, effective.css)
+  if (enabled('safeSelectors')) dom = safeSelectorsDom(dom, effective.css)
 
   // 3. Attribute to style
   if (enabled('attributeToStyle') && typeof effective.css?.inline === 'object' && effective.css.inline.attributeToStyle) {

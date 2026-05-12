@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { safeClassNames } from '../../transformers/safeClassNames.ts'
+import { safeSelectors } from '../../transformers/safeSelectors.ts'
 import type { CssConfig } from '../../types/config.ts'
 
 // Shorthand: run transformer with safe enabled by default so feature tests
 // can stay concise. Pass an explicit value to test config behaviour.
 function run(html: string, safe?: false | true | Record<string, string>): string {
-  return safeClassNames(html, { safe: safe ?? true } satisfies CssConfig)
+  return safeSelectors(html, { safe: safe ?? true } satisfies CssConfig)
 }
 
-describe('safeClassNames — class attributes', () => {
+describe('safeSelectors — class attributes', () => {
   it('replaces : with - (Tailwind responsive/variant prefix)', () => {
     expect(run('<div class="sm:text-base"></div>')).toBe('<div class="sm-text-base"></div>')
   })
@@ -71,7 +71,7 @@ describe('safeClassNames — class attributes', () => {
   })
 })
 
-describe('safeClassNames — style tag selectors', () => {
+describe('safeSelectors — style tag selectors', () => {
   it('replaces \\: with - in CSS selectors', () => {
     const html = '<style>.sm\\:text-base { color: red; }</style>'
     expect(run(html)).toBe('<style>.sm-text-base { color: red; }</style>')
@@ -126,10 +126,10 @@ describe('safeClassNames — style tag selectors', () => {
   })
 })
 
-describe('safeClassNames — config: css.safe', () => {
+describe('safeSelectors — config: css.safe', () => {
   it('is enabled by default', () => {
     const html = '<div class="sm:text-base"></div>'
-    expect(safeClassNames(html, {}))
+    expect(safeSelectors(html, {}))
       .toBe('<div class="sm-text-base"></div>')
   })
 
@@ -173,7 +173,7 @@ describe('safeClassNames — config: css.safe', () => {
   })
 })
 
-describe('safeClassNames — short-circuit behaviour', () => {
+describe('safeSelectors — short-circuit behaviour', () => {
   it('returns the original string when there are no class attrs or style tags', () => {
     const html = '<div id="main"><p>Hello</p></div>'
     const result = run(html)

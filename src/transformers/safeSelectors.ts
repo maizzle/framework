@@ -87,7 +87,7 @@ function processClassAttr(classStr: string, replacements: Record<string, string>
 }
 
 /**
- * Safe class names transformer.
+ * Safe selectors transformer.
  *
  * Replaces unsafe characters (`:`, `/`, `[`, `]`, etc.) in:
  * - CSS selectors inside `<style>` tags
@@ -105,20 +105,20 @@ function processClassAttr(classStr: string, replacements: Record<string, string>
  * @returns      The transformed HTML string.
  *
  * @example
- * import { safeClassNames } from '@maizzle/framework'
+ * import { safeSelectors } from '@maizzle/framework'
  *
- * const out = safeClassNames('<div class="sm:text-base"></div>')
+ * const out = safeSelectors('<div class="sm:text-base"></div>')
  */
-export function safeClassNames(html: string, config: CssConfig = {}): string {
-  return serialize(safeClassNamesDom(parse(html), config))
+export function safeSelectors(html: string, config: CssConfig = {}): string {
+  return serialize(safeSelectorsDom(parse(html), config))
 }
 
 /**
- * DOM-form of {@link safeClassNames} used by the internal transformer pipeline.
+ * DOM-form of {@link safeSelectors} used by the internal transformer pipeline.
  * Takes a parsed DOM, returns a parsed DOM — avoids redundant
  * serialize/parse round-trips when chained with other transformers.
  */
-export function safeClassNamesDom(dom: ChildNode[], config: CssConfig = {}): ChildNode[] {
+export function safeSelectorsDom(dom: ChildNode[], config: CssConfig = {}): ChildNode[] {
   const option = config.safe ?? true
 
   if (!option) return dom

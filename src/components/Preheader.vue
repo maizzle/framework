@@ -1,15 +1,28 @@
 <script setup lang="ts">
-defineProps({
-  /** Number of `&#8199;&#65279;&#847;` filler sequences to render after the preview text. */
-  spaces: {
-    type: Number,
-    default: 150
+import { useSlots, computed } from 'vue'
+
+const slots = useSlots()
+
+function vnodesToText(nodes: unknown): string {
+  if (nodes == null || nodes === false || nodes === true) return ''
+  if (typeof nodes === 'string' || typeof nodes === 'number') return String(nodes)
+  if (Array.isArray(nodes)) return nodes.map(vnodesToText).join('')
+  if (typeof nodes === 'object' && 'children' in (nodes as Record<string, unknown>)) {
+    return vnodesToText((nodes as { children: unknown }).children)
   }
-})
+  return ''
+}
+
+// Inbox preview budget. Pad with invisible fillers so the
+// client doesn't pull body content into the snippet.
+const PREVIEW_LENGTH = 200
+
+const text = computed(() => vnodesToText(slots.default?.()))
+const fillerCount = computed(() => Math.max(0, PREVIEW_LENGTH - text.value.length))
 </script>
 
 <template>
   <Teleport to="body:start">
-    <div style="display: none"><slot /><template v-for="i in spaces" :key="i">&#8199;&#65279;&#847; </template>&nbsp;</div>
+    <div style="display: none">{{ text }}<template v-for="i in fillerCount" :key="i">&#8199;&#65279;&#847; </template>&nbsp;</div>
   </Teleport>
 </template>

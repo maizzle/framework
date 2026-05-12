@@ -33,6 +33,11 @@ describe('entities', () => {
       const result = run('<p>\u200D</p>', true)
       expect(result).toBe('<p>&zwj;</p>')
     })
+
+    it('replaces ZWNBSP (BOM) with &#65279;', () => {
+      const result = run('<p>\uFEFF</p>', true)
+      expect(result).toBe('<p>&#65279;</p>')
+    })
   })
 
   describe('multiple replacements', () => {

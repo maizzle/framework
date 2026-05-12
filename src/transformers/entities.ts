@@ -10,6 +10,7 @@ const DEFAULT_ENTITIES: Record<string, string> = {
   '\u00AD': '&shy;',
   '\u200B': '&#8203;',
   '\u2007': '&#8199;',
+  '\uFEFF': '&#65279;',
   '\u034F': '&#847;',
   '\u2003': '&emsp;',
   '\u2028': '&LineSeparator;',

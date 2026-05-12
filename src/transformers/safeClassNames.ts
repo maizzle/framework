@@ -1,7 +1,7 @@
 import postcss from 'postcss'
 import safeParser from 'postcss-safe-parser'
 import type { ChildNode, Element } from 'domhandler'
-import { walk } from '../utils/ast/index.ts'
+import { parse, serialize, walk } from '../utils/ast/index.ts'
 import type { CssConfig } from '../types/config.ts'
 
 const DEFAULT_REPLACEMENTS: Record<string, string> = {
@@ -99,8 +99,26 @@ function processClassAttr(classStr: string, replacements: Record<string, string>
  * Enabled by default. Disable by setting `css.safe` to `false`.
  * Customize replacements by passing a `Record<string, string>` — user
  * values are merged on top of the defaults.
+ *
+ * @param html   HTML string to transform.
+ * @param config CSS config (see {@link CssConfig}).
+ * @returns      The transformed HTML string.
+ *
+ * @example
+ * import { safeClassNames } from '@maizzle/framework'
+ *
+ * const out = safeClassNames('<div class="sm:text-base"></div>')
  */
-export function safeClassNames(dom: ChildNode[], config: CssConfig = {}): ChildNode[] {
+export function safeClassNames(html: string, config: CssConfig = {}): string {
+  return serialize(safeClassNamesDom(parse(html), config))
+}
+
+/**
+ * DOM-form of {@link safeClassNames} used by the internal transformer pipeline.
+ * Takes a parsed DOM, returns a parsed DOM — avoids redundant
+ * serialize/parse round-trips when chained with other transformers.
+ */
+export function safeClassNamesDom(dom: ChildNode[], config: CssConfig = {}): ChildNode[] {
   const option = config.safe ?? true
 
   if (!option) return dom

@@ -2,7 +2,7 @@ import { parse, serialize } from '../utils/ast/index.ts'
 import { inlineLinkDom } from './inlineLink.ts'
 import { tailwindComponent } from './tailwindComponent.ts'
 import { tailwindcss } from './tailwindcss.ts'
-import { safeClassNames } from './safeClassNames.ts'
+import { safeClassNamesDom } from './safeClassNames.ts'
 import { attributeToStyleDom } from './attributeToStyle.ts'
 import { inlineCssDom } from './inlineCss.ts'
 import { msoPlaceholders } from './msoPlaceholders.ts'
@@ -10,7 +10,7 @@ import { columnWidth } from './columnWidth.ts'
 import { removeAttributesDom } from './removeAttributes.ts'
 import { shorthandCssDom } from './shorthandCss.ts'
 import { sixHexDom } from './sixHex.ts'
-import { addAttributes } from './addAttributes.ts'
+import { addAttributesDom } from './addAttributes.ts'
 import { filtersDom } from './filters/index.ts'
 import { baseDom } from './base.ts'
 import { entitiesDom } from './entities.ts'
@@ -109,7 +109,7 @@ export async function runTransformers(
   dom = await tailwindcss(dom, effective, filePath)
 
   // 2. Safe class names
-  if (enabled('safeClassNames')) dom = safeClassNames(dom, effective.css)
+  if (enabled('safeClassNames')) dom = safeClassNamesDom(dom, effective.css)
 
   // 3. Attribute to style
   if (enabled('attributeToStyle') && typeof effective.css?.inline === 'object' && effective.css.inline.attributeToStyle) {
@@ -144,7 +144,7 @@ export async function runTransformers(
   if (enabled('sixHex') && effective.css?.sixHex !== false) dom = sixHexDom(dom)
 
   // 8. Add attributes
-  if (enabled('addAttributes')) dom = addAttributes(dom, effective.html?.attributes)
+  if (enabled('addAttributes')) dom = addAttributesDom(dom, effective.html?.attributes)
 
   // 9. Filters
   if (enabled('filters')) dom = filtersDom(dom, effective.filters)

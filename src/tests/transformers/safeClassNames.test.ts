@@ -1,12 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { safeClassNames } from '../../transformers/safeClassNames.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
 import type { CssConfig } from '../../types/config.ts'
 
 // Shorthand: run transformer with safe enabled by default so feature tests
 // can stay concise. Pass an explicit value to test config behaviour.
 function run(html: string, safe?: false | true | Record<string, string>): string {
-  return serialize(safeClassNames(parse(html), { safe: safe ?? true } satisfies CssConfig))
+  return safeClassNames(html, { safe: safe ?? true } satisfies CssConfig)
 }
 
 describe('safeClassNames — class attributes', () => {
@@ -130,7 +129,7 @@ describe('safeClassNames — style tag selectors', () => {
 describe('safeClassNames — config: css.safe', () => {
   it('is enabled by default', () => {
     const html = '<div class="sm:text-base"></div>'
-    expect(serialize(safeClassNames(parse(html), {})))
+    expect(safeClassNames(html, {}))
       .toBe('<div class="sm-text-base"></div>')
   })
 

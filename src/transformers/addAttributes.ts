@@ -1,6 +1,6 @@
 import { defu as merge } from 'defu'
 import type { ChildNode, Element } from 'domhandler'
-import { walk } from '../utils/ast/index.ts'
+import { parse, serialize, walk } from '../utils/ast/index.ts'
 import type { AttributesConfig } from '../types/config.ts'
 
 /**
@@ -29,19 +29,32 @@ const DEFAULT_ATTRIBUTES: Record<string, Record<string, string | boolean | numbe
  * Supports tag, class, id, and attribute selectors.
  * Multiple selectors can be specified by comma-separating them.
  *
- * Examples:
- * ```js
- * attributes: {
+ * @param html   HTML string to transform.
+ * @param config Attributes config (see {@link AttributesConfig}).
+ * @returns      The transformed HTML string.
+ *
+ * @example
+ * import { addAttributes } from '@maizzle/framework'
+ *
+ * const out = addAttributes('<div></div>', {
  *   add: {
  *     div: { role: 'article' },
  *     '.test': { editable: true },
  *     '#header': { 'data-id': 'main' },
  *     'div, p': { class: 'content' },
- *   }
- * }
- * ```
+ *   },
+ * })
  */
-export function addAttributes(dom: ChildNode[], config: AttributesConfig = {}): ChildNode[] {
+export function addAttributes(html: string, config: AttributesConfig = {}): string {
+  return serialize(addAttributesDom(parse(html), config))
+}
+
+/**
+ * DOM-form of {@link addAttributes} used by the internal transformer pipeline.
+ * Takes a parsed DOM, returns a parsed DOM — avoids redundant
+ * serialize/parse round-trips when chained with other transformers.
+ */
+export function addAttributesDom(dom: ChildNode[], config: AttributesConfig = {}): ChildNode[] {
   const addConfig = config.add
 
   // Disabled when explicitly set to false

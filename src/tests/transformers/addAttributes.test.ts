@@ -1,11 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { Element } from 'domhandler'
-import { addAttributes } from '../../transformers/addAttributes.ts'
-import { parse, serialize } from '../../utils/ast/index.ts'
+import { addAttributes, addAttributesDom } from '../../transformers/addAttributes.ts'
 import type { AttributesConfig } from '../../types/config.ts'
 
 function run(html: string, add?: false | Record<string, false | Record<string, false | string | boolean | number>>): string {
-  return serialize(addAttributes(parse(html), { add } satisfies AttributesConfig))
+  return addAttributes(html, { add } satisfies AttributesConfig)
 }
 
 describe('addAttributes', () => {
@@ -21,7 +20,7 @@ describe('addAttributes', () => {
     })
 
     it('applies defaults when config is undefined', () => {
-      const result = serialize(addAttributes(parse('<table><tr><td></td></tr></table>'), {}))
+      const result = addAttributes('<table><tr><td></td></tr></table>', {})
       expect(result).toBe('<table cellpadding="0" cellspacing="0" role="none"><tr><td></td></tr></table>')
     })
 
@@ -290,7 +289,7 @@ describe('addAttributes', () => {
 
     it('returns original string when empty config and no defaults match', () => {
       const html = '<div>Content</div>'
-      const result = serialize(addAttributes(parse(html), {}))
+      const result = addAttributes(html, {})
       expect(result).toBe(html)
     })
   })
@@ -328,7 +327,7 @@ describe('addAttributes', () => {
       // @ts-expect-error — simulating a node with undefined attribs
       delete el.attribs
 
-      const dom = addAttributes([el], { add: { div: { role: 'article' } } })
+      const dom = addAttributesDom([el], { add: { div: { role: 'article' } } })
       expect((dom[0] as Element).attribs.role).toBe('article')
     })
   })

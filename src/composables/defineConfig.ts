@@ -14,10 +14,9 @@ const merge = createDefu((obj, key, value) => {
 /**
  * Define Maizzle config.
  *
- * Works in both contexts:
- * - In maizzle.config.ts: typed identity function, returns the config as-is
- * - In Vue SFC <script setup>: merges with the global config and provides
- *   the result to child components via useConfig()
+ * In maizzle.config.ts: typed identity function, returns the config as-is
+ * In Vue SFC `<script setup>`: merges with the global config and provides
+ * the result to child components via `useConfig()`
  */
 export function defineConfig(data: Partial<MaizzleConfig> = {}): MaizzleConfig {
   // Inside a Vue SFC — merge with global config and provide to children

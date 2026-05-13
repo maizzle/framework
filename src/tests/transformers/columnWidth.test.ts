@@ -521,6 +521,129 @@ describe('columnWidth', () => {
     })
   })
 
+  describe('sibling-aware width redistribution', () => {
+    const explicit = (id: string, count: number, widthCss: string) =>
+      `<div style="display: inline-block; min-width: __MAIZZLE_COLW_${id}__; ${widthCss}" data-maizzle-cw-id="${id}" data-maizzle-cw-count="${count}"></div>`
+
+    it('auto cols absorb remainder when one sibling has explicit px width', () => {
+      const html =
+        `<div data-maizzle-cw="576px">`
+        + col('c1', 3)
+        + explicit('c2', 3, 'width: 20px')
+        + col('c3', 3)
+        + `</div>`
+      const out = run(html)
+      // (576 − 20) / 2 = 278 for the auto cols, 20 for the explicit one.
+      expect(out.match(/width: 278px/g)?.length).toBe(2)
+      expect(out).toContain('width: 20px')
+    })
+
+    it('auto cols absorb remainder when one sibling has explicit % width', () => {
+      const html =
+        `<div data-maizzle-cw="600px">`
+        + col('c1', 3)
+        + explicit('c2', 3, 'width: 33.33%')
+        + col('c3', 3)
+        + `</div>`
+      const out = run(html)
+      // 33.33% × 600 = 199.98. Remaining = 400.02 / 2 = 200.01 per auto col.
+      expect(out.match(/width: 200\.01px/g)?.length).toBe(2)
+      expect(out).toContain('width: 33.33%')
+    })
+
+    it('mixes explicit-px and explicit-% siblings; auto col takes the rest', () => {
+      const html =
+        `<div data-maizzle-cw="600px">`
+        + explicit('c1', 3, 'width: 50%')
+        + explicit('c2', 3, 'width: 100px')
+        + col('c3', 3)
+        + `</div>`
+      const out = run(html)
+      // 50% of 600 = 300, plus 100px = 400 taken. Remainder = 200 for the lone auto col.
+      expect(out).toContain('width: 200px')
+      expect(out).toContain('width: 50%')
+      expect(out).toContain('width: 100px')
+    })
+
+    it('counts horizontal padding+border of the explicit sibling against the remainder', () => {
+      const html =
+        `<div data-maizzle-cw="600px">`
+        + col('c1', 3)
+        + explicit('c2', 3, 'width: 20px; padding-left: 4px; padding-right: 4px; border-width: 1px; border-style: solid')
+        + col('c3', 3)
+        + `</div>`
+      const out = run(html)
+      // Explicit outer = 20 + 8 (padding) + 2 (border) = 30. Remaining = 570 / 2 = 285.
+      expect(out.match(/width: 285px/g)?.length).toBe(2)
+    })
+
+    it('falls back to count-based divide when no explicit siblings exist', () => {
+      const html =
+        `<div data-maizzle-cw="576px">`
+        + col('c1', 3)
+        + col('c2', 3)
+        + col('c3', 3)
+        + `</div>`
+      // No explicits → divisor stays at totalCount=3. (576/3 = 192)
+      expect(run(html).match(/width: 192px/g)?.length).toBe(3)
+    })
+
+    it('keeps redistribution local to each row group (nested rows independent)', () => {
+      // Outer: auto + w-5 + auto in 600px → autos = 290 each.
+      // Inner row inside c1 (290px source): 2 auto cols → 145 each.
+      const html =
+        `<div data-maizzle-cw="600px">`
+        + `<div style="display: inline-block; min-width: __MAIZZLE_COLW_c1__;" data-maizzle-cw-id="c1" data-maizzle-cw-count="3">`
+        + col('n1', 2)
+        + col('n2', 2)
+        + `</div>`
+        + explicit('c2', 3, 'width: 20px')
+        + col('c3', 3)
+        + `</div>`
+      const out = run(html)
+      expect(out.match(/width: 290px/g)?.length).toBe(2)
+      expect(out.match(/width: 145px/g)?.length).toBe(2)
+    })
+
+    it('skips redistribution when the source is a percentage (can\'t subtract px sibling)', () => {
+      const html =
+        `<div data-maizzle-cw="100%">`
+        + col('c1', 3)
+        + explicit('c2', 3, 'width: 20px')
+        + col('c3', 3)
+        + `</div>`
+      const out = run(html)
+      // Source is %, no px math → autos use the naive 100%/3 ≈ 33% fallback path.
+      expect(out).toMatch(/width: 33(\.\d+)?%/)
+    })
+
+    it('floors the per-auto share to 2 decimals so 3 autos + 2 spacers never overflow the slot', () => {
+      // 576 − (20 + 20) = 536. 536/3 = 178.6̄. Rounding up to 179 would
+      // give 3×179 + 2×20 = 577 > 576 → row stacks. Floor-to-2-decimals
+      // → 178.66, sum = 535.98 + 40 = 575.98 ≤ 576.
+      const html =
+        `<div data-maizzle-cw="576px">`
+        + col('c1', 5)
+        + explicit('s1', 5, 'width: 20px')
+        + col('c2', 5)
+        + explicit('s2', 5, 'width: 20px')
+        + col('c3', 5)
+        + `</div>`
+      const out = run(html)
+      expect(out.match(/width: 178\.66px/g)?.length).toBe(3)
+    })
+
+    it('clamps negative remainders to zero rather than going negative', () => {
+      const html =
+        `<div data-maizzle-cw="100px">`
+        + col('c1', 2)
+        + explicit('c2', 2, 'width: 200px')
+        + `</div>`
+      // Explicit takes 200, exceeds source. Auto gets max(0, (100−200)/1) = 0.
+      expect(run(html)).toContain('width: 0px')
+    })
+  })
+
   it('falls through an unresolvable ancestor marker to the next sized one', () => {
     // Row emits an empty data-maizzle-cw because a class like `w-typo`
     // tripped the heuristic, but Tailwind dropped the bogus class so no

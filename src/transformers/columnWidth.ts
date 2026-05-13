@@ -264,6 +264,73 @@ export function columnWidth(dom: ChildNode[]): ChildNode[] {
     widthFallbacks.set(id, `${Math.round(100 / Math.max(count, 1))}%`)
   }
 
+  /**
+   * Sibling-aware redistribution.
+   *
+   * Without this, every auto column slices its source `/ totalCount`,
+   * ignoring siblings that already declared a fixed `w-5` (20px) or
+   * `w-1/3` (%). Three auto cols next to a `w-5` would each take
+   * `source/3` and overflow the row by 20px.
+   *
+   * Pre-pass: classify each col against its inlined style.
+   *   - explicit-px:  `width:` or `min-width:` resolving to px. The col
+   *                   occupies (px value + own horizontal padding +
+   *                   own horizontal border) of the source.
+   *   - explicit-pct: `width:` or `min-width:` resolving to %. The col
+   *                   occupies (pct * source / 100 + own inset).
+   *   - auto:         everything else. Shares the remainder with other
+   *                   auto siblings.
+   *
+   * Group cols by their immediate `el.parent` (the Row div). For each
+   * group, sum the explicit contributions and count the autos. The
+   * countBased path below uses these to redistribute leftover space
+   * instead of dividing the raw source by total count.
+   *
+   * `data-maizzle-cw-self` cols (Overlap) are excluded — they own their
+   * source independently and don't share a parent's slot with cols.
+   */
+  interface ColClassification {
+    kind: 'auto' | 'explicit'
+    pxOuter: number
+    pctOuter: number
+  }
+  interface GroupInfo {
+    explicitPxOuterSum: number
+    explicitPctOuterSum: number
+    autoCount: number
+  }
+  const groupInfos = new Map<ParentNode, GroupInfo>()
+
+  for (const c of columns) {
+    if (c.self) continue
+    const ownRoot = parseElStyle(c.el)
+    const ownInset = horizontalPaddingPx(ownRoot) + horizontalBorderPx(ownRoot)
+
+    let cls: ColClassification = { kind: 'auto', pxOuter: 0, pctOuter: 0 }
+    const userVal = findUserMinWidth(ownRoot) ?? firstDeclValue(ownRoot, 'width')
+    if (userVal) {
+      const resolved = resolveLength(userVal)
+      if (resolved?.endsWith('px')) {
+        const px = lengthToPx(resolved)
+        if (px != null) cls = { kind: 'explicit', pxOuter: px + ownInset, pctOuter: 0 }
+      }
+      else if (resolved?.endsWith('%')) {
+        cls = { kind: 'explicit', pxOuter: ownInset, pctOuter: parseFloat(resolved) }
+      }
+    }
+
+    const parent = c.el.parent as ParentNode | null
+    if (!parent) continue
+    let info = groupInfos.get(parent)
+    if (!info) {
+      info = { explicitPxOuterSum: 0, explicitPctOuterSum: 0, autoCount: 0 }
+      groupInfos.set(parent, info)
+    }
+    info.explicitPxOuterSum += cls.pxOuter
+    info.explicitPctOuterSum += cls.pctOuter
+    if (cls.kind === 'auto') info.autoCount++
+  }
+
   for (const { el, id, count, self } of columns) {
     const ownRoot = parseElStyle(el)
 
@@ -309,7 +376,38 @@ export function columnWidth(dom: ChildNode[]): ChildNode[] {
     }
 
     const adjusted = sourceWidth ? subtractInsetPx(sourceWidth, accumulatedInsetPx) : null
-    const countBased = adjusted ? divideLength(adjusted, count) : null
+    let countBased = adjusted ? divideLength(adjusted, count) : null
+
+    /**
+     * Sibling-aware redistribution kicks in only when the auto col has at
+     * least one explicit-width sibling and the source is in px (can't
+     * mix px subtraction with a % source). When that's true, the auto
+     * col's share becomes `(source − sum_explicit_px − pct% of source)
+     * / autoCount`, replacing the naive `source/totalCount`.
+     */
+    if (!self && adjusted?.endsWith('px') && countBased && el.parent) {
+      const group = groupInfos.get(el.parent as ParentNode)
+      if (group && group.autoCount > 0
+        && (group.explicitPxOuterSum > 0 || group.explicitPctOuterSum > 0)) {
+        const adjPx = lengthToPx(adjusted)
+        if (adjPx != null) {
+          const remaining = adjPx - group.explicitPxOuterSum - (adjPx * group.explicitPctOuterSum / 100)
+          /**
+           * Floor-to-2-decimals on the per-auto share. Two reasons:
+           *
+           *   1. Matches `divideLength`'s precision so the auto path and
+           *      group-aware path emit consistent units.
+           *   2. Rounding up (e.g. 536/3 = 178.6̄ → round to 179) pushes
+           *      the sum past the slot — 3×179 + 2×20 = 577 > 576 →
+           *      inline-block wraps and the row stacks. Flooring at 2
+           *      decimals keeps the sum ≤ slot with at most ~0.0(autoCount)
+           *      px unused, which is sub-pixel and invisible.
+           */
+          const share = Math.max(0, Math.floor((remaining * 100) / group.autoCount) / 100)
+          countBased = `${share}px`
+        }
+      }
+    }
 
     /**
      * Four user-override paths, decided by which CSS property the user

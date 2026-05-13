@@ -131,4 +131,32 @@ describe('shorthandCss', () => {
       expect(result).toContain('margin:')
     })
   })
+
+  describe('MSO conditional comments', () => {
+    it('merges padding longhand inside an MSO td comment', () => {
+      const html = '<!--[if mso]><td style="width: 272px; vertical-align: top; padding: 8px; padding-left: 16px"><![endif]-->'
+      const result = run(html, true)
+      expect(result).toContain('padding: 8px 8px 8px 16px')
+      expect(result).not.toContain('padding: 8px;')
+    })
+
+    it('merges multiple style attrs in the same comment independently', () => {
+      const html = '<!--[if mso]><table style="margin-top: 4px; margin-right: 4px; margin-bottom: 4px; margin-left: 4px"><tr><td style="padding-top: 8px; padding-right: 8px; padding-bottom: 8px; padding-left: 8px"><![endif]-->'
+      const result = run(html, true)
+      expect(result).toContain('margin: 4px')
+      expect(result).toContain('padding: 8px')
+    })
+
+    it('leaves comment text alone when no style attr is present', () => {
+      const html = '<!--[if mso]><table role="none" cellpadding="0" cellspacing="0"><tr><td><![endif]-->'
+      const result = run(html, true)
+      expect(result).toBe(html)
+    })
+
+    it('ignores tag filter for MSO comment styles (td has no element-level addressability here)', () => {
+      const html = '<!--[if mso]><td style="padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px"><![endif]-->'
+      const result = run(html, { tags: ['p'] })
+      expect(result).toContain('padding: 4px')
+    })
+  })
 })

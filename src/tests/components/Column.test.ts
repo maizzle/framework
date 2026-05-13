@@ -29,9 +29,9 @@ describe('Column', () => {
       expect(wrapper.find('div').classes()).toContain('inline-block')
     })
 
-    it('resets font-size to base', () => {
+    it('resets font-size to base without planting a line-height', () => {
       const wrapper = mount(Column)
-      expect(wrapper.find('div').classes()).toContain('text-base')
+      expect(wrapper.find('div').classes()).toContain('text-[medium]')
     })
 
     it('renders slot content', () => {
@@ -116,9 +116,14 @@ describe('Column', () => {
 
     it('applies mso-style only to MSO td', () => {
       const html = mount(Column, { props: { msoStyle: 'padding: 10px' } }).html()
-      expect(html).toContain('vertical-align: top; padding: 10px')
+      expect(html).toMatch(/<td style="[^"]*padding: 10px[^"]*">/)
       const wrapper = mount(Column, { props: { msoStyle: 'padding: 10px' } })
       expect(wrapper.find('div').attributes('style')).not.toContain('padding: 10px')
+    })
+
+    it('emits an MSO td extra-style placeholder for the columnWidth transformer', () => {
+      const html = mountLayout({}, {}, {}, 2).html()
+      expect(html).toMatch(/<td style="[^"]*__MAIZZLE_COLTDX_co\d+__/)
     })
   })
 

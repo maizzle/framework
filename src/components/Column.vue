@@ -71,13 +71,14 @@ const msoWidth = computed(() => {
  * `inline-table` during CSS inlining; routing both through twMerge lets
  * the user's utility cleanly replace ours instead of being dropped.
  */
-const baseClass = 'inline-block align-top text-base'
+const baseClass = 'inline-block align-top text-[medium]'
 const mergedClass = computed(() => twMerge(baseClass, (attrs.class as string) ?? ''))
 
 const styles = computed(() => `min-width: ${minWidth.value};`)
 
 const tdStyle = computed(() => {
   const parts = [`width: ${msoWidth.value}`, 'vertical-align: top']
+  if (useMarker) parts.push(`__MAIZZLE_COLTDX_${colId}__`)
   if (props.msoStyle) parts.push(props.msoStyle)
   return parts.join('; ')
 })

@@ -375,6 +375,33 @@ export function columnWidth(dom: ChildNode[]): ChildNode[] {
    * last-wins and bloat the style — so we skip emitting it.
    */
   const userHasMaxWidth = new Set<string>()
+  /**
+   * Horizontal padding+border (px) of each column whose width was auto-
+   * derived from count-based math. The column's own border/padding eats
+   * its content box under content-box sizing, so the emitted `width:`
+   * must be the slice MINUS this inset; otherwise two bordered cols
+   * sum past the container and wrap. Only populated for auto paths
+   * — user-explicit `width:`/`min-width:`/`max-width:`-wins paths
+   * leave the value alone so the user's number stays the user's.
+   */
+  const autoColumnInsets = new Map<string, number>()
+  /**
+   * Extra inline-style decls that get stamped onto each column's MSO `<td>`
+   * via its COLTDX placeholder. Carries `background-color` (so Word
+   * paints the cell behind any padding area or whitespace, not just
+   * the div) and hoisted `padding*` decls (when no border is present
+   * — without one Word silently drops div padding, with one a td
+   * copy would double-pad). The div keeps both for modern clients
+   * since the MSO td is conditional-comment-only.
+   */
+  const tdExtras = new Map<string, string>()
+  /**
+   * MSO td width override for hoisted columns. With padding on the td and
+   * CSS content-box sizing for table cells, td_outer = width + 2*pad,
+   * so we set td width to the slot MINUS 2*horizontal-padding to keep
+   * the cell at its outer slot. Skipped when the slot is a %.
+   */
+  const hoistedTdWidths = new Map<string, string>()
 
   for (const { id, count } of columns) {
     widthFallbacks.set(id, `${Math.round(100 / Math.max(count, 1))}%`)
@@ -486,6 +513,10 @@ export function columnWidth(dom: ChildNode[]): ChildNode[] {
         widthResolutions.set(id, cappedMin)
         el.attribs['data-maizzle-cw'] = cappedMin
         userHasMaxWidth.add(id)
+        if (cappedMin === countBased) {
+          const ownInset = horizontalPaddingPx(ownRoot) + horizontalBorderPx(ownRoot)
+          if (ownInset > 0) autoColumnInsets.set(id, ownInset)
+        }
         continue
       }
     }
@@ -493,6 +524,40 @@ export function columnWidth(dom: ChildNode[]): ChildNode[] {
     if (countBased) {
       widthResolutions.set(id, countBased)
       el.attribs['data-maizzle-cw'] = countBased
+      const ownPaddingPx = horizontalPaddingPx(ownRoot)
+      const ownBorderPx = horizontalBorderPx(ownRoot)
+      const ownInset = ownPaddingPx + ownBorderPx
+      if (ownInset > 0) autoColumnInsets.set(id, ownInset)
+
+      /**
+       * Build the MSO td's "extras" string — decls that need to live on
+       * the td in addition to width + vertical-align. Two contributors:
+       *
+       *   - `background-color` (always, when present) — Word renders the
+       *     div bg inside the cell, but anything outside the div (the
+       *     td's padding area when hoisted, or any whitespace gap)
+       *     would show the parent's bg instead of the column's. Painting
+       *     the td matches the user's intent.
+       *
+       *   - `padding*` (hoisted only when no horizontal border) — Word
+       *     drops div padding without a stabilizing border, so the td
+       *     has to carry it. With a border, Word renders div padding
+       *     and a td copy would double-pad. Skip when the slot is `%`:
+       *     td width math can't subtract px padding from a percentage.
+       */
+      const extras: string[] = []
+      let bgColor: string | undefined
+      ownRoot.walkDecls('background-color', (d) => { bgColor = d.value })
+      if (bgColor) extras.push(`background-color: ${bgColor}`)
+
+      if (ownPaddingPx > 0 && ownBorderPx === 0 && countBased.endsWith('px')) {
+        ownRoot.walkDecls((d) => {
+          if (/^padding(-|$)/.test(d.prop)) extras.push(`${d.prop}: ${d.value}`)
+        })
+        hoistedTdWidths.set(id, subtractInsetPx(countBased, ownPaddingPx))
+      }
+
+      if (extras.length) tdExtras.set(id, extras.join('; '))
     }
   }
 
@@ -506,10 +571,19 @@ export function columnWidth(dom: ChildNode[]): ChildNode[] {
   walk(dom, (node) => {
     if (node.type === 'comment') {
       const data = (node as any).data as string
-      if (!data || (!data.includes('__MAIZZLE_COLW_') && !data.includes('__MAIZZLE_OH_'))) return
+      if (!data) return
+      const hasCW = data.includes('__MAIZZLE_COLW_')
+      const hasOH = data.includes('__MAIZZLE_OH_')
+      const hasTDX = data.includes('__MAIZZLE_COLTDX_')
+      if (!hasCW && !hasOH && !hasTDX) return
       ;(node as any).data = data
         .replace(/__MAIZZLE_COLW_([^_]+)__/g,
-          (_m, mid) => widthResolutions.get(mid) ?? widthFallbacks.get(mid) ?? '100%')
+          (_m, mid) => hoistedTdWidths.get(mid) ?? widthResolutions.get(mid) ?? widthFallbacks.get(mid) ?? '100%')
+        .replace(/;\s*__MAIZZLE_COLTDX_([^_]+)__/g,
+          (_m, mid) => {
+            const pad = tdExtras.get(mid)
+            return pad ? `; ${pad}` : ''
+          })
         .replace(/__MAIZZLE_OH_([^_]+)__/g,
           (_m, hid) => heightResolutions.get(hid) ?? '100%')
       return
@@ -556,7 +630,9 @@ export function columnWidth(dom: ChildNode[]): ChildNode[] {
               d.remove()
               return
             }
-            const resolved = widthResolutions.get(mid)!
+            let resolved = widthResolutions.get(mid)!
+            const inset = autoColumnInsets.get(mid)
+            if (inset) resolved = subtractInsetPx(resolved, inset)
             const repl: Declaration[] = [postcss.decl({ prop: 'width', value: resolved })]
             if (!userHasMaxWidth.has(mid)) {
               repl.push(postcss.decl({ prop: 'max-width', value: '100%' }))

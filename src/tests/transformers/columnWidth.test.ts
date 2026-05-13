@@ -175,6 +175,67 @@ describe('columnWidth', () => {
       expect(run(html)).toContain('width: 297px')
     })
 
+    it('subtracts the column\'s own horizontal border from the emitted min-width', () => {
+      const borderedCol = (id: string, count: number) =>
+        `<div style="display: inline-block; min-width: __MAIZZLE_COLW_${id}__; border-width: 1px; border-style: solid;" data-maizzle-cw-id="${id}" data-maizzle-cw-count="${count}"></div>`
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 576px">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${borderedCol('c1', 2)}${borderedCol('c2', 2)}</div>`
+        + `</div>`
+      const out = run(html)
+      // 576 / 2 = 288 outer slice; col own border = 2px → content min = 286
+      expect(out.match(/width: 286px/g)?.length).toBe(2)
+      expect(out).not.toContain('width: 288px')
+    })
+
+    it('subtracts the column\'s own horizontal padding from the emitted min-width', () => {
+      const paddedCol = (id: string, count: number) =>
+        `<div style="display: inline-block; min-width: __MAIZZLE_COLW_${id}__; padding: 0 8px;" data-maizzle-cw-id="${id}" data-maizzle-cw-count="${count}"></div>`
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 600px">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${paddedCol('c1', 2)}${paddedCol('c2', 2)}</div>`
+        + `</div>`
+      const out = run(html)
+      // 600 / 2 = 300 outer; col padding 8+8 = 16 → content = 284
+      expect(out.match(/width: 284px/g)?.length).toBe(2)
+    })
+
+    it('keeps data-maizzle-cw at the outer slice so nested rows account for the column\'s border', () => {
+      // Outer Container 600 → 2 outer cols with 1px border each (outer = 300, content = 298)
+      // Inner Row in col 1 has 2 nested cols → source = 298 → each = 149 outer
+      const borderedOuter = (id: string, count: number, inner: string) =>
+        `<div style="display: inline-block; min-width: __MAIZZLE_COLW_${id}__; border-width: 1px; border-style: solid;" data-maizzle-cw-id="${id}" data-maizzle-cw-count="${count}">${inner}</div>`
+      const inner =
+        `<div>`
+        + `<div style="display: inline-block; min-width: __MAIZZLE_COLW_n1__;" data-maizzle-cw-id="n1" data-maizzle-cw-count="2"></div>`
+        + `<div style="display: inline-block; min-width: __MAIZZLE_COLW_n2__;" data-maizzle-cw-id="n2" data-maizzle-cw-count="2"></div>`
+        + `</div>`
+      const html =
+        `<div data-maizzle-cw="600px">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${borderedOuter('o1', 2, inner)}</div>`
+        + `</div>`
+      const out = run(html)
+      // Outer col emitted width: 298 (300 outer - 2 border).
+      expect(out).toContain('width: 298px')
+      // Nested cols see outer col's data-maizzle-cw=300, walk up & subtract its 2px border → 298/2 = 149.
+      expect(out.match(/width: 149px/g)?.length).toBe(2)
+    })
+
+    it('propagates the column-own-border adjustment to MSO td as the outer slice (not the content)', () => {
+      const borderedColMso = (id: string, count: number) =>
+        `<!--[if mso]><td style="width: __MAIZZLE_COLW_${id}__"><![endif]-->`
+        + `<div style="display: inline-block; min-width: __MAIZZLE_COLW_${id}__; border-width: 1px; border-style: solid;" data-maizzle-cw-id="${id}" data-maizzle-cw-count="${count}"></div>`
+        + `<!--[if mso]></td><![endif]-->`
+      const html =
+        `<div data-maizzle-cw="" style="max-width: 576px">`
+        + `<div data-maizzle-cw="" style="font-size: 0;">${borderedColMso('c1', 2)}${borderedColMso('c2', 2)}</div>`
+        + `</div>`
+      const out = run(html)
+      // MSO td keeps the outer slice (288). Div content shrinks to 286.
+      expect(out).toContain('<td style="width: 288px">')
+      expect(out.match(/width: 286px/g)?.length).toBe(2)
+    })
+
     it('treats `border: 0` as zero contribution', () => {
       const html =
         `<div data-maizzle-cw="" style="max-width: 600px">`
@@ -183,6 +244,124 @@ describe('columnWidth', () => {
         + `</div>`
         + `</div>`
       expect(run(html)).toContain('width: 300px')
+    })
+
+    describe('mso-td padding hoist (Word lacks div padding without border)', () => {
+      const colWithMsoTdx = (id: string, count: number, divStyle: string) =>
+        `<!--[if mso]><td style="width: __MAIZZLE_COLW_${id}__; vertical-align: top; __MAIZZLE_COLTDX_${id}__"><![endif]-->`
+        + `<div style="display: inline-block; min-width: __MAIZZLE_COLW_${id}__; ${divStyle}" data-maizzle-cw-id="${id}" data-maizzle-cw-count="${count}"></div>`
+        + `<!--[if mso]></td><![endif]-->`
+
+      it('case A: no padding, no border — td width = slot, no hoist', () => {
+        const html =
+          `<div data-maizzle-cw="" style="max-width: 576px">`
+          + `<div data-maizzle-cw="" style="font-size: 0;">${colWithMsoTdx('c1', 2, '')}${colWithMsoTdx('c2', 2, '')}</div>`
+          + `</div>`
+        const out = run(html)
+        expect(out.match(/<td style="width: 288px; vertical-align: top">/g)?.length).toBe(2)
+        expect(out).not.toContain('padding')
+      })
+
+      it('case B: border only — td width = slot, no hoist', () => {
+        const html =
+          `<div data-maizzle-cw="" style="max-width: 576px">`
+          + `<div data-maizzle-cw="" style="font-size: 0;">`
+          + colWithMsoTdx('c1', 2, 'border-width: 1px; border-style: solid;')
+          + colWithMsoTdx('c2', 2, 'border-width: 1px; border-style: solid;')
+          + `</div></div>`
+        const out = run(html)
+        // td stays at outer slot 288; padding not hoisted.
+        expect(out.match(/<td style="width: 288px; vertical-align: top">/g)?.length).toBe(2)
+        expect(out).not.toMatch(/<td[^>]+padding/)
+        // div content = 288 − 2 = 286
+        expect(out.match(/width: 286px/g)?.length).toBe(2)
+      })
+
+      it('case C: padding only — td width = slot − 2*pad, padding hoisted', () => {
+        const html =
+          `<div data-maizzle-cw="" style="max-width: 576px">`
+          + `<div data-maizzle-cw="" style="font-size: 0;">`
+          + colWithMsoTdx('c1', 2, 'padding: 8px;')
+          + colWithMsoTdx('c2', 2, 'padding: 8px;')
+          + `</div></div>`
+        const out = run(html)
+        // 288 − 16 = 272 on the MSO td, plus the hoisted padding decl.
+        expect(out.match(/<td style="width: 272px; vertical-align: top; padding: 8px">/g)?.length).toBe(2)
+        // div content also at 272 (slot − own inset).
+        expect(out.match(/width: 272px/g)?.length).toBeGreaterThanOrEqual(4)
+      })
+
+      it('case D: border + padding — td width = slot, no hoist (div carries padding)', () => {
+        const html =
+          `<div data-maizzle-cw="" style="max-width: 576px">`
+          + `<div data-maizzle-cw="" style="font-size: 0;">`
+          + colWithMsoTdx('c1', 2, 'border-width: 1px; border-style: solid; padding: 8px;')
+          + colWithMsoTdx('c2', 2, 'border-width: 1px; border-style: solid; padding: 8px;')
+          + `</div></div>`
+        const out = run(html)
+        // td at outer slot, no padding hoisted.
+        expect(out.match(/<td style="width: 288px; vertical-align: top">/g)?.length).toBe(2)
+        expect(out).not.toMatch(/<td[^>]+padding/)
+        // div content = 288 − 18 = 270
+        expect(out.match(/width: 270px/g)?.length).toBe(2)
+      })
+
+      it('hoists asymmetric padding (pl-4 pr-2) and adjusts td width by left+right total', () => {
+        const html =
+          `<div data-maizzle-cw="" style="max-width: 600px">`
+          + `<div data-maizzle-cw="" style="font-size: 0;">`
+          + colWithMsoTdx('c1', 2, 'padding-left: 16px; padding-right: 8px;')
+          + colWithMsoTdx('c2', 2, 'padding-left: 16px; padding-right: 8px;')
+          + `</div></div>`
+        const out = run(html)
+        // 300 − 24 = 276; both pl/pr decls preserved on td
+        expect(out.match(/<td style="width: 276px; vertical-align: top; padding-left: 16px; padding-right: 8px">/g)?.length).toBe(2)
+      })
+
+      it('skips hoist when the slot is a percentage', () => {
+        const html =
+          `<div data-maizzle-cw="100%">`
+          + `<div data-maizzle-cw="" style="font-size: 0;">`
+          + colWithMsoTdx('c1', 2, 'padding: 8px;')
+          + `</div></div>`
+        const out = run(html)
+        // % slot → no hoist, td renders at 50% (fallback / count-based %)
+        expect(out).toContain('<td style="width: 50%; vertical-align: top">')
+        expect(out).not.toMatch(/<td[^>]+padding/)
+      })
+
+      it('mirrors background-color to the MSO td (regardless of border / padding state)', () => {
+        const html =
+          `<div data-maizzle-cw="" style="max-width: 576px">`
+          + `<div data-maizzle-cw="" style="font-size: 0;">`
+          + colWithMsoTdx('c1', 2, 'background-color: rgb(229, 231, 235);')
+          + colWithMsoTdx('c2', 2, 'background-color: rgb(156, 163, 175); border-width: 1px; border-style: solid;')
+          + `</div></div>`
+        const out = run(html)
+        // Plain bg col: td at slot, bg mirrored.
+        expect(out).toContain('<td style="width: 288px; vertical-align: top; background-color: rgb(229, 231, 235)">')
+        // Bg + border col: td at slot, bg mirrored, no padding hoist.
+        expect(out).toContain('<td style="width: 288px; vertical-align: top; background-color: rgb(156, 163, 175)">')
+      })
+
+      it('mirrors background-color AND hoists padding when no border', () => {
+        const html =
+          `<div data-maizzle-cw="" style="max-width: 576px">`
+          + `<div data-maizzle-cw="" style="font-size: 0;">`
+          + colWithMsoTdx('c1', 2, 'background-color: #abc; padding: 8px;')
+          + `</div></div>`
+        const out = run(html)
+        // Both bg and padding land on td; td width compensates for padding.
+        expect(out).toContain('<td style="width: 272px; vertical-align: top; background-color: #abc; padding: 8px">')
+      })
+
+      it('removes the COLTDX placeholder when no column matches (defensive cleanup)', () => {
+        const html =
+          `<!--[if mso]><td style="width: __MAIZZLE_COLW_orphan__; vertical-align: top; __MAIZZLE_COLTDX_orphan__"><![endif]-->`
+        const out = run(html)
+        expect(out).not.toContain('__MAIZZLE_COLTDX_')
+        expect(out).toContain('<td style="width: 100%; vertical-align: top">')
+      })
     })
 
     it('propagates the padding-adjusted width to the MSO td placeholder', () => {

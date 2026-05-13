@@ -52,39 +52,57 @@ export function shorthandCssDom(dom: ChildNode[], options: ShorthandCssOptions =
   const allowedTags = options.tags ?? []
   const hasTagFilter = allowedTags.length > 0
 
-  walk(dom, (node) => {
-    const el = node as Element
-
-    // Skip if no attribs or no style
-    if (!el.attribs?.style) {
-      return
-    }
-
-    // Skip if tag filter is active and this tag is not allowed
-    if (hasTagFilter && !allowedTags.includes(el.name)) {
-      return
-    }
-
-    const styleValue = el.attribs.style
-
+  /**
+   * Merge longhand within a single inline-style value. Returns the merged
+   * string when shorter, otherwise the original. Wraps the value in a
+   * dummy selector since postcss-merge-longhand operates on rules.
+   */
+  const mergeStyleValue = (styleValue: string): string => {
     try {
-      // Process the style with postcss-merge-longhand
-      // Wrap in a dummy selector since postcss needs a rule
       const { css } = postcss()
         .use(mergeLonghand)
         .process(`div { ${styleValue} }`, { parser: safeParser })
-
-      // Extract the content between the braces
       const match = css.match(/div\s*\{\s*([^}]+)\s*\}/)
       if (match && match[1]) {
-        const newStyle = match[1].trim()
-        if (newStyle !== styleValue) {
-          el.attribs.style = newStyle
-        }
+        const merged = match[1].trim()
+        if (merged !== styleValue) return merged
       }
-    } catch {
-      // If processing fails, keep the original style
     }
+    catch {}
+    return styleValue
+  }
+
+  walk(dom, (node) => {
+    /**
+     * MSO conditional comments carry their own inline-style attributes
+     * (e.g. `<!--[if mso]><td style="…"><![endif]-->`) as opaque text.
+     * The element walker can't see them, so without this branch the td/
+     * v:rect styles inside comments stay longhand even when the visible
+     * div has already been merged. Match each `style="…"` substring,
+     * run it through mergeLonghand, splice back.
+     *
+     * Tag filter intentionally bypassed: the user can't address MSO td
+     * elements (they don't parse as elements), and these comments
+     * always wrap email-layout primitives anyway.
+     */
+    if (node.type === 'comment') {
+      const data = (node as any).data as string
+      if (!data || !data.includes('style="')) return
+      const newData = data.replace(/style="([^"]*)"/g, (full, value) => {
+        const merged = mergeStyleValue(value)
+        return merged === value ? full : `style="${merged}"`
+      })
+      if (newData !== data) (node as any).data = newData
+      return
+    }
+
+    const el = node as Element
+
+    if (!el.attribs?.style) return
+    if (hasTagFilter && !allowedTags.includes(el.name)) return
+
+    const merged = mergeStyleValue(el.attribs.style)
+    if (merged !== el.attribs.style) el.attribs.style = merged
   })
 
   return dom

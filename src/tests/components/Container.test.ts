@@ -85,22 +85,6 @@ describe('Container', () => {
       expect(html).toContain('<!--[if mso]></td></tr></table><![endif]-->')
     })
 
-    it('msoWidth prop overrides MSO table width and skips the placeholder', () => {
-      const html = mount(Container, { props: { msoWidth: 720 } }).html()
-      expect(html).toContain('style="width: 720px"')
-      expect(html).not.toContain('__MAIZZLE_MSOW_')
-    })
-
-    it('msoWidth wins over width on the MSO table', () => {
-      const html = mount(Container, { props: { width: '500px', msoWidth: '720px' } }).html()
-      expect(html).toContain('style="width: 720px"')
-    })
-
-    it('width prop still applies max-width to the div even when msoWidth is set', () => {
-      const wrapper = mount(Container, { props: { width: '500px', msoWidth: '720px' } })
-      expect(wrapper.find('div').attributes('style')).toContain('max-width: 500px')
-    })
-
     it('emits an MSO td-style placeholder in the opening td', () => {
       const html = mount(Container).html()
       expect(html).toMatch(/<td__MAIZZLE_MSOTDSTYLE_ct\d+__>/)

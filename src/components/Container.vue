@@ -27,15 +27,6 @@ const props = defineProps({
     default: null
   },
   /**
-   * Override the Outlook (MSO) table width independently of the
-   * div's width. Highest priority — wins over `width` and any
-   * class-derived value.
-   */
-  msoWidth: {
-    type: [String, Number],
-    default: null
-  },
-  /**
    * Inline CSS applied only to the MSO `<td>` element.
    *
    * Use for Outlook-specific styling that shouldn't affect other clients.
@@ -65,7 +56,7 @@ const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 provide('containerWidth', computed(() => props.width))
 
-const useMarker = outlookFallback && props.width == null && props.msoWidth == null
+const useMarker = outlookFallback && props.width == null
 const msoId = useMarker ? nextId('c') : null
 const tdId = outlookFallback ? nextId('ct') : null
 
@@ -84,7 +75,6 @@ const mergedClass = computed(() => {
 })
 
 const msoWidth = computed(() => {
-  if (props.msoWidth != null) return normalizeToPixels(props.msoWidth)
   if (props.width != null) return normalizeToPixels(props.width)
   return `__MAIZZLE_MSOW_${msoId}__`
 })

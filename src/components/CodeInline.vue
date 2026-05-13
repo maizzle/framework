@@ -1,5 +1,6 @@
 <script lang="ts">
-import { createStaticVNode } from 'vue'
+import { createStaticVNode, type PropType } from 'vue'
+import { codeToHtml, getSingletonHighlighter, type BundledLanguage, type BundledTheme } from 'shiki'
 
 export default {
   inheritAttrs: false,
@@ -13,9 +14,27 @@ export default {
     code: {
       type: String,
       default: ''
+    },
+    /**
+     * Language for syntax highlighting. Only consulted when `theme` is set.
+     * @default 'html'
+     */
+    language: {
+      type: String as PropType<BundledLanguage>,
+      default: 'html'
+    },
+    /**
+     * Shiki theme to apply. When set, the inline code is syntax-highlighted
+     * with this theme and the cell uses the theme's background color.
+     * When unset, falls back to the plain gray-styled `<code>` (no Shiki
+     * pass, faster, and visually quieter in body copy).
+     */
+    theme: {
+      type: String as PropType<BundledTheme | undefined>,
+      default: undefined
     }
   },
-  setup(props, { slots, attrs }) {
+  async setup(props, { slots, attrs }) {
     let source = props.code
 
     if (!source) {
@@ -32,6 +51,27 @@ export default {
     }
 
     const classes = attrs.class ? ` class="${attrs.class}"` : ''
+
+    if (props.theme) {
+      const highlighted = await codeToHtml(source, {
+        lang: props.language,
+        theme: props.theme,
+      })
+
+      const hl = await getSingletonHighlighter({ themes: [props.theme], langs: [] })
+      const bg = hl.getTheme(props.theme).bg
+
+      const codeContent = highlighted
+        .replace(/^<pre[^>]*><code>/, '')
+        .replace(/<\/code><\/pre>$/, '')
+
+      const baseStyles = `background-color:${bg};border-radius:6px;padding:0 6px;font-size:11px;display:inline-block;line-height:1.75`
+      const styles = [baseStyles, attrs.style].filter(Boolean).join(';')
+
+      const html = `<code${classes} style="${styles}">${codeContent}</code>`
+      return () => createStaticVNode(html, 1)
+    }
+
     const baseStyles = 'white-space:normal;border-radius:6px;border:1px solid #d1d5db;background-color:#f3f4f6;padding:2px 6px;font-size:11px;color:inherit'
     const styles = [baseStyles, attrs.style].filter(Boolean).join(';')
 

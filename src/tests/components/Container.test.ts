@@ -120,6 +120,14 @@ describe('Container', () => {
       const html = mount(Container, { props: { width: '600px' } }).html()
       expect(html).toMatch(/<td__MAIZZLE_MSOTDSTYLE_ct\d+__>/)
     })
+
+    it('exposes data-maizzle-mso-td-id matching the td placeholder id', () => {
+      const wrapper = mount(Container)
+      const div = wrapper.find('div')
+      const tdId = div.attributes('data-maizzle-mso-td-id')
+      expect(tdId).toMatch(/^ct\d+$/)
+      expect(wrapper.html()).toContain(`__MAIZZLE_MSOTDSTYLE_${tdId}__`)
+    })
   })
 
   describe('outlookFallback=false', () => {

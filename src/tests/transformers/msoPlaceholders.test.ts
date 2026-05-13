@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
+import { mount } from '@vue/test-utils'
 import { parse, serialize } from '../../utils/ast/index.ts'
 import { msoPlaceholders } from '../../transformers/msoPlaceholders.ts'
+import Container from '../../components/Container.vue'
 
 function run(html: string): string {
   return serialize(msoPlaceholders(parse(html)))
@@ -205,6 +207,49 @@ describe('msoPlaceholders — MSOTDSTYLE (Container td)', () => {
       + `<div style="background-color: red !important" data-maizzle-mso-td-id="bgimp"></div>`
       + `<!--[if mso]></td></tr></table><![endif]-->`
     expect(run(html)).toContain('<td style="background-color: red !important">')
+  })
+
+  describe('Container integration (component → transformer)', () => {
+    /**
+     * Walk the rendered Container HTML through the transformer with a
+     * synthetic inlined style on the div, mimicking what juice produces
+     * after Tailwind compiles `bg-*`, `p-*`, `border` class output.
+     */
+    const renderContainer = (props: Record<string, unknown>, inlinedStyle: string): string => {
+      const rendered = mount(Container, { props }).html()
+      const withStyle = rendered.replace(
+        /<div([^>]*)data-maizzle-mso-td-id="(ct\d+)"/,
+        (_m, before, id) => `<div${before}data-maizzle-mso-td-id="${id}" style="${inlinedStyle}"`
+      )
+      return run(withStyle)
+    }
+
+    it('mirrors background-color from a class-derived inline style onto the MSO td', () => {
+      const out = renderContainer({}, 'max-width: 600px; background-color: rgb(255, 255, 255)')
+      expect(out).toContain('<td style="background-color: rgb(255, 255, 255)">')
+    })
+
+    it('hoists padding when Container has no border', () => {
+      const out = renderContainer({}, 'max-width: 600px; padding: 24px; background-color: #fff')
+      expect(out).toContain('<td style="background-color: #fff; padding: 24px">')
+    })
+
+    it('skips padding hoist when Container has a horizontal border (avoids double-pad in Word)', () => {
+      const out = renderContainer(
+        {},
+        'max-width: 600px; padding: 24px; border-width: 1px; border-style: solid; background-color: #fff'
+      )
+      expect(out).toContain('<td style="background-color: #fff">')
+      expect(out).not.toMatch(/<td[^>]+padding/)
+    })
+
+    it('mso-style still wins over the hoisted bg + padding (CSS last-wins)', () => {
+      const out = renderContainer(
+        { msoStyle: 'padding: 8px; background-color: #000' },
+        'max-width: 600px; padding: 24px; background-color: #fff'
+      )
+      expect(out).toContain('<td style="background-color: #fff; padding: 24px; padding: 8px; background-color: #000">')
+    })
   })
 })
 

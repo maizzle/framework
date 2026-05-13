@@ -163,6 +163,49 @@ describe('msoPlaceholders — MSOTDSTYLE (Container td)', () => {
       + `<!--[if mso]><![endif]-->`
     expect(run(html)).toContain('<td style="padding: 12px !important">')
   })
+
+  it('mirrors background-color to the MSO td (always, when present)', () => {
+    const html
+      = `<!--[if mso]><table><tr><td__MAIZZLE_MSOTDSTYLE_bg1__><![endif]-->`
+      + `<div style="background-color: #abc; padding: 8px" data-maizzle-mso-td-id="bg1"></div>`
+      + `<!--[if mso]></td></tr></table><![endif]-->`
+    expect(run(html)).toContain('<td style="background-color: #abc; padding: 8px">')
+  })
+
+  it('mirrors background-color even when the div has no padding', () => {
+    const html
+      = `<!--[if mso]><table><tr><td__MAIZZLE_MSOTDSTYLE_bg2__><![endif]-->`
+      + `<div style="background-color: white" data-maizzle-mso-td-id="bg2"></div>`
+      + `<!--[if mso]></td></tr></table><![endif]-->`
+    expect(run(html)).toContain('<td style="background-color: white">')
+  })
+
+  it('skips padding hoist when a horizontal border is present (border stabilizes div padding in Word)', () => {
+    const html
+      = `<!--[if mso]><table><tr><td__MAIZZLE_MSOTDSTYLE_brd__><![endif]-->`
+      + `<div style="background-color: #f00; padding: 8px; border-width: 1px; border-style: solid" data-maizzle-mso-td-id="brd"></div>`
+      + `<!--[if mso]></td></tr></table><![endif]-->`
+    const out = run(html)
+    // bg-color still mirrors; padding stays on the div only
+    expect(out).toContain('<td style="background-color: #f00">')
+    expect(out).not.toMatch(/<td[^>]+padding/)
+  })
+
+  it('honors border-style: none as no border (still hoists padding)', () => {
+    const html
+      = `<!--[if mso]><table><tr><td__MAIZZLE_MSOTDSTYLE_none__><![endif]-->`
+      + `<div style="padding: 8px; border-width: 1px; border-style: none" data-maizzle-mso-td-id="none"></div>`
+      + `<!--[if mso]></td></tr></table><![endif]-->`
+    expect(run(html)).toContain('<td style="padding: 8px">')
+  })
+
+  it('preserves !important on background-color', () => {
+    const html
+      = `<!--[if mso]><table><tr><td__MAIZZLE_MSOTDSTYLE_bgimp__><![endif]-->`
+      + `<div style="background-color: red !important" data-maizzle-mso-td-id="bgimp"></div>`
+      + `<!--[if mso]></td></tr></table><![endif]-->`
+    expect(run(html)).toContain('<td style="background-color: red !important">')
+  })
 })
 
 describe('msoPlaceholders — combined', () => {

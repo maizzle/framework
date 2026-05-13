@@ -51,38 +51,32 @@ describe('Section', () => {
       expect(html).toContain('<!--[if mso]></td></tr></table><![endif]-->')
     })
 
-    it('passes style attribute to both div and MSO td', () => {
-      const html = mount(Section, { attrs: { style: 'background-color: red' } }).html()
-      expect(html).toContain('<td style="background-color: red">')
-      expect(html).toContain('background-color: red')
-      // div should also have the style
-      const wrapper = mount(Section, { attrs: { style: 'background-color: red' } })
-      expect(wrapper.find('div').attributes('style')).toContain('background-color: red')
+    it('emits the MSO td-style placeholder for the post-juice transformer', () => {
+      const html = mount(Section).html()
+      expect(html).toMatch(/<td__MAIZZLE_MSOTDSTYLE_st\d+__>/)
     })
 
-    it('passes style to MSO td along with custom width on div', () => {
-      const html = mount(Section, { props: { width: '600px' }, attrs: { style: 'padding: 10px' } }).html()
-      expect(html).toContain('<td style="padding: 10px">')
+    it('marks the div with data-maizzle-mso-td-id so the transformer can find it', () => {
+      const wrapper = mount(Section, { attrs: { style: 'background-color: red' } })
+      const div = wrapper.find('div')
+      expect(div.attributes('data-maizzle-mso-td-id')).toMatch(/^st\d+$/)
+      // div still carries the user style for modern clients; the auto-hoist runs later.
+      expect(div.attributes('style')).toContain('background-color: red')
+    })
+
+    it('keeps user inline style on the div; div + custom width coexist', () => {
       const wrapper = mount(Section, { props: { width: '600px' }, attrs: { style: 'padding: 10px' } })
       const divStyle = wrapper.find('div').attributes('style')
       expect(divStyle).toContain('max-width: 600px')
       expect(divStyle).toContain('padding: 10px')
     })
 
-    it('applies mso-style only to MSO td, not to div', () => {
-      const html = mount(Section, { props: { msoStyle: 'padding: 20px' } }).html()
-      expect(html).toContain('<td style="padding: 20px">')
+    it('passes mso-style through data-maizzle-mso-style, not directly into the td', () => {
       const wrapper = mount(Section, { props: { msoStyle: 'padding: 20px' } })
-      expect(wrapper.find('div').attributes('style')).toBeUndefined()
-    })
-
-    it('combines style and mso-style on MSO td', () => {
-      const html = mount(Section, {
-        props: { msoStyle: 'padding: 20px' },
-        attrs: { style: 'background-color: red' }
-      }).html()
-      expect(html).toContain('background-color: red')
-      expect(html).toContain('padding: 20px')
+      const div = wrapper.find('div')
+      expect(div.attributes('data-maizzle-mso-style')).toBe('padding: 20px')
+      // mso-style stays out of the visible div style.
+      expect(div.attributes('style')).toBeUndefined()
     })
   })
 

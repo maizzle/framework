@@ -1,10 +1,11 @@
+import safeParser from 'postcss-safe-parser'
 import { walk } from '../utils/ast/index.ts'
+import { horizontalBorderPx } from '../utils/cssBox.ts'
 import type { ChildNode, Element } from 'domhandler'
 
 const RE_MAX_WIDTH = /(?:^|;\s*)max-width:\s*([^;]+)/i
 const RE_WIDTH = /(?:^|;\s*)width:\s*([^;]+)/i
 const RE_PERCENT = /^[\d.]+%$/
-const PADDING_DECL_RE = /(?:^|;)\s*(padding(?:-[a-z-]+)?\s*:\s*[^;]+)/gi
 
 function resolveWidth(value: string): string | null {
   const trimmed = value.trim()
@@ -33,11 +34,16 @@ function resolveWidth(value: string): string | null {
  *   back to `data-maizzle-msow-fallback` (default `600px`) when the
  *   value can't be parsed.
  *
- * MSOTDSTYLE (`__MAIZZLE_MSOTDSTYLE_{id}__`) — emitted by `<Container>`'s
- *   MSO `<td>`. Source element is marked with `data-maizzle-mso-td-id`.
- *   Copies every `padding*` declaration from inlined style and appends
- *   the `data-maizzle-mso-style` value (the user's `msoStyle` prop).
- *   Empty input resolves to '' so the placeholder collapses cleanly.
+ * MSOTDSTYLE (`__MAIZZLE_MSOTDSTYLE_{id}__`) — emitted by `<Container>` and
+ *   `<Section>`'s MSO `<td>`. Source element is marked with
+ *   `data-maizzle-mso-td-id`. Extracts from the inlined style:
+ *     - `background-color` (always, when present) so Word paints the cell.
+ *     - `padding*` (only when no horizontal border on the element, since
+ *       Word drops div padding without a border and a copy would
+ *       double-pad with one).
+ *   Appends the `data-maizzle-mso-style` value (the user's `msoStyle`
+ *   prop) last so it wins on duplicates. Empty input resolves to ''
+ *   so the placeholder collapses cleanly.
  *
  * Single collect-walk + single substitute-walk: the same Container div
  * carries both marker kinds, so one element visit fills both maps.
@@ -71,10 +77,37 @@ export function msoPlaceholders(dom: ChildNode[]): ChildNode[] {
       const msoStyle = (a['data-maizzle-mso-style'] ?? '').trim().replace(/;\s*$/, '')
       delete a['data-maizzle-mso-style']
 
+      /**
+       * Build the MSO td's inline style from three sources, in CSS priority order
+       * (earlier = lower, later wins on dupes):
+       *
+       *   1. `background-color` (always, when present) — Word paints the cell
+       *      under any padding area or inline-block gap, not just the div.
+       *
+       *   2. `padding*` (hoisted only when no horizontal border) — Word drops
+       *      div padding without a stabilizing border, so the td has to
+       *      carry it. With a border, Word renders div padding and a td
+       *      copy would double-pad.
+       *
+       *   3. The user's `mso-style` prop — last so it overrides anything the
+       *      auto-hoist computed.
+       */
       const parts: string[] = []
       if (style) {
-        for (const m of style.matchAll(PADDING_DECL_RE)) {
-          parts.push(m[1].trim())
+        const root = safeParser(style)
+
+        let bgDecl: string | undefined
+        root.walkDecls('background-color', (d) => {
+          bgDecl = `background-color: ${d.value}${d.important ? ' !important' : ''}`
+        })
+        if (bgDecl) parts.push(bgDecl)
+
+        if (horizontalBorderPx(root) === 0) {
+          root.walkDecls((d) => {
+            if (/^padding(-|$)/.test(d.prop)) {
+              parts.push(`${d.prop}: ${d.value}${d.important ? ' !important' : ''}`)
+            }
+          })
         }
       }
       if (msoStyle) parts.push(msoStyle)

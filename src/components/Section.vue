@@ -63,6 +63,7 @@ const userHasWidth = computed(() => {
 
 const useMarker = outlookFallback && props.width == null && userHasWidth.value
 const msoId = useMarker ? nextId('s') : null
+const tdId = outlookFallback ? nextId('st') : null
 
 const divStyle = computed(() => {
   const parts: string[] = []
@@ -74,13 +75,6 @@ const divStyle = computed(() => {
 const restAttrs = computed(() => {
   const { style: _, ...rest } = attrs
   return rest
-})
-
-const tdStyles = computed(() => {
-  const parts: string[] = []
-  if (userStyle.value) parts.push(userStyle.value)
-  if (props.msoStyle) parts.push(props.msoStyle)
-  return parts.length ? parts.join('; ') : ''
 })
 
 const msoWidth = computed(() => {
@@ -95,13 +89,12 @@ const colWidthSource = computed(() => {
   return null
 })
 
-const MsoBefore = () => {
-  const tdStyle = tdStyles.value ? ` style="${tdStyles.value}"` : ''
-  return createStaticVNode(
-    `<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width: ${msoWidth.value}"><tr><td${tdStyle}><![endif]-->`,
-    1
-  )
-}
+const tdMarker = tdId ? `__MAIZZLE_MSOTDSTYLE_${tdId}__` : ''
+
+const MsoBefore = () => createStaticVNode(
+  `<!--[if mso]><table role="none" cellpadding="0" cellspacing="0" style="width: ${msoWidth.value}"><tr><td${tdMarker}><![endif]-->`,
+  1
+)
 
 const MsoAfter = () => createStaticVNode(
   '<!--[if mso]></td></tr></table><![endif]-->',
@@ -117,6 +110,8 @@ const MsoAfter = () => createStaticVNode(
     :data-maizzle-msow-id="msoId"
     :data-maizzle-msow-fallback="useMarker ? '100%' : null"
     :data-maizzle-cw="colWidthSource"
+    :data-maizzle-mso-td-id="tdId"
+    :data-maizzle-mso-style="tdId && props.msoStyle ? props.msoStyle : null"
   >
     <slot />
   </div>

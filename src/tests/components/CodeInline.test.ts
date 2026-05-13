@@ -90,13 +90,15 @@ describe('CodeInline', () => {
   })
 
   describe('shiki highlighting (opt-in via theme prop)', () => {
-    it('emits token spans with inline color styles when theme is set', async () => {
+    it('emits token spans with §MZLT§/§MZGT§ markers when theme is set', async () => {
       const html = await render({ code: '<div>x</div>', theme: 'github-light' })
 
-      // Shiki produces nested spans with inline `color:` styles per token.
-      expect(html).toMatch(/<span[^>]+style="[^"]*color:/)
-      // Source is in the output, syntax-tokenized (so the raw `<div>` is no
-      // longer present as a single substring — it's split across spans).
+      // CodeInline replaces real `<`/`>` with private markers so oxfmt sees
+      // text content (not inline tags) and doesn't reflow. minifyCodeInline
+      // decodes back to real angle brackets at the end of the pipeline.
+      expect(html).toContain('§MZLT§span')
+      expect(html).toContain('§MZGT§')
+      expect(html).toMatch(/style="[^"]*color:/)
       expect(html).toContain('div')
     })
 
@@ -108,24 +110,34 @@ describe('CodeInline', () => {
       expect(html).not.toContain('border:1px solid #d1d5db')
       // Inline-friendly styling still applied.
       expect(html).toContain('border-radius:6px')
-      expect(html).toContain('padding:0 6px')
+      expect(html).toContain('padding:2px 6px')
       expect(html).toContain('font-size:11px')
-      expect(html).toContain('display:inline-block')
-      expect(html).toContain('line-height:1.75')
     })
 
     it('strips shiki\'s <pre><code> wrapper and emits a single <code>', async () => {
       const html = await render({ code: 'foo', theme: 'github-light' })
 
-      expect(html).not.toContain('<pre')
-      expect((html.match(/<code/g) ?? []).length).toBe(1)
+      // No real <pre> tag (shiki's <pre> is consumed before marker-escape).
+      expect(html).not.toMatch(/<pre[\s>]/)
+      // Exactly one real <code> element.
+      expect((html.match(/<code[\s>]/g) ?? []).length).toBe(1)
     })
 
     it('respects the language prop', async () => {
       const html = await render({ code: 'const x = 1', language: 'ts', theme: 'github-light' })
 
-      // ts keyword `const` ends up wrapped in a token span.
-      expect(html).toMatch(/<span[^>]+style="[^"]*color:[^"]*"[^>]*>const<\/span>/)
+      // ts keyword `const` ends up wrapped in a token span (marker-escaped).
+      expect(html).toMatch(/§MZLT§span style="color:[^"]*"§MZGT§const§MZLT§\/span§MZGT§/)
+    })
+
+    it('emits data-minify-inline so the post-format transformer collapses the whitespace shiki/oxfmt inject between token spans', async () => {
+      const html = await render({ code: '<table>', theme: 'github-light' })
+      expect(html).toContain('data-minify-inline')
+    })
+
+    it('does not emit data-minify-inline on the plain path (no shiki, no inter-tag whitespace to clean)', async () => {
+      const html = await render({ code: 'foo' })
+      expect(html).not.toContain('data-minify-inline')
     })
 
     it('falls back to plain styling when theme is not set', async () => {
@@ -133,8 +145,8 @@ describe('CodeInline', () => {
 
       expect(html).toContain('background-color:#f3f4f6')
       expect(html).toContain('border:1px solid #d1d5db')
-      // No shiki token spans without a theme.
-      expect(html).not.toMatch(/<span[^>]+style="[^"]*color:/)
+      // No shiki marker spans without a theme.
+      expect(html).not.toContain('§MZLT§')
     })
   })
 })

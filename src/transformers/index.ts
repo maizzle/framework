@@ -18,6 +18,7 @@ import { urlQueryDom } from './urlQuery.ts'
 import { purgeCssDom } from './purgeCss.ts'
 import { replaceStrings } from './replaceStrings.ts'
 import { format } from './format.ts'
+import { minifyCodeInline } from './minifyCodeInline.ts'
 import { minify } from './minify.ts'
 import type { MaizzleConfig } from '../types/config.ts'
 import type { TailwindBlock } from '../composables/renderContext.ts'
@@ -189,12 +190,21 @@ export async function runTransformers(
 
   // Strip self-closing slashes for HTML5 doctypes, but preserve content
   // inside MSO conditional comments (which are XML-ish and case/syntax sensitive).
+  // MUST run BEFORE minifyCodeInline: at this point, CodeInline's shiki output
+  // is still marker-encoded (§MZLT§/§MZGT§), so any ` />` in the highlighted
+  // source code (e.g. a Vue self-closing tag) hasn't materialized yet and
+  // can't be mistakenly stripped from inside a `<code>` element.
   if (!isXhtml) {
     result = result.replace(
       /<!--\[if [^\]]*\]>[\s\S]*?<!\[endif\]-->|( \/>)/g,
       (match, selfClose) => selfClose ? '>' : match,
     )
   }
+
+  // 16.5. Strip whitespace inside `data-minify-inline` markers (CodeInline's
+  // Shiki output, etc.). Runs after format/minify so it cleans up the
+  // pretty-printer's indentation between sibling tags.
+  result = minifyCodeInline(result)
 
   return result
 }

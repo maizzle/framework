@@ -18,7 +18,7 @@ export interface TailwindBlock {
 
 export interface RenderContext {
   doctype?: string
-  preheader?: { text: string; fillerCount: number; shyCount: number }
+  preheader?: { text: string; fillerCount: number }
   sfcConfig?: MaizzleConfig
   sfcEventHandlers: Array<{ name: EventName; handler: EventMap[EventName] }>
   plaintext?: UsePlaintextOptions

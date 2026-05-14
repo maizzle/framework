@@ -1,11 +1,14 @@
 import { inject } from 'vue'
 import { RenderContextKey } from './renderContext.ts'
 
+const PREVIEW_LENGTH = 200
+
 export interface UsePreheaderOptions {
-  /** Number of &#8199;&#847; filler pairs to render. @default 150 */
-  fillerCount?: number
-  /** Number of &shy; entities to render. @default 150 */
-  shyCount?: number
+  /**
+   * Explicit number of filler sequences to render. When omitted, the count
+   * is auto-derived to fill the 200-char inbox preview budget.
+   */
+  spaces?: number
 }
 
 /**
@@ -18,16 +21,15 @@ export interface UsePreheaderOptions {
  * Usage in SFC <script setup>:
  * ```ts
  * usePreheader('Thanks for signing up!')
- * usePreheader('Welcome!', { fillerCount: 200, shyCount: 200 })
+ * usePreheader('Welcome!', { spaces: 50 })
  * ```
  */
 export function usePreheader(text: string, options?: UsePreheaderOptions): void {
   const ctx = inject(RenderContextKey)
   if (ctx) {
-    ctx.preheader = {
-      text,
-      fillerCount: options?.fillerCount ?? 150,
-      shyCount: options?.shyCount ?? 150,
-    }
+    const fillerCount = options?.spaces !== undefined
+      ? Math.max(0, options.spaces)
+      : Math.max(0, PREVIEW_LENGTH - text.length)
+    ctx.preheader = { text, fillerCount }
   }
 }

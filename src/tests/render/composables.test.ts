@@ -18,6 +18,9 @@ describe('render', () => {
   })
 
   describe('usePreheader', () => {
+    // Each filler iteration emits: U+2007 (figure space) U+FEFF (ZWNBSP) U+034F (combining grapheme joiner) U+0020 (space).
+    const FILLER_RE = new RegExp('\\u2007\\uFEFF\\u034F\\u0020', 'g')
+
     it('injects preheader text div at start of body', async () => {
       const result = await render(`
         <script setup>
@@ -40,10 +43,10 @@ describe('render', () => {
       expect(bodyContent.indexOf('Welcome aboard!')).toBeLessThan(bodyContent.indexOf('<h1>'))
     })
 
-    it('uses custom filler and shy counts', async () => {
+    it('honors an explicit spaces override', async () => {
       const result = await render(`
         <script setup>
-        usePreheader('Hi', { fillerCount: 2, shyCount: 3 })
+        usePreheader('Hi', { spaces: 2 })
         </script>
         <template>
           <html>
@@ -55,6 +58,25 @@ describe('render', () => {
 
       expect(result.html).toContain('Hi')
       expect(result.html).toContain('display:none')
+      // 2 filler units: U+2007 U+FEFF U+034F U+0020 repeated
+      const fillerMatches = result.html.match(FILLER_RE) ?? []
+      expect(fillerMatches.length).toBe(2)
+      // Trailing non-breaking space before closing div
+      expect(result.html).toContain('\u00A0</div>')
+    })
+
+    it('auto-pads to 200 chars minus text length', async () => {
+      const result = await render(`
+        <script setup>
+        usePreheader('Hello')
+        </script>
+        <template>
+          <html><head></head><body><p>x</p></body></html>
+        </template>
+      `, { useTransformers: false })
+
+      const fillerMatches = result.html.match(FILLER_RE) ?? []
+      expect(fillerMatches.length).toBe(195)
     })
   })
 

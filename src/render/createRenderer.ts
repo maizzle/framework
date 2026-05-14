@@ -462,10 +462,9 @@ export async function createRenderer(
 
       // Inject preheader text from usePreheader() composable
       if (renderContext.preheader) {
-        const { text, fillerCount, shyCount } = renderContext.preheader
-        const filler = '\u2007\u034F '.repeat(fillerCount)
-        const shys = '\u00AD '.repeat(shyCount)
-        const previewHtml = `<div style="display:none">${text}${filler}${shys}\u00A0</div>`
+        const { text, fillerCount } = renderContext.preheader
+        const filler = '\u2007\uFEFF\u034F '.repeat(fillerCount)
+        const previewHtml = `<div style="display:none">${text}${filler}\u00A0</div>`
         html = html.replace(/<body([^>]*)>/, `<body$1>${previewHtml}`)
       }
 

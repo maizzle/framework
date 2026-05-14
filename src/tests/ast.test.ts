@@ -139,4 +139,24 @@ describe('serialize', () => {
 
     expect(serialize(dom)).toBe(html)
   })
+
+  it('re-encodes < and > in text nodes so escaped markup does not leak as DOM', () => {
+    const dom = parse('<div>&lt;p&gt;Hello&lt;/p&gt;</div>')
+
+    expect(serialize(dom)).toBe('<div>&lt;p&gt;Hello&lt;/p&gt;</div>')
+  })
+
+  it('leaves & in text nodes untouched (entities transformer relies on it)', () => {
+    const dom = parse('<p>foo</p>')
+    const p = dom[0] as any
+    p.children[0].data = '&nbsp;'
+
+    expect(serialize(dom)).toBe('<p>&nbsp;</p>')
+  })
+
+  it('does not re-encode < or > inside <script> or <style>', () => {
+    const dom = parse('<style>a > b { color: red; }</style>')
+
+    expect(serialize(dom)).toBe('<style>a > b { color: red; }</style>')
+  })
 })

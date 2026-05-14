@@ -1,33 +1,46 @@
 import render from 'dom-serializer'
-import type { ChildNode } from 'domhandler'
+import type { ChildNode, Element, Text } from 'domhandler'
 import type { DomSerializerOptions } from 'dom-serializer'
-import { walk } from './walker.ts'
+
+const RAW_TEXT_ELEMENTS = new Set(['script', 'style'])
 
 /**
- * Re-encode < and > as entities in text nodes inside <code> elements.
+ * Re-encode `<` and `>` in text nodes before serialization.
  *
- * The DOM parser decodes entities like &#x3C; into raw < in text nodes.
- * With encodeEntities: false the serializer outputs them as-is, which
- * creates broken HTML (e.g. </a> inside a code block closes the real tag).
+ * The parser decodes entities like `&lt;` into raw `<` in text nodes. With
+ * `encodeEntities: false` (needed so other transformers can emit entity
+ * strings such as `&nbsp;` verbatim), the serializer would write those raw
+ * `<` characters as-is, turning escaped text (e.g. a Vue `{{ html }}`
+ * interpolation containing `<p>...</p>`) into real DOM downstream.
  *
- * We selectively fix this for <code> contents only, so the rest of the
- * document (where encodeEntities: false is needed) is unaffected.
+ * `&` is intentionally not re-encoded: the `entities` transformer writes
+ * literal entity strings (`&nbsp;`, `&mdash;`) directly into text-node data
+ * and relies on the serializer leaving them alone.
+ *
+ * Skip `<script>` / `<style>` — their children are raw-text containers, and
+ * CSS/JS legitimately contains `<` and `>`.
  */
-function encodeCodeTextNodes(dom: ChildNode[]): void {
-  walk(dom, (node) => {
-    const el = node as import('domhandler').Element
-    if (el.name !== 'code') return
-
-    walk(el.children ?? [], (child) => {
-      if (child.type === 'text') {
-        const text = child as import('domhandler').Text
-        text.data = text.data.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+function encodeTextNodes(dom: ChildNode[], inRawText = false): void {
+  for (const node of dom) {
+    if (node.type === 'text') {
+      if (!inRawText) {
+        const text = node as Text
+        text.data = text.data
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
       }
-    })
-  })
+      continue
+    }
+
+    if ('children' in node && (node as Element).children?.length) {
+      const el = node as Element
+      const nextRaw = inRawText || RAW_TEXT_ELEMENTS.has(el.name)
+      encodeTextNodes(el.children as ChildNode[], nextRaw)
+    }
+  }
 }
 
 export function serialize(dom: ChildNode[], options?: DomSerializerOptions): string {
-  encodeCodeTextNodes(dom)
+  encodeTextNodes(dom)
   return render(dom, { encodeEntities: false, ...options })
 }

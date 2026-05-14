@@ -94,7 +94,7 @@ const render = () => {
 
   const parts = [
     `dir="${props.dir}"`,
-    'style="margin: 0; padding: 0; width: 100%; word-break: break-word;"',
+    'style="margin: 0; padding: 0; width: 100%; height: 100%; word-break: break-word;"',
   ]
   if (outlookFallback) {
     parts.unshift(`xml:lang="${lang}"`)

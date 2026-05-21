@@ -132,15 +132,16 @@ usePlaintext({ extension: 'text', destination: 'dist/plaintext', options: { igno
 
 Hidden preview text injected at `<body>` start. Script equivalent of the `<Preheader>` component.
 
+Padded with invisible filler sequences (`&#8199;&#65279;&#847;`) so clients don't pull body text into the inbox snippet.
+
 Options:
 
-- `fillerCount` (number, default `150`) — `&#8199;&#65279;&#847;` filler pairs that push body text out of the preview area.
-- `shyCount` (number, default `150`) — `&shy;` entities.
+- `spaces` (number) — explicit number of filler sequences. When omitted, the count auto-derives to fill a ~200-char inbox preview budget based on the text length.
 
 ```vue
 <script setup>
 usePreheader('Check out our latest deals — up to 50% off everything.')
-usePreheader('Short preview.', { fillerCount: 200, shyCount: 200 })
+usePreheader('Short preview.', { spaces: 50 })
 </script>
 ```
 

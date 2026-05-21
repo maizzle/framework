@@ -21,53 +21,53 @@ Vue templates need a colon prefix to bind dynamic values (`:href="resetUrl"`); s
 
 | React Email | Maizzle | Notes |
 |---|---|---|
-| `<Html>` | `<Html>` | Same. Or use `<Layout>` for full document setup. |
-| `<Tailwind config={...}>` | _(remove)_ | Maizzle compiles Tailwind via `@import "@maizzle/tailwindcss"` in `<style>`. |
-| `<Head />` | `<Head>` | When not using `<Layout>`, contains `<style>@import "@maizzle/tailwindcss";</style>`. |
+| `<Html>` | `<Html>` | Or `<Layout>` for full document setup. |
+| `<Tailwind config={...}>` | _(remove)_ | Maizzle compiles via `@import "@maizzle/tailwindcss"` in `<style>`. |
+| `<Head />` | `<Head>` | Without `<Layout>`, contains `<style>@import "@maizzle/tailwindcss";</style>`. |
 | `<Body>` | `<Body>` | Or `<Layout body-class="...">`. |
-| `<Preview>text</Preview>` | `<Preheader>text</Preheader>` | Auto-teleported to body start; can sit anywhere. |
-| `<Container>` | `<Container>` | Optional `width` prop pins both div max-width and MSO table width. Without it: `max-w-150 mx-auto` (600px), MSO width auto-derived. |
+| `<Preview>text</Preview>` | `<Preheader>text</Preheader>` | Auto-teleported to body start. |
+| `<Container>` | `<Container>` | Optional `width` prop pins div max-width + MSO table width. Default `max-w-150 mx-auto` (600px). |
 | `<Section>` | `<Section>` | MSO `<table>` wrapped automatically. |
-| `<Row>` | `<Row>` | Same. |
-| `<Column class="w-1/2">` | `<Column class="w-1/2 xs:w-full">` | Without explicit width classes, Column auto-calculates `min-width` from nearest sized ancestor and stacks naturally. |
-| `<Heading as="h2">` | `<Heading level="2">` | Prop is `level` (number 1-6), not `as`. Default `level=1`. Has built-in `m-0`. |
+| `<Row>` | `<Row>` | |
+| `<Column class="w-1/2">` | `<Column class="w-1/2 xs:w-full">` | Without explicit widths, auto-calculates `min-width` from nearest sized ancestor. |
+| `<Heading as="h2">` | `<Heading level="2">` | Prop is `level` (1-6), not `as`. Has built-in `m-0`. |
 | `<Text>` | `<Text>` | Supports `as="span"`. |
-| `<Button href="..." className="... block text-center no-underline box-border">` | `<Button href="..." class="...">` | Drop `box-border block text-center no-underline` — handled internally. Use `class` for colors. Variants: `solid` (default), `outline`, `ghost`, `link`. Optional `align`, `icon`, `icon-position`. |
+| `<Button href="..." className="... block text-center no-underline box-border">` | `<Button href="..." class="...">` | Drop `box-border block text-center no-underline` — handled internally. Variants: `solid`(default)/`outline`/`ghost`/`link`. Optional `align`, `icon`, `icon-position`. |
 | `<Link>` | `<Link>` | Defaults to `no-underline`. |
-| `<Img src="..." width="150">` | `<Img src="..." width="150">` | `width` is required. Adds `dark-src` and `motion-src` for variant images via `<picture>`. |
-| `<Hr>` | `<Hr>` | Maizzle's `<Hr>` is a styled `<div>` with defaults `h-px leading-px my-6 bg-slate-300`. Override via class: `bg-*`, `m*-*`, and `h-*` or `leading-*`. Drop React Email's `border-solid border-*`. |
-| `<CodeBlock code language="js" theme={dracula}>` | `<CodeBlock code="..." language="js" theme="github-light">` | Theme is a Shiki theme name (string), not an imported object. |
-| `<CodeInline>` | `<CodeInline>` | Same. |
+| `<Img src="..." width="150">` | `<Img src="..." width="150">` | `width` required. Adds `dark-src`/`motion-src` for variant images via `<picture>`. |
+| `<Hr>` | `<Hr>` | Styled `<div>` (defaults `h-px leading-px my-6 bg-slate-300`). Override via `bg-*`/`m*-*`/`h-*`/`leading-*`. Drop `border-solid border-*`. |
+| `<CodeBlock code language="js" theme={dracula}>` | `<CodeBlock code="..." language="js" theme="github-light">` | Theme is a Shiki theme **name** (string), not imported object. |
+| `<CodeInline>` | `<CodeInline>` | Plain by default; opt into Shiki via `theme` prop. |
 | `<Markdown>{content}</Markdown>` | `<Markdown>content</Markdown>` | Also accepts `src` for `.md` files. |
-| `<Font fontFamily webFont>` | _(use `<link>` in `<Head>`)_ | No `<Font>` component. `<Layout>` includes Inter by default. |
+| `<Font fontFamily webFont>` | _(use `<link>` in `<Head>`)_ | No `<Font>` component required; `<Layout>` includes Inter by default. |
 
 ## Maizzle-Only Components & Features
 
 | Component | Purpose |
 |---|---|
-| `<Layout>` | Full document scaffold: `html` + `head` (charset/viewport/format-detection meta, MSO font reset, Tailwind import, Inter font, color-scheme meta) + `body` + `<div role="article">`. Replaces the `Html > Tailwind > Head + Body` chain. Props: `lang`, `dir`, `body-class`, `aria-label`, `double-head`, `outlook-fallback`. |
-| `<Spacer>` | Vertical or horizontal spacer. Props: `type` (`vertical`/`horizontal`), `width` (default 16, horizontal-only), `outlook-fallback`. Vertical sizing via class: `leading-*` or `h-*`; Outlook fine-tune via `mso-line-height-alt-*` utilities. Horizontal renders MSO-safe `mso-font-width` `<i>`. |
-| `<WithUrl>` | Scoped URL rewriting (base URL, UTM params) for descendant `href`/`src` attributes. |
-| `<NoWidows>` | Prevents orphaned last words in text. |
-| `<Outlook>` / `<NotOutlook>` | Render content only in (or only outside) Outlook. Outlook supports version filtering. |
-| `<OutlookBg>` | VML background images for Outlook. |
+| `<Layout>` | Full document scaffold. Replaces `Html > Tailwind > Head + Body`. Props: `lang`, `dir`, `body-class`, `aria-label`, `double-head`, `outlook-fallback`. |
+| `<Spacer>` | Vertical/horizontal spacer. Props: `type`, `width` (horizontal-only, default 16). Vertical sizing via `leading-*`/`h-*`; Outlook fine-tune via `mso-line-height-alt-*`. Horizontal renders MSO-safe `mso-font-width` `<i>`. |
+| `<WithUrl>` | Scoped URL rewriting (base URL, UTM) for descendant `href`/`src` attrs. |
+| `<NoWidows>` | Prevent orphaned last words. |
+| `<Outlook>`/`<NotOutlook>` | Render inside/outside Outlook. Outlook supports version filtering + `open`/`close` raw HTML for ghost-table openers. |
+| `<OutlookBg>` | VML background images. |
 | `<Overlap>` | Faux absolute positioning with VML fallback. |
-| `<Plaintext>` / `<NotPlaintext>` | Show content only in the plaintext output (or hide it from plaintext). |
-| `<QrCode value="...">` | Inline table-based QR code. Props: `value`, `ecc` (`L`/`M`/`Q`/`H`), `border`, `alt`. Sized via `size-*`/`w-*`/`h-*` Tailwind classes. |
-| `<Raw>` | Pass content through verbatim — `{{ }}` and other Vue/ESP syntax is not parsed. |
+| `<Plaintext>`/`<NotPlaintext>` | Plaintext-only or HTML-only routing. |
+| `<QrCode value="...">` | Table-based QR. Props: `value`, `ecc`, `border`, `alt`. Sized via `size-*`/`w-*`/`h-*`. |
+| `<Raw>` | Pass content through verbatim — `{{ }}` and other Vue/ESP syntax not parsed. |
 | `<Preheader spaces="150">` | Hidden preview text + filler. Auto-teleports to `body:start`. |
-| `<Img dark-src motion-src>` | `<picture>` with dark-mode and reduced-motion variants. |
-| Responsive variants | `sm:` (≤600px), `xs:` (≤430px). |
+| `<Img dark-src motion-src>` | `<picture>` with dark-mode + reduced-motion variants. |
+| Responsive | `sm:` (≤600px), `xs:` (≤430px). |
 | Dark mode | `dark:` via `prefers-color-scheme`. |
 | Client variants | `gmail:`, `outlook-mac:`, `apple-mail:`, `yahoo:`, etc. |
-| `defineConfig()` | Per-template config overrides in `<script setup>`. |
-| `useEvent()` | Template-level lifecycle hooks (afterRender, afterTransform, etc.). |
+| `defineConfig()` | Per-template config overrides. |
+| `useEvent()` | Template-level lifecycle hooks. |
 
 ## Conversion Steps
 
 ### 1. File format
 
-`.tsx` default-export function → `.vue` SFC with `<script setup>` and `<template>`.
+`.tsx` default-export function → `.vue` SFC with `<script setup>` + `<template>`.
 
 ### 2. Remove React Email boilerplate
 
@@ -78,13 +78,11 @@ Vue templates need a colon prefix to bind dynamic values (`:href="resetUrl"`); s
 
 ### 3. Document structure
 
-Recommended — let `<Layout>` set everything up:
+Recommended:
 
 ```vue
 <template>
-  <Layout lang="en" body-class="bg-gray-100">
-    <!-- content -->
-  </Layout>
+  <Layout lang="en" body-class="bg-gray-100"><!-- content --></Layout>
 </template>
 ```
 
@@ -94,26 +92,18 @@ React Email-like with `<Tailwind>`:
 <template>
   <Html lang="en">
     <Head />
-    <Tailwind>
-      <Body class="bg-gray-100">
-        <!-- content -->
-      </Body>
-    </Tailwind>
+    <Tailwind><Body class="bg-gray-100"><!-- content --></Body></Tailwind>
   </Html>
 </template>
 ```
 
-Manual control with `<Html>`/`<Head>`/`<Body>`:
+Manual control:
 
 ```vue
 <template>
   <Html lang="en">
-    <Head>
-      <style>@import "@maizzle/tailwindcss";</style>
-    </Head>
-    <Body class="bg-gray-100">
-      <!-- content -->
-    </Body>
+    <Head><style>@import "@maizzle/tailwindcss";</style></Head>
+    <Body class="bg-gray-100"><!-- content --></Body>
   </Html>
 </template>
 ```
@@ -136,15 +126,12 @@ const props = defineProps({
 <Text v-if="isVip">VIP member</Text>
 <Text v-if="status === 'active'">Active</Text>
 <Text v-else>Inactive</Text>
-
-<Section v-for="(item, i) in items" :key="i">
-  <Text>{{ item.name }}</Text>
-</Section>
+<Section v-for="(item, i) in items" :key="i"><Text>{{ item.name }}</Text></Section>
 ```
 
 ### 6. Styling
 
-`className` → `class`. Tailwind utilities are mostly identical (Maizzle uses Tailwind v4).
+`className` → `class`. Tailwind utilities mostly identical (Maizzle uses Tailwind v4).
 
 Drop email-workaround classes Maizzle handles internally:
 - `box-border`, `block text-center no-underline` on `<Button>`
@@ -156,9 +143,7 @@ Customize Tailwind theme inline:
 <Head>
   <style>
     @import "@maizzle/tailwindcss";
-    @theme {
-      --color-brand: #007bff;
-    }
+    @theme { --color-brand: #007bff; }
   </style>
 </Head>
 ```
@@ -172,10 +157,7 @@ Drop manual `baseURL` concatenation. Use `url.base` in `maizzle.config.ts` or `<
 ```
 
 ```ts
-// maizzle.config.ts
-export default defineConfig({
-  url: { base: 'https://cdn.example.com/emails/' }
-})
+export default defineConfig({ url: { base: 'https://cdn.example.com/emails/' } })
 ```
 
 ### 8. Dividers
@@ -217,22 +199,11 @@ export default function PasswordReset({ resetUrl, email, expiryHours = 1 }: Prop
           <Preview>Reset your password</Preview>
           <Container className="mx-auto py-10 px-5 max-w-xl bg-white">
             <Heading className="text-2xl font-bold text-gray-800 mb-5">Reset Your Password</Heading>
-            <Text className="text-base leading-7 text-gray-800 my-4">
-              A reset was requested for <strong>{email}</strong>.
-            </Text>
-            <Text className="text-base leading-7 text-gray-800 my-4">
-              This link expires in {expiryHours} hour{expiryHours > 1 ? 's' : ''}.
-            </Text>
-            <Button
-              href={resetUrl}
-              className="bg-red-600 text-white px-7 py-3.5 rounded block text-center font-bold my-6 no-underline box-border"
-            >
-              Reset Password
-            </Button>
+            <Text className="text-base leading-7 text-gray-800 my-4">A reset was requested for <strong>{email}</strong>.</Text>
+            <Text className="text-base leading-7 text-gray-800 my-4">This link expires in {expiryHours} hour{expiryHours > 1 ? 's' : ''}.</Text>
+            <Button href={resetUrl} className="bg-red-600 text-white px-7 py-3.5 rounded block text-center font-bold my-6 no-underline box-border">Reset Password</Button>
             <Hr className="border-solid border-gray-200 my-6" />
-            <Text className="text-sm text-gray-500 leading-5 my-2">
-              If you didn't request this, ignore this email.
-            </Text>
+            <Text className="text-sm text-gray-500 leading-5 my-2">If you didn't request this, ignore this email.</Text>
           </Container>
         </Body>
       </Tailwind>
@@ -260,19 +231,11 @@ const props = defineProps({
     <Container class="max-w-xl">
       <Section class="py-10 px-5 bg-white">
         <Heading class="text-2xl font-bold text-gray-800 mb-5">Reset Your Password</Heading>
-        <Text class="leading-7 text-gray-800">
-          A reset was requested for <strong>{{ email }}</strong>.
-        </Text>
-        <Text class="leading-7 text-gray-800">
-          This link expires in {{ expiryHours }} hour{{ expiryHours > 1 ? 's' : '' }}.
-        </Text>
-        <Button :href="resetUrl" class="bg-red-600 text-white font-bold rounded my-6">
-          Reset Password
-        </Button>
+        <Text class="leading-7 text-gray-800">A reset was requested for <strong>{{ email }}</strong>.</Text>
+        <Text class="leading-7 text-gray-800">This link expires in {{ expiryHours }} hour{{ expiryHours > 1 ? 's' : '' }}.</Text>
+        <Button :href="resetUrl" class="bg-red-600 text-white font-bold rounded my-6">Reset Password</Button>
         <Hr class="bg-gray-200 my-6" />
-        <Text class="text-sm text-gray-500">
-          If you didn't request this, ignore this email.
-        </Text>
+        <Text class="text-sm text-gray-500">If you didn't request this, ignore this email.</Text>
       </Section>
     </Container>
   </Layout>
@@ -281,11 +244,11 @@ const props = defineProps({
 
 ## Common Pitfalls
 
-1. Using `as="h2"` on `<Heading>` — it's `level="2"`.
+1. `<Heading as="h2">` — it's `level="2"`.
 2. Keeping `box-border` / `block text-center no-underline` on `<Button>` — internal.
 3. Forgetting `xs:w-full` on Columns when you want mobile stacking with explicit widths.
 4. Manual `baseURL` concatenation for images — use `url.base` or `<WithUrl>`.
 5. Forgetting `:` for dynamic props (`:href="resetUrl"`, not `href={resetUrl}` or `href="resetUrl"`).
 6. `{variable}` instead of `{{ variable }}`.
 7. Not converting `PreviewProps` to `defineProps`.
-8. Setting Button color via a non-existent `bg-color` prop — use Tailwind classes (`class="bg-red-600 text-white"`) or override via inline `style`.
+8. Setting Button color via a non-existent `bg-color` prop — use Tailwind classes (`class="bg-red-600 text-white"`) or inline `style`.

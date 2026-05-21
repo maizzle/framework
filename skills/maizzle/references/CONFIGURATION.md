@@ -5,19 +5,10 @@ Configuration lives in `maizzle.config.ts` at the project root. Use `defineConfi
 ```ts
 import { defineConfig } from '@maizzle/framework'
 
-export default defineConfig({
-  // options...
-})
+export default defineConfig({ /* options */ })
 ```
 
-**Resolution order** (highest priority last):
-1. Built-in defaults
-2. `maizzle.config.ts`
-3. Per-template `defineConfig()` in `<script setup>` (deep-merged)
-
-Arrays are replaced, not merged: setting `content: ['x']` overrides the default array entirely.
-
-When using Maizzle as a Vite plugin, pass the same config object to `maizzle({ ... })`.
+**Resolution order** (highest priority last): built-in defaults → `maizzle.config.ts` → per-template `defineConfig()` (deep-merged). Arrays are replaced, not merged. When using the Vite plugin, pass the same config to `maizzle({ ... })`.
 
 ## Defaults Summary
 
@@ -35,12 +26,10 @@ When using Maizzle as a Vite plugin, pass the same config object to `maizzle({ .
 
 ## Project Layout
 
-- `root` (string, default `process.cwd()`) — root for `content`, `static.source`, `css.base`. Set when emails live in a subdir of a larger app (Laravel, monorepo, Vite SPA).
+- `root` (string, default `process.cwd()`) — root for `content`, `static.source`, `css.base`. Set when emails live in a subdir of a larger app.
 - `content` (string[], default `['emails/**/*.{vue,md}']`) — template globs. Negation supported (`'!emails/drafts/**'`). Output preserves directory structure.
-- `output.path` (string, default `'dist'`) — output dir.
-- `output.extension` (string, default `'html'`) — output file extension (e.g. `'blade.php'`).
-- `static.source` (string[], default `['public/**/*.*']`) — static file globs.
-- `static.destination` (string, default `'public'`) — static subdir inside output.
+- `output.path` / `output.extension` (default `'dist'` / `'html'`; e.g. `'blade.php'`).
+- `static.source` / `static.destination` (default `['public/**/*.*']` / `'public'`).
 - `components.source` (string | string[]) — extra component dirs (relative to `cwd`, not `root`).
 
 ```ts
@@ -55,15 +44,15 @@ export default defineConfig({
 
 ## CSS
 
-- `css.inline` (bool | object, default `true`) — Juice options. Inline `<style>` into elements. Common Juice keys: `attributeToStyle`, `excludedProperties`, `applyWidthAttributes`, `removeStyleTags`, `removeInlinedSelectors`, `styleToAttribute`, `widthElements`, `heightElements`, `safelist`, `customCSS`.
-- `css.purge` (bool | object, default `true`) — `email-comb` options. `safelist` extends defaults; supports wildcards (`.gmail*`).
-- `css.shorthand` (bool | { tags?: string[] }, default `true`) — collapse longhand CSS (e.g. `padding: 10px 20px 10px 20px` → `10px 20px`).
-- `css.safe` (bool | Record, default `true`) — replace unsafe class chars (`sm:text-lg` → `sm-text-lg`). Pass a map for custom replacements.
-- `css.preferUnitless` (bool, default `true`) — strip units from zero values in inlined styles (`0px` → `0`).
+- `css.inline` (bool | object, default `true`) — Juice options. Common keys: `attributeToStyle`, `excludedProperties`, `applyWidthAttributes`, `removeStyleTags`, `removeInlinedSelectors`, `styleToAttribute`, `widthElements`, `heightElements`, `safelist`, `customCSS`.
+- `css.purge` (bool | object, default `true`) — `email-comb` options. `safelist` extends defaults; wildcards (`.gmail*`).
+- `css.shorthand` (bool | { tags? }, default `true`) — collapse longhand (`padding: 10px 20px 10px 20px` → `10px 20px`).
+- `css.safe` (bool | Record, default `true`) — replace unsafe class chars (`sm:text-lg` → `sm-text-lg`). Object form extends.
+- `css.preferUnitless` (bool, default `true`) — strip units from zero values in inlined styles.
 - `css.sixHex` (bool, default `true`) — convert 3-digit HEX to 6-digit in `bgcolor`/`color` attrs.
 - `css.media` (bool | { sort? }, default `true`) — merge and sort `@media` queries. `sort: 'mobile-first' | 'desktop-first' | (a, b) => number`.
-- `css.removeDeclarations` (Record) — strip CSS declarations by selector. Value of `'*'` removes the whole rule.
-- `css.base` (string) — Tailwind `@source` base; auto-set to `root` when `root` is configured.
+- `css.removeDeclarations` (Record) — strip CSS declarations by selector. `'*'` removes the whole rule.
+- `css.base` (string) — Tailwind `@source` base; auto-set to `root` when configured.
 - `css.exclude` (string[]) — globs excluded from Tailwind's source scanner.
 
 ```ts
@@ -85,10 +74,10 @@ export default defineConfig({
 
 ## HTML
 
-- `html.attributes.add` (false | Record, default `{ table: { cellpadding: 0, cellspacing: 0, role: 'none' }, img: { alt: '' } }`) — merged on top of defaults. Set the whole map / a selector / a single attr to `false` to skip.
-- `html.attributes.remove` (Array, default `['style', 'class']`) — strip empty `style`/`class` always; entries support `'name'` (when empty), `{ name, value: 'literal' }`, `{ name, value: /regex/ }`.
-- `html.decodeEntities` (bool | Record, default `true`) — replace literal characters (nbsp, zwj, mdash, curly quotes, bullets, …) with HTML entities. Pass an object to extend.
-- `html.format` (bool | object, default `true`) — pretty-print via `oxfmt`. Defaults: `printWidth: 320`, `htmlWhitespaceSensitivity: 'ignore'`, `embeddedLanguageFormatting: 'off'`. Auto-skipped when `minify` is on.
+- `html.attributes.add` (false | Record, default `{ table: { cellpadding: 0, cellspacing: 0, role: 'none' }, img: { alt: '' } }`) — merged on top of defaults; set map/selector/attr to `false` to skip.
+- `html.attributes.remove` (Array, default `['style', 'class']`) — strip empty `style`/`class` always; entries: `'name'`, `{ name, value: 'literal' }`, or `{ name, value: /regex/ }`.
+- `html.decodeEntities` (bool | Record, default `true`) — replace literal characters (nbsp, zwj, mdash, curly quotes, bullets, …). Object extends.
+- `html.format` (bool | object, default `true`) — pretty-print via `oxfmt` (`printWidth: 320`, `htmlWhitespaceSensitivity: 'ignore'`, `embeddedLanguageFormatting: 'off'`). Auto-skipped when `minify` is on.
 - `html.minify` (bool | object) — minify via `html-crush`. Useful for Gmail's ~102KB clipping limit.
 
 ```ts
@@ -108,27 +97,24 @@ export default defineConfig({
 
 - `url.base` (string | object) — prepend a base URL to relative paths. Object form: `{ url, tags?, attributes?, styleTag?, inlineCss? }`.
 - `url.query` (Record) — append query parameters. Non-`_options` keys are URL parameters.
-- `url.query._options.tags` (string[], default `['a']`) — tags processed.
-- `url.query._options.attributes` (string[], default `['src', 'href', 'poster', 'srcset', 'background']`).
-- `url.query._options.strict` (bool, default `true`) — only process absolute URLs.
-- `url.query._options.qs` (object, default `{ encode: false }`) — query-string library options.
+  - `_options.tags` (default `['a']`).
+  - `_options.attributes` (default `['src', 'href', 'poster', 'srcset', 'background']`).
+  - `_options.strict` (bool, default `true`) — absolute URLs only.
+  - `_options.qs` (default `{ encode: false }`).
 
 ```ts
 export default defineConfig({
   url: {
     base: 'https://cdn.example.com/emails/',
-    query: {
-      utm_source: 'maizzle',
-      _options: { tags: ['a', 'img'], strict: false },
-    },
+    query: { utm_source: 'maizzle', _options: { tags: ['a', 'img'], strict: false } },
   },
 })
 ```
 
 ## Markdown
 
-- `markdown.shikiTheme` (Shiki BundledTheme, default `'github-light'`) — syntax-highlight theme for fenced code blocks.
-- `markdown.wrapperComponent` (string | (id, raw) => string | null) — component used to wrap each `.md` template. Default resolver returns `'MarkdownLayout'` for entry templates and honors a `layout:` frontmatter key. A user-supplied value (or function returning a name) takes precedence.
+- `markdown.shikiTheme` (BundledTheme, default `'github-light'`).
+- `markdown.wrapperComponent` (string | (id, raw) => string | null) — default returns `'MarkdownLayout'` for entry templates and honors a `layout:` frontmatter key. User value (or function returning a name) takes precedence.
 - Other `unplugin-vue-markdown` keys pass through (`headEnabled`, `wrapperDiv`, `wrapperClasses`, `markdownOptions`).
 
 ```ts
@@ -143,15 +129,15 @@ export default defineConfig({
 ## Plaintext
 
 - `plaintext` (bool | object, default `false`) — `true` writes a `.txt` next to each `.html`.
-- `plaintext.destination` (string) — alternate output dir (template paths preserved).
+- `plaintext.destination` (string) — alternate output dir.
 - `plaintext.extension` (string, default `'txt'`).
 - `plaintext.options` (object) — forwarded to [`string-strip-html`](https://codsen.com/os/string-strip-html).
 
-Per-template opt-in via `usePlaintext()` in `<script setup>` takes precedence.
+Per-template via `usePlaintext()` takes precedence.
 
 ## Filters
 
-- `filters` (false | Record<string, (str, value) => string>, default `{}`) — content filters applied to text inside elements via attributes. User filters merge on top of built-in defaults. Set to `false` to disable everything.
+- `filters` (false | Record<string, (str, value) => string>, default `{}`) — content filters applied via attributes. User filters merge on top of built-ins; `false` disables everything.
 
 ```html
 <div uppercase>hello</div>          <!-- HELLO -->
@@ -160,33 +146,29 @@ Per-template opt-in via `usePlaintext()` in `<script setup>` takes precedence.
 
 ```ts
 export default defineConfig({
-  filters: {
-    'big-text': (str) => `<span style="font-size: 24px">${str}</span>`,
-  },
+  filters: { 'big-text': (str) => `<span style="font-size: 24px">${str}</span>` },
 })
 ```
 
-Built-in: `uppercase`, `lowercase`, `capitalize`, `trim`, `lstrip`, `rstrip`, `escape`, `escape-once`, `append`, `prepend`, `plus`, `minus`, `multiply`/`times`, `divide-by`/`divide`, `modulo`, `ceil`, `floor`, `round`, `size`, `slice`, `truncate`, `truncate-words`, `remove`, `remove-first`, `replace`, `replace-first`, `newline-to-br`, `strip-newlines`, `url-decode`, `url-encode`. Multiple filters on the same element run in attribute order.
+Built-ins: `uppercase`, `lowercase`, `capitalize`, `trim`, `lstrip`, `rstrip`, `escape`, `escape-once`, `append`, `prepend`, `plus`, `minus`, `multiply`/`times`, `divide-by`/`divide`, `modulo`, `ceil`, `floor`, `round`, `size`, `slice`, `truncate`, `truncate-words`, `remove`, `remove-first`, `replace`, `replace-first`, `newline-to-br`, `strip-newlines`, `url-decode`, `url-encode`. Multiple filters on the same element run in attribute order.
 
 ## replaceStrings
 
-- `replaceStrings` (Record<string, string>) — find/replace on the final HTML after all transformers (matches tags and attributes too). Keys are treated as case-insensitive global regex patterns (`gi` flags added internally) — escape character classes in keys (`\\s` for `\s`).
+`replaceStrings` (Record<string, string>) — find/replace on the final HTML after all transformers (matches tags + attrs). Keys treated as case-insensitive global regex (`gi` flags added). Escape character classes in keys (`\\s` for `\s`).
 
 ```ts
 export default defineConfig({
-  replaceStrings: {
-    '{{ year }}': new Date().getFullYear().toString(),
-  },
+  replaceStrings: { '{{ year }}': new Date().getFullYear().toString() },
 })
 ```
 
 ## useTransformers
 
-- `useTransformers` (bool | object, default `true`) — toggle the transformer pipeline. `false` returns raw Vue SSR output.
+`useTransformers` (bool | object, default `true`) — toggle the pipeline. `false` returns raw Vue SSR output.
 
-Pass an object to toggle individual transformers. Keys: `inlineCss`, `purgeCss`, `safeSelectors`, `shorthandCss`, `sixHex`, `prettify`, `minify`, `addAttributes`, `removeAttributes`, `attributeToStyle`, `baseURL`, `urlQuery`, `entities`, `replaceStrings`, `filters`. Force-enable (`true`) only works for boolean-driven transformers — data-driven ones (`filters`, `baseURL`, `urlQuery`, `addAttributes`, `removeAttributes`, `replaceStrings`, `attributeToStyle`) need actual config values.
+Object keys: `inlineCss`, `purgeCss`, `safeSelectors`, `shorthandCss`, `sixHex`, `prettify`, `minify`, `addAttributes`, `removeAttributes`, `attributeToStyle`, `baseURL`, `urlQuery`, `entities`, `replaceStrings`, `filters`. Force-enable (`true`) only works for boolean-driven transformers — data-driven ones (`filters`, `baseURL`, `urlQuery`, `addAttributes`, `removeAttributes`, `replaceStrings`, `attributeToStyle`) need actual config values.
 
-Per-template via `useTransformers(false)` or `useTransformers({ inlineCss: false, minify: true })` in `<script setup>`.
+Per-template: `useTransformers(false)` or `useTransformers({ inlineCss: false, minify: true })`.
 
 ```ts
 export default defineConfig({
@@ -197,15 +179,12 @@ export default defineConfig({
 ## Server
 
 - `server.port` (number, default `3000`).
-- `server.watch` (string[]) — extra files to watch (config, data sources).
-- `server.email` — "Send test" config in the dev UI. Defaults to Ethereal (free fake SMTP) when omitted.
-  - `email.to` (string | string[]).
-  - `email.from` (string, default `'Maizzle <maizzle@ethereal.email>'`).
-  - `email.subject` (string).
-  - `email.transport` (Nodemailer transport options).
-- `server.checks` (false | object) — Checks tab in dev UI. `false` hides it.
-  - `checks.clients` (slug[] | `'all'`, default `['gmail', 'apple-mail', 'outlook', 'yahoo']`) — caniemail clients to check.
-  - `checks.level` (`'error'` | `'warning'` | `'lint'`) — filter severities.
+- `server.watch` (string[]) — extra files to watch.
+- `server.email` — "Send test" config; defaults to Ethereal (free fake SMTP) when omitted.
+  - `to` (string | string[]), `from` (default `'Maizzle <maizzle@ethereal.email>'`), `subject`, `transport` (Nodemailer options).
+- `server.checks` (false | object) — Checks tab in dev UI; `false` hides it.
+  - `clients` (slug[] | `'all'`, default `['gmail', 'apple-mail', 'outlook', 'yahoo']`).
+  - `level` (`'error'` | `'warning'` | `'lint'`).
 
 ```ts
 export default defineConfig({
@@ -224,7 +203,7 @@ export default defineConfig({
 
 ## Vite
 
-- `vite` (Vite `InlineConfig`) — merged into Maizzle's internal Vite SSR server. A standalone `vite.config.{ts,js}` in the project root takes precedence.
+`vite` (Vite `InlineConfig`) — merged into Maizzle's internal Vite SSR server. A standalone `vite.config.{ts,js}` takes precedence.
 
 ```ts
 import myPlugin from 'vite-plugin-example'
@@ -248,15 +227,15 @@ export default defineConfig({
 
 ## Lifecycle Events
 
-Hooks run during the build. Define at the config level or per-template via `useEvent()`. Config handlers run before SFC handlers; for events that return a value, the return replaces the input for the next handler.
+Config-level hooks. Config handlers run before SFC handlers (`useEvent()`); for events that return a value, the return replaces the input for the next handler.
 
 - `beforeCreate({ config })` — once before any templates are processed.
-- `beforeRender({ config, template })` — return a string to replace `template.source`.
+- `beforeRender({ config, template })` — return string to replace `template.source`.
 - `afterRender({ config, template, html })` — after render, before transformers. Return to replace HTML.
 - `afterTransform({ config, template, html })` — after transformers. Return to replace HTML.
 - `afterBuild({ files, config })` — once after all templates are built.
 
-In per-template events, `template` is `{ source: string, path: ParsedPath }` where `path` is `path.parse(absolutePath)` — `{ root, dir, base, ext, name }`. The same `ParsedPath` is also available via `useCurrentTemplate()` (handy inside SFC `<script setup>`).
+Per-template `template` is `{ source, path }` where `path` is `path.parse(absolutePath)` (`{ root, dir, base, ext, name }`). Same `ParsedPath` via `useCurrentTemplate()` inside SFC `<script setup>`.
 
 ```ts
 export default defineConfig({
@@ -268,12 +247,10 @@ export default defineConfig({
 
 ## Arbitrary User Data
 
-Any extra top-level keys are accessible via `useConfig()` and in event handlers.
+Extra top-level keys are accessible via `useConfig()` and in event handlers.
 
 ```ts
-export default defineConfig({
-  company: { name: 'Acme Inc.' },
-})
+export default defineConfig({ company: { name: 'Acme Inc.' } })
 ```
 
 ```vue
@@ -290,12 +267,10 @@ import { defineConfig } from 'vite'
 import { maizzle } from '@maizzle/framework'
 
 export default defineConfig({
-  plugins: [
-    maizzle({
-      root: 'resources/js/emails',
-      content: ['**/*.vue'],
-      output: { path: 'resources/views/emails', extension: 'blade.php' },
-    }),
-  ],
+  plugins: [maizzle({
+    root: 'resources/js/emails',
+    content: ['**/*.vue'],
+    output: { path: 'resources/views/emails', extension: 'blade.php' },
+  })],
 })
 ```

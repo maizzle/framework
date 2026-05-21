@@ -38,7 +38,12 @@ Props:
 
 The `<html>` element with `lang`, `dir`, and (by default) Outlook VML/Office XML namespaces. Use when manually composing the document instead of `<Layout>`.
 
-Props: `lang`, `dir`, `xmlns` (bool, default `true`).
+Props:
+- `lang` (string, default `'en'`).
+- `dir` (`'ltr'` | `'rtl'`, default `'ltr'`).
+- `xmlns` (bool, default `true`) — include VML/Office XML namespace attributes.
+- `doctype` (string) — override the rendered DOCTYPE for this template (also overrides config + `useDoctype()`).
+- `outlookFallback` (bool, default `true`) — when `false`, skips MSO ghost tables, VML, `xmlns:v/o`, mso-only CSS for this component and all descendants.
 
 ```vue
 <Html lang="fr" dir="ltr">
@@ -68,7 +73,11 @@ Props:
 
 The `<body>` element with accessible `<div role="article">` wrapper.
 
-Props: `xmlLang`, `dir`, `ariaLabel`.
+Props:
+- `xmlLang` (string) — `xml:lang` attribute. Defaults to the parent `Html`'s `lang`.
+- `dir` (`'ltr'` | `'rtl'`, default `'ltr'`).
+- `ariaLabel` (string) — `aria-label` on the inner article div.
+- `outlookFallback` (bool, default `true`).
 
 ## Tailwind
 
@@ -119,17 +128,17 @@ Equivalent script form: `useFont({ family: 'Roboto', weights: [400, 600] })`. Fo
 
 ## Preheader
 
-Hidden preview text teleported to the start of `<body>`, followed by filler characters that prevent clients from pulling other text into the inbox preview.
+Hidden preview text teleported to the start of `<body>`, padded with invisible filler sequences (`&#8199;&#65279;&#847;`) so clients don't pull other body text into the inbox snippet.
 
 Props:
-- `fillerCount` (number, default `150`) — `&#8199;&#65279;&#847;` filler pairs.
-- `shyCount` (number, default `150`) — `&shy;` entities.
+- `spaces` (number) — explicit number of filler sequences to render. When omitted, the count is auto-derived to fill a ~200-char inbox preview budget based on the slot text length.
 
 ```vue
 <Preheader>Your order has shipped!</Preheader>
+<Preheader :spaces="50">Short preview text</Preheader>
 ```
 
-Script alternative: `usePreheader('text', { fillerCount, shyCount })`.
+Script alternative: `usePreheader('text', { spaces })`.
 
 ## Container
 
@@ -143,7 +152,6 @@ Without any width hint at all, the div defaults to `max-w-150 mx-auto` (600px).
 
 Props:
 - `width` (string | number) — `max-width` on the div + `width` on the MSO table.
-- `msoWidth` (string | number) — override only the MSO table width.
 - `msoStyle` (string) — inline CSS applied only to the MSO `<td>`.
 - `outlookFallback` (bool, default `true`).
 
@@ -375,13 +383,20 @@ Props:
 
 ## CodeInline
 
-Inline `<code>` with light gray bg + border. Content is HTML-escaped automatically.
+Inline `<code>`. Two modes:
+- **Plain (default)** — light-gray background + border, content HTML-escaped. No Shiki pass: faster and visually quieter in body copy.
+- **Syntax-highlighted** — set `theme` to opt into Shiki. Cell background switches to the theme's bg color.
+
+Source via `code` prop or slot.
 
 Props:
-- `code` (string) — falls back to slot.
+- `code` (string) — falls back to slot content.
+- `language` (string, default `'html'`) — Shiki language. Only consulted when `theme` is set.
+- `theme` (string) — any Shiki theme name. Unset → plain mode.
 
 ```vue
 <Text>Use <CodeInline code="render()" /> to compile.</Text>
+<Text>Try <CodeInline language="js" theme="github-dark" code="const x = 1" />.</Text>
 ```
 
 ## QrCode
@@ -410,10 +425,12 @@ QR HTML can grow to tens of KB — avoid duplicating the same code in one email 
 
 Wrap content in MSO conditional comments. Default targets all MSO versions.
 
-Props (all comma-separated, e.g. `"2013,2016"`):
+Props (version selectors are comma-separated, e.g. `"2013,2016"`):
 - `only` — show only in those versions.
 - `not` — show in all versions except those.
 - `lt` / `lte` / `gt` / `gte` — version comparisons.
+- `open` (string) — raw HTML injected inside the conditional comment before the slot. Bypasses Vue's parser, so unbalanced tags (e.g. ghost-table openers) are preserved.
+- `close` (string) — raw HTML injected after the slot. Pair with `open` to close ghost-table tags.
 
 Versions: `2003`, `2007`, `2010`, `2013`, `2016`, `2019`.
 

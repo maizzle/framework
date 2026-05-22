@@ -74,13 +74,27 @@ describe('CodeBlock', () => {
     it('uses default td-class', async () => {
       const html = await render({ code: '<div>test</div>' })
 
-      expect(html).toContain('<td class="max-w-0 mso-padding-alt-4">')
+      expect(html).toContain('<td class="max-w-0 mso-padding-alt-4"')
     })
 
     it('accepts custom td-class', async () => {
       const html = await render({ code: '<div>test</div>', 'td-class': 'custom-class' })
 
-      expect(html).toContain('<td class="custom-class">')
+      expect(html).toContain('<td class="custom-class"')
+    })
+
+    it('sets the shiki theme background on the wrapping td', async () => {
+      const html = await render({ code: '<div>test</div>' })
+
+      // github-light bg is #fff — must appear on the td so Outlook's td
+      // padding doesn't show through as white on a dark theme.
+      expect(html).toMatch(/<td[^>]*style="background-color:#fff"/)
+    })
+
+    it('uses the dark theme bg on the wrapping td', async () => {
+      const html = await render({ code: '<div>test</div>', theme: 'github-dark' })
+
+      expect(html).toMatch(/<td[^>]*style="background-color:#24292e"/)
     })
   })
 

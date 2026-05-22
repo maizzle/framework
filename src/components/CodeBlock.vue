@@ -61,7 +61,7 @@ export default {
     const baseStyles = `background-color:${bg};padding:16px;overflow:auto;white-space:pre;word-wrap:normal;word-break:normal;word-spacing:normal`
     const styles = [baseStyles, attrs.style].filter(Boolean).join(';')
 
-    const html = `<table class="w-full"><tr><td class="${props.tdClass}"><pre class="${classes}" style="${styles}"><code>${codeContent}</code></pre></td></tr></table>`
+    const html = `<table class="w-full"><tr><td class="${props.tdClass}" style="background-color:${bg}"><pre class="${classes}" style="${styles}"><code>${codeContent}</code></pre></td></tr></table>`
 
     return () => createStaticVNode(html, 1)
   }

@@ -217,4 +217,25 @@ describe('inlineCss', () => {
       expect(result).not.toContain('style=')
     })
   })
+
+  describe('pre-existing inline styles are passed through verbatim', () => {
+    it('does not inject a space inside https:// in url()', () => {
+      const html = `<div style="background-image:url('https://example.com/img.jpg')">x</div>`
+      const result = run(html, true)
+      expect(result).toContain("background-image:url('https://example.com/img.jpg')")
+      expect(result).not.toContain('https: //')
+    })
+
+    it('preserves data: URIs in url()', () => {
+      const html = `<div style="background-image:url('data:image/png;base64,iVBORw0KG')">x</div>`
+      const result = run(html, true)
+      expect(result).toContain("background-image:url('data:image/png;base64,iVBORw0KG')")
+    })
+
+    it('preserves URLs with query strings containing colons or ampersands', () => {
+      const html = `<div style="background-image:url('https://cdn.example.com/img.jpg?expires=1700000000&sig=abc')">x</div>`
+      const result = run(html, true)
+      expect(result).toContain("url('https://cdn.example.com/img.jpg?expires=1700000000&sig=abc')")
+    })
+  })
 })

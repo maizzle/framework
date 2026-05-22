@@ -217,8 +217,9 @@ const vmlAspect = computed(() => {
 const VmlRect = () => {
   if (!isCropped.value || !heightPx.value || !Number.isFinite(imgWidth.value)) return null
   const aspectAttr = vmlAspect.value ? ` aspect="${vmlAspect.value}"` : ''
+  const altAttr = props.alt ? ` alt="${escapeAttr(props.alt)}"` : ''
   return createStaticVNode(
-    `<!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:${imgWidth.value}px;height:${heightPx.value}px;"><v:fill type="frame" src="${escapeAttr(props.src)}"${aspectAttr} /></v:rect><![endif]-->`,
+    `<!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false"${altAttr} style="width:${imgWidth.value}px;height:${heightPx.value}px;"><v:fill type="frame" src="${escapeAttr(props.src)}"${aspectAttr} /></v:rect><![endif]-->`,
     1
   )
 }

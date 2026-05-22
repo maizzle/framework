@@ -438,6 +438,21 @@ describe('Img', () => {
       expect(html).not.toContain('aspect="atmost"')
     })
 
+    it('sets the VML rect alt attribute from the alt prop', async () => {
+      const html = await renderSsr({ src: 'img.jpg', width: 600, aspect: '16:9', alt: 'Hero banner' })
+      expect(html).toMatch(/<v:rect[^>]*alt="Hero banner"/)
+    })
+
+    it('HTML-escapes the VML alt attribute', async () => {
+      const html = await renderSsr({ src: 'img.jpg', width: 600, aspect: '16:9', alt: '"Sale" & deal' })
+      expect(html).toContain('alt="&quot;Sale&quot; &amp; deal"')
+    })
+
+    it('omits the VML alt attribute when alt is empty', async () => {
+      const html = await renderSsr({ src: 'img.jpg', width: 600, aspect: '16:9' })
+      expect(html).not.toMatch(/<v:rect[^>]*\salt=/)
+    })
+
     it('wraps the modern markup in <!--[if !mso]> conditional comments', async () => {
       const html = await renderSsr({ src: 'img.jpg', width: 600, aspect: '16:9' })
       expect(html).toContain('<!--[if !mso]><!-->')

@@ -85,13 +85,27 @@ const props = defineProps({
   /**
    * Toggle Outlook (MSO) and VML fallback markup for this image.
    *
-   * Only relevant in cropped mode (`aspect`). When `false`, the VML
-   * `<v:rect>` shape is skipped and the modern padding-hack div renders
-   * to all clients including Outlook (which will show an empty area).
+   * Inherits from an ancestor (e.g. a Layout calling
+   * `useOutlookFallback(false)`); an explicit value overrides. When
+   * `false`, the VML `<v:rect>` emitted in cropped mode (`aspect`)
+   * is skipped and the modern padding-hack div renders to all
+   * clients including Outlook (which will show an empty area).
    *
-   * @default true
+   * @default inherits — root default `true`
    */
   outlookFallback: outlookFallbackProp,
+  /**
+   * URL to navigate to when the image is clicked.
+   *
+   * Modern clients: output is wrapped in `<a href>`. In cropped mode the
+   * anchor is `display:block` so the whole padding-hack area is clickable.
+   * Outlook: emitted as the `href` attribute on the `<v:rect>` (a
+   * documented VML Shape attribute).
+   */
+  href: {
+    type: String,
+    default: ''
+  },
 })
 
 const outlookFallback = useOutlookFallback(props.outlookFallback)
@@ -218,8 +232,9 @@ const VmlRect = () => {
   if (!isCropped.value || !heightPx.value || !Number.isFinite(imgWidth.value)) return null
   const aspectAttr = vmlAspect.value ? ` aspect="${vmlAspect.value}"` : ''
   const altAttr = props.alt ? ` alt="${escapeAttr(props.alt)}"` : ''
+  const hrefAttr = props.href ? ` href="${escapeAttr(props.href)}"` : ''
   return createStaticVNode(
-    `<!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false"${altAttr} style="width:${imgWidth.value}px;height:${heightPx.value}px;"><v:fill type="frame" src="${escapeAttr(props.src)}"${aspectAttr} /></v:rect><![endif]-->`,
+    `<!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false"${hrefAttr}${altAttr} style="width:${imgWidth.value}px;height:${heightPx.value}px;"><v:fill type="frame" src="${escapeAttr(props.src)}"${aspectAttr} /></v:rect><![endif]-->`,
     1
   )
 }
@@ -227,19 +242,43 @@ const VmlRect = () => {
 const NotMsoBefore = () => createStaticVNode('<!--[if !mso]><!-->', 1)
 const NotMsoAfter = () => createStaticVNode('<!--<![endif]-->', 1)
 
-const imgStyle = 'max-width: 100%; vertical-align: middle;'
+const imgClass = 'max-w-full align-middle'
 </script>
 
 <template>
   <template v-if="isCropped">
     <VmlRect v-if="outlookFallback" />
     <NotMsoBefore v-if="outlookFallback" />
+    <a v-if="href" :href="href" class="block no-underline">
+      <div
+        v-bind="{ ...attrs, class: undefined }"
+        role="img"
+        :aria-label="alt || undefined"
+        :class="['overflow-hidden table max-w-full', parsedClass.className]"
+        :style="`width: ${imgWidth}px;`"
+      >
+        <div
+          :class="[
+            'table-cell w-full h-0 bg-no-repeat',
+            darkSrc ? `dark:bg-[url('${escapeForClass(darkSrc)}')]!` : '',
+            motionSrc ? `motion-safe:bg-[url('${escapeForClass(motionSrc)}')]!` : '',
+          ]"
+          :style="{
+            paddingBottom: ratio!.paddingBottom,
+            backgroundImage: `url('${escapeForCssUrl(src)}')`,
+            backgroundSize: size,
+            backgroundPosition: position,
+          }"
+        />
+      </div>
+    </a>
     <div
+      v-else
       v-bind="{ ...attrs, class: undefined }"
       role="img"
       :aria-label="alt || undefined"
-      :class="['overflow-hidden table', parsedClass.className]"
-      :style="`width: ${imgWidth}px; max-width: 100%;`"
+      :class="['overflow-hidden table max-w-full', parsedClass.className]"
+      :style="`width: ${imgWidth}px;`"
     >
       <div
         :class="[
@@ -257,10 +296,20 @@ const imgStyle = 'max-width: 100%; vertical-align: middle;'
     </div>
     <NotMsoAfter v-if="outlookFallback" />
   </template>
+  <a v-else-if="href && usePicture" :href="href">
+    <picture>
+      <source v-if="darkSrc" :srcset="darkSrc" media="(prefers-color-scheme: dark)">
+      <source v-if="motionSrc" :srcset="motionSrc" :type="motionType || undefined" media="(prefers-reduced-motion: no-preference)">
+      <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass">
+    </picture>
+  </a>
   <picture v-else-if="usePicture">
     <source v-if="darkSrc" :srcset="darkSrc" media="(prefers-color-scheme: dark)">
     <source v-if="motionSrc" :srcset="motionSrc" :type="motionType || undefined" media="(prefers-reduced-motion: no-preference)">
-    <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :style="imgStyle">
+    <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass">
   </picture>
-  <img v-else v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :style="imgStyle">
+  <a v-else-if="href" :href="href">
+    <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass">
+  </a>
+  <img v-else v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass">
 </template>

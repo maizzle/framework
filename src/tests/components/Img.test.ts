@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { createSSRApp, h } from 'vue'
+import { createSSRApp, defineComponent, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import Img from '../../components/Img.vue'
+import { useOutlookFallback } from '../../composables/useOutlookFallback'
 
 function renderSsr(props: Record<string, unknown>) {
   const app = createSSRApp({
@@ -36,11 +37,11 @@ describe('Img', () => {
       expect(wrapper.find('img').attributes('alt')).toBe('')
     })
 
-    it('sets max-width and vertical-align styles', () => {
+    it('applies max-w-full and align-middle utilities', () => {
       const wrapper = mount(Img, { props: { src: 'img.png', width: 100 } })
-      const style = wrapper.find('img').attributes('style')
-      expect(style).toContain('max-width: 100%')
-      expect(style).toContain('vertical-align: middle')
+      const cls = wrapper.find('img').classes()
+      expect(cls).toContain('max-w-full')
+      expect(cls).toContain('align-middle')
     })
 
     it('does not wrap in picture element without darkSrc or motionSrc', () => {
@@ -476,6 +477,98 @@ describe('Img', () => {
         props: { src: 'img.jpg', width: 600, aspect: '16:9', outlookFallback: false }
       })
       expect(wrapper.find('div[role="img"]').exists()).toBe(true)
+    })
+
+    it('inherits outlookFallback=false from a parent — skips VML', async () => {
+      const Parent = defineComponent({
+        setup(_, { slots }) {
+          useOutlookFallback(false)
+          return () => slots.default?.()
+        },
+      })
+      const app = createSSRApp({
+        render: () => h(Parent, null, { default: () => h(Img, { src: 'img.jpg', width: 600, aspect: '16:9' }) }),
+      })
+      const html = await renderToString(app)
+      expect(html).not.toContain('<v:rect')
+      expect(html).not.toContain('<!--[if mso]>')
+      expect(html).toContain('role="img"')
+    })
+
+    it('explicit prop overrides inherited value (parent false, prop true)', async () => {
+      const Parent = defineComponent({
+        setup(_, { slots }) {
+          useOutlookFallback(false)
+          return () => slots.default?.()
+        },
+      })
+      const app = createSSRApp({
+        render: () => h(Parent, null, {
+          default: () => h(Img, { src: 'img.jpg', width: 600, aspect: '16:9', outlookFallback: true })
+        }),
+      })
+      const html = await renderToString(app)
+      expect(html).toContain('<v:rect')
+    })
+  })
+
+  describe('href prop', () => {
+    it('wraps a bare img in an anchor', () => {
+      const wrapper = mount(Img, { props: { src: 'img.png', width: 100, href: 'https://example.com' } })
+      const a = wrapper.find('a')
+      expect(a.exists()).toBe(true)
+      expect(a.attributes('href')).toBe('https://example.com')
+      expect(a.find('img').attributes('src')).toBe('img.png')
+    })
+
+    it('does not wrap when href is empty', () => {
+      const wrapper = mount(Img, { props: { src: 'img.png', width: 100 } })
+      expect(wrapper.find('a').exists()).toBe(false)
+    })
+
+    it('wraps a picture in an anchor when darkSrc is set', () => {
+      const wrapper = mount(Img, {
+        props: { src: 'img.png', width: 100, darkSrc: 'dark.png', href: 'https://example.com' }
+      })
+      const a = wrapper.find('a')
+      expect(a.exists()).toBe(true)
+      expect(a.attributes('href')).toBe('https://example.com')
+      expect(a.find('picture').exists()).toBe(true)
+      expect(a.find('picture > img').exists()).toBe(true)
+    })
+
+    it('wraps the cropped modern markup in an anchor', () => {
+      const wrapper = mount(Img, {
+        props: { src: 'img.jpg', width: 600, aspect: '16:9', href: 'https://example.com' }
+      })
+      const a = wrapper.find('a')
+      expect(a.exists()).toBe(true)
+      expect(a.attributes('href')).toBe('https://example.com')
+      expect(a.find('div[role="img"]').exists()).toBe(true)
+    })
+
+    it('gives the cropped anchor block + no-underline utilities so the whole area is clickable', () => {
+      const wrapper = mount(Img, {
+        props: { src: 'img.jpg', width: 600, aspect: '16:9', href: 'https://example.com' }
+      })
+      const cls = wrapper.find('a').classes()
+      expect(cls).toContain('block')
+      expect(cls).toContain('no-underline')
+    })
+
+    it('emits href on the VML v:rect', async () => {
+      const html = await renderSsr({ src: 'img.jpg', width: 600, aspect: '16:9', href: 'https://example.com' })
+      expect(html).toMatch(/<v:rect[^>]*href="https:\/\/example\.com"/)
+    })
+
+    it('HTML-escapes the VML href attribute', async () => {
+      const html = await renderSsr({ src: 'img.jpg', width: 600, aspect: '16:9', href: 'https://example.com/?a=1&b=2' })
+      expect(html).toContain('href="https://example.com/?a=1&amp;b=2"')
+    })
+
+    it('omits the VML href attribute when href is empty', async () => {
+      const html = await renderSsr({ src: 'img.jpg', width: 600, aspect: '16:9' })
+      expect(html).not.toMatch(/<v:rect[^>]*\shref=/)
     })
   })
 

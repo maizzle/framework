@@ -4,7 +4,7 @@ All components below auto-import — no imports needed.
 
 ## Conventions
 
-- **`outlookFallback`** (bool, default `true`) is available on `<Layout>`, `<Html>`, `<Body>`, `<Container>`, `<Section>`, `<Column>`, `<Button>`, `<Spacer>`, `<Overlap>`. Setting `false` skips MSO ghost tables, VML, `xmlns:v/o`, and mso-only CSS for that component + descendants.
+- **`outlookFallback`** (bool, default `true`) is available on `<Layout>`, `<Html>`, `<Body>`, `<Container>`, `<Section>`, `<Column>`, `<Button>`, `<Spacer>`, `<Overlap>`, `<Img>`. Setting `false` skips MSO ghost tables, VML, `xmlns:v/o`, and mso-only CSS for that component + descendants. Each component also inherits the value from any ancestor that set it.
 - `<Container>`/`<Section>` auto-wrap in an MSO conditional `<table>`. `<Column>` auto-wraps in an MSO `<td>`.
 - Use kebab-case for camelCase props in templates (`body-class`, `dark-src`, `mso-style`).
 
@@ -182,10 +182,11 @@ Props: `href` (required), `variant` (`'solid'`(default)/`'outline'`/`'ghost'`/`'
 
 Plain `<img>`, or `<picture>` when `darkSrc`/`motionSrc` is set. Defaults: `max-width: 100%`, `vertical-align: middle`. `width` renders unitless.
 
-Props: `src` (required; static fallback when `motionSrc` set), `alt`, `width` (required), `darkSrc` (`prefers-color-scheme: dark` variant), `motionSrc` (`prefers-reduced-motion: no-preference` variant; MIME auto-derived).
+Props: `src` (required; static fallback when `motionSrc` set), `alt`, `width` (required), `darkSrc` (`prefers-color-scheme: dark` variant), `motionSrc` (`prefers-reduced-motion: no-preference` variant; MIME auto-derived), `href` (wraps output in `<a>`).
 
 ```vue
 <Img src="/logo.png" dark-src="/logo-dark.png" motion-src="/logo.gif" alt="Logo" width="120" />
+<Img src="/banner.jpg" alt="Banner" width="600" href="https://example.com" />
 ```
 
 ### Cropped mode
@@ -197,11 +198,13 @@ Props: `src` (required; static fallback when `motionSrc` set), `alt`, `width` (r
 - `size` — default `'cover'`. Maps to VML aspect: `cover`→`atleast`, `contain`→`atmost`.
 - `position` — CSS `background-position`, default `'center'`.
 - `dark-src`/`motion-src` — emit `dark:bg-[url('…')]!` / `motion-safe:bg-[url('…')]!` classes instead of `<picture>`.
-- `outlookFallback` — default `true`; `false` skips the `<v:rect>`.
+- `href` — modern clients get an `<a class="block no-underline">` around the wrapper; Outlook gets a native `href` attribute on the `<v:rect>` (so the whole shape is clickable).
+- `outlookFallback` — see [Conventions](#conventions); in cropped mode `false` skips the `<v:rect>` and the `<!--[if !mso]>` wrapper, letting the modern padding-hack div render to all clients (Outlook shows an empty area).
 
 ```vue
 <Img src="thumb.jpg" aspect="16:9" alt="Thumbnail" width="600" class="rounded-lg" />
 <Img src="thumb.jpg" width="600" class="aspect-video" />
+<Img src="hero.jpg" aspect="16:9" alt="Hero" width="600" href="https://example.com" />
 ```
 
 ## Hr

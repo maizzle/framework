@@ -173,3 +173,4 @@ Or per-template via `usePlaintext()` in `<script setup>`. Customize destination/
 - `references/TRANSFORMERS.md` — pipeline order, per-stage behavior.
 - `references/CLI.md` — every CLI command, flags, and usage.
 - `references/CONVERT-REACT-EMAIL.md` — porting guide from React Email.
+- `references/CONVERT-MAIZZLE-V5.md` — upgrade guide from Maizzle 5 to Maizzle 6.

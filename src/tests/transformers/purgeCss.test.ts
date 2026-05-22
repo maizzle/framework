@@ -199,6 +199,15 @@ describe('purgeCss', () => {
       expect(result).toContain('.prose')
     })
 
+    it('treats amp-custom like embed: skips purging and preserves the attribute', () => {
+      const html = `<html><head><style amp-custom>.prose img { max-width: 100% }</style></head><body><div class="prose"><p>hi</p></div></body></html>`
+      const result = run(html, true)
+      // amp-custom CSS is preserved verbatim (no purging of unused selectors).
+      expect(result).toContain('.prose img')
+      // The amp-custom attribute remains on the tag (AMP4Email requires it).
+      expect(result).toContain('amp-custom')
+    })
+
     it('removes :not() selectors when no element matches', () => {
       const html = `<html><head><style>.prose :not(pre) > code { color: red } .prose p { margin: 0 }</style></head><body><div class="prose"><p>hi</p></div></body></html>`
       const result = run(html, true)

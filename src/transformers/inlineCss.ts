@@ -111,15 +111,22 @@ export function inlineCssDom(dom: ChildNode[], options: InlineCssOptions = {}): 
   // Handle style tags with embed attributes.
   // We add a marker attribute that persists through the pipeline,
   // then restore data-embed from it after Juice runs.
+  // `amp-custom` (AMP4Email's CSS attribute) is treated the same as embed:
+  // contents are preserved, never inlined.
   walk(dom, (node) => {
     const el = node as Element
     if (el.name === 'style' && el.attribs) {
+      // `amp-custom` → tell juice to skip via data-embed, but don't mirror
+      // back to `embed` (user wrote amp-custom, that's what stays in output).
+      if ('amp-custom' in el.attribs && !('data-embed' in el.attribs)) {
+        el.attribs['data-embed'] = ''
+      }
       // Sync data-embed ↔ embed. Use `in` so presence-only attrs
       // (<style embed> → attribs.embed === '') still count.
       if ('embed' in el.attribs && !('data-embed' in el.attribs)) {
         el.attribs['data-embed'] = ''
       }
-      if ('data-embed' in el.attribs && !('embed' in el.attribs)) {
+      if ('data-embed' in el.attribs && !('embed' in el.attribs) && !('amp-custom' in el.attribs)) {
         el.attribs.embed = ''
       }
 
@@ -176,7 +183,12 @@ export function inlineCssDom(dom: ChildNode[], options: InlineCssOptions = {}): 
   walk(result, (node) => {
     const el = node as Element
     if (el.name === 'style' && el.attribs && 'data-maizzle-embed' in el.attribs) {
-      el.attribs.embed = ''
+      // Only restore `embed` when the original signal was embed/data-embed —
+      // an `amp-custom` style was tagged for juice's benefit only and must
+      // not pick up a stray `embed` attribute in the rendered output.
+      if (!('amp-custom' in el.attribs)) {
+        el.attribs.embed = ''
+      }
       delete el.attribs['data-embed']
       delete el.attribs['data-maizzle-embed']
     }

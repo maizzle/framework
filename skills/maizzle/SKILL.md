@@ -82,6 +82,8 @@ All built-in components auto-import. Full props/usage in `references/COMPONENTS.
 
 **Conditionals & escape hatches** — `<Outlook>`, `<NotOutlook>`, `<OutlookBg>`, `<Plaintext>`, `<NotPlaintext>`, `<Raw>`, `<NoWidows>`, `<WithUrl>`
 
+**AMP4Email** — `<amp-*>` tags pass through verbatim (native, no component resolution). `<style amp-custom>` is preserved like `<style embed>` — use `@reference "@maizzle/tailwindcss"` (not `@import`) for `@apply` inside.
+
 ## Authoring rules
 
 Surgical edits: change only what was asked. Keep existing structure, components, and class lists intact unless explicitly requested.

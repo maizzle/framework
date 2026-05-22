@@ -234,6 +234,13 @@ export async function createRenderer(
         include: [/\.vue$/, /\.md$/],
         template: {
           transformAssetUrls: false,
+          compilerOptions: {
+            // AMP4Email tags (<amp-carousel>, <amp-img>, <amp-list> ...) render
+            // verbatim — skip the component resolver. Users who want to wrap an
+            // amp tag in a Vue component should register it under a PascalCase
+            // name (e.g. `components/AmpCarousel.vue` → `<AmpCarousel>`).
+            isCustomElement: (tag: string) => tag.startsWith('amp-'),
+          },
         },
       }),
       Markdown(merge(markdownOptions ?? {}, {

@@ -105,7 +105,7 @@ export function purgeCssDom(dom: ChildNode[], options: PurgeCssOptions = {}): Ch
   walk(dom, (node) => {
     const el = node as Element
     if (el.name !== 'style' || !el.attribs) return
-    if (!('embed' in el.attribs) && !('data-embed' in el.attribs)) return
+    if (!('embed' in el.attribs) && !('data-embed' in el.attribs) && !('amp-custom' in el.attribs)) return
     const textNode = el.children?.find((c: any) => c.type === 'text') as any
     if (!textNode?.data) return
     const idx = stash.length
@@ -135,7 +135,7 @@ export function purgeCssDom(dom: ChildNode[], options: PurgeCssOptions = {}): Ch
     walk(purgedDom, (node) => {
       const el = node as Element
       if (el.name !== 'style' || !el.attribs) return
-      if (!('embed' in el.attribs) && !('data-embed' in el.attribs)) return
+      if (!('embed' in el.attribs) && !('data-embed' in el.attribs) && !('amp-custom' in el.attribs)) return
       const textNode = el.children?.find((c: any) => c.type === 'text') as any
       if (!textNode?.data) return
       const trimmed = textNode.data.trim()
@@ -144,7 +144,8 @@ export function purgeCssDom(dom: ChildNode[], options: PurgeCssOptions = {}): Ch
     })
   }
 
-  // Clean up data-embed/embed attributes — no longer needed after purging
+  // Clean up data-embed/embed attributes — no longer needed after purging.
+  // `amp-custom` stays as-is (it's the user-authored AMP4Email attribute).
   walk(purgedDom, (node) => {
     const el = node as Element
     if (el.name === 'style' && el.attribs) {
@@ -181,7 +182,7 @@ function deepPurge(dom: ChildNode[], safelist: string[]): ChildNode[] {
     const el = node as Element
 
     if (el.name !== 'style' || !el.attribs) return
-    if ('data-embed' in el.attribs || 'embed' in el.attribs) return
+    if ('data-embed' in el.attribs || 'embed' in el.attribs || 'amp-custom' in el.attribs) return
 
     const textNode = el.children?.find((c: any) => c.type === 'text') as any
     if (!textNode?.data?.trim()) return

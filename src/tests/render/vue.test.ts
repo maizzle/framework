@@ -556,4 +556,59 @@ describe('render', () => {
       }
     })
   })
+
+  describe('AMP4Email custom elements', () => {
+    it('renders <amp-carousel> as-is without resolving a component', async () => {
+      const result = await render(`
+        <template>
+          <amp-carousel layout="responsive" width="600" height="300">
+            <amp-img src="a.jpg" width="600" height="300" />
+            <amp-img src="b.jpg" width="600" height="300" />
+          </amp-carousel>
+        </template>
+      `)
+
+      expect(result.html).toContain('<amp-carousel')
+      expect(result.html).toContain('layout="responsive"')
+      expect(result.html).toContain('<amp-img')
+    })
+
+    it('renders any amp-* tag verbatim with its attributes', async () => {
+      const result = await render(`
+        <template>
+          <amp-list src="https://example.com/items.json" width="300" height="200">
+            <template type="amp-mustache">{{title}}</template>
+          </amp-list>
+        </template>
+      `)
+
+      expect(result.html).toContain('<amp-list')
+      expect(result.html).toContain('src="https://example.com/items.json"')
+    })
+
+    it('PascalCase component override resolves; kebab amp-* tag stays native', async () => {
+      writeSfc(tempDir, 'components/AmpCarousel.vue', `
+        <template>
+          <div class="vue-wrapper"><slot /></div>
+        </template>
+      `)
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template>
+          <div>
+            <AmpCarousel>wrapped</AmpCarousel>
+            <amp-carousel layout="responsive">native</amp-carousel>
+          </div>
+        </template>
+      `)
+
+      const result = await render(join(tempDir, 'emails/test.vue'))
+
+      // PascalCase reference renders the user's component.
+      expect(result.html).toContain('class="vue-wrapper"')
+      expect(result.html).toContain('wrapped')
+      // Kebab reference stays a raw amp-* element — does NOT route through
+      // the user's component (isCustomElement skips component resolution).
+      expect(result.html).toContain('<amp-carousel layout="responsive">native</amp-carousel>')
+    })
+  })
 })

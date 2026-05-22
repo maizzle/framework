@@ -149,6 +149,27 @@ describe('inlineCss', () => {
       const result = run(html, true)
       expect(result).toContain('<style no-inline>')
     })
+
+    it('treats amp-custom like embed: contents preserved, no inlining', () => {
+      const html = '<style amp-custom>.keep { color: blue; }</style><p class="keep">Text</p>'
+      const result = run(html, { removeInlinedSelectors: false })
+      // The amp-custom attribute survives (AMP requires it on the output).
+      expect(result).toContain('amp-custom')
+      // The CSS rule is preserved inside the style tag.
+      expect(result).toContain('.keep')
+      // The rule must NOT be inlined onto the matching element.
+      expect(result).not.toContain('style="color: blue"')
+    })
+
+    it('does not add embed attribute to amp-custom style tags', () => {
+      const html = '<style amp-custom>.keep { color: blue; }</style><p class="keep">Text</p>'
+      const result = run(html, true)
+      // `amp-custom` and `embed` are mutually exclusive in the output —
+      // amp-custom is the user's chosen attr and stays unaltered.
+      expect(result).not.toMatch(/<style[^>]*\sembed[\s>=]/)
+      expect(result).not.toContain('data-embed')
+      expect(result).not.toContain('data-maizzle-embed')
+    })
   })
 
   describe('width/height attributes', () => {

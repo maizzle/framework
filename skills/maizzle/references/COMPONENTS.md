@@ -188,6 +188,22 @@ Props: `src` (required; static fallback when `motionSrc` set), `alt`, `width` (r
 <Img src="/logo.png" dark-src="/logo-dark.png" motion-src="/logo.gif" alt="Logo" width="120" />
 ```
 
+### Cropped mode
+
+`aspect` (or a Tailwind `aspect-*` class) switches to a cropped `background-image` wrapper + VML `<v:rect>` for Outlook. No `<img>` — wrapper is `role="img"` + `aria-label` from `alt`.
+
+- `aspect` — `'16:9'`, `'16/9'`, `'4:3'`, `'1:1'`, etc. Prop wins over class.
+- Tailwind classes: `aspect-square` (1:1), `aspect-video` (16:9), `aspect-[n/m]`, `aspect-[n:m]`, `aspect-n/m`. Stripped from forwarded class.
+- `size` — default `'cover'`. Maps to VML aspect: `cover`→`atleast`, `contain`→`atmost`.
+- `position` — CSS `background-position`, default `'center'`.
+- `dark-src`/`motion-src` — emit `dark:bg-[url('…')]!` / `motion-safe:bg-[url('…')]!` classes instead of `<picture>`.
+- `outlookFallback` — default `true`; `false` skips the `<v:rect>`.
+
+```vue
+<Img src="thumb.jpg" aspect="16:9" alt="Thumbnail" width="600" class="rounded-lg" />
+<Img src="thumb.jpg" width="600" class="aspect-video" />
+```
+
 ## Hr
 
 `<div role="separator">` with defaults `h-px leading-px my-6 bg-slate-300`. Override via class: height (`h-*`/`leading-*`), margin (`m*-*`), color (`bg-*`).

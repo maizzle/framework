@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { dirname, resolve, basename } from 'node:path'
+import { dirname, resolve, basename, parse as parsePath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import { createServer, createLogger, type ViteDevServer } from 'vite'
@@ -13,6 +13,7 @@ import { stripForHtml, stripForPlaintext } from './utils/output-markers.ts'
 import { resolveConfig } from './config/index.ts'
 import { runTransformers } from './transformers/index.ts'
 import { createRenderer, type Renderer } from './render/createRenderer.ts'
+import { _setCurrentTemplate } from './composables/useCurrentTemplate.ts'
 import { setActiveRenderer } from './render/active.ts'
 import { serveCompatibility } from './server/compatibility.ts'
 import { serveLint } from './server/linter.ts'
@@ -338,9 +339,10 @@ async function serveRenderedTemplate(url: string, config: MaizzleConfig, rendere
     return
   }
 
-  try {
-    const absolutePath = resolve(match)
+  const absolutePath = resolve(match)
+  _setCurrentTemplate(parsePath(absolutePath))
 
+  try {
     // Invalidate all modules so template + component changes are picked up
     await renderer.invalidateAll()
 
@@ -358,6 +360,8 @@ async function serveRenderedTemplate(url: string, config: MaizzleConfig, rendere
   } catch (error: any) {
     res.statusCode = 500
     res.end(`<pre>${error.stack || error.message}</pre>`)
+  } finally {
+    _setCurrentTemplate(undefined)
   }
 }
 
@@ -386,9 +390,10 @@ async function serveHighlightedSource(url: string, config: MaizzleConfig, render
     return
   }
 
-  try {
-    const absolutePath = resolve(match)
+  const absolutePath = resolve(match)
+  _setCurrentTemplate(parsePath(absolutePath))
 
+  try {
     await renderer.invalidateAll()
 
     const rendered = await renderer.render(absolutePath, config)
@@ -416,6 +421,8 @@ async function serveHighlightedSource(url: string, config: MaizzleConfig, render
   } catch (error: any) {
     res.statusCode = 500
     res.end(`<pre>${error.stack || error.message}</pre>`)
+  } finally {
+    _setCurrentTemplate(undefined)
   }
 }
 
@@ -468,8 +475,10 @@ async function servePlaintext(url: string, config: MaizzleConfig, renderer: Rend
     return
   }
 
+  const absolutePath = resolve(match)
+  _setCurrentTemplate(parsePath(absolutePath))
+
   try {
-    const absolutePath = resolve(match)
     await renderer.invalidateAll()
 
     const rendered = await renderer.render(absolutePath, config)
@@ -485,6 +494,8 @@ async function servePlaintext(url: string, config: MaizzleConfig, renderer: Rend
   } catch (error: any) {
     res.statusCode = 500
     res.end(error.message)
+  } finally {
+    _setCurrentTemplate(undefined)
   }
 }
 
@@ -520,8 +531,10 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
     return
   }
 
+  const absolutePath = resolve(match)
+  _setCurrentTemplate(parsePath(absolutePath))
+
   try {
-    const absolutePath = resolve(match)
     await renderer.invalidateAll()
 
     const rendered = await renderer.render(absolutePath, config)
@@ -553,6 +566,8 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
   } catch (error: any) {
     res.statusCode = 500
     res.end(JSON.stringify({ error: error.message }))
+  } finally {
+    _setCurrentTemplate(undefined)
   }
 }
 
@@ -588,8 +603,10 @@ async function serveEmailEndpoint(url: string, req: any, res: any, config: Maizz
     return
   }
 
+  const absolutePath = resolve(match)
+  _setCurrentTemplate(parsePath(absolutePath))
+
   try {
-    const absolutePath = resolve(match)
     await renderer.invalidateAll()
 
     const rendered = await renderer.render(absolutePath, config)
@@ -613,6 +630,8 @@ async function serveEmailEndpoint(url: string, req: any, res: any, config: Maizz
   } catch (error: any) {
     res.statusCode = 500
     res.end(JSON.stringify({ success: false, message: error.message }))
+  } finally {
+    _setCurrentTemplate(undefined)
   }
 }
 

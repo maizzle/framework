@@ -20,7 +20,7 @@ const mergedClass = computed(() => twMerge('no-underline', attrs.class as string
 </script>
 
 <template>
-  <a :href="href" v-bind="$attrs" :class="mergedClass">
+  <a :href="href" v-bind="{ ...$attrs, class: mergedClass }">
     <slot />
   </a>
 </template>

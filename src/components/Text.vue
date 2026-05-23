@@ -23,7 +23,7 @@ const mergedClass = computed(() => twMerge(defaultClass.value, attrs.class as st
 </script>
 
 <template>
-  <component :is="props.as" v-bind="$attrs" :class="mergedClass">
+  <component :is="props.as" v-bind="{ ...$attrs, class: mergedClass }">
     <slot />
   </component>
 </template>

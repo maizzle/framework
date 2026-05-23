@@ -71,6 +71,16 @@ describe('purgeCss', () => {
     expect(result).toContain('.moz-text-html')
   })
 
+  it('preserves Yahoo Mail ".\\&" wrapper selector by default', () => {
+    // Yahoo Mail wraps content in an element with class literally named "&".
+    // The @maizzle/tailwindcss `yahoo:` variant produces selectors like
+    // `.\& .yahoo\:text-white` which won't match anything in the template,
+    // so the default safelist must keep them.
+    const html = `<html><head><style>.\\& .yahoo\\:text-white { color: white }</style></head><body><p class="yahoo:text-white">hi</p></body></html>`
+    const result = run(html, true)
+    expect(result).toContain('.\\& .yahoo\\:text-white')
+  })
+
   // ---------------------------------------------------------------------------
   // HTML comments handling
   // ---------------------------------------------------------------------------

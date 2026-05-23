@@ -107,6 +107,22 @@ describe('safeSelectors — style tag selectors', () => {
     expect(run(html)).toBe('<style>.sm-flex, .md-block { color: red; }</style>')
   })
 
+  it('preserves the standalone Yahoo Mail ".\\&" wrapper selector', () => {
+    // Yahoo Mail wraps content in a class literally named `&`. Rewriting
+    // `\&` to `and-` would break the rule because we can't rewrite Yahoo's
+    // DOM. `\&` inside larger class names (Tailwind arbitrary variants)
+    // must still be rewritten.
+    const html = '<style>.\\& .yahoo\\:text-white { color: red; }</style>'
+    expect(run(html)).toBe('<style>.\\& .yahoo-text-white { color: red; }</style>')
+  })
+
+  it('still rewrites \\& when part of a larger class name', () => {
+    // Tailwind arbitrary variants like `[&>span]:flex` generate selectors
+    // where `\&` is part of a bigger class — those must still be rewritten.
+    const html = '<style>.\\[\\&\\>span\\]\\:flex > span { display: flex; }</style>'
+    expect(run(html)).toContain('and-')
+  })
+
   it('handles \\2c  (CSS unicode escape for comma) in selectors', () => {
     // \2c  is the CSS unicode escape for comma character
     const html = '<style>.item\\2c list { color: red; }</style>'

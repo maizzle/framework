@@ -59,7 +59,17 @@ function processCssSelectors(css: string, replacements: Record<string, string>):
     (root: postcss.Root) => {
       root.walkRules((rule: postcss.Rule) => {
         rule.selector = rule.selector
-          .replace(selectorRegex, (_matched, char) => replacements[char] ?? _matched)
+          .replace(selectorRegex, (matched, char, offset, str) => {
+            // Yahoo Mail wraps content in a class literally named `&`, so
+            // the selector `.\&` must be preserved. Detect it as a `\&`
+            // that follows a `.` and ends the class atom (space, combinator,
+            // comma, `{`, or end-of-string).
+            if (char === '&' && str[offset - 1] === '.') {
+              const next = str[offset + 2]
+              if (next === undefined || /[\s,{>~+)]/.test(next)) return matched
+            }
+            return replacements[char] ?? matched
+          })
           // Handle CSS unicode escape for comma (\2c  → _)
           .replaceAll('\\2c ', '_')
       })

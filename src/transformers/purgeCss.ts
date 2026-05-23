@@ -21,6 +21,7 @@ const DEFAULT_SAFELIST: string[] = [
   '.mail-detail-content', // Comcast, Libero webmail
   '*edo*', // Edison (all)
   '#*', // Freenet uses #msgBody
+  '.\\&*', // Yahoo Mail wraps content in a class literally named "&"
   '.lang*', // Fenced code blocks
 ]
 

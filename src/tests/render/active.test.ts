@@ -41,8 +41,11 @@ describe('render() with an active renderer', () => {
     const result = await render('<template><div>own</div></template>')
 
     expect(result.html).toContain('own')
-    // No assertion on close — implicit: the host process didn't leak a Vite
-    // server. Pairs with the reuse test to cover both branches of the
-    // `if (!active) await renderer.close()` cleanup in render/index.ts.
+    /**
+     * No assertion on close — implicit: the host process didn't leak
+     * a Vite server. Pairs with the reuse test to cover both
+     * branches of the `if (!active) await renderer.close()`
+     * cleanup in render/index.ts.
+     */
   })
 })

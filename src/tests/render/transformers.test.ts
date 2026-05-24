@@ -156,8 +156,10 @@ describe('render', () => {
       expect(result.html).toContain('border: 1px solid green')
       // Markers stripped
       expect(result.html).not.toContain('mz-tw:')
-      // Only one <style> block from <Tailwind> (no duplication from a
-      // nested inner block compiling separately)
+      /**
+       * Only one <style> block from <Tailwind> (no duplication from
+       * a nested inner block compiling separately).
+       */
       const matches = result.html.match(/border: 1px solid green/g)
       expect(matches).toHaveLength(1)
     })
@@ -232,9 +234,12 @@ describe('render', () => {
     })
 
     it('useTransformers({ ... }) preserves config defaults instead of replacing them', async () => {
-      // Repro for: SFC calling useTransformers with a partial override
-      // would drop defaults like css.inline / css.purge, because sfcConfig
-      // replaced the resolved config wholesale. Renderer must merge.
+      /**
+       * Repro for: SFC calling useTransformers with a partial override
+       * would drop defaults like css.inline / css.purge, because
+       * sfcConfig replaced the resolved config wholesale.
+       * Renderer must merge.
+       */
       const result = await render(`
         <script setup>
         useTransformers({ prettify: true })

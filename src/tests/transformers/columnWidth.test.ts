@@ -201,8 +201,11 @@ describe('columnWidth', () => {
     })
 
     it('keeps data-maizzle-cw at the outer slice so nested rows account for the column\'s border', () => {
-      // Outer Container 600 → 2 outer cols with 1px border each (outer = 300, content = 298)
-      // Inner Row in col 1 has 2 nested cols → source = 298 → each = 149 outer
+      /**
+       * Outer Container 600 → 2 outer cols with 1px border each (outer = 300,
+       * content = 298). Inner Row in col 1 has 2 nested cols → source = 298,
+       * so each nested column resolves to 149 outer width.
+       */
       const borderedOuter = (id: string, count: number, inner: string) =>
         `<div style="display: inline-block; min-width: __MAIZZLE_COLW_${id}__; border-width: 1px; border-style: solid;" data-maizzle-cw-id="${id}" data-maizzle-cw-count="${count}">${inner}</div>`
       const inner =
@@ -477,9 +480,11 @@ describe('columnWidth', () => {
     })
 
     it('uses user `min-width:` (post-juice, second declaration) and strips it', () => {
-      // Mirrors what juice actually produces: our placeholder declaration
-      // comes first (Vue's :style), the class-derived `min-width: X%`
-      // comes after (juice-appended).
+      /**
+       * Mirrors what juice actually produces: our placeholder declaration
+       * comes first (from Vue's :style), then the class-derived
+       * `min-width: X%` (juice-appended).
+       */
       const realJuiceCol = (id: string, count: number, userMin: string) =>
         `<div style="display: inline-block; min-width: __MAIZZLE_COLW_${id}__; font-size: 16px; vertical-align: top; min-width: ${userMin}; background-color: #38bdf8" data-maizzle-cw-id="${id}" data-maizzle-cw-count="${count}"></div>`
 
@@ -515,8 +520,11 @@ describe('columnWidth', () => {
         + userCol('c1', 2, 'max-width: 192px')
         + `</div>`
       const out = run(html)
-      // Source is %, count-based = 50%, cannot meaningfully compare/cap with px → cap to user's max anyway? No — falls through.
-      // Actually: countBased is '50%', endsWith('px') is false, branch taken → cappedMin = maxPx = '192px'.
+      /**
+       * Source is %, count-based = 50%, cannot meaningfully compare/cap with px
+       * → cap to user's max anyway? No, falls through. Actually: countBased is
+       * '50%', endsWith('px') is false, branch taken → cappedMin = maxPx = 192px.
+       */
       expect(out).toContain('width: 192px')
     })
   })
@@ -589,8 +597,10 @@ describe('columnWidth', () => {
     })
 
     it('keeps redistribution local to each row group (nested rows independent)', () => {
-      // Outer: auto + w-5 + auto in 600px → autos = 290 each.
-      // Inner row inside c1 (290px source): 2 auto cols → 145 each.
+      /**
+       * Outer: auto + w-5 + auto in 600px → autos = 290 each.
+       * Inner row in c1 (290px source): 2 auto cols → 145 each.
+       */
       const html =
         `<div data-maizzle-cw="600px">`
         + `<div style="display: inline-block; min-width: __MAIZZLE_COLW_c1__;" data-maizzle-cw-id="c1" data-maizzle-cw-count="3">`
@@ -618,9 +628,11 @@ describe('columnWidth', () => {
     })
 
     it('floors the per-auto share to 2 decimals so 3 autos + 2 spacers never overflow the slot', () => {
-      // 576 − (20 + 20) = 536. 536/3 = 178.6̄. Rounding up to 179 would
-      // give 3×179 + 2×20 = 577 > 576 → row stacks. Floor-to-2-decimals
-      // → 178.66, sum = 535.98 + 40 = 575.98 ≤ 576.
+      /**
+       * 576 − (20 + 20) = 536. 536/3 = 178.6̄. Rounding up to 179 would give
+       * 3×179 + 2×20 = 577 > 576 → row stacks. Floor-to-2-decimals lands
+       * at 178.66, so sum = 535.98 + 40 = 575.98 ≤ 576.
+       */
       const html =
         `<div data-maizzle-cw="576px">`
         + col('c1', 5)
@@ -645,9 +657,11 @@ describe('columnWidth', () => {
   })
 
   it('falls through an unresolvable ancestor marker to the next sized one', () => {
-    // Row emits an empty data-maizzle-cw because a class like `w-typo`
-    // tripped the heuristic, but Tailwind dropped the bogus class so no
-    // width ends up in style. Columns should still resolve via Container.
+    /**
+     * Row emits an empty data-maizzle-cw because a class like `w-typo`
+     * tripped the heuristic, but Tailwind dropped the bogus class so
+     * no width ends up in style. Columns still resolve via Container.
+     */
     const html =
       `<div data-maizzle-cw="" style="max-width: 576px">`
       + `<div data-maizzle-cw="" style="font-size: 0;">${col('c1', 2)}${col('c2', 2)}</div>`
@@ -680,8 +694,10 @@ describe('columnWidth', () => {
   })
 
   it('cascades resolved widths through nested rows', () => {
-    // Outer Container 400px → 2 cols = 200px each
-    // Inner Row inside col[0] → 2 cols = 100px each
+    /**
+     * Outer Container 400px → 2 cols = 200px each.
+     * Inner Row in col[0] → 2 cols = 100px each.
+     */
     const html =
       `<div data-maizzle-cw="400px">`
       + `<div>` // Row

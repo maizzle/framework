@@ -389,9 +389,12 @@ describe('render', () => {
       const renderer = await createRenderer({ root: tempDir })
 
       try {
-        // A stateful plugin: each instance owns its own mutable counter
-        // exposed via $counter. If the framework reused one instance
-        // across renders, the second render would observe `1` instead of `0`.
+        /**
+         * A stateful plugin: each instance owns its own mutable
+         * counter exposed via $counter. If the framework reused
+         * one instance across renders, the second render would
+         * observe `1` instead of `0`.
+         */
         const config = {
           ...resolvedConfig,
           vue: {

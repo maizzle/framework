@@ -4,9 +4,11 @@ const toLch = converter('lch')
 
 type Mode = 'background' | 'foreground'
 
-// CSS properties whose values contain colors we should invert, mapped to
-// the inversion mode. Kebab-case for <style> decls; inline styles are
-// handled via the same lookup after lowercasing.
+/**
+ * CSS properties whose values contain colors we should invert, mapped to
+ * the inversion mode. Kebab-case for <style> decls; inline styles
+ * are handled via the same lookup after lowercasing.
+ */
 const styleProps = new Map<string, Mode>([
   ['background', 'background'],
   ['background-color', 'background'],

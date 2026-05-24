@@ -93,9 +93,11 @@ describe('CodeInline', () => {
     it('emits token spans with §MZLT§/§MZGT§ markers when theme is set', async () => {
       const html = await render({ code: '<div>x</div>', theme: 'github-light' })
 
-      // CodeInline replaces real `<`/`>` with private markers so oxfmt sees
-      // text content (not inline tags) and doesn't reflow. minifyCodeInline
-      // decodes back to real angle brackets at the end of the pipeline.
+      /**
+       * CodeInline replaces real `<`/`>` with private markers so oxfmt
+       * sees text content (not inline tags) and doesn't reflow.
+       * minifyCodeInline decodes back to real angle brackets at end.
+       */
       expect(html).toContain('§MZLT§span')
       expect(html).toContain('§MZGT§')
       expect(html).toMatch(/style="[^"]*color:/)

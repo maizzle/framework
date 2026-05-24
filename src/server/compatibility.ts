@@ -121,9 +121,11 @@ function computeSupport(stats: any, familyNicenames: Record<string, string>, all
     if (allowedClients !== 'all' && !allowedClients.has(family)) continue
     let familyHasNonY = false
     for (const plat in stats[family]) {
-      // Only score the latest version per (family, platform) — legacy
-      // versions (Outlook 2007, etc.) otherwise flag modern-widely-supported
-      // features as partial forever.
+      /**
+       * Only score the latest version per (family, platform) — legacy
+       * versions (Outlook 2007, etc.) otherwise flag modern-widely
+       * supported features as partial forever.
+       */
       const versions = Object.keys(stats[family][plat]).sort()
       const latest = versions[versions.length - 1]
       if (!latest) continue
@@ -164,8 +166,10 @@ const IGNORED_SLUGS = new Set([
   'html-role', 'html-hidden', 'html-width', 'html-height',
   // CSS noise
   'css-comments', 'css-important',
-  // CSS fundamentals — universally used with known minor caveats; flagging
-  // them as "partial" is noise rather than signal.
+  /**
+   * CSS fundamentals — universally used with known minor caveats; flagging
+   * them as "partial" is noise rather than signal.
+   */
   'css-margin', 'css-padding', 'css-border',
   'css-font-size', 'css-font-weight', 'css-font', 'css-font-family',
   'css-line-height', 'css-letter-spacing', 'css-text-align',
@@ -177,9 +181,12 @@ const IGNORED_SLUGS = new Set([
 
 function classify(f: Feature, idx: Indexes) {
   const slug = f.slug
-  // Retain html-style feature for the body-only detector even though it's
-  // blacklisted from the normal html-tag detection path. Title is suffixed
-  // so the flag reads as a body-placement warning, not a blanket `<style>`.
+  /**
+   * Retain html-style feature for the body-only detector even though it's
+   * blacklisted from the normal html-tag detection path. Title is
+   * suffixed so the flag reads as a body-placement warning, not a
+   * blanket `<style>`.
+   */
   if (slug === 'html-style') {
     idx.htmlStyleInBody = { ...f, title: `${f.title} in <body>` }
     return
@@ -310,12 +317,16 @@ export async function initCompatibility(): Promise<Indexes | null> {
       const data = await res.json()
       const idx = emptyIndexes(data.nicenames?.support ?? {}, data.nicenames?.family ?? {})
       for (const item of data.data ?? []) {
-        // Record every slug's title/url so lint can look up caniemail pages
-        // for issues that map to a known feature, even ignored ones.
+        /**
+         * Record every slug's title/url so lint can look up caniemail
+         * pages for issues that map to a known feature, even ignored.
+         */
         if (item.slug && item.url) idx.bySlug.set(item.slug, { title: item.title, url: item.url })
-        // Index the feature if any cell anywhere in the matrix is non-y.
-        // Per-request aggregation (with the active client filter) decides
-        // whether to actually surface the issue.
+        /**
+         * Index the feature if any cell anywhere in the matrix is non-y.
+         * Per-request aggregation (with the active client filter)
+         * decides whether to actually surface the issue.
+         */
         if (!hasAnyNonY(item.stats)) continue
         const f: Feature = {
           slug: item.slug,
@@ -335,9 +346,11 @@ export async function initCompatibility(): Promise<Indexes | null> {
   return initPromise
 }
 
-// Note: fetch of the caniemail dataset is lazy — it fires on the first
-// check request, not at module load, so `server.checks: false` pays no
-// network cost.
+/**
+ * Note: fetch of the caniemail dataset is lazy — it fires on the first
+ * check request, not at module load, so `server.checks: false` pays
+ * no network cost.
+ */
 
 interface FileStreams {
   path: string
@@ -481,9 +494,11 @@ function walkCss(
     }
 
     if (atRule.name === 'media') {
-      // Pick the most specific media-feature match (prefers-color-scheme,
-      // hover, orientation, …). If one matches, skip the generic `css-at-media`
-      // to avoid duplicate rows pointing at the same line.
+      /**
+       * Pick the most specific media-feature match (prefers-color-scheme,
+       * hover, orientation, …). If one matches, skip the generic
+       * `css-at-media` to avoid duplicate rows on the same line.
+       */
       const specific: Feature[] = []
       if (idx.cssMediaFeature.size) {
         for (const [feat, fs2] of idx.cssMediaFeature) {
@@ -586,8 +601,10 @@ function walkTemplate(
   const semanticTags = new Set(['article', 'aside', 'details', 'figcaption', 'figure',
     'footer', 'header', 'main', 'mark', 'nav', 'section', 'time', 'summary'])
 
-  // Stack of tags that opened a body-scope: a literal <body> or a
-  // <Teleport to="body..."> whose rendered contents land inside body.
+  /**
+   * Stack of tags that opened a body-scope: a literal <body> or a
+   * <Teleport to="body..."> whose rendered contents land inside body.
+   */
   const bodyScopeStack: string[] = []
   const parser = new Parser({
     onopentag(tag, attrs) {
@@ -754,12 +771,15 @@ async function scan(
     })
   }
 
-  // Stream A: compiled CSS from real pipeline — reflects shipped output
-  // (Tailwind utilities resolved, @maizzle/tailwindcss imported, calc
-  // resolved, modern CSS lowered). Filter hits whose containing selector
-  // doesn't reference a user class — drops Tailwind preflight noise.
-  // For hits without a class selector (e.g. @media, user-written rules),
-  // attribute to the file that owned the style block.
+  /**
+   * Stream A: compiled CSS from real pipeline — reflects shipped output
+   * (Tailwind utilities resolved, @maizzle/tailwindcss imported, calc
+   * resolved, modern CSS lowered). Filter hits whose containing
+   * selector doesn't reference a user class — drops Tailwind
+   * preflight noise. For hits without a class selector
+   * (e.g. @media, user-written rules), attribute to the
+   * file that owned the style block.
+   */
   const compiledBlocks = await compileViaPipeline(streams, config, rootFile)
   for (const block of compiledBlocks) {
     walkCss(block.css, idx, (feature, node) => {
@@ -768,9 +788,11 @@ async function scan(
         add(feature, block.file, block.line)
         return
       }
-      // @media features collapse to a single source line: the first usage
-      // of whatever class/variant triggered the wrapper. Other features
-      // show up for every occurrence.
+      /**
+       * @media features collapse to a single source line: the first use
+       * of whatever class/variant triggered the wrapper. Other
+       * features show up for every occurrence.
+       */
       if (feature.slug.startsWith('css-at-media')) {
         add(feature, locations[0].file, locations[0].line)
       } else {
@@ -886,9 +908,11 @@ export async function serveCompatibility(
   try {
     res.setHeader('Content-Type', 'application/json')
     if (!checksCfg) {
-      // Defensive: UI hides the tab using window.__MAIZZLE_CONFIG__ so it
-      // shouldn't reach this endpoint when disabled, but if something else
-      // does, return an empty list.
+      /**
+       * Defensive: UI hides the tab using window.__MAIZZLE_CONFIG__ so
+       * it shouldn't reach this endpoint when disabled, but if
+       * something else does, return an empty list.
+       */
       res.end(JSON.stringify([]))
       return
     }

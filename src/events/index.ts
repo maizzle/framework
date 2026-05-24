@@ -30,9 +30,11 @@ export interface EventMap {
  */
 export class EventManager {
   private handlers = new Map<EventName, EventMap[EventName][]>()
-  // Snapshot of config-handler counts per event, captured at registerConfig().
-  // clearSfcHandlers() truncates each list back to this count, dropping any
-  // SFC-registered handlers that were appended after.
+  /**
+   * Snapshot of config-handler counts per event, captured at registerConfig().
+   * clearSfcHandlers() truncates each list back to this count, dropping
+   * any SFC-registered handlers that were appended after.
+   */
   private configHandlerCount = new Map<EventName, number>()
 
   /**

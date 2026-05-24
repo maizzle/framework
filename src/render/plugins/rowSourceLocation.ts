@@ -35,8 +35,10 @@ export function rowSourceLocation(): Plugin {
       let transformed: string
 
       if (isVue) {
-        // Replace inside every <template>...</template> block, leaving
-        // <script> and <style> blocks alone.
+        /**
+         * Replace inside every <template>...</template> block, leaving
+         * <script> and <style> blocks alone.
+         */
         const templateBlock = /(<template\b[^>]*>)([\s\S]*?)(<\/template>)/g
         transformed = code.replace(templateBlock, (_match, open, inner, close, offset: number) => {
           const innerOffset = offset + open.length

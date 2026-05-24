@@ -164,8 +164,10 @@ describe('inlineCss', () => {
     it('does not add embed attribute to amp-custom style tags', () => {
       const html = '<style amp-custom>.keep { color: blue; }</style><p class="keep">Text</p>'
       const result = run(html, true)
-      // `amp-custom` and `embed` are mutually exclusive in the output —
-      // amp-custom is the user's chosen attr and stays unaltered.
+      /**
+       * `amp-custom` and `embed` are mutually exclusive in the output;
+       * amp-custom is the user's chosen attr and stays unaltered.
+       */
       expect(result).not.toMatch(/<style[^>]*\sembed[\s>=]/)
       expect(result).not.toContain('data-embed')
       expect(result).not.toContain('data-maizzle-embed')
@@ -194,8 +196,11 @@ describe('inlineCss', () => {
     it('disables width attributes when applyWidthAttributes is false', () => {
       const html = '<style>img { width: 100px; }</style><img src="test.jpg">'
       const result = run(html, { applyWidthAttributes: false, applyHeightAttributes: false })
-      // Note: Juice may still add width attributes depending on its internal behavior
-      // This test verifies the option is passed through correctly
+      /**
+       * Note: Juice may still add width attributes depending on its
+       * internal behavior. This test verifies the option is passed
+       * through correctly.
+       */
       expect(result).toContain('style=')
     })
   })

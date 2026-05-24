@@ -22,8 +22,10 @@ export function codeBlockExtract(): Plugin {
         // Skip if already has a :code or v-bind:code prop
         if (/(?:^|\s):code\b/.test(attrs) || /v-bind:code\b/.test(attrs)) return _match
 
-        // Strip leading/trailing blank lines, then dedent based on
-        // the minimum indent of non-empty lines (à la min-indent)
+        /**
+         * Strip leading/trailing blank lines, then dedent based on
+         * the minimum indent of non-empty lines (à la min-indent).
+         */
         const stripped = content.replace(/^\n+/, '').replace(/\s+$/, '')
         if (!stripped) return _match
 

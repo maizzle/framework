@@ -1,9 +1,12 @@
 import type { ParsedPath } from 'node:path'
 
-// Stored on globalThis so the Vite SSR module graph (which loads this
-// file when a user SFC auto-imports useCurrentTemplate) and the Node
-// import graph (used by build.ts / serve.ts) share the same value.
-// Two module instances would otherwise hold independent `let` bindings.
+/**
+ * Stored on globalThis so the Vite SSR module graph (which loads this file
+ * when a user SFC auto-imports useCurrentTemplate) and the Node import
+ * graph (used by build.ts / serve.ts) share the same value. Two
+ * module instances would otherwise hold independent `let`
+ * bindings.
+ */
 const KEY = Symbol.for('maizzle.currentTemplate')
 
 interface GlobalWithCurrentTemplate {

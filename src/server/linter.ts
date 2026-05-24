@@ -161,10 +161,12 @@ function lintHtml(html: string, lineOffset: number, filePath: string, presence: 
     else if (tagName === 'head') presence.head = true
     else if (tagName === 'body') presence.body = true
 
-    // Layout tables — accessibility requires role="none" so screen readers
-    // skip the table structure. Only surface the warning when the user has
-    // disabled Maizzle's auto-role-add; otherwise every build-step output
-    // already has role="none" set.
+    /**
+     * Layout tables — accessibility requires role="none" so screen readers
+     * skip the table structure. Only surface the warning when the user
+     * has disabled Maizzle's auto-role-add; otherwise every build
+     * step output already has role="none" set.
+     */
     if (checkTableRole && tagName === 'table') {
       const roleMatch = tag.match(/\brole\s*=\s*["']([^"']*)["']/i)
       if (!roleMatch) {

@@ -60,8 +60,10 @@ export async function tailwindComponent(
     }
 
     const el = node as Element
-    // Always assign to the OUTERMOST active marker (stack[0]) so nested
-    // <Tailwind> blocks merge their classes into the parent's scope.
+    /**
+     * Always assign to the OUTERMOST active marker (stack[0]) so nested
+     * <Tailwind> blocks merge their classes into the parent's scope.
+     */
     if (el.attribs?.class && stack.length > 0) {
       map.get(stack[0])!.classes.add(el.attribs.class)
     }
@@ -78,8 +80,11 @@ export async function tailwindComponent(
     throw new Error('`Tailwind` component requires `Head` component to be present in the template.')
   }
 
-  // Compile + inject one <style raw> per outermost block. `raw` opts the
-  // existing tailwindcss transformer out of recompiling already-compiled CSS.
+  /**
+   * Compile + inject one <style raw> per outermost block. `raw` opts
+   * the existing tailwindcss transformer out of recompiling
+   * already-compiled CSS.
+   */
   for (const meta of map.values()) {
     if (meta.nested) continue
 

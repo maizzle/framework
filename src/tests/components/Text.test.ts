@@ -45,8 +45,11 @@ describe('Text', () => {
   })
 
   it('does not duplicate a user class that twMerge passes through (e.g. yahoo:text-2xl)', () => {
-    // `yahoo:` is not a Tailwind built-in variant so twMerge can't dedupe it
-    // against the defaults; the component must still emit each class once.
+    /**
+     * `yahoo:` is not a Tailwind built-in variant so twMerge can't
+     * dedupe it against defaults; component must still emit each
+     * class once.
+     */
     const wrapper = mount(Text, { attrs: { class: 'yahoo:text-2xl' } })
     const classAttr = wrapper.attributes('class') ?? ''
     const occurrences = classAttr.split(/\s+/).filter(c => c === 'yahoo:text-2xl').length

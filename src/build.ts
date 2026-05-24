@@ -71,17 +71,23 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
 
         const rendered = await renderer.render(absolutePath, config)
 
-        // Register SFC event handlers collected during render so they participate
-        // in the post-render events (afterRender / afterTransform). They're cleared
-        // at the end of the iteration so they don't leak into the next template.
+        /**
+         * Register SFC event handlers collected during render so they take
+         * part in the post-render events (afterRender / afterTransform).
+         * They're cleared at the end of the iteration so they don't
+         * leak into the next template.
+         */
         for (const { name, handler } of rendered.sfcEventHandlers) {
           events.on(name, handler)
         }
 
         let html = await events.fireAfterRender({ config, template, html: rendered.html })
 
-        // Use the per-template merged config (from defineConfig() in the SFC) so that
-        // template-level overrides like css.safe: false are respected by transformers.
+        /**
+         * Use the per-template merged config (from defineConfig() in the SFC) so
+         * that template-level overrides like css.safe: false are respected
+         * by transformers.
+         */
         const templateConfig = rendered.templateConfig
 
         const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'

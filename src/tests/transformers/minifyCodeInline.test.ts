@@ -8,9 +8,11 @@ describe('minifyCodeInline', () => {
   })
 
   it('preserves source-level &lt;/&gt; entities (literal `<` `>` in user code) untouched', () => {
-    // CodeInline only replaces real `<`/`>` (structural). Shiki's entities for
-    // source-level chars are `&lt;`/`&gt;` strings (no real `<` inside), so
-    // they pass through this transformer verbatim.
+    /**
+     * CodeInline only replaces real `<`/`>` (structural). Shiki's entities
+     * for source-level chars are `&lt;`/`&gt;` strings (no real `<` inside),
+     * so they pass through this transformer verbatim.
+     */
     const input = '<code data-minify-inline>§MZLT§span§MZGT§&lt;§MZLT§/span§MZGT§</code>'
     expect(minifyCodeInline(input)).toBe('<code><span>&lt;</span></code>')
   })

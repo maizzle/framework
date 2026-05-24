@@ -93,8 +93,10 @@ function resolveValue(
     } else if (v.fallback !== undefined) {
       result = result.slice(0, v.start) + v.fallback.trim() + result.slice(v.end)
     } else {
-      // Unresolvable with no fallback — skip past it to avoid infinite loop
-      // Try to find another var() after this one
+      /**
+       * Unresolvable with no fallback — skip past it to avoid infinite loop.
+       * Try to find another var() after this one.
+       */
       const next = findVar(result, v.end)
       if (!next) break
 
@@ -125,15 +127,20 @@ export default (): Plugin => {
         })
       })
 
-      // Pass 1: collect :root vars (top-level and inside @layer)
-      // Skip :root inside @media — those are for dark mode and should stay.
+      /**
+       * Pass 1: collect :root vars (top-level and inside @layer). Skip
+       * :root inside @media — those are for dark mode and should
+       * stay.
+       */
       const rootVars = new Map<string, string>()
 
       root.walkRules((rule) => {
         if (!isRootRule(rule)) return
 
-        // Allow :root at top level or inside @layer (Tailwind theme vars)
-        // Skip :root inside @media or other non-layer at-rules
+        /**
+         * Allow :root at top level or inside @layer (Tailwind theme vars).
+         * Skip :root inside @media or other non-layer at-rules.
+         */
         if (rule.parent?.type !== 'root' && !isInLayer(rule)) return
 
         rule.each((node) => {
@@ -163,9 +170,11 @@ export default (): Plugin => {
 
       // Pass 2: resolve var() in all rules
       root.walkRules((rule) => {
-        // Skip :root inside @media — those vars are for dark mode etc.
-        // and must stay in the <style> tag as-is.
-        // Allow :root at top level and inside @layer (processed in pass 3).
+        /**
+         * Skip :root inside @media — those vars are for dark mode etc. and
+         * must stay in the <style> tag as-is. Allow :root at top
+         * level and inside @layer (processed in pass 3).
+         */
         if (isRootRule(rule)) {
           if (rule.parent?.type !== 'root' && !isInLayer(rule)) return
         }

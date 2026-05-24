@@ -93,9 +93,12 @@ export async function buildComponentMap(
 ): Promise<Map<string, string>> {
   const map = new Map<string, string>()
 
-  // Built-in framework components + the user's default `components/` dir use
-  // unplugin's directoryAsNamespace + collapseSamePrefixes behavior — i.e.
-  // no explicit prefix, folder name becomes the namespace.
+  /**
+   * Built-in framework components + the user's default `components/` dir
+   * use unplugin's directoryAsNamespace + collapseSamePrefixes
+   * behavior — i.e. no explicit prefix, folder name becomes
+   * the namespace.
+   */
   const implicitDirs = [
     resolve(__dirname, '../components'),
     resolve(root, 'components'),

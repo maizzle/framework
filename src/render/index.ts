@@ -40,9 +40,12 @@ export async function render(
 
   const resolvedConfig = await resolveConfig(config)
 
-  // Reuse a renderer started by the Vite plugin when one is active. Spinning
-  // up a fresh Vite SSR server inside a host Vite dev process (e.g. TanStack
-  // Start) collides on env wiring and throws "outsideEmitter undefined".
+  /**
+   * Reuse a renderer started by the Vite plugin when one is active.
+   * Spinning up a fresh Vite SSR server inside a host Vite dev process
+   * (e.g. TanStack Start) collides on env wiring and throws
+   * "outsideEmitter undefined".
+   */
   const active = getActiveRenderer()
   const renderer = active ?? await createRenderer({
     markdown: resolvedConfig.markdown,

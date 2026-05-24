@@ -86,8 +86,10 @@ describe('CodeBlock', () => {
     it('sets the shiki theme background on the wrapping td', async () => {
       const html = await render({ code: '<div>test</div>' })
 
-      // github-light bg is #fff — must appear on the td so Outlook's td
-      // padding doesn't show through as white on a dark theme.
+      /**
+       * github-light bg is #fff — must appear on the td so Outlook's
+       * td padding doesn't show through as white on a dark theme.
+       */
       expect(html).toMatch(/<td[^>]*style="background-color:#fff"/)
     })
 

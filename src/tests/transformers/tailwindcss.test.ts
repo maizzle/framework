@@ -95,8 +95,10 @@ describe('tailwindcss', () => {
       const html = '<style>:root { --brand: #ff0000 } .foo { color: var(--brand) }</style>'
       const result = await run(html)
 
-      // resolveProps resolves the var() inline, so the
-      // declaration is consumed — pruneVars should not blow up
+      /**
+       * resolveProps resolves the var() inline, so the
+       * declaration is consumed and pruneVars should not blow up.
+       */
       expect(result).toContain('.foo')
       expect(result).toContain('color: red')
     })
@@ -123,8 +125,10 @@ describe('tailwindcss', () => {
       const html = '<style>:root { --base: #0000ff; --alias: var(--base) } .foo { color: var(--alias) }</style>'
       const result = await run(html)
 
-      // resolveProps resolves the whole chain, so the final
-      // rule should carry the concrete colour value (lightningcss normalises blue → #00f)
+      /**
+       * resolveProps resolves the whole chain, so the final rule should
+       * carry the concrete colour value (lightningcss normalises blue → #00f).
+       */
       expect(result).toContain('.foo')
       expect(result).toContain('color: #00f')
     })

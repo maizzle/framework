@@ -84,8 +84,10 @@ const iframeContentHeight = ref<number | null>(null)
 function copySource() {
   let text: string
   if (sourceView.value === 'compiled') {
-    // `renderedHtml` holds the raw compiled HTML (srcdoc is only populated
-    // for the initial iframe load; subsequent renders use doc.write).
+    /**
+     * `renderedHtml` holds the raw compiled HTML (srcdoc is only populated
+     * for the initial iframe load; subsequent renders use doc.write).
+     */
     text = renderedHtml || srcdoc.value
   } else if (sourceView.value === 'plaintext') {
     text = plaintextContent.value
@@ -160,8 +162,10 @@ const compatibilityIssues = ref<CheckIssue[]>([])
 const compatibilityLoading = ref(false)
 const compatibilityError = ref('')
 const compatibilityCategory = ref('')
-// Injected by serveDevUI into index.html — synchronous, available before
-// any HTTP calls, so the Checks tab never flashes in when disabled.
+/**
+ * Injected by serveDevUI into index.html — synchronous, available before
+ * any HTTP calls, so the Checks tab never flashes in when disabled.
+ */
 const checksConfig = (window as any).__MAIZZLE_CONFIG__?.checks
 const compatibilityDisabled = ref(checksConfig === false)
 const expandedIssueKeys = ref(new Set<string>())
@@ -266,8 +270,10 @@ async function fetchTemplate() {
   const iframe = iframeEl.value
   const doc = iframe?.contentDocument
 
-  // Write directly into the iframe document to avoid a full reload,
-  // which preserves scroll position natively.
+  /**
+   * Write directly into the iframe document to avoid a full reload,
+   * which preserves scroll position natively.
+   */
   if (doc) {
     doc.open()
     doc.write(renderedHtml)
@@ -359,9 +365,12 @@ async function fetchCompatibility() {
     } else {
       const issues: CheckIssue[] = Array.isArray(data) ? data : []
       compatibilityIssues.value = issues
-      // Keep the current category if it still has issues; otherwise fall
-      // back to the first category that does. Prevents a "refresh" during
-      // edits from snapping back to CSS when the user is on HTML/Image.
+      /**
+       * Keep the current category if it still has issues; otherwise fall
+       * back to the first category that does. Prevents a "refresh"
+       * during edits from snapping back to CSS when the user is
+       * on HTML/Image.
+       */
       const current = compatibilityCategory.value
       const currentStillActive = current && issues.some((i) => i.category === current)
       if (!currentStillActive) {
@@ -462,20 +471,25 @@ if ((import.meta as any).hot) {
     fetchCompatibility()
     fetchStats()
 
-    // Refetch in place — don't clear the previous values first. v-html
-    // replaces the highlighted block atomically when the new content
-    // arrives, and the ScrollArea viewport keeps its scrollTop as long
-    // as the new content's height is similar. Plaintext interpolation
-    // updates a single text node, so scroll is naturally preserved.
+    /**
+     * Refetch in place — don't clear the previous values first. v-html
+     * replaces the highlighted block atomically when the new content
+     * arrives, and the ScrollArea viewport keeps its scrollTop as
+     * long as the new content's height is similar. Plaintext
+     * interpolation updates a single text node, so scroll
+     * is naturally preserved.
+     */
     fetchTemplate()
     fetchSource()
     fetchVueSource()
     fetchPlaintext()
   })
 
-  // Keep the UI in sync with live config edits. Payload is the same shape
-  // as the initial `window.__MAIZZLE_CONFIG__` inject — we replace it and
-  // derive per-feature flags from there.
+  /**
+   * Keep the UI in sync with live config edits. Payload is the same shape
+   * as the initial `window.__MAIZZLE_CONFIG__` inject — we replace it
+   * and derive per-feature flags from there.
+   */
   ;(import.meta as any).hot.on('maizzle:config-updated', (data: Record<string, unknown>) => {
     ;(window as any).__MAIZZLE_CONFIG__ = data
     const wasDisabled = compatibilityDisabled.value

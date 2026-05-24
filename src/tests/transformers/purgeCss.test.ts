@@ -7,9 +7,9 @@ function run(html: string, option?: PurgeCssOptions | boolean): string {
   return purgeCss(html, opts)
 }
 
-// ---------------------------------------------------------------------------
-// Core feature — removes unused CSS
-// ---------------------------------------------------------------------------
+/**
+ * Core feature — removes unused CSS
+ */
 
 describe('purgeCss', () => {
   it('removes unused CSS class from <style> and class attribute', () => {
@@ -34,17 +34,19 @@ describe('purgeCss', () => {
   })
 
   it('preserves all id selectors by default (due to #* in default safelist)', () => {
-    // #* is in the default safelist for Freenet webmail compatibility,
-    // so all id selectors are preserved even when unused.
+    /**
+     * #* is in the default safelist for Freenet webmail compatibility,
+     * so all id selectors are preserved even when unused.
+     */
     const html = `<html><head><style>#header { color: red } #used { color: blue }</style></head><body><div id="used">hi</div></body></html>`
     const result = run(html, true)
     expect(result).toContain('#used')
     expect(result).toContain('#header')
   })
 
-  // ---------------------------------------------------------------------------
-  // Default safelist — email client reset selectors are preserved
-  // ---------------------------------------------------------------------------
+  /**
+   * Default safelist — email client reset selectors are preserved
+   */
 
   it('preserves *body* selector by default', () => {
     const html = `<html><head><style>body[yahoo] .foo { color: red } .unused { color: blue }</style></head><body><p>hi</p></body></html>`
@@ -72,18 +74,20 @@ describe('purgeCss', () => {
   })
 
   it('preserves Yahoo Mail ".\\&" wrapper selector by default', () => {
-    // Yahoo Mail wraps content in an element with class literally named "&".
-    // The @maizzle/tailwindcss `yahoo:` variant produces selectors like
-    // `.\& .yahoo\:text-white` which won't match anything in the template,
-    // so the default safelist must keep them.
+    /**
+     * Yahoo Mail wraps content in an element with class literally named "&".
+     * The @maizzle/tailwindcss `yahoo:` variant produces selectors like
+     * `.\& .yahoo\:text-white` which won't match anything in the template,
+     * so the default safelist must keep them around.
+     */
     const html = `<html><head><style>.\\& .yahoo\\:text-white { color: white }</style></head><body><p class="yahoo:text-white">hi</p></body></html>`
     const result = run(html, true)
     expect(result).toContain('.\\& .yahoo\\:text-white')
   })
 
-  // ---------------------------------------------------------------------------
-  // HTML comments handling
-  // ---------------------------------------------------------------------------
+  /**
+   * HTML comments handling
+   */
 
   it('removes HTML comments by default', () => {
     const html = `<html><head></head><body><!-- a comment --><p>hi</p></body></html>`
@@ -104,9 +108,9 @@ describe('purgeCss', () => {
     expect(result).toContain('<!-- keep me -->')
   })
 
-  // ---------------------------------------------------------------------------
-  // CSS comments handling
-  // ---------------------------------------------------------------------------
+  /**
+   * CSS comments handling
+   */
 
   it('removes CSS comments by default', () => {
     const html = `<html><head><style>/* this is a comment */ .foo { color: red }</style></head><body><p class="foo">hi</p></body></html>`
@@ -120,9 +124,9 @@ describe('purgeCss', () => {
     expect(result).toContain('/* keep */')
   })
 
-  // ---------------------------------------------------------------------------
-  // safelist option — user additions append to defaults
-  // ---------------------------------------------------------------------------
+  /**
+   * safelist option — user additions append to defaults
+   */
 
   it('preserves classes matching user safelist entries', () => {
     const html = `<html><head><style>.External { color: red } .ReadMsgBody { margin: 0 }</style></head><body></body></html>`
@@ -139,9 +143,9 @@ describe('purgeCss', () => {
     expect(result).toContain('.custom')
   })
 
-  // ---------------------------------------------------------------------------
-  // backend option — template tags inside class attributes are preserved
-  // ---------------------------------------------------------------------------
+  /**
+   * backend option — template tags inside class attributes are preserved
+   */
 
   it('ignores default backend delimiters {{ }} so they are not treated as class names', () => {
     const html = `<html><head><style>.text-sm { font-size: 14px }</style></head><body><p class="{{ computed }} text-sm">hi</p></body></html>`
@@ -156,9 +160,9 @@ describe('purgeCss', () => {
     expect(result).toContain('.text-sm')
   })
 
-  // ---------------------------------------------------------------------------
-  // uglify option
-  // ---------------------------------------------------------------------------
+  /**
+   * uglify option
+   */
 
   it('renames classes when uglify is true', () => {
     const html = `<html><head><style>.a-very-long-class-name { color: red }</style></head><body><p class="a-very-long-class-name">hi</p></body></html>`
@@ -167,9 +171,9 @@ describe('purgeCss', () => {
     expect(result).not.toContain('a-very-long-class-name')
   })
 
-  // ---------------------------------------------------------------------------
-  // Deep purge — PostCSS + css-select DOM-aware selector removal
-  // ---------------------------------------------------------------------------
+  /**
+   * Deep purge — PostCSS + css-select DOM-aware selector removal
+   */
 
   describe('deep purge', () => {
     it('removes compound selectors not matching any DOM element', () => {
@@ -194,8 +198,10 @@ describe('purgeCss', () => {
     })
 
     it('skips data-embed style tags', () => {
-      // .prose img doesn't exist but deep purge should skip data-embed tags
-      // The class .prose must exist so email-comb doesn't strip it first
+      /**
+       * .prose img doesn't exist but deep purge should skip data-embed tags.
+       * The class .prose must exist so email-comb doesn't strip it first.
+       */
       const html = `<html><head><style data-embed>.prose img { max-width: 100% }</style></head><body><div class="prose"><p>hi</p></div></body></html>`
       const result = run(html, true)
       expect(result).toContain('.prose img')
@@ -245,8 +251,10 @@ describe('purgeCss', () => {
     })
 
     it('preserves rules inside @media at-rules', () => {
-      // .btn exists in body so email-comb keeps the @media rule,
-      // deep purge should skip rules inside at-rules
+      /**
+       * .btn exists in body so email-comb keeps the @media rule,
+       * deep purge should skip rules inside at-rules.
+       */
       const html = `<html><head><style>@media (max-width: 600px) { .btn { color: red } }</style></head><body><a class="btn">hi</a></body></html>`
       const result = run(html, true)
       expect(result).toContain('@media')
@@ -254,8 +262,10 @@ describe('purgeCss', () => {
     })
 
     it('removes empty at-rules after purging their children', () => {
-      // .kept class exists so email-comb preserves the @media,
-      // .gone does not exist so email-comb removes it at top level
+      /**
+       * .kept class exists so email-comb preserves the @media,
+       * .gone does not exist so email-comb removes it at top level.
+       */
       const html = `<html><head><style>.gone { color: red } @media (max-width: 600px) { .kept { display: block } }</style></head><body><div class="kept">hi</div></body></html>`
       const result = run(html, true)
       expect(result).not.toContain('.gone')
@@ -316,9 +326,11 @@ describe('purgeCss', () => {
     })
 
     it('removes empty @media after all its rules are purged', () => {
-      // All rules inside @media reference non-existent elements,
-      // deep purge skips at-rule children but email-comb removes the rules,
-      // leaving an empty @media that should be cleaned up
+      /**
+       * All rules inside @media reference non-existent elements; deep purge
+       * skips at-rule children but email-comb removes the rules, leaving
+       * an empty @media that should be cleaned up.
+       */
       const html = `<html><head><style>p { color: red } @media (max-width: 600px) { }</style></head><body><p>hi</p></body></html>`
       const result = run(html, true)
       expect(result).not.toContain('@media')

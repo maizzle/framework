@@ -149,8 +149,10 @@ describe('Row', () => {
     })
 
     it('does not warn when slot contains only an empty Fragment', () => {
-      // Empty Fragment (e.g. `<template v-if="false">`) — recursion finds
-      // nothing meaningful, the loop continues past the Fragment.
+      /**
+       * Empty Fragment (e.g. `<template v-if="false">`) — recursion
+       * finds nothing meaningful, loop continues past the Fragment.
+       */
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       try {
         mount(Row, {
@@ -165,9 +167,11 @@ describe('Row', () => {
     })
 
     it('descends into Fragment children when checking for elements', () => {
-      // v-for / template fragments produce Fragment vnodes. The Row's child
-      // walker must recurse into them. Here a Fragment wraps a non-Column
-      // element, which should still trigger the warning.
+      /**
+       * v-for / template fragments produce Fragment vnodes. The Row's
+       * child walker must recurse into them. Here a Fragment wraps
+       * a non-Column element, which should still trigger the warn.
+       */
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       try {
         mount(Row, {
@@ -199,9 +203,12 @@ describe('Row', () => {
     })
 
     it('recognizes a Column-shaped component by __name even if not the imported Column', () => {
-      // A different module instance / re-export of Column.vue could fail the
-      // identity check (vnode.type === Column) but still match by __name —
-      // the same field the Vue SFC compiler injects from the filename.
+      /**
+       * A different module instance / re-export of Column.vue could fail
+       * the identity check (vnode.type === Column) but still match by
+       * __name — the same field the Vue SFC compiler injects from
+       * the filename.
+       */
       const FakeColumn = defineComponent({
         setup: () => () => h('div', 'fake-column'),
       })

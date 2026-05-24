@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { safeSelectors } from '../../transformers/safeSelectors.ts'
 import type { CssConfig } from '../../types/config.ts'
 
-// Shorthand: run transformer with safe enabled by default so feature tests
-// can stay concise. Pass an explicit value to test config behaviour.
+/**
+ * Shorthand: run transformer with safe enabled by default so feature tests
+ * can stay concise. Pass an explicit value to test config behaviour.
+ */
 function run(html: string, safe?: false | true | Record<string, string>): string {
   return safeSelectors(html, { safe: safe ?? true } satisfies CssConfig)
 }
@@ -108,17 +110,21 @@ describe('safeSelectors — style tag selectors', () => {
   })
 
   it('preserves the standalone Yahoo Mail ".\\&" wrapper selector', () => {
-    // Yahoo Mail wraps content in a class literally named `&`. Rewriting
-    // `\&` to `and-` would break the rule because we can't rewrite Yahoo's
-    // DOM. `\&` inside larger class names (Tailwind arbitrary variants)
-    // must still be rewritten.
+    /**
+     * Yahoo Mail wraps content in a class literally named `&`. Rewriting
+     * `\&` to `and-` would break the rule because we can't rewrite
+     * Yahoo's DOM. `\&` inside larger class names (Tailwind arbitrary
+     * variants) must still be rewritten.
+     */
     const html = '<style>.\\& .yahoo\\:text-white { color: red; }</style>'
     expect(run(html)).toBe('<style>.\\& .yahoo-text-white { color: red; }</style>')
   })
 
   it('still rewrites \\& when part of a larger class name', () => {
-    // Tailwind arbitrary variants like `[&>span]:flex` generate selectors
-    // where `\&` is part of a bigger class — those must still be rewritten.
+    /**
+     * Tailwind arbitrary variants like `[&>span]:flex` generate selectors
+     * where `\&` is part of a bigger class. Those must still be rewritten.
+     */
     const html = '<style>.\\[\\&\\>span\\]\\:flex > span { display: flex; }</style>'
     expect(run(html)).toContain('and-')
   })

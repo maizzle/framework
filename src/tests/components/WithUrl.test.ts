@@ -368,11 +368,17 @@ describe('WithUrl', () => {
         },
       })
 
-      // Fragment URLs are treated as absolute (isAbsoluteUrl returns true for #)
-      // so no base rewriting; but parameters can still be appended by query-string
+      /**
+       * Fragment URLs are treated as absolute (isAbsoluteUrl returns true
+       * for #) so no base rewriting; but parameters can still be
+       * appended by query-string.
+       */
       const href = wrapper.find('a').attributes('href')
-      // query-string will produce '#section?utm_source=newsletter' or '#section' depending on behaviour
-      // The important thing is it doesn't crash; we just assert it contains #section
+      /**
+       * query-string will produce '#section?utm_source=newsletter' or
+       * '#section' depending on behaviour. The important thing is it
+       * doesn't crash; we just assert it contains #section.
+       */
       expect(href).toContain('#section')
     })
   })

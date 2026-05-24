@@ -18,8 +18,10 @@ describe('minify', () => {
     it('collapses indentation between tags', () => {
       const html = '<table>\n  <tr>\n    <td>Hello</td>\n  </tr>\n</table>'
       const result = run(html, true)
-      // html-crush breaks before closing tags per breakToTheLeftOf defaults,
-      // but removes leading indentation whitespace
+      /**
+       * html-crush breaks before closing tags per breakToTheLeftOf
+       * defaults, but removes leading indentation whitespace.
+       */
       expect(result).not.toContain('  <tr>')
       expect(result).not.toContain('    <td>')
       expect(result).toContain('Hello')

@@ -60,16 +60,18 @@ export async function runTransformers(
   doctype?: string,
   tailwindBlocks?: TailwindBlock[],
 ): Promise<string> {
-  // Per-transformer skip map — only honored when useTransformers is an object.
-  // Whole-pipeline opt-out (`useTransformers === false`) is handled upstream
-  // in build.ts / render so we never reach this function in that case.
-  //
-  // A toggle set to `true` *force-enables* its transformer for this run by
-  // layering on the matching config slice (e.g. `prettify: true` sets
-  // `html.format = true`). This only applies to transformers whose
-  // enable flag is a plain boolean — data-driven ones (filters,
-  // baseURL, urlQuery, etc.) need actual config values, so a
-  // bare `true` for those is a no-op.
+  /**
+   * Per-transformer skip map — only honored when useTransformers is an object.
+   * Whole-pipeline opt-out (`useTransformers === false`) is handled upstream
+   * in build.ts / render so we never reach this function in that case.
+   *
+   * A toggle set to `true` *force-enables* its transformer for this run
+   * by layering on the matching config slice (e.g. `prettify: true`
+   * sets `html.format = true`). This only applies to transformers
+   * whose enable flag is a plain boolean — data-driven ones
+   * (filters, baseURL, urlQuery, etc.) need actual config
+   * values, so a bare `true` for those is a no-op.
+   */
   const toggles = typeof config.useTransformers === 'object' ? config.useTransformers : null
   const enabled = (key: keyof NonNullable<typeof toggles>) => toggles?.[key] !== false
 
@@ -188,12 +190,15 @@ export async function runTransformers(
     result = minify(result, minifyOptions)
   }
 
-  // Strip self-closing slashes for HTML5 doctypes, but preserve content
-  // inside MSO conditional comments (which are XML-ish and case/syntax sensitive).
-  // MUST run BEFORE minifyCodeInline: at this point, CodeInline's shiki output
-  // is still marker-encoded (§MZLT§/§MZGT§), so any ` />` in the highlighted
-  // source code (e.g. a Vue self-closing tag) hasn't materialized yet and
-  // can't be mistakenly stripped from inside a `<code>` element.
+  /**
+   * Strip self-closing slashes for HTML5 doctypes, but preserve content
+   * inside MSO conditional comments (XML-ish, case/syntax sensitive).
+   * MUST run BEFORE minifyCodeInline: at this point, CodeInline's
+   * shiki output is still marker-encoded (§MZLT§/§MZGT§), so any
+   * ` />` in the highlighted source code (e.g. a Vue self-close
+   * tag) hasn't materialized yet and can't be mistakenly
+   * stripped from inside a `<code>` element.
+   */
   if (!isXhtml) {
     result = result.replace(
       /<!--\[if [^\]]*\]>[\s\S]*?<!\[endif\]-->|( \/>)/g,
@@ -201,9 +206,11 @@ export async function runTransformers(
     )
   }
 
-  // 16.5. Strip whitespace inside `data-minify-inline` markers (CodeInline's
-  // Shiki output, etc.). Runs after format/minify so it cleans up the
-  // pretty-printer's indentation between sibling tags.
+  /**
+   * 16.5. Strip whitespace inside `data-minify-inline` markers (CodeInline's
+   * Shiki output, etc.). Runs after format/minify so it cleans up the
+   * pretty-printer's indentation between sibling tags.
+   */
   result = minifyCodeInline(result)
 
   return result

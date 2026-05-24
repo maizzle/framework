@@ -62,9 +62,11 @@ export async function serve(options: ServeOptions = {}) {
   // Create a renderer for SSR rendering email templates (with dts for dev)
   let renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
 
-  // Register so user-land render() calls reuse this renderer instead of
-  // spinning up another Vite SSR server (which collides when the host app
-  // is itself a Vite dev process — e.g. TanStack Start).
+  /**
+   * Register so user-land render() calls reuse this renderer instead of
+   * spinning up another Vite SSR server (which collides when the host
+   * app is itself a Vite dev process — e.g. TanStack Start).
+   */
   setActiveRenderer(renderer)
 
   const server = await createServer({
@@ -147,8 +149,11 @@ function maizzleDevPlugin(
     hotUpdate: {
       order: 'pre' as const,
       handler({ file }: { file: string }) {
-        // Prevent Tailwind/Vue from triggering a full reload for email template files.
-        // Maizzle handles these via custom HMR events in the watcher below.
+        /**
+         * Prevent Tailwind/Vue from triggering a full reload for email template
+         * files. Maizzle handles these via custom HMR events in the
+         * watcher below.
+         */
         if (isTemplateFile(file)) {
           return []
         }
@@ -195,13 +200,19 @@ function maizzleDevPlugin(
           await renderer.close()
           renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
 
-          // Push UI-relevant config bits so the dev UI reacts to live edits
-          // without a page reload. Uses the same shape as the initial inject.
+          /**
+           * Push UI-relevant config bits so the dev UI reacts to live edits
+           * without a page reload. Uses the same shape as the initial
+           * inject.
+           */
           server.ws.send({ type: 'custom', event: 'maizzle:config-updated', data: buildUiConfig(config) })
         }
 
-        // Invalidate all renderer modules so component and config changes
-        // are picked up on the next render (Tailwind recompiles with fresh content)
+        /**
+         * Invalidate all renderer modules so component and config changes
+         * are picked up on the next render (Tailwind recompiles with
+         * fresh content).
+         */
         await renderer.invalidateAll()
 
         if (

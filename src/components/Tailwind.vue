@@ -27,8 +27,10 @@ export default defineComponent({
     if (!ctx.tailwindBlocks) ctx.tailwindBlocks = []
     const id = `tw${ctx.tailwindBlocks.length}`
 
-    // Extract optional `#config` slot content as raw CSS. Evaluated at
-    // setup time; the slot is NOT rendered into the document.
+    /**
+     * Extract optional `#config` slot content as raw CSS. Evaluated at setup
+     * time; the slot is NOT rendered into the document.
+     */
     const css = slots.config ? vnodeText(slots.config()).trim() : undefined
 
     ctx.tailwindBlocks.push({ id, css: css || undefined })

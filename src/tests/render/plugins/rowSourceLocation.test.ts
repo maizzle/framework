@@ -5,8 +5,10 @@ type TransformResult = { code: string; map: null } | undefined
 
 function transform(code: string, id: string): TransformResult {
   const plugin = rowSourceLocation()
-  // The Vite plugin's `transform` is typed as a hook with extra context.
-  // We call it directly here; only `code` and `id` are read.
+  /**
+   * The Vite plugin's `transform` is typed as a hook with extra
+   * context. We call it directly here; only `code` and `id` are read.
+   */
   return (plugin.transform as unknown as (
     code: string,
     id: string,

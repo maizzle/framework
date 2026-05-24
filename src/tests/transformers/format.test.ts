@@ -7,9 +7,9 @@ async function run(html: string, option?: boolean | FormatOptions): Promise<stri
   return format(html, opts)
 }
 
-// ---------------------------------------------------------------------------
-// Core feature — indents HTML
-// ---------------------------------------------------------------------------
+/**
+ * Core feature — indents HTML
+ */
 
 describe('format', () => {
   it('indents nested HTML elements', async () => {
@@ -28,9 +28,9 @@ describe('format', () => {
     expect(result).toContain('hi')
   })
 
-  // ---------------------------------------------------------------------------
-  // Custom options — user values win
-  // ---------------------------------------------------------------------------
+  /**
+   * Custom options — user values win
+   */
 
   it('uses tabs when useTabs is set', async () => {
     const html = `<html><body><p>hi</p></body></html>`
@@ -53,9 +53,9 @@ describe('format', () => {
     expect(result).toMatch(/id="bar"\n/)
   })
 
-  // ---------------------------------------------------------------------------
-  // Formatting normalisation
-  // ---------------------------------------------------------------------------
+  /**
+   * Formatting normalization
+   */
 
   it('condenses multiple blank lines', async () => {
     const html = `<html><body>\n\n\n<p>hi</p>\n\n\n</body></html>`
@@ -69,8 +69,8 @@ describe('format', () => {
     expect(result).not.toMatch(/^\s+/)
   })
 
-  // ---------------------------------------------------------------------------
-  // Disabled / short-circuit
-  // ---------------------------------------------------------------------------
+  /**
+   * Disabled / short-circuit
+   */
 
 })

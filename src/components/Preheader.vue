@@ -24,8 +24,10 @@ function vnodesToText(nodes: unknown): string {
   return ''
 }
 
-// Inbox preview budget. Pad with invisible fillers so the
-// client doesn't pull body content into the snippet.
+/**
+ * Inbox preview budget. Pad with invisible fillers so the client
+ * doesn't pull body content into the snippet.
+ */
 const PREVIEW_LENGTH = 200
 
 const text = computed(() => vnodesToText(slots.default?.()))

@@ -67,10 +67,12 @@ export async function resolveConfig(
     })
   }
 
-  // Resolve components.source paths relative to cwd (not root),
-  // since extra component dirs often live outside the root directory.
-  // String entries → resolve in-place. Object entries → resolve `path`,
-  // preserve `prefix`/`pathPrefix`.
+  /**
+   * Resolve components.source paths relative to cwd (not root), since extra
+   * component dirs often live outside the root directory. String
+   * entries → resolve in-place. Object entries → resolve
+   * `path`, preserve `prefix`/`pathPrefix`.
+   */
   if (merged.components?.source) {
     const dirs = Array.isArray(merged.components.source)
       ? merged.components.source
@@ -87,10 +89,12 @@ export async function resolveConfig(
     })
   }
 
-  // Default css.base to root when root is explicitly set,
-  // so Tailwind resolves @source from the right directory.
-  // When root is not set, leave css.base undefined so Tailwind
-  // uses its own default (the template file's directory).
+  /**
+   * Default css.base to root when root is explicitly set, so Tailwind resolves
+   * @source from the right directory. When root is not set, leave
+   * css.base undefined so Tailwind uses its own default (the
+   * template file's directory).
+   */
   if (hasExplicitRoot && !merged.css?.base) {
     if (!merged.css) merged.css = {}
     merged.css.base = root

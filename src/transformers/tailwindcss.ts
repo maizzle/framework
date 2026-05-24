@@ -39,10 +39,13 @@ function buildSourceDirectives(dom: ChildNode[], config: MaizzleConfig, fromDir:
     directives.push(`@source not "${relative(fromDir, resolve(p))}";`)
   }
 
-  // Inline source: collect all class attribute values from the rendered DOM.
-  // After Vue SSR, the DOM contains every class from every component
-  // (built-in framework components, user components, dynamic bindings).
-  // We pass these raw values to Tailwind's scanner via @source inline().
+  /**
+   * Inline source: collect all class attribute values from the rendered DOM.
+   * After Vue SSR, the DOM contains every class from every component
+   * (built-in framework components, user components, dynamic
+   * bindings). We pass these raw values to Tailwind's
+   * scanner via @source inline().
+   */
   const classes: string[] = []
   walk(dom, (n) => {
     const cls = (n as Element).attribs?.class
@@ -81,9 +84,12 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
     const el = node as Element
     const attrs = el.attribs || {}
 
-    // `raw` opts out of compilation entirely (marker is consumed here).
-    // `embed`/`data-embed` only signal "preserve tag after inlining" — they
-    // still need to go through compile so Tailwind/@apply resolves.
+    /**
+     * `raw` opts out of compilation entirely (marker is consumed here).
+     * `embed`/`data-embed` only signal "preserve tag after inlining"
+     * — they still need to go through compile so Tailwind/@apply
+     * resolves.
+     */
     if ('raw' in attrs) {
       delete el.attribs.raw
       return
@@ -114,9 +120,11 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
   for (let i = 0; i < styleTags.length; i++) {
     const { node, cssContent } = styleTags[i]
 
-    // Only add source directives to style tags that import Tailwind —
-    // plain CSS doesn't need them and @tailwindcss/postcss would leave
-    // the directives unconsumed in the output
+    /**
+     * Only add source directives to style tags that import Tailwind —
+     * plain CSS doesn't need them and @tailwindcss/postcss would
+     * leave the directives unconsumed in the output.
+     */
     const fullCss = usesTailwind(cssContent)
       ? `${cssContent}\n${sourceDirectives}`
       : cssContent
@@ -131,8 +139,10 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
         parent: node,
       } as any]
     } catch {
-      // If CSS processing fails, still replace with decoded content
-      // so HTML entities don't break the CSS
+      /**
+       * If CSS processing fails, still replace with decoded content
+       * so HTML entities don't break the CSS.
+       */
       node.children = [{
         type: 'text',
         data: cssContent,

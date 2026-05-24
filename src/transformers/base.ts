@@ -231,8 +231,10 @@ export function baseDom(dom: ChildNode[], options: string | BaseUrlOptions | und
     }
   })
 
-  // VML and MSO comment rewrites require operating on serialized HTML
-  // (HTML comments are not represented as traversable DOM nodes)
+  /**
+   * VML and MSO comment rewrites require operating on serialized HTML
+   * (HTML comments are not represented as traversable DOM nodes).
+   */
   const serialized = serialize(dom)
   const rewritten = rewriteMsoComments(rewriteVMLs(serialized, baseUrl), baseUrl)
 

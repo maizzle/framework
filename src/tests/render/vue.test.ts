@@ -103,9 +103,12 @@ describe('render', () => {
     })
 
     it('preserves content inside MSO conditional comments around Vue SSR fragment markers', async () => {
-      // Vue SSR emits `<!--[-->`/`<!--]-->` fragment markers around slots.
-      // Each contains `-->` which would prematurely terminate a surrounding
-      // `<!--[if mso]>...<![endif]-->` if the markers reached htmlparser2.
+      /**
+       * Vue SSR emits `<!--[-->`/`<!--]-->` fragment markers around
+       * slots. Each contains `-->` which would prematurely terminate
+       * a surrounding `<!--[if mso]>...<![endif]-->` if the markers
+       * reached htmlparser2.
+       */
       const result = await render(`
         <template>
           <Outlook open="<table><tr><td>" close="</td></tr></table>">
@@ -152,8 +155,10 @@ describe('render', () => {
         </template>
       `, { useTransformers: false })
 
-      // Vue SSR places teleported content in the target with anchor comments,
-      // which are stripped by the transformer pipeline
+      /**
+       * Vue SSR places teleported content in the target with anchor
+       * comments, which are stripped by the transformer pipeline.
+       */
       expect(result.html).toContain('color: red')
       expect(result.html).toContain('<h1>Hello</h1>')
       // No teleport anchor comments in output
@@ -506,8 +511,10 @@ describe('render', () => {
     })
 
     it('user component overrides a built-in with the same name', async () => {
-      // Heading is a built-in framework component; the user's local one
-      // should win without any "naming conflict" warning surfacing.
+      /**
+       * Heading is a built-in framework component; the user's local
+       * one should win without any "naming conflict" warning.
+       */
       writeSfc(tempDir, 'components/Heading.vue', `
         <template><span class="user-heading">override</span></template>
       `)
@@ -606,8 +613,11 @@ describe('render', () => {
       // PascalCase reference renders the user's component.
       expect(result.html).toContain('class="vue-wrapper"')
       expect(result.html).toContain('wrapped')
-      // Kebab reference stays a raw amp-* element — does NOT route through
-      // the user's component (isCustomElement skips component resolution).
+      /**
+       * Kebab reference stays a raw amp-* element — does NOT route
+       * through the user's component (isCustomElement skips
+       * component resolution).
+       */
       expect(result.html).toContain('<amp-carousel layout="responsive">native</amp-carousel>')
     })
   })

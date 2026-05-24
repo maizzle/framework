@@ -77,18 +77,22 @@ export function purgeCssDom(dom: ChildNode[], options: PurgeCssOptions = {}): Ch
 
   const { safelist: _discard, ...restUserOptions } = options
 
-  // Merge user options on top of defaults.
-  // defu merges objects deeply; for arrays it appends user values.
-  // We want the user safelist appended to the default safelist,
-  // so we build whitelist manually.
+  /**
+   * Merge user options on top of defaults. defu merges objects deeply;
+   * for arrays it appends user values. We want the user safelist
+   * appended to the default safelist, so we build whitelist
+   * manually.
+   */
   const combOptions = merge(
     { ...restUserOptions, whitelist: [...DEFAULT_SAFELIST, ...userSafelist] },
     DEFAULT_OPTIONS,
   )
 
-  // Deep purge first: DOM-aware selector removal using PostCSS + css-select.
-  // Runs before email-comb so that email-comb can clean up orphaned classes
-  // in HTML attributes left behind by removed CSS rules.
+  /**
+   * Deep purge first: DOM-aware selector removal via PostCSS + css-select.
+   * Runs before email-comb so that email-comb can clean up orphaned
+   * classes in HTML attributes left behind by removed CSS rules.
+   */
   const safelist = [...DEFAULT_SAFELIST, ...userSafelist]
   dom = deepPurge(dom, safelist)
 
@@ -145,8 +149,10 @@ export function purgeCssDom(dom: ChildNode[], options: PurgeCssOptions = {}): Ch
     })
   }
 
-  // Clean up data-embed/embed attributes — no longer needed after purging.
-  // `amp-custom` stays as-is (it's the user-authored AMP4Email attribute).
+  /**
+   * Clean up data-embed/embed attributes — no longer needed after purging.
+   * `amp-custom` stays as-is (it's the user-authored AMP4Email attr).
+   */
   walk(purgedDom, (node) => {
     const el = node as Element
     if (el.name === 'style' && el.attribs) {
@@ -191,8 +197,10 @@ function deepPurge(dom: ChildNode[], safelist: string[]): ChildNode[] {
     const root = safeParser(textNode.data)
 
     root.walkRules((rule) => {
-      // Skip rules inside @media or other at-rules — those may target
-      // states we can't match statically (hover, responsive, etc.)
+      /**
+       * Skip rules inside @media or other at-rules — those may target
+       * states we can't match statically (hover, responsive, etc.).
+       */
       if (rule.parent?.type === 'atrule') return
 
       const selectors = rule.selectors ?? [rule.selector]
@@ -200,9 +208,12 @@ function deepPurge(dom: ChildNode[], safelist: string[]): ChildNode[] {
         // Keep safelisted selectors
         if (isSafelisted(sel, safelist)) return true
 
-        // Skip pseudo-classes/elements that can't be matched statically.
-        // Functional pseudos like :not(), :is(), :where(), :has() are
-        // matchable by css-select, so we only skip dynamic/state ones.
+        /**
+         * Skip pseudo-classes/elements that can't be matched statically.
+         * Functional pseudos like :not(), :is(), :where(), :has() are
+         * matchable by css-select, so we only skip dynamic/state
+         * ones.
+         */
         if (/::[\w-]/.test(sel)) return true
         if (/(?<!:):(?!not\b|is\b|where\b|has\b)[\w-]/.test(sel.replace(/\\./g, ''))) return true
 

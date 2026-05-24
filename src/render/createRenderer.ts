@@ -76,25 +76,32 @@ export async function createRenderer(
   const { dts = false, markdown: markdownOptionsRaw, root = process.cwd(), componentDirs = [], vite: userViteConfig } = options
   const { shikiTheme = 'github-light', ...markdownOptions } = markdownOptionsRaw ?? {}
 
-  // Sources without an explicit prefix get registered via unplugin's `dirs`
-  // (folder name auto-namespaces). Sources with an explicit `prefix` are
-  // registered through a custom resolver below so we can fully control naming.
+  /**
+   * Sources without an explicit prefix get registered via unplugin's `dirs`
+   * (folder name auto-namespaces). Sources with an explicit `prefix` are
+   * registered through a custom resolver below so we fully control naming.
+   */
   const dirSources = componentDirs.filter(s => s.prefix === undefined)
   const prefixedSources = componentDirs.filter(s => s.prefix !== undefined)
 
-  // Absolute component dirs — used to skip auto-wrapping `.md` files that are
-  // imported as reusable components (vs. entry-point email templates).
+  /**
+   * Absolute component dirs — used to skip auto-wrapping `.md` files that
+   * are imported as reusable components (vs. entry-point email templates).
+   */
   const componentDirsAbs = [resolve(root, 'components'), ...componentDirs.map(s => s.path)]
 
   const dtsDir = isLaravel()
     ? resolve(process.cwd(), 'resources/js/types/maizzle')
     : resolve(root, '.maizzle')
 
-  // Built-in framework components live at this path. When a user provides a
-  // top-level file with the same (PascalCased) basename, drop the built-in
-  // from unplugin's scan so the user's component is the only candidate. This
-  // avoids the "naming conflicts" warning and the alphabetical-glob ordering
-  // pitfall that decides who wins when both are present in `dirs`.
+  /**
+   * Built-in framework components live at this path. When a user provides
+   * a top-level file with the same (PascalCased) basename, drop the
+   * built-in from unplugin's scan so the user's component is the only
+   * candidate. This avoids the "naming conflicts" warning and the
+   * alphabetical-glob ordering pitfall that decides who wins when
+   * both are present in `dirs`.
+   */
   const frameworkComponentsDir = resolve(__dirname, '../components')
 
   function topLevelBasenamesLower(dir: string): Set<string> {
@@ -118,9 +125,11 @@ export async function createRenderer(
   const frameworkExcludes = [...shadowedNames]
     .map(lower => `${frameworkComponentsDir}/${frameworkByLower.get(lower)}`)
 
-  // Pre-scanned name → absolute-path map for prefixed sources. Rebuilt on
-  // file add/unlink via the watcher hook plugin further down. Powers the
-  // runtime resolver and the d.ts file we write for IDE autocompletion.
+  /**
+   * Pre-scanned name → absolute-path map for prefixed sources. Rebuilt
+   * on file add/unlink via the watcher hook plugin further down. Drives
+   * the runtime resolver and the d.ts we emit for IDE autocompletion.
+   */
   const prefixedNameMap = new Map<string, string>()
 
   async function scanPrefixedSources(): Promise<void> {
@@ -152,10 +161,13 @@ export async function createRenderer(
 
   const prefixedResolver = (name: string) => prefixedNameMap.get(name)
 
-  // unplugin-vue-components' own d.ts only covers components found via `dirs`;
-  // its `types` option emits named-import entries which break for SFC `default`
-  // exports. Write a sibling d.ts for prefixed sources so editors get correct
-  // autocompletion via TypeScript interface merging on `vue.GlobalComponents`.
+  /**
+   * unplugin-vue-components' own d.ts only covers components found via
+   * `dirs`; its `types` option emits named-import entries which break
+   * for SFC `default` exports. Write a sibling d.ts for prefixed
+   * sources so editors get correct autocompletion via TypeScript
+   * interface merging on `vue.GlobalComponents`.
+   */
   const prefixedDtsPath = resolve(dtsDir, 'prefixed-components.d.ts')
 
   function writePrefixedDts(): void {
@@ -209,11 +221,14 @@ export async function createRenderer(
   const VIRTUAL_SFC_ID = 'virtual:maizzle-sfc.vue'
   let virtualSfcSource = ''
 
-  // Never load the host project's vite.config.ts here. Doing so pulls every
-  // host plugin (Nitro, TanStack Start, the Maizzle plugin itself, …) into
-  // this isolated SSR pipeline, where they override env factories, re-trigger
-  // configureServer hooks, and break Vite's hot channel wiring. Users that
-  // need extra Vite plugins for SSR pass them explicitly via the `vite` option.
+  /**
+   * Never load the host project's vite.config.ts here. Doing so pulls
+   * every host plugin (Nitro, TanStack Start, the Maizzle plugin
+   * itself, …) into this isolated SSR pipeline, where they override
+   * env factories, re-trigger configureServer hooks, and break
+   * Vite's hot channel wiring. Users who need extra Vite plugins
+   * for SSR pass them explicitly via the `vite` option.
+   */
   const maizzleConfig: InlineConfig = {
     configFile: false,
     plugins: [
@@ -235,10 +250,13 @@ export async function createRenderer(
         template: {
           transformAssetUrls: false,
           compilerOptions: {
-            // AMP4Email tags (<amp-carousel>, <amp-img>, <amp-list> ...) render
-            // verbatim — skip the component resolver. Users who want to wrap an
-            // amp tag in a Vue component should register it under a PascalCase
-            // name (e.g. `components/AmpCarousel.vue` → `<AmpCarousel>`).
+            /**
+             * AMP4Email tags (<amp-carousel>, <amp-img>, <amp-list> ...)
+             * render verbatim — skip the component resolver. Users who
+             * want to wrap an amp tag in a Vue component should register
+             * it under a PascalCase name (e.g. `components/AmpCarousel.vue`
+             * → `<AmpCarousel>`).
+             */
             isCustomElement: (tag: string) => tag.startsWith('amp-'),
           },
         },
@@ -252,9 +270,12 @@ export async function createRenderer(
           const layout = fm?.match(/^[ \t]*layout[ \t]*:[ \t]*['"]?([A-Za-z][\w-]*|false|none)['"]?[ \t]*$/m)?.[1]
           if (layout === 'false' || layout === 'none') return null
           if (layout) return layout
-          // No `layout:` set — default to the built-in `MarkdownLayout` for
-          // entry-template `.md` files. Skip for `.md` files inside component
-          // dirs, which are reusable fragments imported into other templates.
+          /**
+           * No `layout:` set — default to the built-in `MarkdownLayout`
+           * for entry-template `.md` files. Skip for `.md` files inside
+           * component dirs, which are reusable fragments imported into
+           * other templates.
+           */
           const inComponentDir = componentDirsAbs.some(d => id === d || id.startsWith(`${d}/`))
           return inComponentDir ? null : 'MarkdownLayout'
         },
@@ -295,9 +316,11 @@ export async function createRenderer(
           resolve(root, 'components'),
           ...dirSources.map(s => s.path),
         ],
-        // Drop built-in component files whose name the user has shadowed.
-        // This makes the user's version the only match — no "naming
-        // conflicts" warning, no glob-ordering games.
+        /**
+         * Drop built-in component files whose name the user has shadowed.
+         * This makes the user's version the only match — no "naming
+         * conflicts" warning, no glob-ordering games.
+         */
         globsExclude: frameworkExcludes,
         directoryAsNamespace: true,
         collapseSamePrefixes: true,
@@ -318,9 +341,11 @@ export async function createRenderer(
     server: {
       middlewareMode: true,
       hmr: false,
-      // Watcher is required so unplugin-vue-components and unplugin-auto-import
-      // detect added/removed component files and rewrite their .d.ts on the fly.
-      // (We only render via SSR — HMR is off, but chokidar still drives the plugins.)
+      /**
+       * Watcher is required so unplugin-vue-components and unplugin-auto-import
+       * detect added/removed component files and rewrite their .d.ts on the fly.
+       * (We only render via SSR — HMR is off, but chokidar still drives plugins.)
+       */
       fs: {
         allow: [process.cwd(), root, ...componentDirs.map(s => s.path), vuePkgDir, vueServerRendererPkgDir, unheadVuePkgDir, vueRouterPkgDir],
       },
@@ -332,10 +357,12 @@ export async function createRenderer(
     },
   }
 
-  // Merge user's vite config (from config.vite) under Maizzle's config.
-  // mergeConfig(a, b) → b overrides a for scalars, arrays are concatenated.
-  // This ensures Maizzle's critical settings (middlewareMode, appType, etc.) always win,
-  // while user plugins and other options are included.
+  /**
+   * Merge user's vite config (from config.vite) under Maizzle's config.
+   * mergeConfig(a, b) → b overrides a for scalars, arrays concatenate.
+   * This ensures Maizzle's critical settings (middlewareMode, appType,
+   * etc.) always win, while user plugins and other options remain.
+   */
   const finalConfig = userViteConfig
     ? mergeConfig(userViteConfig, maizzleConfig)
     : maizzleConfig
@@ -349,8 +376,10 @@ export async function createRenderer(
       let contextKey: InjectionKey<RenderContext>
 
       if (typeof input === 'string') {
-        // String input goes through Vite — must use ssrLoadModule for injection keys
-        // so they share the same module instance as the SFC
+        /**
+         * String input goes through Vite — must use ssrLoadModule for
+         * injection keys so they share the same module instance as SFC.
+         */
         const configModule = await server.ssrLoadModule(resolve(__dirname, '../composables/useConfig'))
         const contextModule = await server.ssrLoadModule(resolve(__dirname, '../composables/renderContext'))
         configKey = configModule.MaizzleConfigKey
@@ -475,10 +504,13 @@ export async function createRenderer(
         html = html.replace(/<body([^>]*)>/, `<body$1>${previewHtml}`)
       }
 
-      // Strip Vue SSR fragment markers + teleport anchor comments. These are
-      // rendering hygiene, not transformer concerns — must run regardless of
-      // `useTransformers` state. Fragment markers contain `-->`, which would
-      // prematurely terminate MSO conditional comments downstream.
+      /**
+       * Strip Vue SSR fragment markers + teleport anchor comments. These
+       * are rendering hygiene, not transformer concerns — must run
+       * regardless of `useTransformers` state. Fragment markers contain
+       * `-->`, which would prematurely terminate MSO conditional
+       * comments downstream.
+       */
       html = html
         .replaceAll('<!--[-->', '')
         .replaceAll('<!--]-->', '')
@@ -490,13 +522,16 @@ export async function createRenderer(
       return {
         html,
         doctype: renderContext.doctype,
-        // Layer sfcConfig over config — sfcConfig is a partial override
-        // emitted by composables (defineConfig, useTransformers, etc.).
-        // A naive replacement (`sfcConfig ?? config`) drops defaults from
-        // the resolved config when the SFC only sets a single key, since
-        // the composables' inject() of globalConfig can return `{}` in
-        // dev when ssrLoadModule and the SFC's auto-imported module
-        // resolve to different module instances (different Symbols).
+        /**
+         * Layer sfcConfig over config — sfcConfig is a partial override
+         * emitted by composables (defineConfig, useTransformers, etc.).
+         * A naive replacement (`sfcConfig ?? config`) drops defaults
+         * from the resolved config when the SFC only sets a single
+         * key, since the composables' inject() of globalConfig can
+         * return `{}` in dev when ssrLoadModule and the SFC's
+         * auto-imported module resolve to different module
+         * instances (different Symbols).
+         */
         templateConfig: renderContext.sfcConfig ? merge(renderContext.sfcConfig, config) : config,
         sfcEventHandlers: renderContext.sfcEventHandlers,
         plaintext: renderContext.plaintext,
@@ -519,12 +554,15 @@ export async function createRenderer(
 
     async close(): Promise<void> {
       await server.close()
-      // unplugin-auto-import schedules a 500ms-throttled, fire-and-forget
-      // d.ts write on its first scan. server.close() doesn't drain that
-      // pending write, so callers tearing down the working dir right after
-      // close (tests, ephemeral build pipelines) can race the mkdir against
-      // a missing parent directory. Wait one throttle window past close so
-      // that lingering write resolves while the dir still exists.
+      /**
+       * unplugin-auto-import schedules a 500ms-throttled, fire-and-forget
+       * d.ts write on its first scan. server.close() doesn't drain that
+       * pending write, so callers tearing down the working dir right
+       * after close (tests, ephemeral build pipelines) can race the
+       * mkdir against a missing parent directory. Wait one throttle
+       * window past close so the lingering write resolves while
+       * the dir still exists.
+       */
       if (dts) {
         await new Promise(resolve => setTimeout(resolve, 600))
       }

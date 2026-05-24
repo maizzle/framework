@@ -547,8 +547,10 @@ describe('build', () => {
       </script>
       <template><div>marker-a</div></template>
     `)
-    // Template B contains the LEAK_TARGET token. If A's handler leaks, B's
-    // output would contain 'A_LEAKED'.
+    /**
+     * Template B contains the LEAK_TARGET token. If A's handler
+     * leaks, B's output would contain 'A_LEAKED'.
+     */
     writeSfc(tempDir, 'emails/b.vue', `
       <template><div>LEAK_TARGET</div></template>
     `)

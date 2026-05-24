@@ -45,7 +45,7 @@ watch(() => filterState.search, (val) => {
     data-slot="command-input-wrapper"
     class="flex h-9 items-center gap-2 border-b px-3"
   >
-    <Search class="size-4 shrink-0 opacity-50" />
+    <Search class="size-4 shrink-0 opacity-70" :stroke-width="1" />
     <ListboxFilter
       v-bind="{ ...forwardedProps, ...$attrs }"
       v-model="filterState.search"

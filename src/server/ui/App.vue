@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
-import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, Search, FileCode, FileText, Code, BookText, MailQuestion, Moon, Sun } from '@lucide/vue'
+import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, Search, FileCodeCorner, FileCode, FileText, Code, BookText, MailQuestion, Moon, Sun } from '@lucide/vue'
 import SidebarClose from '@/components/SidebarClose.vue'
+import Markdown from '@/components/Markdown.vue'
 import logoUrl from '@/logo.svg'
 import logoGradientUrl from '@/logo-gradient.svg'
 import { Kbd } from '@/components/ui/kbd'
@@ -303,7 +304,7 @@ onUnmounted(() => {
           <img :src="logoGradientUrl" alt="Maizzle" class="hidden h-4 dark:block">
         </RouterLink>
         <button class="hidden md:inline-flex items-center gap-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" @click="commandOpen = true">
-          <Search class="size-3.5" />
+          <Search class="size-3.5 text-gray-500 dark:text-gray-300" :stroke-width="1" />
           <kbd class="flex items-center gap-0.5 text-[10px] font-sans">
             <span>{{ modKey }}</span>
             <span class="text-gray-300 dark:text-gray-600">K</span>
@@ -333,10 +334,7 @@ onUnmounted(() => {
                     :is-active="isActive(t.href)"
                   >
                     <RouterLink :to="t.href" class="truncate">
-                      <svg class="size-3 shrink-0 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-                        <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-                      </svg>
+                      <component :is="t.path.endsWith('.md') ? Markdown : FileCodeCorner" class="size-3 shrink-0 opacity-70" :stroke-width="1" />
                       <span class="truncate">{{ t.name }}</span>
                     </RouterLink>
                   </SidebarMenuButton>
@@ -454,7 +452,7 @@ onUnmounted(() => {
             value="HTML"
             @select="copyHtml"
           >
-            <FileCode class="size-3 shrink-0 opacity-50" />
+            <FileCode class="size-3 shrink-0 opacity-70" :stroke-width="1" />
             <span>HTML</span>
             <CommandShortcut>{{ isMac ? '⌘' : 'ALT+' }}C</CommandShortcut>
           </CommandItem>
@@ -462,7 +460,7 @@ onUnmounted(() => {
             value="Plaintext"
             @select="copyPlaintext"
           >
-            <FileText class="size-3 shrink-0 opacity-50" />
+            <FileText class="size-3 shrink-0 opacity-70" :stroke-width="1" />
             <span>Plaintext</span>
             <CommandShortcut>{{ isMac ? '⌘' : 'ALT+' }}P</CommandShortcut>
           </CommandItem>
@@ -470,7 +468,7 @@ onUnmounted(() => {
             value="Vue source"
             @select="copySource"
           >
-            <Code class="size-3 shrink-0 opacity-50" />
+            <Code class="size-3 shrink-0 opacity-70" :stroke-width="1" />
             <span>Vue source</span>
             <CommandShortcut>{{ isMac ? '⌘' : 'ALT+' }}U</CommandShortcut>
           </CommandItem>
@@ -482,14 +480,14 @@ onUnmounted(() => {
             value="Documentation"
             @select="openExternal('https://maizzle.com')"
           >
-            <BookText class="size-3 shrink-0 opacity-50" />
+            <BookText class="size-3 shrink-0 opacity-70" :stroke-width="1" />
             <span>Documentation</span>
           </CommandItem>
           <CommandItem
             value="Can I Email"
             @select="openExternal('https://www.caniemail.com')"
           >
-            <MailQuestion class="size-3 shrink-0 opacity-50" />
+            <MailQuestion class="size-3 shrink-0 opacity-70" :stroke-width="1" />
             <span>Can I Email</span>
           </CommandItem>
         </CommandGroup>
@@ -503,10 +501,7 @@ onUnmounted(() => {
               :value="t.path"
               @select="onCommandSelect(t.href)"
             >
-              <svg class="size-3 shrink-0 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-              </svg>
+              <component :is="t.path.endsWith('.md') ? Markdown : FileCodeCorner" class="size-3 shrink-0 opacity-70" :stroke-width="1" />
               <span>{{ getFileName(t.path) }}</span>
               <span class="sr-only">{{ ' ' + t.path.split('/').join(' ') }}</span>
             </CommandItem>

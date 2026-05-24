@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronUp, ChevronDown, Check } from 'lucide-vue-next'
+import { ChevronUp, ChevronDown, Check } from '@lucide/vue'
 import {
   DropdownMenu,
   DropdownMenuContent,

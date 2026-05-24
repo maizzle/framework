@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Terminal } from 'lucide-vue-next'
+import { Terminal } from '@lucide/vue'
 import { Kbd } from '@/components/ui/kbd'
 import {
   Empty,

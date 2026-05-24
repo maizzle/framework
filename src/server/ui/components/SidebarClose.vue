@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PanelRightOpen } from 'lucide-vue-next'
+import { PanelRightOpen } from '@lucide/vue'
 import { useSidebar } from '@/components/ui/sidebar'
 
 const { setOpenMobile } = useSidebar()

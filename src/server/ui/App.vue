@@ -53,7 +53,13 @@ const route = useRoute()
 
 watchEffect(() => {
   const slug = route.path === '/' ? '' : route.path.split('/').pop()
-  document.title = slug ? `Maizzle Dev - ${slug}.vue` : 'Maizzle Dev'
+  if (!slug) {
+    document.title = 'Maizzle Dev'
+    return
+  }
+  const tpl = templates.value.find(t => t.href === route.path)
+  const ext = tpl?.path.endsWith('.md') ? '.md' : '.vue'
+  document.title = `Maizzle Dev - ${slug}${ext}`
 })
 
 const templates = ref<Template[]>([])

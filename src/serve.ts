@@ -80,7 +80,7 @@ export async function serve(options: ServeOptions = {}) {
       alias: [
         { find: '@', replacement: devUIDir },
         { find: 'vue', replacement: resolve(pkg('vue'), 'dist/vue.runtime.esm-bundler.js') },
-        ...['vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', '@lucide/vue', 'class-variance-authority', 'clsx', 'tailwind-merge', 'culori', 'postcss-safe-parser']
+        ...['vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', '@lucide/vue', 'class-variance-authority', 'clsx', 'tailwind-merge', 'culori']
           .map(name => ({ find: name, replacement: pkg(name) })),
       ],
     },
@@ -98,14 +98,13 @@ export async function serve(options: ServeOptions = {}) {
         'clsx',
         'tailwind-merge',
         'culori',
-        'postcss-safe-parser',
       ],
     },
     server: {
       port,
       host: options.host,
       fs: {
-        allow: [process.cwd(), config.root ?? process.cwd(), devUIDir, ...['vue', 'vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', '@lucide/vue', 'class-variance-authority', 'clsx', 'tailwind-merge', 'culori', 'postcss-safe-parser'].map(pkg)],
+        allow: [process.cwd(), config.root ?? process.cwd(), devUIDir, ...['vue', 'vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', '@lucide/vue', 'class-variance-authority', 'clsx', 'tailwind-merge', 'culori'].map(pkg)],
       },
     },
     customLogger: customLogger(),

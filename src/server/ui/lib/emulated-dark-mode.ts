@@ -1,5 +1,4 @@
 import { parse, converter, formatRgb } from 'culori'
-import safeParser from 'postcss-safe-parser'
 
 const toLch = converter('lch')
 
@@ -71,12 +70,26 @@ function invertInlineStyle(style: string): string {
 
 function invertStyleTag(css: string): string {
   try {
-    const root = safeParser(css)
-    root.walkDecls((decl) => {
-      const mode = styleProps.get(decl.prop.toLowerCase())
-      if (mode) decl.value = invertValue(decl.value, mode)
-    })
-    return root.toString()
+    const sheet = new CSSStyleSheet()
+    sheet.replaceSync(css)
+    const walk = (rules: CSSRuleList) => {
+      for (const rule of Array.from(rules)) {
+        if (rule instanceof CSSStyleRule) {
+          const props = Array.from({ length: rule.style.length }, (_, i) => rule.style.item(i))
+          for (const prop of props) {
+            const mode = styleProps.get(prop.toLowerCase())
+            if (!mode) continue
+            const value = rule.style.getPropertyValue(prop)
+            const priority = rule.style.getPropertyPriority(prop)
+            rule.style.setProperty(prop, invertValue(value, mode), priority)
+          }
+        } else if ('cssRules' in rule) {
+          walk((rule as CSSGroupingRule).cssRules)
+        }
+      }
+    }
+    walk(sheet.cssRules)
+    return Array.from(sheet.cssRules).map(r => r.cssText).join('\n')
   } catch {
     return css
   }

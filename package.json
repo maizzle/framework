@@ -84,7 +84,6 @@
     "vue": "^3"
   },
   "devDependencies": {
-    "@types/js-beautify": "^1.14.3",
     "@types/node": "^25.2.3",
     "@types/nodemailer": "^8.0.0",
     "@types/postcss-safe-parser": "^5.0.4",

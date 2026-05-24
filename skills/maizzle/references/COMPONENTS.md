@@ -312,6 +312,47 @@ Props: `width` (default `'600px'`), `height` (auto-sizes if absent), `src`, `typ
 </Section>
 ```
 
+## Vml
+
+General-purpose VML primitive for Outlook. Emits a chosen VML shape (`v:rect` / `v:roundrect` / `v:oval` / `v:line`) inside `<!--[if mso]>` with an optional `<v:fill>` child and a `<v:textbox>` slot wrapper. Use for shapes, gradients, rounded outlines, dividers — anything VML can render that isn't a plain bg image (use `<OutlookBg>` for that).
+
+Props:
+
+- `shape` (`'rect'`(default)/`'roundrect'`/`'oval'`/`'line'`) — underlying VML element.
+- `arcsize` — corner radius for `roundrect` (0–1 fraction).
+- `from` / `to` — `"x,y"` endpoints for `shape="line"`.
+- `width` (default `'600px'`), `height` — ignored for `line`.
+- Fill image: `src`, `type` (`'solid'`/`'gradient'`/`'gradientradial'`/`'tile'`/`'pattern'`/`'frame'`), `sizes`, `aspect`, `origin`/`position`, `backgroundPosition`, `color`.
+- Gradient: `color2`, `angle`, `focus`, `focussize`, `focusposition`.
+- Shape element: `fill` (default `true`, `false` for `line`), `fillcolor`, `stroke` (default `false`, `true` for `line`), `strokecolor`, `inset` (default `'0,0,0,0'`).
+
+`<v:fill>` is only emitted when any fill-related prop is set; otherwise the shape relies on the parent `fillcolor` attribute.
+
+```vue
+<!-- Background image (equivalent to OutlookBg; needs explicit type="frame") -->
+<Section class="bg-[url('/hero.jpg')] bg-cover bg-center">
+  <Vml type="frame" src="/hero.jpg" width="600px" height="400px" background-position="center,center">
+    <Container><Heading class="text-white text-3xl">Hello</Heading></Container>
+  </Vml>
+</Section>
+
+<!-- Rounded outline -->
+<Vml shape="roundrect" arcsize="0.1" width="300" height="120" fillcolor="#3b82f6" strokecolor="#1e3a8a">
+  <Text class="text-white">Outlook-only rounded card</Text>
+</Vml>
+
+<!-- Linear gradient -->
+<Vml type="gradient" color="#3b82f6" color2="#9333ea" angle="90" width="600" height="200">
+  <Text class="text-white">Gradient header</Text>
+</Vml>
+
+<!-- Oval -->
+<Vml shape="oval" width="80" height="80" fillcolor="#f97316" />
+
+<!-- Horizontal line divider -->
+<Vml shape="line" from="0,0" to="600,0" strokecolor="#e5e7eb" />
+```
+
 ## Plaintext / NotPlaintext
 
 `<Plaintext>` routes slot to plaintext output only (removed from HTML). `<NotPlaintext>` is the inverse. Both no-op until `plaintext` is enabled in config (or via `usePlaintext()`).

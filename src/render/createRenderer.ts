@@ -307,6 +307,15 @@ export async function createRenderer(
           resolve(__dirname, '../filters'),
         ],
         imports: ['vue', unheadVueComposablesImports],
+        /**
+         * unplugin-auto-import's default `include` doesn't match `.md`, so
+         * auto-imports (Vue, unhead and Maizzle composables/filters) were
+         * never injected into Markdown templates — `useConfig()` and friends
+         * threw at runtime. Extend the default list with `.md` (and its
+         * `?vue` script sub-requests) to mirror the `.md` coverage the
+         * Components plugin already declares below.
+         */
+        include: [/\.[jt]sx?$/, /\.vue$/, /\.vue\?vue/, /\.md$/, /\.md\?vue/],
         dts: dts ? resolve(dtsDir, 'auto-imports.d.ts') : false,
       }),
       Components({

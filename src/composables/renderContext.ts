@@ -27,4 +27,5 @@ export interface RenderContext {
   tailwindBlocks?: TailwindBlock[]
 }
 
-export const RenderContextKey: InjectionKey<RenderContext> = Symbol('RenderContext')
+// Global symbol registry — same rationale as MaizzleConfigKey in useConfig.ts.
+export const RenderContextKey: InjectionKey<RenderContext> = Symbol.for('maizzle.renderContext')

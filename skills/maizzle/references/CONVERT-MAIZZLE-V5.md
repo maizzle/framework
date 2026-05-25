@@ -32,8 +32,12 @@ PostHTML expressions are gone. Use Vue's template syntax:
 | `<yield />` | `<slot />` |
 | `<block name="x">` (defines slot) | `<slot name="x" />` |
 | `<block name="x">` (fills slot) | `<template #x>...</template>` |
+| `<slot:x>fallback</slot:x>` (slot + default) | `<slot name="x">fallback</slot>` |
+| `loop.first` / `loop.index` (in `<each>`) | `v-for="(item, index) in items"` → `index === 0` / `index` |
 
 ESP / mail-merge syntax (`{{ mailchimp_var }}`, `*|MERGE|*`, etc.) that you need preserved verbatim: wrap in `<Raw>` or use `v-pre` on the parent.
+
+An `<each>` body that emits sibling elements per iteration (e.g. a separator `<tr>` then a content `<tr>`) needs `<template v-for>` — v-for on one element can't wrap multiple roots.
 
 ## Components
 
@@ -47,6 +51,23 @@ Sizing/styling moved from props to Tailwind classes:
 | `<x-spacer height="32px" />` | `<Spacer class="h-8" />` |
 
 For Outlook fine-tuning of spacer height: `mso-line-height-alt-*` utility.
+
+`<script props>` (posthtml-component locals) → `<script setup>` + `defineProps`. Kebab prop names become camelCase; array/object defaults need a factory function:
+
+```diff
+- <script props>
+-   module.exports = {
+-     containerClasses: props['container-class'] || '',
+-     items: props.items || [{ name: 'A' }],
+-   }
+- </script>
++ <script setup>
++   defineProps({
++     containerClass: { type: String, default: '' },
++     items: { type: Array, default: () => ([{ name: 'A' }]) },
++   })
++ </script>
+```
 
 ## `.vue` Templates: No Frontmatter
 

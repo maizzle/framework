@@ -241,7 +241,11 @@ function updateIframeContentHeight() {
 
   // Temporarily collapse to measure true content height
   iframe.style.height = '0'
-  iframeContentHeight.value = doc.documentElement.scrollHeight
+  const contentHeight = doc.documentElement.scrollHeight
+  // Fill the preview viewport when the email is shorter than it; grow past it
+  // (and let the ScrollArea scroll) when the email is taller.
+  const availableHeight = viewport?.clientHeight ?? 0
+  iframeContentHeight.value = Math.max(contentHeight, availableHeight)
   iframe.style.height = `${iframeContentHeight.value}px`
 
   // Restore scroll position

@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
-import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, Search, FileCodeCorner, FileCode, FileText, Code, BookText, MailQuestion, Moon, Sun } from '@lucide/vue'
+import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, Search, FileCode, FileText, Code, BookText, MailQuestion, Moon, Sun } from '@lucide/vue'
 import SidebarClose from '@/components/SidebarClose.vue'
-import Markdown from '@/components/Markdown.vue'
 import logoUrl from '@/logo.svg'
 import logoGradientUrl from '@/logo-gradient.svg'
 import { Kbd } from '@/components/ui/kbd'
@@ -340,7 +339,7 @@ onUnmounted(() => {
                     :is-active="isActive(t.href)"
                   >
                     <RouterLink :to="t.href" class="truncate">
-                      <component :is="t.path.endsWith('.md') ? Markdown : FileCodeCorner" class="size-3 shrink-0 opacity-70" :stroke-width="1" />
+                      <span class="mz-tpl-icon size-4 shrink-0 opacity-70" :class="t.path.endsWith('.md') ? 'mz-tpl-icon-md' : 'mz-tpl-icon-vue'" />
                       <span class="truncate">{{ t.name }}</span>
                     </RouterLink>
                   </SidebarMenuButton>
@@ -507,7 +506,7 @@ onUnmounted(() => {
               :value="t.path"
               @select="onCommandSelect(t.href)"
             >
-              <component :is="t.path.endsWith('.md') ? Markdown : FileCodeCorner" class="size-3 shrink-0 opacity-70" :stroke-width="1" />
+              <span class="mz-tpl-icon size-3 shrink-0 opacity-70" :class="t.path.endsWith('.md') ? 'mz-tpl-icon-md' : 'mz-tpl-icon-vue'" />
               <span>{{ getFileName(t.path) }}</span>
               <span class="sr-only">{{ ' ' + t.path.split('/').join(' ') }}</span>
             </CommandItem>

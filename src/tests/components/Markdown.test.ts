@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { createSSRApp, h, Suspense } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import Markdown from '../../components/Markdown.vue'
+import { MaizzleConfigKey } from '../../composables/useConfig.ts'
 
 function render(props: Record<string, any> = {}, slotContent?: string) {
   const app = createSSRApp({
@@ -12,6 +13,21 @@ function render(props: Record<string, any> = {}, slotContent?: string) {
       ),
     }),
   })
+
+  return renderToString(app)
+}
+
+function renderWithConfig(props: Record<string, any>, markdown: Record<string, any>, slotContent?: string) {
+  const app = createSSRApp({
+    render: () => h(Suspense, null, {
+      default: () => h(Markdown, props, slotContent
+        ? { default: () => slotContent }
+        : undefined
+      ),
+    }),
+  })
+
+  app.provide(MaizzleConfigKey, { markdown } as any)
 
   return renderToString(app)
 }
@@ -133,6 +149,62 @@ describe('Markdown', () => {
       const html = await render({ content: '    # Indented\n    Paragraph' })
 
       expect(html).toContain('<code>')
+    })
+  })
+
+  describe('config.markdown integration', () => {
+    it('applies markdownOptions from config', async () => {
+      const html = await renderWithConfig(
+        { content: '<span>raw</span>' },
+        { markdownOptions: { html: false } },
+      )
+
+      expect(html).toContain('&lt;span&gt;raw&lt;/span&gt;')
+    })
+
+    it('lets the config prop override config.markdown.markdownOptions', async () => {
+      const html = await renderWithConfig(
+        { content: '<span>raw</span>', config: { html: true } },
+        { markdownOptions: { html: false } },
+      )
+
+      expect(html).toContain('<span>raw</span>')
+    })
+
+    it('registers plugins from markdownUses', async () => {
+      const upcase = (md: any) => {
+        md.core.ruler.push('upcase', (state: any) => {
+          for (const token of state.tokens) {
+            if (token.type === 'inline' && token.children) {
+              for (const child of token.children) {
+                if (child.type === 'text') child.content = child.content.toUpperCase()
+              }
+            }
+          }
+        })
+      }
+
+      const html = await renderWithConfig({ content: 'hello world' }, { markdownUses: [upcase] })
+
+      expect(html).toContain('<p>HELLO WORLD</p>')
+    })
+
+    it('uses shikiTheme from config', async () => {
+      const html = await renderWithConfig(
+        { content: '```css\n.foo { color: red; }\n```' },
+        { shikiTheme: 'github-light' },
+      )
+
+      expect(html).toContain('background-color:#fff')
+    })
+
+    it('lets the shikiTheme prop override config', async () => {
+      const html = await renderWithConfig(
+        { content: '```css\n.foo { color: red; }\n```', 'shiki-theme': 'github-dark-high-contrast' },
+        { shikiTheme: 'github-light' },
+      )
+
+      expect(html).toContain('background-color:#0a0c10')
     })
   })
 })

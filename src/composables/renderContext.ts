@@ -22,6 +22,7 @@ export interface RenderContext {
   sfcConfig?: MaizzleConfig
   sfcEventHandlers: Array<{ name: EventName; handler: EventMap[EventName] }>
   plaintext?: UsePlaintextOptions
+  outputPath?: string
   fonts?: FontRegistration[]
   tailwindBlocks?: TailwindBlock[]
 }

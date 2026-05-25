@@ -100,7 +100,17 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
         html = `${doctype}\n${html}`
 
         const htmlOut = stripForHtml(html)
-        const outputFilePath = resolveOutputPath(templatePath, outputPath, outputExtension, contentBase)
+        const sfcOutputPath = rendered.outputPath
+        let outputFilePath: string
+
+        if (sfcOutputPath) {
+          const parsed = parsePath(resolve(sfcOutputPath))
+          const ext = parsed.ext ? parsed.ext.slice(1) : outputExtension
+          outputFilePath = join(parsed.dir, `${parsed.name}.${ext}`)
+        } else {
+          outputFilePath = resolveOutputPath(templatePath, outputPath, outputExtension, contentBase)
+        }
+
         mkdirSync(dirname(outputFilePath), { recursive: true })
         writeFileSync(outputFilePath, htmlOut)
         outputFiles.push(outputFilePath)
@@ -120,6 +130,9 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
           if (sfcPlaintext?.destination) {
             const name = basename(templatePath).replace(/\.(vue|md)$/, '')
             ptOutputPath = join(resolve(sfcPlaintext.destination), `${name}.${ptExtension}`)
+          } else if (sfcOutputPath) {
+            const parsed = parsePath(outputFilePath)
+            ptOutputPath = join(parsed.dir, `${parsed.name}.${ptExtension}`)
           } else if (globalCfg.destination) {
             ptOutputPath = resolveOutputPath(templatePath, resolve(globalCfg.destination), ptExtension, contentBase)
           } else {

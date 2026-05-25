@@ -425,6 +425,99 @@ describe('build', () => {
     })
   })
 
+  describe('useOutputPath', () => {
+    it('writes HTML to the exact path, not the default structured path', async () => {
+      writeSfc(tempDir, 'emails/welcome.vue', `
+        <script setup>
+        useOutputPath('dist/promos/welcome.html')
+        </script>
+        <template>
+          <div>Hello</div>
+        </template>
+      `)
+
+      const result = await build()
+
+      expect(existsSync(join(tempDir, 'dist/promos/welcome.html'))).toBe(true)
+      expect(existsSync(join(tempDir, 'dist/welcome.html'))).toBe(false)
+      expect(result.files[0]).toContain(join('dist', 'promos', 'welcome.html'))
+    })
+
+    it('appends output.extension when the path has no extension', async () => {
+      writeSfc(tempDir, 'emails/welcome.vue', `
+        <script setup>
+        useOutputPath('dist/promos/welcome')
+        </script>
+        <template>
+          <div>Hello</div>
+        </template>
+      `)
+
+      await build()
+
+      expect(existsSync(join(tempDir, 'dist/promos/welcome.html'))).toBe(true)
+    })
+
+    it('writes the plaintext file next to the HTML output', async () => {
+      writeSfc(tempDir, 'emails/welcome.vue', `
+        <script setup>
+        useOutputPath('dist/promos/welcome.html')
+        usePlaintext()
+        </script>
+        <template>
+          <div>Hello</div>
+        </template>
+      `)
+
+      await build()
+
+      expect(existsSync(join(tempDir, 'dist/promos/welcome.html'))).toBe(true)
+      expect(existsSync(join(tempDir, 'dist/promos/welcome.txt'))).toBe(true)
+    })
+
+    it('usePlaintext({ destination }) overrides useOutputPath for the plaintext file', async () => {
+      const customDest = join(tempDir, 'custom-txt')
+
+      writeSfc(tempDir, 'emails/welcome.vue', `
+        <script setup>
+        useOutputPath('dist/promos/welcome.html')
+        usePlaintext({ destination: '${customDest.replace(/\\/g, '\\\\')}' })
+        </script>
+        <template>
+          <div>Hello</div>
+        </template>
+      `)
+
+      await build()
+
+      expect(existsSync(join(customDest, 'welcome.txt'))).toBe(true)
+      expect(existsSync(join(tempDir, 'dist/promos/welcome.txt'))).toBe(false)
+    })
+
+    it('does not leak the output path to other templates', async () => {
+      writeSfc(tempDir, 'emails/moved.vue', `
+        <script setup>
+        useOutputPath('dist/special/moved.html')
+        </script>
+        <template>
+          <div>Moved</div>
+        </template>
+      `)
+
+      writeSfc(tempDir, 'emails/normal.vue', `
+        <template>
+          <div>Normal</div>
+        </template>
+      `)
+
+      await build()
+
+      expect(existsSync(join(tempDir, 'dist/special/moved.html'))).toBe(true)
+      expect(existsSync(join(tempDir, 'dist/normal.html'))).toBe(true)
+      expect(existsSync(join(tempDir, 'dist/special/normal.html'))).toBe(false)
+    })
+  })
+
   it('copies static assets to output', async () => {
     writeSfc(tempDir, 'emails/test.vue', `
       <template><div>Test</div></template>

@@ -97,7 +97,7 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
         }
 
         html = await events.fireAfterTransform({ config, template, html })
-        html = `${doctype}\n${html}`
+        if (doctype) html = `${doctype}\n${html}`
 
         const htmlOut = stripForHtml(html)
         const sfcOutputPath = rendered.outputPath

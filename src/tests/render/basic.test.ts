@@ -110,6 +110,19 @@ describe('render', () => {
       expect(result.html).toMatch(/^<!DOCTYPE html>\n/)
     })
 
+    it('omits doctype when config doctype is false', async () => {
+      const result = await render(`
+        <template>
+          <div>Test</div>
+        </template>
+      `, {
+        doctype: false,
+      })
+
+      expect(result.html).not.toMatch(/doctype/i)
+      expect(result.html.startsWith('\n')).toBe(false)
+    })
+
     it('uses custom doctype from config', async () => {
       const result = await render(`
         <template>

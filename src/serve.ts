@@ -363,7 +363,7 @@ async function serveRenderedTemplate(url: string, config: MaizzleConfig, rendere
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
 
     html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
-    html = `${doctype}\n${html}`
+    if (doctype) html = `${doctype}\n${html}`
 
     res.setHeader('Content-Type', 'text/html')
     res.end(stripForHtml(html))
@@ -413,7 +413,7 @@ async function serveHighlightedSource(url: string, config: MaizzleConfig, render
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
     html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
 
-    html = stripForHtml(`${doctype}\n${html}`)
+    html = stripForHtml(doctype ? `${doctype}\n${html}` : html)
 
     const hl = await getHighlighter()
     const highlighted = hl.codeToHtml(html, {
@@ -624,7 +624,7 @@ async function serveEmailEndpoint(url: string, req: any, res: any, config: Maizz
     const templateConfig = rendered.templateConfig
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
     html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
-    html = `${doctype}\n${html}`
+    if (doctype) html = `${doctype}\n${html}`
 
     const text = createPlaintext(stripForPlaintext(html))
     html = stripForHtml(html)

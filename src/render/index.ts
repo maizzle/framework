@@ -67,7 +67,7 @@ export async function render(
     if (rendered.templateConfig.useTransformers !== false) {
       html = await runTransformers(html, rendered.templateConfig, isFile ? resolve(template) : undefined, doctype, rendered.tailwindBlocks)
     }
-    html = `${doctype}\n${html}`
+    if (doctype) html = `${doctype}\n${html}`
 
     const globalPlaintext = rendered.templateConfig.plaintext
     const sfcPlaintext = rendered.plaintext

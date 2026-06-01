@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, createStaticVNode, useAttrs } from 'vue'
+import { twMerge } from 'tailwind-merge'
 import { hasWidthInStyle, hasWidthUtility, nextId, normalizeToPixels, outlookFallbackProp } from './utils.ts'
 import { useOutlookFallback } from '../composables/useOutlookFallback'
 
@@ -65,15 +66,16 @@ const useMarker = outlookFallback && props.width == null && userHasWidth.value
 const msoId = useMarker ? nextId('s') : null
 const tdId = outlookFallback ? nextId('st') : null
 
-const divStyle = computed(() => {
-  const parts: string[] = []
-  if (props.width != null) parts.push(`max-width: ${normalizeToPixels(props.width)}`)
-  if (userStyle.value) parts.push(userStyle.value)
-  return parts.length ? parts.join('; ') : undefined
+const mergedClass = computed(() => {
+  const userClass = (attrs.class as string) ?? ''
+  if (props.width == null) return userClass || undefined
+  return twMerge(`max-w-[${normalizeToPixels(props.width)}]`, userClass)
 })
 
+const divStyle = computed(() => userStyle.value || undefined)
+
 const restAttrs = computed(() => {
-  const { style: _, ...rest } = attrs
+  const { style: _, class: __, ...rest } = attrs
   return rest
 })
 
@@ -106,6 +108,7 @@ const MsoAfter = () => createStaticVNode(
   <MsoBefore v-if="outlookFallback" />
   <div
     v-bind="restAttrs"
+    :class="mergedClass"
     :style="divStyle"
     :data-maizzle-msow-id="msoId"
     :data-maizzle-msow-fallback="useMarker ? '100%' : null"

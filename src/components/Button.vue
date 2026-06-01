@@ -129,48 +129,35 @@ const alignClass = computed(() => props.align ? ({
   right: 'text-right',
 })[props.align] || '' : '')
 
-const styles = computed(() => {
+const baseClasses = computed(() => {
   if (props.variant === 'link') {
-    return 'text-decoration: none; color: #4338ca;'
+    return 'no-underline text-[#4338ca]'
   }
 
-  const base = [
-    'display: inline-block;',
-    'text-decoration: none;',
-    'padding: 16px 24px;',
-    'font-size: 16px;',
-    'line-height: 1;',
-    'border-radius: 4px;',
+  const classes = [
+    'inline-block',
+    'no-underline',
+    'px-[24px]',
+    'py-[16px]',
+    'text-[16px]',
+    'leading-none',
+    'rounded-[4px]',
   ]
 
   if (props.variant === 'outline') {
-    base.push(
-      'background-color: transparent;',
-      'border: 1px solid #4338ca;',
-      'color: #4338ca;',
-    )
+    classes.push('bg-transparent', 'border', 'border-solid', 'border-[#4338ca]', 'text-[#4338ca]')
   } else if (props.variant === 'ghost') {
-    base.push(
-      'background-color: transparent;',
-      'color: #4338ca;',
-    )
+    classes.push('bg-transparent', 'text-[#4338ca]', 'hover:bg-indigo-50')
   } else {
-    base.push(
-      'background-color: #4338ca;',
-      'color: #fffffe;',
-    )
+    classes.push('bg-[#4338ca]', 'text-[#fffffe]')
   }
 
-  return base.join('')
+  return classes.join(' ')
 })
 
 const isLink = computed(() => props.variant === 'link')
 
-const variantClasses = computed(() =>
-  props.variant === 'ghost' ? 'hover:bg-indigo-50' : '',
-)
-
-const mergedClass = computed(() => twMerge(variantClasses.value, attrs.class as string))
+const mergedClass = computed(() => twMerge(baseClasses.value, attrs.class as string))
 
 const textSpanStyle = computed(() =>
   outlookFallback ? `mso-text-raise: ${props.msoPt};` : undefined,
@@ -209,7 +196,7 @@ const MsoIconGap = () => createStaticVNode(
     <a
       v-bind="{ ...$attrs, class: undefined, style: undefined }"
       :href="href"
-      :style="[styles, $attrs.style as any]"
+      :style="$attrs.style as any"
       :class="mergedClass"
     >
       <template v-if="!isLink">

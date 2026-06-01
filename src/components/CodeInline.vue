@@ -1,5 +1,6 @@
 <script lang="ts">
 import { createStaticVNode, type PropType } from 'vue'
+import { twMerge } from 'tailwind-merge'
 import { codeToHtml, getSingletonHighlighter, type BundledLanguage, type BundledTheme } from 'shiki'
 
 export default {
@@ -50,8 +51,6 @@ export default {
       return () => createStaticVNode('', 0)
     }
 
-    const classes = attrs.class ? ` class="${attrs.class}"` : ''
-
     if (props.theme) {
       const highlighted = await codeToHtml(source, {
         lang: props.language,
@@ -95,15 +94,17 @@ export default {
         .replace(/</g, '§MZLT§')
         .replace(/>/g, '§MZGT§')
 
-      const baseStyles = `background-color:${bg};border-radius:6px;padding:2px 6px;font-size:11px`
-      const styles = [baseStyles, attrs.style].filter(Boolean).join(';')
+      const base = `bg-[${bg}] rounded-[6px] py-[2px] px-[6px] text-[11px]`
+      const merged = twMerge(base, (attrs.class as string) ?? '')
+      const styleAttr = attrs.style ? ` style="${attrs.style}"` : ''
 
-      const html = `<code${classes} style="${styles}" data-minify-inline>${escaped}</code>`
+      const html = `<code class="${merged}"${styleAttr} data-minify-inline>${escaped}</code>`
       return () => createStaticVNode(html, 1)
     }
 
-    const baseStyles = 'white-space:normal;border-radius:6px;border:1px solid #d1d5db;background-color:#f3f4f6;padding:2px 6px;font-size:11px;color:inherit'
-    const styles = [baseStyles, attrs.style].filter(Boolean).join(';')
+    const base = 'whitespace-normal rounded-[6px] border border-solid border-[#d1d5db] bg-[#f3f4f6] py-[2px] px-[6px] text-[11px] text-[inherit]'
+    const merged = twMerge(base, (attrs.class as string) ?? '')
+    const styleAttr = attrs.style ? ` style="${attrs.style}"` : ''
 
     const escaped = source
       .replace(/&/g, '&amp;')
@@ -111,7 +112,7 @@ export default {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
 
-    const html = `<code${classes} style="${styles}">${escaped}</code>`
+    const html = `<code class="${merged}"${styleAttr}>${escaped}</code>`
 
     return () => createStaticVNode(html, 1)
   }

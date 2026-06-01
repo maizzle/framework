@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, createStaticVNode, useAttrs, type PropType } from 'vue'
+import { twMerge } from 'tailwind-merge'
 import { outlookFallbackProp } from './utils.ts'
 import { useOutlookFallback } from '../composables/useOutlookFallback'
 
@@ -243,6 +244,10 @@ const NotMsoBefore = () => createStaticVNode('<!--[if !mso]><!-->', 1)
 const NotMsoAfter = () => createStaticVNode('<!--<![endif]-->', 1)
 
 const imgClass = 'max-w-full align-middle'
+
+const cropClass = computed(() =>
+  twMerge(`overflow-hidden table max-w-full w-[${imgWidth.value}px]`, parsedClass.value.className)
+)
 </script>
 
 <template>
@@ -254,8 +259,7 @@ const imgClass = 'max-w-full align-middle'
         v-bind="{ ...attrs, class: undefined }"
         role="img"
         :aria-label="alt || undefined"
-        :class="['overflow-hidden table max-w-full', parsedClass.className]"
-        :style="`width: ${imgWidth}px;`"
+        :class="cropClass"
       >
         <div
           :class="[

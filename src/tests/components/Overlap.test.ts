@@ -30,19 +30,20 @@ describe('Overlap', () => {
 
     it('sets max-height from prop', () => {
       const wrapper = mountOverlap({ height: 340 })
-      expect(wrapper.find('div').attributes('style')).toContain('max-height: 340px')
+      expect(wrapper.find('div').classes()).toContain('max-h-[340px]')
     })
 
     it('accepts max-height as string with units', () => {
       const wrapper = mountOverlap({ height: '20rem' })
-      expect(wrapper.find('div').attributes('style')).toContain('max-height: 20rem')
+      expect(wrapper.find('div').classes()).toContain('max-h-[20rem]')
     })
 
     it('centers the background div', () => {
       const wrapper = mountOverlap()
-      const style = wrapper.find('div').attributes('style')
-      expect(style).toContain('margin: 0px auto')
-      expect(style).toContain('text-align: center')
+      const classes = wrapper.find('div').classes()
+      expect(classes).toContain('my-0')
+      expect(classes).toContain('mx-auto')
+      expect(classes).toContain('text-center')
     })
 
     it('passes extra attrs to the background div', () => {

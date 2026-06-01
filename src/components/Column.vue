@@ -70,11 +70,24 @@ const msoWidth = computed(() => {
  * `display: inline-block` would silently shadow a class like
  * `inline-table` during CSS inlining; routing both through twMerge lets
  * the user's utility cleanly replace ours instead of being dropped.
+ *
+ * When `width` is set as a prop the resolved pixel value also goes
+ * through the class list (`min-w-[Npx]`) so it dedupes against the
+ * user's `min-w-*` utility. The marker path (no prop) has to stay
+ * inline because the placeholder string is replaced post-render and
+ * Tailwind's content scanner can't compile a class whose value is
+ * still a marker.
  */
 const baseClass = 'inline-block align-top text-[medium]'
-const mergedClass = computed(() => twMerge(baseClass, (attrs.class as string) ?? ''))
+const mergedClass = computed(() => {
+  const parts = [baseClass]
+  if (props.width != null) parts.push(`min-w-[${normalizeToPixels(props.width)}]`)
+  return twMerge(parts.join(' '), (attrs.class as string) ?? '')
+})
 
-const styles = computed(() => `min-width: ${minWidth.value};`)
+const styles = computed(() =>
+  props.width != null ? undefined : `min-width: ${minWidth.value};`
+)
 
 const tdStyle = computed(() => {
   const parts = [`width: ${msoWidth.value}`, 'vertical-align: top']

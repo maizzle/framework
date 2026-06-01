@@ -60,18 +60,15 @@ const useMarker = outlookFallback && props.width == null
 const msoId = useMarker ? nextId('c') : null
 const tdId = outlookFallback ? nextId('ct') : null
 
-const styles = computed(() => {
-  if (props.width == null) return undefined
-  return `max-width: ${normalizeToPixels(props.width)}; margin: 0 auto;`
-})
-
 const mergedClass = computed(() => {
-  if (props.width != null) return attrs.class as string | undefined
   const userClass = (attrs.class as string) ?? ''
-  const defaultClass = hasWidthUtility(userClass)
-    ? 'm-0 mx-auto'
-    : 'max-w-150 m-0 mx-auto'
-  return twMerge(defaultClass, userClass)
+  const parts: string[] = ['m-0', 'mx-auto']
+  if (props.width != null) {
+    parts.push(`max-w-[${normalizeToPixels(props.width)}]`)
+  } else if (!hasWidthUtility(userClass)) {
+    parts.push('max-w-150')
+  }
+  return twMerge(parts.join(' '), userClass)
 })
 
 const msoWidth = computed(() => {
@@ -101,7 +98,6 @@ const MsoAfter = () => createStaticVNode(
   <div
     v-bind="{ ...attrs, class: undefined }"
     :class="mergedClass"
-    :style="styles"
     :data-maizzle-msow-id="msoId"
     :data-maizzle-cw="colWidthSource"
     :data-maizzle-mso-td-id="tdId"

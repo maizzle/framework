@@ -44,12 +44,12 @@ describe('Container', () => {
 
   it('accepts custom width as string', () => {
     const wrapper = mount(Container, { props: { width: '600px' } })
-    expect(wrapper.find('div').attributes('style')).toContain('max-width: 600px')
+    expect(wrapper.find('div').classes()).toContain('max-w-[600px]')
   })
 
   it('accepts custom width as number and adds px', () => {
     const wrapper = mount(Container, { props: { width: 600 } })
-    expect(wrapper.find('div').attributes('style')).toContain('max-width: 600px')
+    expect(wrapper.find('div').classes()).toContain('max-w-[600px]')
   })
 
   it('renders slot content', () => {
@@ -137,7 +137,7 @@ describe('Container', () => {
 
     it('still applies width prop to the visible div', () => {
       const wrapper = mount(Container, { props: { outlookFallback: false, width: '600px' } })
-      expect(wrapper.find('div').attributes('style')).toContain('max-width: 600px')
+      expect(wrapper.find('div').classes()).toContain('max-w-[600px]')
     })
   })
 })

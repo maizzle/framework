@@ -56,47 +56,51 @@ describe('CodeBlock', () => {
     it('adds font-mono class to the pre element', async () => {
       const html = await render({ code: '<div>test</div>' })
 
-      expect(html).toMatch(/<pre class="font-mono"/)
+      expect(html).toMatch(/<pre class="[^"]*\bfont-mono\b/)
     })
 
-    it('sets inline styles on the pre element', async () => {
+    it('emits base styling on the pre element as classes', async () => {
       const html = await render({ code: '<div>test</div>' })
 
-      expect(html).toContain('background-color:#fff')
-      expect(html).toContain('padding:16px')
-      expect(html).toContain('overflow:auto')
-      expect(html).toContain('white-space:pre')
-      expect(html).toContain('word-wrap:normal')
-      expect(html).toContain('word-break:normal')
-      expect(html).toContain('word-spacing:normal')
+      expect(html).toMatch(/<pre class="[^"]*\bbg-\[#fff\]/)
+      expect(html).toMatch(/<pre class="[^"]*\bp-\[16px\]/)
+      expect(html).toMatch(/<pre class="[^"]*\boverflow-auto\b/)
+      expect(html).toMatch(/<pre class="[^"]*\bwhitespace-pre\b/)
+      expect(html).toMatch(/<pre class="[^"]*\[word-wrap:normal\]/)
+      expect(html).toMatch(/<pre class="[^"]*\[word-break:normal\]/)
+      expect(html).toMatch(/<pre class="[^"]*\[word-spacing:normal\]/)
     })
 
-    it('uses default td-class', async () => {
+    it('uses default td-class with the theme bg merged in', async () => {
       const html = await render({ code: '<div>test</div>' })
 
-      expect(html).toContain('<td class="max-w-0 mso-padding-alt-4"')
+      expect(html).toMatch(/<td class="[^"]*\bmax-w-0\b/)
+      expect(html).toMatch(/<td class="[^"]*\bmso-padding-alt-4\b/)
+      expect(html).toMatch(/<td class="[^"]*\bbg-\[#fff\]/)
     })
 
-    it('accepts custom td-class', async () => {
+    it('accepts custom td-class merged with the theme bg', async () => {
       const html = await render({ code: '<div>test</div>', 'td-class': 'custom-class' })
 
-      expect(html).toContain('<td class="custom-class"')
+      expect(html).toMatch(/<td class="[^"]*\bcustom-class\b/)
+      expect(html).toMatch(/<td class="[^"]*\bbg-\[#fff\]/)
     })
 
-    it('sets the shiki theme background on the wrapping td', async () => {
+    it('sets the shiki theme background on the wrapping td as a class', async () => {
       const html = await render({ code: '<div>test</div>' })
 
       /**
        * github-light bg is #fff — must appear on the td so Outlook's
        * td padding doesn't show through as white on a dark theme.
+       * Now emitted as a class so user `td-class` overrides via twMerge.
        */
-      expect(html).toMatch(/<td[^>]*style="background-color:#fff"/)
+      expect(html).toMatch(/<td[^>]*class="[^"]*\bbg-\[#fff\]/)
     })
 
-    it('uses the dark theme bg on the wrapping td', async () => {
+    it('uses the dark theme bg on the wrapping td as a class', async () => {
       const html = await render({ code: '<div>test</div>', theme: 'github-dark' })
 
-      expect(html).toMatch(/<td[^>]*style="background-color:#24292e"/)
+      expect(html).toMatch(/<td[^>]*class="[^"]*\bbg-\[#24292e\]/)
     })
   })
 
@@ -104,7 +108,11 @@ describe('CodeBlock', () => {
     it('merges class onto the pre element', async () => {
       const html = await render({ code: '<div>test</div>', class: 'p-6 rounded-lg' })
 
-      expect(html).toMatch(/<pre class="font-mono p-6 rounded-lg"/)
+      expect(html).toMatch(/<pre class="[^"]*\bfont-mono\b/)
+      expect(html).toMatch(/<pre class="[^"]*\bp-6\b/)
+      expect(html).toMatch(/<pre class="[^"]*\brounded-lg\b/)
+      // User padding wins via twMerge — base p-[16px] dropped
+      expect(html).not.toMatch(/<pre class="[^"]*p-\[16px\]/)
     })
 
     it('merges style onto the pre element', async () => {
@@ -118,13 +126,13 @@ describe('CodeBlock', () => {
     it('uses github-light theme by default', async () => {
       const html = await render({ code: '.foo { color: red; }', language: 'css' })
 
-      expect(html).toContain('background-color:#fff')
+      expect(html).toContain('bg-[#fff]')
     })
 
     it('supports dark themes', async () => {
       const html = await render({ code: '.foo { color: red; }', language: 'css', theme: 'github-dark' })
 
-      expect(html).toContain('background-color:#24292e')
+      expect(html).toContain('bg-[#24292e]')
     })
   })
 

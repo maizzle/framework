@@ -67,18 +67,18 @@ describe('Column', () => {
   })
 
   describe('explicit width override', () => {
-    it('uses explicit width prop as literal min-width without a placeholder', () => {
+    it('uses explicit width prop as literal min-width class without a placeholder', () => {
       const wrapper = mountLayout({}, {}, { width: '400px' })
       const div = wrapper.findAllComponents(Column)[0].find('div')
-      expect(div.attributes('style')).toContain('min-width: 400px')
-      expect(div.attributes('style')).not.toContain('__MAIZZLE_COLW_')
+      expect(div.classes()).toContain('min-w-[400px]')
+      expect(div.attributes('style')).toBeUndefined()
       expect(div.attributes('data-maizzle-cw-id')).toBeUndefined()
       expect(div.attributes('data-maizzle-cw-count')).toBeUndefined()
     })
 
     it('adds px to numeric width', () => {
       const wrapper = mount(Column, { props: { width: 250 } })
-      expect(wrapper.find('div').attributes('style')).toContain('min-width: 250px')
+      expect(wrapper.find('div').classes()).toContain('min-w-[250px]')
     })
   })
 

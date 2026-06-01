@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, useAttrs, createStaticVNode } from 'vue'
+import { twMerge } from 'tailwind-merge'
 import {
   hasHeightInStyle,
   hasHeightUtility,
@@ -108,13 +109,13 @@ const heightValue = computed(() => {
   return `__MAIZZLE_OH_${id}__`
 })
 
-const backgroundStyles = computed(() => {
-  const parts: string[] = []
-  if (props.height != null) parts.push(`max-height: ${normalizeToPixels(props.height)}`)
-  parts.push('margin: 0 auto', 'text-align: center')
-  if (userStyle.value) parts.push(userStyle.value)
-  return parts.join('; ') + ';'
+const mergedClass = computed(() => {
+  const parts: string[] = ['my-0', 'mx-auto', 'text-center']
+  if (props.height != null) parts.push(`max-h-[${normalizeToPixels(props.height)}]`)
+  return twMerge(parts.join(' '), userClass.value)
 })
+
+const backgroundStyles = computed(() => userStyle.value || undefined)
 
 const tdStyle = computed(() =>
   `width: ${widthValue.value}; max-width: 100%; vertical-align: top;`
@@ -125,7 +126,7 @@ const vmlOpen = computed(() =>
 )
 
 const restAttrs = computed(() => {
-  const { style: _, ...rest } = attrs
+  const { style: _, class: __, ...rest } = attrs
   return rest
 })
 
@@ -136,6 +137,7 @@ const VmlAfter = () => createStaticVNode('<!--[if mso]></v:textbox></v:rect><![e
 <template>
   <div
     v-bind="restAttrs"
+    :class="mergedClass"
     :style="backgroundStyles"
     :data-maizzle-cw-id="useWidthMarker ? id : null"
     :data-maizzle-cw-count="useWidthMarker ? 1 : null"

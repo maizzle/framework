@@ -61,23 +61,25 @@ describe('CodeInline', () => {
   })
 
   describe('styles', () => {
-    it('applies default inline styles', async () => {
+    it('emits default styling as classes', async () => {
       const html = await render({ code: 'test' })
 
-      expect(html).toContain('white-space:normal')
-      expect(html).toContain('border-radius:6px')
-      expect(html).toContain('border:1px solid #d1d5db')
-      expect(html).toContain('background-color:#f3f4f6')
-      expect(html).toContain('padding:2px 6px')
-      expect(html).toContain('font-size:11px')
-      expect(html).toContain('color:inherit')
+      expect(html).toMatch(/<code class="[^"]*\bwhitespace-normal\b/)
+      expect(html).toMatch(/<code class="[^"]*\brounded-\[6px\]/)
+      expect(html).toMatch(/<code class="[^"]*\bborder\b/)
+      expect(html).toMatch(/<code class="[^"]*\bborder-\[#d1d5db\]/)
+      expect(html).toMatch(/<code class="[^"]*\bbg-\[#f3f4f6\]/)
+      expect(html).toMatch(/<code class="[^"]*\bpy-\[2px\]/)
+      expect(html).toMatch(/<code class="[^"]*\bpx-\[6px\]/)
+      expect(html).toMatch(/<code class="[^"]*\btext-\[11px\]/)
+      expect(html).toMatch(/<code class="[^"]*\btext-\[inherit\]/)
     })
 
-    it('merges custom style', async () => {
+    it('passes user style through unmodified', async () => {
       const html = await render({ code: 'test', style: 'font-weight:bold' })
 
-      expect(html).toContain('font-weight:bold')
-      expect(html).toContain('white-space:normal')
+      expect(html).toContain('style="font-weight:bold"')
+      expect(html).toMatch(/<code class="[^"]*\bwhitespace-normal\b/)
     })
   })
 
@@ -85,7 +87,9 @@ describe('CodeInline', () => {
     it('merges class onto the code element', async () => {
       const html = await render({ code: 'test', class: 'font-mono' })
 
-      expect(html).toContain('class="font-mono"')
+      expect(html).toMatch(/<code class="[^"]*\bfont-mono\b/)
+      // Base styling still present alongside user class
+      expect(html).toMatch(/<code class="[^"]*\bwhitespace-normal\b/)
     })
   })
 
@@ -107,13 +111,14 @@ describe('CodeInline', () => {
     it('uses the theme background color and skips the default gray border styling', async () => {
       const html = await render({ code: 'foo', theme: 'github-light' })
 
-      // github-light bg is white-ish; just assert the default gray bg isn't there.
-      expect(html).not.toContain('background-color:#f3f4f6')
-      expect(html).not.toContain('border:1px solid #d1d5db')
-      // Inline-friendly styling still applied.
-      expect(html).toContain('border-radius:6px')
-      expect(html).toContain('padding:2px 6px')
-      expect(html).toContain('font-size:11px')
+      // github-light bg is white-ish; just assert the default gray bg/border classes aren't there.
+      expect(html).not.toContain('bg-[#f3f4f6]')
+      expect(html).not.toContain('border-[#d1d5db]')
+      // Base styling still applied as classes.
+      expect(html).toMatch(/<code class="[^"]*\brounded-\[6px\]/)
+      expect(html).toMatch(/<code class="[^"]*\bpy-\[2px\]/)
+      expect(html).toMatch(/<code class="[^"]*\bpx-\[6px\]/)
+      expect(html).toMatch(/<code class="[^"]*\btext-\[11px\]/)
     })
 
     it('strips shiki\'s <pre><code> wrapper and emits a single <code>', async () => {
@@ -145,8 +150,8 @@ describe('CodeInline', () => {
     it('falls back to plain styling when theme is not set', async () => {
       const html = await render({ code: 'foo', language: 'ts' })
 
-      expect(html).toContain('background-color:#f3f4f6')
-      expect(html).toContain('border:1px solid #d1d5db')
+      expect(html).toContain('bg-[#f3f4f6]')
+      expect(html).toContain('border-[#d1d5db]')
       // No shiki marker spans without a theme.
       expect(html).not.toContain('§MZLT§')
     })

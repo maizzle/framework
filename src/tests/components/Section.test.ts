@@ -10,12 +10,12 @@ describe('Section', () => {
 
   it('applies max-width to div when custom width is set', () => {
     const wrapper = mount(Section, { props: { width: '600px' } })
-    expect(wrapper.find('div').attributes('style')).toContain('max-width: 600px')
+    expect(wrapper.find('div').classes()).toContain('max-w-[600px]')
   })
 
   it('applies max-width to div when custom width is a number', () => {
     const wrapper = mount(Section, { props: { width: 600 } })
-    expect(wrapper.find('div').attributes('style')).toContain('max-width: 600px')
+    expect(wrapper.find('div').classes()).toContain('max-w-[600px]')
   })
 
   it('renders slot content', () => {
@@ -66,9 +66,9 @@ describe('Section', () => {
 
     it('keeps user inline style on the div; div + custom width coexist', () => {
       const wrapper = mount(Section, { props: { width: '600px' }, attrs: { style: 'padding: 10px' } })
-      const divStyle = wrapper.find('div').attributes('style')
-      expect(divStyle).toContain('max-width: 600px')
-      expect(divStyle).toContain('padding: 10px')
+      const div = wrapper.find('div')
+      expect(div.classes()).toContain('max-w-[600px]')
+      expect(div.attributes('style')).toContain('padding: 10px')
     })
 
     it('passes mso-style through data-maizzle-mso-style, not directly into the td', () => {

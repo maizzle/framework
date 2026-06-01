@@ -57,11 +57,12 @@ export default {
       .replace(/^<pre[^>]*><code>/, '')
       .replace(/<\/code><\/pre>$/, '')
 
-    const classes = twMerge('font-mono', attrs.class as string)
-    const baseStyles = `background-color:${bg};padding:16px;overflow:auto;white-space:pre;word-wrap:normal;word-break:normal;word-spacing:normal`
-    const styles = [baseStyles, attrs.style].filter(Boolean).join(';')
+    const preBase = `font-mono bg-[${bg}] p-[16px] overflow-auto whitespace-pre [word-wrap:normal] [word-break:normal] [word-spacing:normal]`
+    const classes = twMerge(preBase, attrs.class as string)
+    const tdClass = twMerge(`bg-[${bg}]`, props.tdClass)
+    const styleAttr = attrs.style ? ` style="${attrs.style}"` : ''
 
-    const html = `<table class="w-full"><tr><td class="${props.tdClass}" style="background-color:${bg}"><pre class="${classes}" style="${styles}"><code>${codeContent}</code></pre></td></tr></table>`
+    const html = `<table class="w-full"><tr><td class="${tdClass}"><pre class="${classes}"${styleAttr}><code>${codeContent}</code></pre></td></tr></table>`
 
     return () => createStaticVNode(html, 1)
   }

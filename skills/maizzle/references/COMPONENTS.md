@@ -4,14 +4,14 @@ All components below auto-import — no imports needed.
 
 ## Conventions
 
-- **`outlookFallback`** (bool, default `true`) is available on `<Layout>`, `<Html>`, `<Body>`, `<Container>`, `<Section>`, `<Column>`, `<Button>`, `<Spacer>`, `<Overlap>`, `<Img>`. Setting `false` skips MSO ghost tables, VML, `xmlns:v/o`, and mso-only CSS for that component + descendants. Each component also inherits the value from any ancestor that set it.
+- **`outlookFallback`** (bool, default `true`) is available on `<Layout>`, `<Html>`, `<Body>`, `<Container>`, `<Section>`, `<Column>`, `<Button>`, `<Spacer>`, `<Img>`. Setting `false` skips MSO ghost tables, VML, `xmlns:v/o`, and mso-only CSS for that component + descendants. Each component also inherits the value from any ancestor that set it.
 - `<Container>`/`<Section>` auto-wrap in an MSO conditional `<table>`. `<Column>` auto-wraps in an MSO `<td>`.
 - Use kebab-case for camelCase props in templates (`body-class`, `dark-src`, `mso-style`).
 
 ## Index
 
 **Document scaffolding:** `<Layout>` `<Html>` `<Head>` `<Body>` `<Tailwind>` `<Font>` `<Preheader>`
-**Layout primitives:** `<Container>` `<Section>` `<Row>` `<Column>` `<Overlap>`
+**Layout primitives:** `<Container>` `<Section>` `<Row>` `<Column>`
 **Content:** `<Heading>` `<Text>` `<Link>` `<Button>` `<Img>` `<Hr>` `<Spacer>` `<Markdown>` `<CodeBlock>` `<CodeInline>` `<QrCode>`
 **Conditionals & escape hatches:** `<Outlook>` `<NotOutlook>` `<OutlookBg>` `<Plaintext>` `<NotPlaintext>` `<Raw>` `<NoWidows>` `<WithUrl>`
 
@@ -140,19 +140,6 @@ See `PATTERNS.md` for equal columns, percentage widths, equal-height, reverse st
     <Column class="w-1/2 xs:w-full">Right</Column>
   </Row>
 </Container>
-```
-
-## Overlap
-
-Faux absolute positioning: stacks an `#overlay` slot on top of the default slot (background layer) via `position: relative` table tricks, with VML fallback for Outlook.
-
-Props: `height` (**required**, max height of background layer), `width` (overlay table / VML rect width; inherits Container width), `msoHeight` (Outlook VML height override), `msoInset` (default `'0,-60px,0,0'` — VML textbox inset `top,right,bottom,left`; negative values shift overlay).
-
-```vue
-<Overlap height="200px">
-  <Img src="/banner.jpg" alt="Banner" width="600" />
-  <template #overlay><Img src="/avatar.png" alt="Avatar" width="80" /></template>
-</Overlap>
 ```
 
 ## Heading

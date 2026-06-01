@@ -59,7 +59,6 @@ Guide for converting MJML templates to Maizzle 6 (Vue SFC) templates.
 | `<CodeBlock>` / `<CodeInline>` | Shiki syntax highlighting. |
 | `<Outlook>` / `<NotOutlook>` | Render inside (or outside) MSO. Outlook supports version filtering. |
 | `<OutlookBg>` | VML background images. |
-| `<Overlap>` | Faux absolute positioning with VML fallback. |
 | `<NoWidows>` | Prevents orphaned last words. |
 | `<WithUrl>` | Scoped URL rewriting (base URL, UTM params). |
 | `<Plaintext>` / `<NotPlaintext>` | Plaintext-only or HTML-only routing. |

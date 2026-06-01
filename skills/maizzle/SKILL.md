@@ -76,7 +76,7 @@ All built-in components auto-import. Full props/usage in `references/COMPONENTS.
 
 **Document scaffolding** — `<Layout>`, `<Html>`, `<Head>`, `<Body>`, `<Tailwind>`, `<Font>`, `<Preheader>`
 
-**Layout primitives** — `<Container>`, `<Section>`, `<Row>`, `<Column>`, `<Overlap>`
+**Layout primitives** — `<Container>`, `<Section>`, `<Row>`, `<Column>`
 
 **Content** — `<Heading>`, `<Text>`, `<Link>`, `<Button>`, `<Img>`, `<Hr>`, `<Spacer>`, `<Markdown>`, `<CodeBlock>`, `<CodeInline>`, `<QrCode>`
 

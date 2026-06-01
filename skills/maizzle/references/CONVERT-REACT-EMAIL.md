@@ -51,7 +51,6 @@ Vue templates need a colon prefix to bind dynamic values (`:href="resetUrl"`); s
 | `<NoWidows>` | Prevent orphaned last words. |
 | `<Outlook>`/`<NotOutlook>` | Render inside/outside Outlook. Outlook supports version filtering + `open`/`close` raw HTML for ghost-table openers. |
 | `<OutlookBg>` | VML background images. |
-| `<Overlap>` | Faux absolute positioning with VML fallback. |
 | `<Plaintext>`/`<NotPlaintext>` | Plaintext-only or HTML-only routing. |
 | `<QrCode value="...">` | Table-based QR. Props: `value`, `ecc`, `border`, `alt`. Sized via `size-*`/`w-*`/`h-*`. |
 | `<Raw>` | Pass content through verbatim — `{{ }}` and other Vue/ESP syntax not parsed. |

@@ -304,16 +304,16 @@ const cropClass = computed(() =>
     <picture>
       <source v-if="darkSrc" :srcset="darkSrc" media="(prefers-color-scheme: dark)">
       <source v-if="motionSrc" :srcset="motionSrc" :type="motionType || undefined" media="(prefers-reduced-motion: no-preference)">
-      <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass">
+      <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass" data-juice-duplicates="false">
     </picture>
   </a>
   <picture v-else-if="usePicture">
     <source v-if="darkSrc" :srcset="darkSrc" media="(prefers-color-scheme: dark)">
     <source v-if="motionSrc" :srcset="motionSrc" :type="motionType || undefined" media="(prefers-reduced-motion: no-preference)">
-    <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass">
+    <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass" data-juice-duplicates="false">
   </picture>
   <a v-else-if="href" :href="href">
-    <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass">
+    <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass" data-juice-duplicates="false">
   </a>
-  <img v-else v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass">
+  <img v-else v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass" data-juice-duplicates="false">
 </template>

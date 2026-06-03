@@ -109,11 +109,6 @@ describe('Column', () => {
       expect(html).not.toContain('__MAIZZLE_COLW_')
     })
 
-    it('sets vertical-align: top on MSO td', () => {
-      const html = mount(Column).html()
-      expect(html).toContain('vertical-align: top')
-    })
-
     it('applies mso-style only to MSO td', () => {
       const html = mount(Column, { props: { msoStyle: 'padding: 10px' } }).html()
       expect(html).toMatch(/<td style="[^"]*padding: 10px[^"]*">/)

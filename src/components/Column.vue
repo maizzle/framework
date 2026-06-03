@@ -78,7 +78,7 @@ const msoWidth = computed(() => {
  * Tailwind's content scanner can't compile a class whose value is
  * still a marker.
  */
-const baseClass = 'inline-block align-top text-[medium]'
+const baseClass = 'inline-block text-[medium]'
 const mergedClass = computed(() => {
   const parts = [baseClass]
   if (props.width != null) parts.push(`min-w-[${normalizeToPixels(props.width)}]`)
@@ -90,7 +90,7 @@ const styles = computed(() =>
 )
 
 const tdStyle = computed(() => {
-  const parts = [`width: ${msoWidth.value}`, 'vertical-align: top']
+  const parts = [`width: ${msoWidth.value}`]
   if (useMarker) parts.push(`__MAIZZLE_COLTDX_${colId}__`)
   if (props.msoStyle) parts.push(props.msoStyle)
   return parts.join('; ')

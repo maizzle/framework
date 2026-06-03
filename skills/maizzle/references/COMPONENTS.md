@@ -6,7 +6,7 @@ All components below auto-import — no imports needed.
 
 - **`outlookFallback`** (bool, default `true`) is available on `<Layout>`, `<Html>`, `<Body>`, `<Container>`, `<Section>`, `<Column>`, `<Button>`, `<Spacer>`, `<Img>`. Setting `false` skips MSO ghost tables, VML, `xmlns:v/o`, and mso-only CSS for that component + descendants. Each component also inherits the value from any ancestor that set it.
 - `<Container>`/`<Section>` auto-wrap in an MSO conditional `<table>`. `<Column>` auto-wraps in an MSO `<td>`.
-- **Auto MSO `<td>` hoist:** `<Container>`, `<Section>`, and `<Column>` copy `background-color` and `padding*` from their inlined Tailwind classes onto the MSO `<td>` automatically — don't add `mso-style` to restate padding/bg for Outlook. Skipped when the element has a horizontal border (avoids double-padding); on `<Column>` only for auto-width px columns (not percentage widths). `msoStyle` is appended last, for Outlook-only overrides.
+- **Auto MSO `<td>` hoist:** `<Container>`/`<Section>`/`<Column>` copy `background-color`+`padding*` from classes onto the MSO `<td>` — don't restate them via `mso-style` (reserve it for Outlook-only overrides). Skipped with a horizontal border, or on `<Column>` percentage widths.
 - Use kebab-case for camelCase props in templates (`body-class`, `dark-src`, `mso-style`).
 
 ## Index

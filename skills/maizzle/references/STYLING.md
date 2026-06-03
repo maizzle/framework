@@ -47,6 +47,10 @@ Pin page width to what you need (default 600px) — Maizzle handles the Outlook 
 <Text as="span" class="text-sm text-gray-500">Order #1234</Text>
 ```
 
+### Line height
+
+`text-*` sizes ship a paired `line-height` (`xs`16 `sm`20 `base`24 `lg`28 `xl`28 `2xl`32 `3xl`36 `4xl`40; `5xl`+ = size px). Don't add a `leading-*` that restates it — only to deviate. No paired leading on `text-xxs`/`text-2xs`/`text-2sm`/`text-0` or arbitrary sizes — use the slash form (`text-[32px]/10`).
+
 Inter is loaded by `<Layout>`. Register additional families with `<Font>` (or `useFont()`):
 
 ```vue

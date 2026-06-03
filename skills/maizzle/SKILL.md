@@ -90,7 +90,9 @@ Surgical edits: change only what was asked. Keep existing structure, components,
 
 Reach for built-in components over raw HTML — they encode email-client quirks. Style with Tailwind utilities; arbitrary values are fine. Don't add `box-border` on `<Button>` (handled internally) or `border-solid border-*` on `<Hr>` (use `bg-*` for color).
 
-Don't add `mso-style` just to repeat padding or background for Outlook. `<Container>`, `<Section>`, and `<Column>` auto-hoist `background-color` and `padding*` from your Tailwind classes onto the MSO `<td>` — set them once via utilities (`bg-* px-* py-*`) and Outlook gets them too. Reserve `mso-style` for genuine Outlook-only overrides. Caveats: hoisting is skipped when the element has a horizontal border (Word renders div padding then, so a `<td>` copy would double-pad), and on `<Column>` it only applies to auto-width columns whose slot resolves to px (a percentage-width column like `w-1/2` won't hoist padding).
+Don't add a `leading-*` that restates a `text-*` size's built-in line-height — `text-*` sizes ship a paired `line-height`; add `leading-*` only to deviate (pairs in `references/STYLING.md`).
+
+Don't add `mso-style` to repeat padding/bg for Outlook — `<Container>`, `<Section>`, `<Column>` auto-hoist `background-color`/`padding*` from your classes onto the MSO `<td>`. Reserve `mso-style` for Outlook-only overrides. (Skipped if the element has a horizontal border, or on `<Column>` with a percentage width.)
 
 What survives across email clients:
 - **Outlook desktop on Windows** uses Word as renderer — no `border-radius`, `background-image`, modern CSS, or media queries. Maizzle's components include MSO ghost tables / VML where needed.

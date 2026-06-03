@@ -21,11 +21,9 @@ describe('Text', () => {
     expect(classes).toContain('text-base')
   })
 
-  it('applies text-base on the <span> variant without margin classes', () => {
+  it('adds no font-size/line-height or margin classes on the <span> variant', () => {
     const wrapper = mount(Text, { props: { as: 'span' } })
-    const classes = wrapper.classes()
-    expect(classes).toContain('text-base')
-    expect(classes).not.toContain('mt-4')
+    expect(wrapper.attributes('class')).toBeUndefined()
   })
 
   it('twMerges user classes so they can override defaults (e.g. m-0 strips mt-4)', () => {

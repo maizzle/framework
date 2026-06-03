@@ -90,6 +90,8 @@ Surgical edits: change only what was asked. Keep existing structure, components,
 
 Reach for built-in components over raw HTML — they encode email-client quirks. Style with Tailwind utilities; arbitrary values are fine. Don't add `box-border` on `<Button>` (handled internally) or `border-solid border-*` on `<Hr>` (use `bg-*` for color).
 
+Don't add `mso-style` just to repeat padding or background for Outlook. `<Container>`, `<Section>`, and `<Column>` auto-hoist `background-color` and `padding*` from your Tailwind classes onto the MSO `<td>` — set them once via utilities (`bg-* px-* py-*`) and Outlook gets them too. Reserve `mso-style` for genuine Outlook-only overrides. Caveats: hoisting is skipped when the element has a horizontal border (Word renders div padding then, so a `<td>` copy would double-pad), and on `<Column>` it only applies to auto-width columns whose slot resolves to px (a percentage-width column like `w-1/2` won't hoist padding).
+
 What survives across email clients:
 - **Outlook desktop on Windows** uses Word as renderer — no `border-radius`, `background-image`, modern CSS, or media queries. Maizzle's components include MSO ghost tables / VML where needed.
 - **Gmail clips emails > ~102 KB**. Keep templates lean; minify for production. `<QrCode>` can be heavy.

@@ -6,6 +6,7 @@ All components below auto-import — no imports needed.
 
 - **`outlookFallback`** (bool, default `true`) is available on `<Layout>`, `<Html>`, `<Body>`, `<Container>`, `<Section>`, `<Column>`, `<Button>`, `<Spacer>`, `<Img>`. Setting `false` skips MSO ghost tables, VML, `xmlns:v/o`, and mso-only CSS for that component + descendants. Each component also inherits the value from any ancestor that set it.
 - `<Container>`/`<Section>` auto-wrap in an MSO conditional `<table>`. `<Column>` auto-wraps in an MSO `<td>`.
+- **Auto MSO `<td>` hoist:** `<Container>`, `<Section>`, and `<Column>` copy `background-color` and `padding*` from their inlined Tailwind classes onto the MSO `<td>` automatically — don't add `mso-style` to restate padding/bg for Outlook. Skipped when the element has a horizontal border (avoids double-padding); on `<Column>` only for auto-width px columns (not percentage widths). `msoStyle` is appended last, for Outlook-only overrides.
 - Use kebab-case for camelCase props in templates (`body-class`, `dark-src`, `mso-style`).
 
 ## Index
@@ -103,7 +104,7 @@ Centered wrapper (`<div>` + MSO `<table>`). Two modes:
 
 Without any width hint, defaults to `max-w-150 mx-auto` (600px).
 
-Props: `width` (max-width on div + width on MSO table), `msoStyle` (inline CSS on MSO `<td>` only).
+Props: `width` (max-width on div + width on MSO table), `msoStyle` (inline CSS on MSO `<td>` only — for Outlook-only overrides; padding/bg auto-hoist, see [Conventions](#conventions)).
 
 ```vue
 <Container class="max-w-xl mx-auto"><!-- Tailwind mode --></Container>
@@ -114,7 +115,7 @@ Props: `width` (max-width on div + width on MSO table), `msoStyle` (inline CSS o
 
 Full-width content block (`<div>` + MSO `<table>`).
 
-Props: `width` (`max-width` + MSO table width; without it, MSO width auto-derives from a width utility/inline style, fallback `100%`), `msoStyle`.
+Props: `width` (`max-width` + MSO table width; without it, MSO width auto-derives from a width utility/inline style, fallback `100%`), `msoStyle` (Outlook-only overrides; padding/bg auto-hoist, see [Conventions](#conventions)).
 
 ## Row
 
@@ -129,7 +130,7 @@ Inline-block `<div>` (`vertical-align: top`, `font-size: 16px` reset), wrapped i
 - With Container `width`: auto-calculates `min-width = containerWidth ÷ columns`. Stacks naturally, no media queries.
 - Tailwind mode (no Container `width`): use `w-1/2 xs:w-full`-style classes.
 
-Props: `width` (explicit `min-width` + MSO `<td>` width), `msoStyle`.
+Props: `width` (explicit `min-width` + MSO `<td>` width), `msoStyle` (Outlook-only overrides; padding/bg auto-hoist on auto-width px columns, see [Conventions](#conventions)).
 
 See `PATTERNS.md` for equal columns, percentage widths, equal-height, reverse stack on mobile, gutters, nested rows.
 

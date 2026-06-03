@@ -88,7 +88,7 @@ All built-in components auto-import. Full props/usage in `references/COMPONENTS.
 
 Surgical edits: change only what was asked. Keep existing structure, components, and class lists intact unless explicitly requested.
 
-Reach for built-in components over raw HTML — they encode email-client quirks. Style with Tailwind utilities; arbitrary values are fine. Don't add `box-border` on `<Button>` (handled internally) or `border-solid border-*` on `<Hr>` (use `bg-*` for color).
+Reach for built-in components over raw HTML — they encode email-client quirks. Style with Tailwind utilities; arbitrary values are fine. Don't add `box-border` on `<Button>` (handled internally), `align="left"` on `<Button>` (left is the default), or `border-solid border-*` on `<Hr>` (use `bg-*` for color).
 
 Don't add a `leading-*` that restates a `text-*` size's built-in line-height — `text-*` sizes ship a paired `line-height`; add `leading-*` only to deviate (pairs in `references/STYLING.md`).
 

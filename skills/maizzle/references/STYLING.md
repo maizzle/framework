@@ -122,6 +122,8 @@ Project-wide `tailwind.css`:
 
 ## Spacing & Dividers
 
+- Prefer `mt-*` over `mb-*` for gaps between blocks — put the gap on the *following* element so the last child leaves no orphaned trailing space inside its container's padding.
+- `<Button>` is `inline-block` by default, so it ignores `mt-*`/`mb-*` — space it with `mt-*` on the next element, or with `<Spacer>`, or set the button to `block`.
 - `<Spacer class="h-8" />` for vertical space (`h-*` preferred, `leading-*` also works). For Outlook fine-tune use `mso-line-height-alt-*`.
 - `<Hr />` for visible separators — defaults `h-px leading-px my-6 bg-slate-300`. Pass `h-*`, `bg-*`, `m*-*` to override.
 

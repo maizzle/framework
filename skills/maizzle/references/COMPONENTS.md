@@ -159,7 +159,7 @@ See `PATTERNS.md` for equal columns, percentage widths, equal-height, reverse st
 
 Bulletproof CTA `<a>` styled as a button, with MSO spacer `<i>` for Outlook padding. Defaults: solid indigo (`#4338ca`) bg, white text, 16/24px padding, 4px radius. **No** `bgColor`/`color` prop — override colors via Tailwind classes or inline `style`.
 
-Props: `href` (required), `variant` (`'solid'`(default)/`'outline'`/`'ghost'`/`'link'`), `align` (`'left'`/`'center'`/`'right'`), `icon` (URL), `iconWidth` (default `12`), `iconPosition` (`'left'`/`'right'`(default)), `iconClass`, `iconAlt`, `msoPt` (default `'16px'` — `mso-text-raise` on inner span), `msoPb` (default `'31px'` — bottom spacer mso-text-raise), `msoPx` (default `150` — horizontal padding via `mso-font-width`; bare numbers → `%`).
+Props: `href` (required), `variant` (`'solid'`(default)/`'outline'`/`'ghost'`/`'link'`), `align` (`'center'`/`'right'`; left is default — omit it), `icon` (URL), `iconWidth` (default `12`), `iconPosition` (`'left'`/`'right'`(default)), `iconClass`, `iconAlt`, `msoPt` (default `'16px'` — `mso-text-raise` on inner span), `msoPb` (default `'31px'` — bottom spacer mso-text-raise), `msoPx` (default `150` — horizontal padding via `mso-font-width`; bare numbers → `%`).
 
 ```vue
 <Button href="https://example.com" variant="outline" align="center">Outline</Button>

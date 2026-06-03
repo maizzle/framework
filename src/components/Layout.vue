@@ -116,7 +116,7 @@ const htmlXmlns = computed(() => outlookFallback ? {
     <MsoHead v-if="outlookFallback" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" media="screen">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" media="screen">
     <style>
       @import "@maizzle/tailwindcss";
 

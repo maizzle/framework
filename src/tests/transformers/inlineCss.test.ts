@@ -119,6 +119,15 @@ describe('inlineCss', () => {
       })
       expect(result).toContain('{{% colorVar %}}')
     })
+
+    it('skips a code block definition missing start or end', () => {
+      const html = '<style>.red { color: red }</style><p class="red">Text</p>'
+      const result = run(html, {
+        codeBlocks: { Bad: { start: '{{%' } as any },
+      })
+      // Incomplete definition is ignored; normal inlining still happens.
+      expect(result).toContain('color: red')
+    })
   })
 
   describe('embedded styles', () => {

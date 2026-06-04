@@ -280,4 +280,19 @@ describe('render', () => {
       expect(result.html.startsWith('<!DOCTYPE html>')).toBe(true)
     })
   })
+
+  describe('invalid input', () => {
+    it('throws a helpful error when given null', async () => {
+      await expect(render(null as any)).rejects.toThrow(/render\(\) received null/)
+    })
+
+    it('throws a helpful error when given undefined', async () => {
+      await expect(render(undefined as any)).rejects.toThrow(/render\(\) received undefined/)
+    })
+
+    it('throws a TypeError for a non-string/object/function input', async () => {
+      await expect(render(123 as any)).rejects.toThrow(TypeError)
+      await expect(render(123 as any)).rejects.toThrow(/expected a file path or SFC source/)
+    })
+  })
 })

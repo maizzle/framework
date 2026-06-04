@@ -122,6 +122,11 @@ describe('Section', () => {
       expect(html).not.toContain('__MAIZZLE_MSOW_')
     })
 
+    it('serializes an object style with camelCase keys to kebab-case', () => {
+      const html = mount(Section, { attrs: { style: { backgroundColor: 'red' } } }).html()
+      expect(html).toContain('background-color: red')
+    })
+
     it('width prop takes precedence over class-derived width', () => {
       const html = mount(Section, {
         props: { width: '600px' },

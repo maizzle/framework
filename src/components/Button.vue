@@ -131,25 +131,25 @@ const alignClass = computed(() => props.align ? ({
 
 const baseClasses = computed(() => {
   if (props.variant === 'link') {
-    return 'no-underline text-[#4338ca]'
+    return 'no-underline text-gray-950'
   }
 
   const classes = [
     'inline-block',
     'no-underline',
-    'px-[24px]',
-    'py-[16px]',
-    'text-[16px]',
+    'px-6',
+    'py-4',
+    'text-base',
     'leading-none',
-    'rounded-[4px]',
+    'rounded',
   ]
 
   if (props.variant === 'outline') {
-    classes.push('bg-transparent', 'border', 'border-solid', 'border-[#4338ca]', 'text-[#4338ca]')
+    classes.push('bg-transparent', 'border', 'border-solid', 'border-indigo-700', 'text-indigo-700')
   } else if (props.variant === 'ghost') {
-    classes.push('bg-transparent', 'text-[#4338ca]', 'hover:bg-indigo-50')
+    classes.push('bg-transparent', 'text-indigo-700', 'hover:bg-indigo-50')
   } else {
-    classes.push('bg-[#4338ca]', 'text-[#fffffe]')
+    classes.push('bg-indigo-700', 'text-white')
   }
 
   return classes.join(' ')

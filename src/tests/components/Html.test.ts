@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import Html from '../../components/Html.vue'
+import { RenderContextKey } from '../../composables/renderContext.ts'
 
 async function render(props = {}, attrs = {}, slotContent = '') {
   const app = createSSRApp({
@@ -69,5 +70,20 @@ describe('Html', () => {
     const html = await render({ doctype: '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">' })
     expect(html).toContain('<html')
     expect(html).not.toContain('<!DOCTYPE')
+  })
+
+  it('writes the doctype prop into an active render context', async () => {
+    const ctx: any = {}
+    const app = createSSRApp({
+      render: () => h(Html, { doctype: '<!DOCTYPE custom>' }, { default: () => '' }),
+    })
+    app.provide(RenderContextKey, ctx)
+    await renderToString(app)
+    expect(ctx.doctype).toBe('<!DOCTYPE custom>')
+  })
+
+  it('renders boolean attributes as bare attribute names', async () => {
+    const html = await render({}, { hidden: true })
+    expect(html).toMatch(/<html[^>]*\bhidden\b/)
   })
 })

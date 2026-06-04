@@ -525,6 +525,8 @@ describe('build', () => {
 
     mkdirSync(join(tempDir, 'public/images'), { recursive: true })
     writeFileSync(join(tempDir, 'public/images/logo.png'), 'fake-png-data')
+    // Second file in the same directory exercises the existsSync(destDir) === true path.
+    writeFileSync(join(tempDir, 'public/images/icon.png'), 'fake-icon-data')
 
     const result = await build({
       static: {
@@ -536,6 +538,7 @@ describe('build', () => {
 
     const outputDir = join(tempDir, 'dist')
     expect(existsSync(join(outputDir, 'public/images/logo.png'))).toBe(true)
+    expect(existsSync(join(outputDir, 'public/images/icon.png'))).toBe(true)
     expect(readFileSync(join(outputDir, 'public/images/logo.png'), 'utf-8')).toBe('fake-png-data')
   })
 
@@ -653,5 +656,36 @@ describe('build', () => {
     const bHtml = readFileSync(join(tempDir, 'dist/b.html'), 'utf-8')
     expect(bHtml).toContain('LEAK_TARGET')
     expect(bHtml).not.toContain('A_LEAKED')
+  })
+
+  it('skips transformers when useTransformers is false', async () => {
+    writeSfc(tempDir, 'emails/test.vue', `
+      <template>
+        <html><head><style>.a { color: red }</style></head><body><div class="a">Hi</div></body></html>
+      </template>
+    `)
+
+    const result = await build({ useTransformers: false })
+
+    const html = readFileSync(result.files[0], 'utf-8')
+    // No inlining/purging ran, so the <style> block stays as-authored.
+    expect(html).toContain('<style>.a { color: red }</style>')
+  })
+
+  it('derives the output path from a content pattern with no trailing-slash base', async () => {
+    writeSfc(tempDir, 'emails/mail.vue', `<template><div>x</div></template>`)
+
+    const result = await build({ content: ['emails/mail*.vue'] })
+
+    expect(result.files).toHaveLength(1)
+    expect(result.files[0]).toContain('mail.html')
+  })
+
+  it('builds nothing when every content pattern is negated', async () => {
+    writeSfc(tempDir, 'emails/skip.vue', `<template><div>x</div></template>`)
+
+    const result = await build({ content: ['!emails/skip.vue'] })
+
+    expect(result.files).toHaveLength(0)
   })
 })

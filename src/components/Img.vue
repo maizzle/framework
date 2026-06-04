@@ -33,15 +33,22 @@ const props = defineProps({
     type: String,
     default: null
   },
-  /** The width of the image, rendered without units. */
+  /**
+   * The width of the image, rendered without units.
+   *
+   * Optional: when omitted, the width is auto-derived post-render from
+   * the nearest sized ancestor (Container/Section/Column or any element
+   * with a pixel width). Falls back to fluid when no pixel width is
+   * resolvable. The `aspect` crop mode still requires an explicit width.
+   */
   width: {
     type: [String, Number],
-    required: true
+    default: undefined
   },
   /** Animated image source, shown when user has no reduced motion preference. */
   motionSrc: {
     type: String,
-    default: null
+    default: ''
   },
   /**
    * Aspect ratio for cropped images.
@@ -112,7 +119,7 @@ const props = defineProps({
 const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 function mimeFromExtension(src: string): string {
-  const ext = src.split('.').pop()?.toLowerCase() ?? ''
+  const ext = src.slice(src.lastIndexOf('.') + 1).toLowerCase()
 
   const types: Record<string, string> = {
     apng: 'image/apng',
@@ -178,9 +185,17 @@ const ratio = computed(() => {
 
 const isCropped = computed(() => ratio.value !== null)
 
-const motionType = computed(() => mimeFromExtension(props.motionSrc ?? ''))
+const motionType = computed(() => mimeFromExtension(props.motionSrc))
 
 const imgWidth = computed(() => Number.parseInt(String(props.width), 10))
+
+/**
+ * Whether an explicit, usable pixel width was supplied. When false, the
+ * non-cropped `<img>` is emitted without a width attribute plus a
+ * `data-maizzle-img-width` marker the `imgWidth` transformer reads to
+ * backfill the width from the nearest sized ancestor.
+ */
+const hasWidth = computed(() => props.width != null && props.width !== '' && Number.isFinite(imgWidth.value))
 
 const heightPx = computed(() =>
   ratio.value && Number.isFinite(imgWidth.value)
@@ -241,7 +256,10 @@ const NotMsoAfter = () => createStaticVNode('<!--<![endif]-->', 1)
 const imgClass = 'max-w-full align-middle'
 
 const cropClass = computed(() =>
-  twMerge(`overflow-hidden table max-w-full w-[${imgWidth.value}px]`, parsedClass.value.className)
+  twMerge(
+    `overflow-hidden table max-w-full${hasWidth.value ? ` w-[${imgWidth.value}px]` : ''}`,
+    parsedClass.value.className,
+  )
 )
 </script>
 
@@ -277,7 +295,7 @@ const cropClass = computed(() =>
       role="img"
       :aria-label="alt || undefined"
       :class="['overflow-hidden table max-w-full', parsedClass.className]"
-      :style="`width: ${imgWidth}px;`"
+      :style="hasWidth ? `width: ${imgWidth}px;` : undefined"
     >
       <div
         :class="[
@@ -299,16 +317,16 @@ const cropClass = computed(() =>
     <picture>
       <source v-if="darkSrc" :srcset="darkSrc" media="(prefers-color-scheme: dark)">
       <source v-if="motionSrc" :srcset="motionSrc" :type="motionType || undefined" media="(prefers-reduced-motion: no-preference)">
-      <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass" data-juice-duplicates="false">
+      <img v-bind="attrs" :src="src" :alt="alt" :width="hasWidth ? imgWidth : undefined" :data-maizzle-img-width="hasWidth ? undefined : ''" :class="imgClass" data-juice-duplicates="false">
     </picture>
   </a>
   <picture v-else-if="usePicture">
     <source v-if="darkSrc" :srcset="darkSrc" media="(prefers-color-scheme: dark)">
     <source v-if="motionSrc" :srcset="motionSrc" :type="motionType || undefined" media="(prefers-reduced-motion: no-preference)">
-    <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass" data-juice-duplicates="false">
+    <img v-bind="attrs" :src="src" :alt="alt" :width="hasWidth ? imgWidth : undefined" :data-maizzle-img-width="hasWidth ? undefined : ''" :class="imgClass" data-juice-duplicates="false">
   </picture>
   <a v-else-if="href" :href="href">
-    <img v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass" data-juice-duplicates="false">
+    <img v-bind="attrs" :src="src" :alt="alt" :width="hasWidth ? imgWidth : undefined" :data-maizzle-img-width="hasWidth ? undefined : ''" :class="imgClass" data-juice-duplicates="false">
   </a>
-  <img v-else v-bind="attrs" :src="src" :alt="alt" :width="imgWidth" :class="imgClass" data-juice-duplicates="false">
+  <img v-else v-bind="attrs" :src="src" :alt="alt" :width="hasWidth ? imgWidth : undefined" :data-maizzle-img-width="hasWidth ? undefined : ''" :class="imgClass" data-juice-duplicates="false">
 </template>

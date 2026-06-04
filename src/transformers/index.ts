@@ -7,6 +7,7 @@ import { attributeToStyleDom } from './attributeToStyle.ts'
 import { inlineCssDom } from './inlineCss.ts'
 import { msoPlaceholders } from './msoPlaceholders.ts'
 import { columnWidth } from './columnWidth.ts'
+import { imgWidthDom } from './imgWidth.ts'
 import { removeAttributesDom } from './removeAttributes.ts'
 import { shorthandCssDom } from './shorthandCss.ts'
 import { sixHexDom } from './sixHex.ts'
@@ -130,6 +131,9 @@ export async function runTransformers(
 
   // 4.6. Resolve Column min-width placeholders from nearest sized ancestor
   dom = columnWidth(dom)
+
+  // 4.7. Backfill width on <Img> images that inherit their parent's width
+  dom = imgWidthDom(dom)
 
   // 5. Remove attributes
   if (enabled('removeAttributes')) {

@@ -130,6 +130,31 @@ describe('render', () => {
       expect(result.html).toContain('1/3')
     })
 
+    it('backfills <Img> width from a sized ancestor when no width is set', async () => {
+      symlinkSync(join(originalCwd, 'node_modules'), join(tempDir, 'node_modules'))
+
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template>
+          <Html>
+            <Head />
+            <Body>
+              <Tailwind>
+                <Container :width="600">
+                  <Img src="hero.jpg" alt="Hero" />
+                </Container>
+              </Tailwind>
+            </Body>
+          </Html>
+        </template>
+      `)
+
+      const result = await render(join(tempDir, 'emails/test.vue'))
+      const img = result.html.match(/<img[^>]*hero\.jpg[^>]*>/)?.[0] ?? ''
+
+      expect(img).toMatch(/width="\d+"/)
+      expect(result.html).not.toContain('data-maizzle-img-width')
+    })
+
     it('Tailwind component flattens nested instances into the outermost block', async () => {
       symlinkSync(join(originalCwd, 'node_modules'), join(tempDir, 'node_modules'))
 

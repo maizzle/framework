@@ -95,6 +95,34 @@ describe('Img', () => {
       const wrapper = mount(Img, { props: { src: 'img.png', width: 250, darkSrc: 'dark.png' } })
       expect(wrapper.find('picture img').attributes('width')).toBe('250')
     })
+
+    it('does not emit the auto-width marker when a width is set', () => {
+      const wrapper = mount(Img, { props: { src: 'img.png', width: 200 } })
+      expect(wrapper.find('img').attributes('data-maizzle-img-width')).toBeUndefined()
+    })
+  })
+
+  describe('auto width (no width prop)', () => {
+    it('omits the width attribute and emits the auto-width marker', () => {
+      const wrapper = mount(Img, { props: { src: 'img.png' } })
+      const img = wrapper.find('img')
+      expect(img.attributes('width')).toBeUndefined()
+      expect(img.attributes('data-maizzle-img-width')).toBe('')
+    })
+
+    it('marks the img inside a picture element', () => {
+      const wrapper = mount(Img, { props: { src: 'img.png', darkSrc: 'dark.png' } })
+      const img = wrapper.find('picture img')
+      expect(img.attributes('width')).toBeUndefined()
+      expect(img.attributes('data-maizzle-img-width')).toBe('')
+    })
+
+    it('does not leak NaN into cropped mode when aspect is set without width', () => {
+      const wrapper = mount(Img, { props: { src: 'img.png', aspect: '16:9' } })
+      const html = wrapper.html()
+      expect(html).not.toContain('NaN')
+      expect(wrapper.find('div[role="img"]').exists()).toBe(true)
+    })
   })
 
   describe('darkSrc prop', () => {
@@ -176,6 +204,97 @@ describe('Img', () => {
       const sources = wrapper.findAll('source')
       expect(sources[0].attributes('media')).toBe('(prefers-color-scheme: dark)')
       expect(sources[1].attributes('media')).toBe('(prefers-reduced-motion: no-preference)')
+    })
+  })
+
+  describe('branch combinations', () => {
+    it('first aspect keyword wins when several are present', () => {
+      const wrapper = mount(Img, {
+        props: { src: 'img.jpg', width: 200 },
+        attrs: { class: 'aspect-square aspect-video' },
+      })
+      // aspect-square (1/1) wins -> 100%
+      expect(wrapper.find('div[role="img"] > div').attributes('style')).toContain('padding-bottom: 100%')
+    })
+
+    it('first arbitrary aspect token wins when several are present', () => {
+      const wrapper = mount(Img, {
+        props: { src: 'img.jpg', width: 200 },
+        attrs: { class: 'aspect-[16/9] aspect-[4/3]' },
+      })
+      expect(wrapper.find('div[role="img"] > div').attributes('style')).toContain('padding-bottom: 56.25%')
+    })
+
+    it('cropped + href keeps a fixed width on the wrapper', () => {
+      const wrapper = mount(Img, { props: { src: 'img.jpg', width: 200, aspect: '16:9', href: '#x' } })
+      expect(wrapper.find('a[href="#x"] div[role="img"]').classes()).toContain('w-[200px]')
+    })
+
+    it('cropped + href without width omits the fixed width and emits no NaN', () => {
+      const wrapper = mount(Img, { props: { src: 'img.jpg', aspect: '16:9', href: '#x' } })
+      const html = wrapper.html()
+      expect(html).not.toContain('NaN')
+      expect(wrapper.find('a[href="#x"] div[role="img"]').exists()).toBe(true)
+    })
+
+    it('cropped + darkSrc emits the dark background class', () => {
+      const wrapper = mount(Img, { props: { src: 'img.jpg', width: 200, aspect: '16:9', darkSrc: 'dark.jpg' } })
+      expect(wrapper.html()).toContain('dark:bg-[url(')
+    })
+
+    it('cropped + motionSrc emits the motion background class', () => {
+      const wrapper = mount(Img, { props: { src: 'img.jpg', width: 200, aspect: '16:9', motionSrc: 'anim.webp' } })
+      expect(wrapper.html()).toContain('motion-safe:bg-[url(')
+    })
+
+    it('href + picture with only darkSrc renders a single dark source', () => {
+      const wrapper = mount(Img, { props: { src: 'img.jpg', width: 200, href: '#x', darkSrc: 'dark.jpg' } })
+      const sources = wrapper.findAll('a[href="#x"] picture source')
+      expect(sources).toHaveLength(1)
+      expect(sources[0].attributes('media')).toBe('(prefers-color-scheme: dark)')
+    })
+
+    it('href + picture with only motionSrc renders a single motion source', () => {
+      const wrapper = mount(Img, { props: { src: 'img.jpg', width: 200, href: '#x', motionSrc: 'anim.webp' } })
+      const sources = wrapper.findAll('a[href="#x"] picture source')
+      expect(sources).toHaveLength(1)
+      expect(sources[0].attributes('media')).toBe('(prefers-reduced-motion: no-preference)')
+    })
+
+    it('cropped + href + darkSrc emits the dark background class', () => {
+      const wrapper = mount(Img, { props: { src: 'img.jpg', width: 200, aspect: '16:9', href: '#x', darkSrc: 'dark.jpg' } })
+      expect(wrapper.find('a[href="#x"]').html()).toContain('dark:bg-[url(')
+    })
+
+    it('cropped + href + motionSrc emits the motion background class', () => {
+      const wrapper = mount(Img, { props: { src: 'img.jpg', width: 200, aspect: '16:9', href: '#x', motionSrc: 'anim.webp' } })
+      expect(wrapper.find('a[href="#x"]').html()).toContain('motion-safe:bg-[url(')
+    })
+
+    it('href + picture + motionSrc with an unknown extension omits the type', () => {
+      const wrapper = mount(Img, { props: { src: 'img.jpg', width: 200, href: '#x', motionSrc: 'anim.xyz' } })
+      expect(wrapper.find('a[href="#x"] picture source').attributes('type')).toBeUndefined()
+    })
+
+    it('href + picture without width marks the img for auto-width', () => {
+      const wrapper = mount(Img, { props: { src: 'img.jpg', href: '#x', darkSrc: 'dark.jpg' } })
+      const img = wrapper.find('a[href="#x"] picture img')
+      expect(img.attributes('width')).toBeUndefined()
+      expect(img.attributes('data-maizzle-img-width')).toBe('')
+    })
+
+    it('href-only (no picture/crop) with width renders a linked img', () => {
+      const wrapper = mount(Img, { props: { src: 'img.jpg', width: 200, href: '#x' } })
+      const img = wrapper.find('a[href="#x"] > img')
+      expect(img.attributes('width')).toBe('200')
+      expect(img.attributes('data-maizzle-img-width')).toBeUndefined()
+    })
+
+    it('href-only (no picture/crop) without width marks the img for auto-width', () => {
+      const wrapper = mount(Img, { props: { src: 'img.jpg', href: '#x' } })
+      const img = wrapper.find('a[href="#x"] > img')
+      expect(img.attributes('width')).toBeUndefined()
+      expect(img.attributes('data-maizzle-img-width')).toBe('')
     })
   })
 

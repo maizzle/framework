@@ -38,6 +38,27 @@ describe('tailwindcss', () => {
     })
   })
 
+  describe('css.exclude', () => {
+    it('compiles normally when exclude paths are configured', async () => {
+      const html = '<style>@import "tailwindcss" source(none);</style><div class="text-red-500">Test</div>'
+      const result = await run(html, undefined, {
+        postcss: { removeAtRules: [] },
+        css: { exclude: ['emails/ignored', 'public/legacy'] },
+      })
+
+      expect(result).toContain('color:')
+      expect(result).not.toContain('@source')
+    })
+
+    it('emits no inline @source when the DOM has no class attributes', async () => {
+      const html = '<style>@import "tailwindcss" source(none);</style><div>no classes</div>'
+      const result = await run(html, undefined, { postcss: { removeAtRules: [] } })
+
+      expect(result).not.toContain('@source inline')
+      expect(result).not.toContain('@import "tailwindcss"')
+    })
+  })
+
   describe('lightningcss syntax lowering', () => {
     it('flattens CSS nesting to separate rules', async () => {
       const html = '<style>.parent { color: red; .child { color: blue } }</style>'

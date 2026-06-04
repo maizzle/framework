@@ -82,7 +82,7 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
     if ((node as Element).name !== 'style') return
 
     const el = node as Element
-    const attrs = el.attribs || {}
+    const attrs = el.attribs
 
     /**
      * `raw` opts out of compilation entirely (marker is consumed here).

@@ -211,6 +211,18 @@ describe('Vml', () => {
       expect(html).toContain('focusposition="0.5,0.5"')
     })
 
+    it('emits sizes', async () => {
+      const html = await render({ src: 'x.jpg', sizes: '300px,200px' })
+
+      expect(html).toContain('sizes="300px,200px"')
+    })
+
+    it('emits aspect', async () => {
+      const html = await render({ src: 'x.jpg', aspect: 'atleast' })
+
+      expect(html).toContain('aspect="atleast"')
+    })
+
     it('any gradient attr alone triggers v:fill emission', async () => {
       const html = await render({ angle: 45 })
 

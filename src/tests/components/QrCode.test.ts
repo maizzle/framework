@@ -164,6 +164,30 @@ describe('QrCode', () => {
       expect(html).toContain(`[&amp;_td]:w-[${cellPx}px]`)
     })
 
+    it('non-numeric sizing value falls back to the default 120px', async () => {
+      const html = await render({ value: URL, class: 'w-full' })
+      const dim = encode(URL, { ecc: 'M', border: 1, boostEcc: true }).size
+      const cellPx = Math.floor(120 / dim)
+
+      expect(html).toContain(`[&amp;_td]:w-[${cellPx}px]`)
+    })
+
+    it('min-w/max-w sizing token falls back to the default 120px', async () => {
+      const html = await render({ value: URL, class: 'min-w-40' })
+      const dim = encode(URL, { ecc: 'M', border: 1, boostEcc: true }).size
+      const cellPx = Math.floor(120 / dim)
+
+      expect(html).toContain(`[&amp;_td]:w-[${cellPx}px]`)
+    })
+
+    it('arbitrary value with an unsupported unit falls back to the default 120px', async () => {
+      const html = await render({ value: URL, class: 'size-[10vh]' })
+      const dim = encode(URL, { ecc: 'M', border: 1, boostEcc: true }).size
+      const cellPx = Math.floor(120 / dim)
+
+      expect(html).toContain(`[&amp;_td]:w-[${cellPx}px]`)
+    })
+
     it('user sizing token does not pass through unmodified', async () => {
       const html = await render({ value: URL, class: 'size-40' })
 

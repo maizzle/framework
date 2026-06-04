@@ -21,7 +21,7 @@ const escapeAttr = (v: string) =>
  * fall through to the caller's default.
  */
 function tokenToPx(token: string): number {
-  const seg = token.split(':').at(-1) ?? ''
+  const seg = token.slice(token.lastIndexOf(':') + 1)
   const m = seg.match(/^(?:size|w|h)-(.+)$/)
   if (!m) return 0
   const v = m[1]
@@ -45,7 +45,7 @@ function partition(cls: string): { neutral: string[]; sizing: string[] } {
   const neutral: string[] = []
   const sizing: string[] = []
   for (const t of cls.split(/\s+/).filter(Boolean)) {
-    const last = t.split(':').at(-1) ?? ''
+    const last = t.slice(t.lastIndexOf(':') + 1)
     if (/^(?:size|w|h|min-w|min-h|max-w|max-h)-/.test(last)) sizing.push(t)
     else neutral.push(t)
   }

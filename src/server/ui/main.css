@@ -1,0 +1,154 @@
+@import "tailwindcss" source(none);
+@import "tw-animate-css";
+@source "./";
+
+/* Light theme — gray palette */
+:root {
+  --background: #ffffff;
+  --foreground: #030712;        /* gray-950 */
+  --card: #ffffff;
+  --card-foreground: #030712;
+  --popover: #ffffff;
+  --popover-foreground: #030712;
+  --primary: #111827;           /* gray-900 */
+  --primary-foreground: #f9fafb; /* gray-50 */
+  --secondary: #f3f4f6;         /* gray-100 */
+  --secondary-foreground: #111827;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;  /* gray-500 */
+  --accent: #f3f4f6;
+  --accent-foreground: #111827;
+  --destructive: #ef4444;
+  --border: #e5e7eb;            /* gray-200 */
+  --input: #e5e7eb;
+  --ring: #9ca3af;              /* gray-400 */
+  --radius: 0.625rem;
+  --sidebar-background: #f9fafb; /* gray-50 */
+  --sidebar-foreground: #030712;
+  --sidebar-primary: #111827;
+  --sidebar-primary-foreground: #f9fafb;
+  --sidebar-accent: #f9fafb;
+  --sidebar-accent-foreground: #111827;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #9ca3af;
+}
+
+/* Dark theme — gray palette */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #030712;        /* gray-950 */
+    --foreground: #e5e7eb;        /* gray-200 */
+    --card: #030712;
+    --card-foreground: #e5e7eb;
+    --popover: #030712;
+    --popover-foreground: #e5e7eb;
+    --primary: #e5e7eb;
+    --primary-foreground: #030712;
+    --secondary: #111827;         /* gray-900 */
+    --secondary-foreground: #e5e7eb;
+    --muted: #111827;
+    --muted-foreground: #9ca3af;  /* gray-400 */
+    --accent: #111827;
+    --accent-foreground: #e5e7eb;
+    --destructive: #ef4444;
+    --border: #1f2937;            /* gray-800 */
+    --input: #1f2937;
+    --ring: #4b5563;              /* gray-600 */
+    --sidebar-background: #030712; /* gray-950 */
+    --sidebar-foreground: #e5e7eb;
+    --sidebar-primary: #e5e7eb;
+    --sidebar-primary-foreground: #030712;
+    --sidebar-accent: rgb(255 255 255 / 0.06);
+    --sidebar-accent-foreground: #e5e7eb;
+    --sidebar-border: #1f2937;
+    --sidebar-ring: #4b5563;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius: var(--radius);
+  --color-sidebar-background: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.shiki-line-numbers code {
+  counter-reset: line;
+}
+
+.shiki-line-numbers code .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 3ch;
+  margin-right: 1.5rem;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.shiki-line-numbers code .line.shiki-highlight-line {
+  display: inline-block;
+  width: calc(100% + 3rem);
+  margin: 0 -1.5rem;
+  padding: 0 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-left: 2px solid #f59e0b;
+  min-width: fit-content;
+}
+
+/**
+ * Template list icons, painted as a CSS mask so the sidebar can render
+ * thousands of rows without a Vue component or inline <svg> per row. Each
+ * icon SVG is decoded once and reused; background-color: currentColor keeps
+ * the currentColor theming the old <svg> icons had.
+ */
+.mz-tpl-icon {
+  display: inline-block;
+  background-color: currentColor;
+  -webkit-mask-position: center;
+          mask-position: center;
+  -webkit-mask-size: contain;
+          mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+}
+.mz-tpl-icon-vue {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12.15V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2h-3.35'/%3E%3Cpath d='M14 2v5a1 1 0 0 0 1 1h5'/%3E%3Cpath d='m5 16-3 3 3 3'/%3E%3Cpath d='m9 22 3-3-3-3'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12.15V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2h-3.35'/%3E%3Cpath d='M14 2v5a1 1 0 0 0 1 1h5'/%3E%3Cpath d='m5 16-3 3 3 3'/%3E%3Cpath d='m9 22 3-3-3-3'/%3E%3C/svg%3E");
+}
+.mz-tpl-icon-md {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22h6a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v6'/%3E%3Cpath d='M14 2v5a1 1 0 0 0 1 1h5'/%3E%3Cpath d='M3 22V14l4 4 4-4v8'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22h6a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v6'/%3E%3Cpath d='M14 2v5a1 1 0 0 0 1 1h5'/%3E%3Cpath d='M3 22V14l4 4 4-4v8'/%3E%3C/svg%3E");
+}

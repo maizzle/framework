@@ -189,6 +189,13 @@ describe('addAttributes', () => {
       // Only the first input should have the class
       expect(result.match(/required-field/g)).toHaveLength(1)
     })
+
+    it('does not match a malformed attribute selector with no name', () => {
+      const result = run('<div>Div</div>', {
+        'div[=foo]': { class: 'danger' },
+      })
+      expect(result).toBe('<div>Div</div>')
+    })
   })
 
   describe('comma-separated selectors', () => {
@@ -235,6 +242,13 @@ describe('addAttributes', () => {
         div: { class: 'b c d' },
       })
       expect(result).toBe('<div class="a b c d">Content</div>')
+    })
+
+    it('leaves the class untouched when it already has the added class', () => {
+      const result = run('<div class="danger">Content</div>', {
+        div: { class: 'danger' },
+      })
+      expect(result).toBe('<div class="danger">Content</div>')
     })
   })
 

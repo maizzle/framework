@@ -66,10 +66,6 @@ export function addAttributesDom(dom: ChildNode[], config: AttributesConfig = {}
   const userAttributes = typeof addConfig === 'object' ? addConfig : {}
   const attributesToAdd = merge(userAttributes, DEFAULT_ATTRIBUTES) as Record<string, false | Record<string, false | string | boolean | number>>
 
-  if (Object.keys(attributesToAdd).length === 0) {
-    return dom
-  }
-
   // Process each selector pattern
   for (const [selectorPattern, attributes] of Object.entries(attributesToAdd)) {
     // User opted out of this selector entirely (e.g. `table: false`)
@@ -129,7 +125,7 @@ function elementMatches(el: Element, selector: string): boolean {
     const [, attrName, attrValue] = attrMatch
     if (attrValue === undefined) {
       // Just checking if attribute exists
-      return attrName in (el.attribs || {})
+      return attrName in el.attribs
     } else {
       // Check if attribute has specific value
       return el.attribs?.[attrName] === attrValue
@@ -161,7 +157,7 @@ function elementMatches(el: Element, selector: string): boolean {
     if (attrEqMatch) {
       const [, attrName, attrValue] = attrEqMatch
       if (attrValue === undefined) {
-        return attrName in (el.attribs || {})
+        return attrName in el.attribs
       } else {
         return el.attribs?.[attrName] === attrValue
       }

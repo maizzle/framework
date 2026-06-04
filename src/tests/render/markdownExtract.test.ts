@@ -14,6 +14,14 @@ describe('markdownExtract', () => {
     expect(result?.code).toContain('content="**hi**"')
   })
 
+  it('leaves a tag that already has a :content binding untouched', () => {
+    expect(transform('<Markdown :content="md">ignored</Markdown>', '/x/a.vue')).toBeUndefined()
+  })
+
+  it('leaves a Markdown tag with empty content untouched', () => {
+    expect(transform('<Markdown>   \n  </Markdown>', '/x/a.vue')).toBeUndefined()
+  })
+
   it('skips files that mention neither Markdown nor markdown', () => {
     expect(transform('<div>nope</div>', '/x/a.vue')).toBeUndefined()
   })

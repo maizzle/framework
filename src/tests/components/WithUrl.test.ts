@@ -542,4 +542,94 @@ describe('WithUrl', () => {
       expect(wrapper.find('a').attributes('href')).toBe('https://example.com/')
     })
   })
+
+  describe('edge cases', () => {
+    it('prepends the base URL to each candidate in a srcset', () => {
+      const wrapper = mount(WithUrl, {
+        props: { base: 'https://cdn.example.com/' },
+        slots: { default: () => h('img', { src: 'x.jpg', srcset: 'a.jpg 1x, b.jpg 2x' }) },
+      })
+      expect(wrapper.find('img').attributes('srcset')).toBe(
+        'https://cdn.example.com/a.jpg 1x, https://cdn.example.com/b.jpg 2x'
+      )
+    })
+
+    it('leaves an empty src untouched', () => {
+      const wrapper = mount(WithUrl, {
+        props: { base: 'https://cdn.example.com/' },
+        slots: { default: () => h('img', { src: '' }) },
+      })
+      expect(wrapper.find('img').attributes('src')).toBe('')
+    })
+
+    it('handles an element with no props under base', () => {
+      const wrapper = mount(WithUrl, {
+        props: { base: 'https://cdn.example.com/' },
+        slots: { default: () => h('img') },
+      })
+      expect(wrapper.find('img').exists()).toBe(true)
+    })
+
+    it('handles an element with no props under parameters', () => {
+      const wrapper = mount(WithUrl, {
+        props: { parameters: 'utm_source=maizzle' },
+        slots: { default: () => h('img') },
+      })
+      expect(wrapper.find('img').exists()).toBe(true)
+    })
+
+    it('recurses into Fragment children', () => {
+      const wrapper = mount(WithUrl, {
+        props: { base: 'https://cdn.example.com/' },
+        slots: { default: () => h(Fragment, null, [h('img', { src: 'x.jpg' })]) },
+      })
+      expect(wrapper.find('img').attributes('src')).toBe('https://cdn.example.com/x.jpg')
+    })
+
+    it('passes through null slot children', () => {
+      const wrapper = mount(WithUrl, {
+        props: { base: 'https://cdn.example.com/' },
+        slots: { default: () => [null, h('img', { src: 'x.jpg' })] },
+      })
+      expect(wrapper.find('img').attributes('src')).toBe('https://cdn.example.com/x.jpg')
+    })
+
+    it('leaves absolute candidates in a srcset untouched', () => {
+      const wrapper = mount(WithUrl, {
+        props: { base: 'https://cdn.example.com/' },
+        slots: { default: () => h('img', { src: 'x.jpg', srcset: 'https://other.com/a.jpg 1x' }) },
+      })
+      expect(wrapper.find('img').attributes('srcset')).toBe('https://other.com/a.jpg 1x')
+    })
+
+    it('leaves an empty URL attribute untouched under parameters', () => {
+      const wrapper = mount(WithUrl, {
+        props: { parameters: 'utm_source=maizzle' },
+        slots: { default: () => h('a', { href: '' }, 'Link') },
+      })
+      expect(wrapper.find('a').attributes('href')).toBe('')
+    })
+
+    it('renders nothing when no default slot is provided', () => {
+      const wrapper = mount(WithUrl, { props: { base: 'https://cdn.example.com/' } })
+      expect(wrapper.html()).toBe('')
+    })
+
+    it('leaves a URL unchanged when it already carries the same parameter', () => {
+      const wrapper = mount(WithUrl, {
+        props: { parameters: 'utm_source=x' },
+        slots: { default: () => h('a', { href: 'page?utm_source=x' }, 'Link') },
+      })
+      expect(wrapper.find('a').attributes('href')).toBe('page?utm_source=x')
+    })
+
+    it('appends parameters to multiple URL attributes on one element', () => {
+      const wrapper = mount(WithUrl, {
+        props: { parameters: 'ref=abc' },
+        slots: { default: () => h('img', { src: 'a.jpg', srcset: 'b.jpg' }) },
+      })
+      expect(wrapper.find('img').attributes('src')).toContain('ref=abc')
+      expect(wrapper.find('img').attributes('srcset')).toContain('ref=abc')
+    })
+  })
 })

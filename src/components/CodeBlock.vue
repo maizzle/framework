@@ -2,6 +2,7 @@
 import { createStaticVNode, type PropType } from 'vue'
 import { twMerge } from 'tailwind-merge'
 import { codeToHtml, getSingletonHighlighter, type BundledLanguage, type BundledTheme } from 'shiki'
+import { buildCodeBlock, codeBlockPreClass } from './utils'
 
 export default {
   props: {
@@ -57,12 +58,11 @@ export default {
       .replace(/^<pre[^>]*><code>/, '')
       .replace(/<\/code><\/pre>$/, '')
 
-    const preBase = `font-mono bg-[${bg}] p-4 overflow-auto whitespace-pre [word-wrap:normal] [word-break:normal] [word-spacing:normal]`
-    const classes = twMerge(preBase, attrs.class as string)
+    const preClass = twMerge(codeBlockPreClass(bg), attrs.class as string)
     const tdClass = twMerge(`bg-[${bg}]`, props.tdClass)
     const styleAttr = attrs.style ? ` style="${attrs.style}"` : ''
 
-    const html = `<table class="w-full"><tr><td class="${tdClass}"><pre class="${classes}"${styleAttr}><code>${codeContent}</code></pre></td></tr></table>`
+    const html = buildCodeBlock(codeContent, bg, { preClass, tdClass, styleAttr })
 
     return () => createStaticVNode(html, 1)
   }

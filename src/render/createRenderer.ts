@@ -20,6 +20,7 @@ import { createHead } from '@unhead/vue/server'
 import { MaizzleConfigKey } from '../composables/useConfig.ts'
 import { RenderContextKey } from '../composables/renderContext.ts'
 import { componentNameFromPath, type NormalizedComponentSource } from '../utils/componentSources.ts'
+import { shikiToCodeBlock } from '../components/utils.ts'
 import type { Component, InjectionKey } from 'vue'
 import type { MaizzleConfig, MarkdownConfig } from '../types/index.ts'
 import type { MarkdownExit } from 'markdown-exit'
@@ -287,15 +288,12 @@ export async function createRenderer(
           },
         },
         markdownSetup(md: MarkdownExit) {
-          const wrapPre = (html: string) =>
-            `<table class="w-full"><tr><td class="max-w-0 mso-padding-alt-4">${html}</td></tr></table>\n`
-
           const defaultFence = md.renderer.rules.fence!
           md.renderer.rules.fence = (...args) =>
-            Promise.resolve(defaultFence(...args)).then(wrapPre)
+            Promise.resolve(defaultFence(...args)).then(shikiToCodeBlock)
 
           const defaultCodeBlock = md.renderer.rules.code_block!
-          md.renderer.rules.code_block = (...args) => wrapPre(defaultCodeBlock(...args) as string)
+          md.renderer.rules.code_block = (...args) => shikiToCodeBlock(defaultCodeBlock(...args) as string)
         },
       })),
       AutoImport({

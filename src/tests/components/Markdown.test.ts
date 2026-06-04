@@ -91,13 +91,13 @@ describe('Markdown', () => {
     it('uses github-dark-high-contrast theme by default', async () => {
       const html = await render({ content: '```css\n.foo { color: red; }\n```' })
 
-      expect(html).toContain('background-color:#0a0c10')
+      expect(html).toContain('bg-[#0a0c10]')
     })
 
     it('supports custom shiki theme', async () => {
       const html = await render({ content: '```css\n.foo { color: red; }\n```', 'shiki-theme': 'github-light' })
 
-      expect(html).toContain('background-color:#fff')
+      expect(html).toContain('bg-[#fff]')
     })
 
     it('falls back gracefully when the fence language is unknown', async () => {
@@ -232,7 +232,7 @@ describe('Markdown', () => {
         { shikiTheme: 'github-light' },
       )
 
-      expect(html).toContain('background-color:#fff')
+      expect(html).toContain('bg-[#fff]')
     })
 
     it('lets the shikiTheme prop override config', async () => {
@@ -241,7 +241,7 @@ describe('Markdown', () => {
         { shikiTheme: 'github-light' },
       )
 
-      expect(html).toContain('background-color:#0a0c10')
+      expect(html).toContain('bg-[#0a0c10]')
     })
   })
 })

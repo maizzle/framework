@@ -55,3 +55,49 @@ export const outlookFallbackProp = {
   default: null,
 } as const
 
+/**
+ * Default utility classes for a code-block `<pre>`. `whitespace-pre!` is
+ * forced important so Gmail's stylesheet can't reset it to `normal`, and
+ * `mb-0` strips the browser's default `<pre>` bottom margin.
+ */
+export function codeBlockPreClass(bg: string): string {
+  return `font-mono bg-[${bg}] p-4 mb-0 overflow-auto whitespace-pre! [word-wrap:normal] [word-break:normal] [word-spacing:normal]`
+}
+
+/**
+ * Build the email-safe table wrapper around highlighted code. Shared by the
+ * `<CodeBlock>` component and the Markdown fenced/indented code-block
+ * rules so both render identical markup: a full-width table whose
+ * cell carries the theme background, wrapping a `<pre>` styled
+ * with utility classes (not Shiki's raw inline styles).
+ */
+export function buildCodeBlock(
+  codeContent: string,
+  bg: string,
+  options: { preClass?: string; tdClass?: string; styleAttr?: string } = {},
+): string {
+  const preClass = options.preClass ?? codeBlockPreClass(bg)
+  const tdClass = options.tdClass ?? `bg-[${bg}] max-w-0 mso-padding-alt-4`
+  const styleAttr = options.styleAttr ?? ''
+
+  // `data-juice-important` tells the CSS inliner to keep `!important` on this
+  // element's inlined declarations (e.g. `white-space: pre !important`), which
+  // it strips by default. Juice removes the attribute from the output.
+  return `<table class="w-full"><tr><td class="${tdClass}"><pre class="${preClass}"${styleAttr} data-juice-important><code>${codeContent}</code></pre></td></tr></table>`
+}
+
+/**
+ * Re-wrap a Shiki (or plain markdown-it) `<pre><code>` block as a CodeBlock,
+ * pulling the inner code and the theme background out of the highlighted
+ * HTML. Falls back to a white background for unhighlighted blocks.
+ */
+export function shikiToCodeBlock(highlighted: string): string {
+  const bg = highlighted.match(/background-color:\s*(#[0-9a-fA-F]+)/)?.[1] ?? '#fff'
+  const codeContent = highlighted
+    .trim()
+    .replace(/^<pre[^>]*><code[^>]*>/, '')
+    .replace(/<\/code><\/pre>$/, '')
+
+  return buildCodeBlock(codeContent, bg)
+}
+

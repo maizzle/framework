@@ -71,11 +71,18 @@ describe('CodeBlock', () => {
 
       expect(html).toMatch(/<pre class="[^"]*\bbg-\[#fff\]/)
       expect(html).toMatch(/<pre class="[^"]*\bp-4\b/)
+      expect(html).toMatch(/<pre class="[^"]*\bmb-0\b/)
       expect(html).toMatch(/<pre class="[^"]*\boverflow-auto\b/)
-      expect(html).toMatch(/<pre class="[^"]*\bwhitespace-pre\b/)
+      expect(html).toMatch(/<pre class="[^"]*whitespace-pre!/)
       expect(html).toMatch(/<pre class="[^"]*\[word-wrap:normal\]/)
       expect(html).toMatch(/<pre class="[^"]*\[word-break:normal\]/)
       expect(html).toMatch(/<pre class="[^"]*\[word-spacing:normal\]/)
+    })
+
+    it('marks the pre with data-juice-important so the inliner keeps !important', async () => {
+      const html = await render({ code: '<div>test</div>' })
+
+      expect(html).toMatch(/<pre[^>]*\bdata-juice-important\b/)
     })
 
     it('uses default td-class with the theme bg merged in', async () => {

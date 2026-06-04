@@ -94,7 +94,7 @@ export default {
         .replace(/</g, '§MZLT§')
         .replace(/>/g, '§MZGT§')
 
-      const base = `bg-[${bg}] rounded-[6px] py-[2px] px-[6px] text-[11px]`
+      const base = `bg-[${bg}] rounded-md py-0.5 px-1.5 text-[11px]`
       const merged = twMerge(base, (attrs.class as string) ?? '')
       const styleAttr = attrs.style ? ` style="${attrs.style}"` : ''
 
@@ -102,7 +102,7 @@ export default {
       return () => createStaticVNode(html, 1)
     }
 
-    const base = 'whitespace-normal rounded-[6px] border border-solid border-[#d1d5db] bg-[#f3f4f6] py-[2px] px-[6px] text-[11px] text-[inherit]'
+    const base = 'whitespace-normal rounded-md [border:1px_solid_#d1d5db] bg-gray-100 py-0.5 px-1.5 text-[11px] text-inherit'
     const merged = twMerge(base, (attrs.class as string) ?? '')
     const styleAttr = attrs.style ? ` style="${attrs.style}"` : ''
 

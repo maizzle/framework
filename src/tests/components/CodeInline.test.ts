@@ -65,14 +65,13 @@ describe('CodeInline', () => {
       const html = await render({ code: 'test' })
 
       expect(html).toMatch(/<code class="[^"]*\bwhitespace-normal\b/)
-      expect(html).toMatch(/<code class="[^"]*\brounded-\[6px\]/)
-      expect(html).toMatch(/<code class="[^"]*\bborder\b/)
-      expect(html).toMatch(/<code class="[^"]*\bborder-\[#d1d5db\]/)
-      expect(html).toMatch(/<code class="[^"]*\bbg-\[#f3f4f6\]/)
-      expect(html).toMatch(/<code class="[^"]*\bpy-\[2px\]/)
-      expect(html).toMatch(/<code class="[^"]*\bpx-\[6px\]/)
+      expect(html).toMatch(/<code class="[^"]*\brounded-md\b/)
+      expect(html).toContain('[border:1px_solid_#d1d5db]')
+      expect(html).toMatch(/<code class="[^"]*\bbg-gray-100\b/)
+      expect(html).toMatch(/<code class="[^"]*\bpy-0\.5\b/)
+      expect(html).toMatch(/<code class="[^"]*\bpx-1\.5\b/)
       expect(html).toMatch(/<code class="[^"]*\btext-\[11px\]/)
-      expect(html).toMatch(/<code class="[^"]*\btext-\[inherit\]/)
+      expect(html).toMatch(/<code class="[^"]*\btext-inherit\b/)
     })
 
     it('passes user style through unmodified', async () => {
@@ -112,12 +111,12 @@ describe('CodeInline', () => {
       const html = await render({ code: 'foo', theme: 'github-light' })
 
       // github-light bg is white-ish; just assert the default gray bg/border classes aren't there.
-      expect(html).not.toContain('bg-[#f3f4f6]')
-      expect(html).not.toContain('border-[#d1d5db]')
+      expect(html).not.toContain('bg-gray-100')
+      expect(html).not.toContain('[border:1px_solid_#d1d5db]')
       // Base styling still applied as classes.
-      expect(html).toMatch(/<code class="[^"]*\brounded-\[6px\]/)
-      expect(html).toMatch(/<code class="[^"]*\bpy-\[2px\]/)
-      expect(html).toMatch(/<code class="[^"]*\bpx-\[6px\]/)
+      expect(html).toMatch(/<code class="[^"]*\brounded-md\b/)
+      expect(html).toMatch(/<code class="[^"]*\bpy-0\.5\b/)
+      expect(html).toMatch(/<code class="[^"]*\bpx-1\.5\b/)
       expect(html).toMatch(/<code class="[^"]*\btext-\[11px\]/)
     })
 
@@ -150,8 +149,8 @@ describe('CodeInline', () => {
     it('falls back to plain styling when theme is not set', async () => {
       const html = await render({ code: 'foo', language: 'ts' })
 
-      expect(html).toContain('bg-[#f3f4f6]')
-      expect(html).toContain('border-[#d1d5db]')
+      expect(html).toContain('bg-gray-100')
+      expect(html).toContain('[border:1px_solid_#d1d5db]')
       // No shiki marker spans without a theme.
       expect(html).not.toContain('§MZLT§')
     })

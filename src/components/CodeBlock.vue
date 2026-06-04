@@ -57,7 +57,7 @@ export default {
       .replace(/^<pre[^>]*><code>/, '')
       .replace(/<\/code><\/pre>$/, '')
 
-    const preBase = `font-mono bg-[${bg}] p-[16px] overflow-auto whitespace-pre [word-wrap:normal] [word-break:normal] [word-spacing:normal]`
+    const preBase = `font-mono bg-[${bg}] p-4 overflow-auto whitespace-pre [word-wrap:normal] [word-break:normal] [word-spacing:normal]`
     const classes = twMerge(preBase, attrs.class as string)
     const tdClass = twMerge(`bg-[${bg}]`, props.tdClass)
     const styleAttr = attrs.style ? ` style="${attrs.style}"` : ''

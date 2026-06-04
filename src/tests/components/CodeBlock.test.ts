@@ -63,7 +63,7 @@ describe('CodeBlock', () => {
       const html = await render({ code: '<div>test</div>' })
 
       expect(html).toMatch(/<pre class="[^"]*\bbg-\[#fff\]/)
-      expect(html).toMatch(/<pre class="[^"]*\bp-\[16px\]/)
+      expect(html).toMatch(/<pre class="[^"]*\bp-4\b/)
       expect(html).toMatch(/<pre class="[^"]*\boverflow-auto\b/)
       expect(html).toMatch(/<pre class="[^"]*\bwhitespace-pre\b/)
       expect(html).toMatch(/<pre class="[^"]*\[word-wrap:normal\]/)
@@ -111,8 +111,8 @@ describe('CodeBlock', () => {
       expect(html).toMatch(/<pre class="[^"]*\bfont-mono\b/)
       expect(html).toMatch(/<pre class="[^"]*\bp-6\b/)
       expect(html).toMatch(/<pre class="[^"]*\brounded-lg\b/)
-      // User padding wins via twMerge — base p-[16px] dropped
-      expect(html).not.toMatch(/<pre class="[^"]*p-\[16px\]/)
+      // User padding wins via twMerge — base p-4 dropped
+      expect(html).not.toMatch(/<pre class="[^"]*\bp-4\b/)
     })
 
     it('merges style onto the pre element', async () => {

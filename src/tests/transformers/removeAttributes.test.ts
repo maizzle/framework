@@ -56,6 +56,17 @@ describe('removeAttributes', () => {
       const result = run(html, ['data-a', 'data-b'])
       expect(result).toBe('<div data-c="keep">Content</div>')
     })
+
+    it('removes an empty value via an object rule with omitted value', () => {
+      const html = '<img src="test.jpg" data-src="" alt="Test">'
+      const result = run(html, [{ name: 'data-src' }])
+      expect(result).toBe('<img src="test.jpg" alt="Test">')
+    })
+
+    it('keeps a non-empty value when an object rule omits the value', () => {
+      const html = '<img data-src="x.jpg">'
+      expect(run(html, [{ name: 'data-src' }])).toBe('<img data-src="x.jpg">')
+    })
   })
 
   describe('remove by name and exact value', () => {

@@ -60,4 +60,16 @@ describe('Body', () => {
     const html = await render({ outlookFallback: false })
     expect(html).not.toContain('xml:lang')
   })
+
+  it('renders the mso body span as the first body child', async () => {
+    const html = await render()
+    expect(html).toContain('<span style="display: none"><!--[if mso]>')
+    expect(html).toContain('<o:PixelsPerInch>96</o:PixelsPerInch>')
+    expect(html).toMatch(/<body[^>]*><span style="display: none">/)
+  })
+
+  it('omits the mso body span when outlookFallback is false', async () => {
+    const html = await render({ outlookFallback: false })
+    expect(html).not.toContain('<!--[if mso]>')
+  })
 })

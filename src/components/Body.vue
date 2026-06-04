@@ -85,6 +85,17 @@ const outlookFallback = useOutlookFallback(props.outlookFallback)
 
 const htmlLang = inject<string>('htmlLang', 'en')
 
+const msoBody = `<!--[if mso]>
+  <xml>
+    <o:OfficeDocumentSettings>
+      <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings>
+    <w:WordDocument>
+      <w:DontUseAdvancedTypographyReadingMail />
+    </w:WordDocument>
+  </xml>
+<![endif]-->`
+
 const render = () => {
   const extraAttrs = Object.entries(attrs)
     .map(([key, value]) => value === true ? key : `${key}="${value}"`)
@@ -115,6 +126,7 @@ const render = () => {
 
   return [
     createStaticVNode(`<body ${parts.join(' ')}>`, 1),
+    outlookFallback ? createStaticVNode(`<span style="display: none">${msoBody}</span>`, 1) : null,
     createStaticVNode(`<div ${articleParts}>`, 1),
     slots.default?.(),
     createStaticVNode('</div>', 1),

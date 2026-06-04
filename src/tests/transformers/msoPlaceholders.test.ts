@@ -19,6 +19,36 @@ describe('msoPlaceholders — MSOW (table width)', () => {
     expect(out).not.toContain('data-maizzle-msow-id')
   })
 
+  it('replaces placeholder with px-rounded value from max-width in pt', () => {
+    const html = `<!--[if mso]><table style="width: __MAIZZLE_MSOW_pt__"><![endif]-->`
+      + `<div style="max-width: 75pt;" data-maizzle-msow-id="pt"></div>`
+      + `<!--[if mso]></table><![endif]-->`
+    // 75 * 1.333 = 99.975 -> 100
+    expect(run(html)).toContain('width: 100px')
+  })
+
+  it('treats a unitless width as px', () => {
+    const html = `<!--[if mso]><table style="width: __MAIZZLE_MSOW_u__"><![endif]-->`
+      + `<div style="max-width: 480;" data-maizzle-msow-id="u"></div>`
+      + `<!--[if mso]></table><![endif]-->`
+    expect(run(html)).toContain('width: 480px')
+  })
+
+  it('uses the fallback when the width value is non-numeric', () => {
+    const html = `<!--[if mso]><table style="width: __MAIZZLE_MSOW_n__"><![endif]-->`
+      + `<div style="max-width: auto;" data-maizzle-msow-id="n"></div>`
+      + `<!--[if mso]></table><![endif]-->`
+    expect(run(html)).toContain('width: 600px')
+  })
+
+  it('skips empty comment nodes while resolving', () => {
+    const html = `<!---->`
+      + `<!--[if mso]><table style="width: __MAIZZLE_MSOW_e__"><![endif]-->`
+      + `<div style="max-width: 300px;" data-maizzle-msow-id="e"></div>`
+      + `<!--[if mso]></table><![endif]-->`
+    expect(run(html)).toContain('width: 300px')
+  })
+
   it('reads max-width in px directly', () => {
     const html = `<!--[if mso]><table style="width: __MAIZZLE_MSOW_a__"><![endif]-->`
       + `<div style="max-width: 720px;" data-maizzle-msow-id="a"></div>`

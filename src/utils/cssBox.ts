@@ -11,13 +11,8 @@ export function lengthToPx(value: string): number | null {
   const m = value.trim().match(/^([\d.]+)(px|rem|em|pt)?$/i)
   if (!m) return null
   const n = parseFloat(m[1])
-  switch ((m[2] || 'px').toLowerCase()) {
-    case 'px': return n
-    case 'rem':
-    case 'em': return n * 16
-    case 'pt': return n * 1.333
-    default: return null
-  }
+  const unit = (m[2] || 'px').toLowerCase()
+  return n * (unit === 'rem' || unit === 'em' ? 16 : unit === 'pt' ? 1.333 : 1)
 }
 
 /**

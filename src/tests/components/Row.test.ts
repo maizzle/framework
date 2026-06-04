@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { Fragment, defineComponent, h } from 'vue'
+import { Fragment, defineComponent, h, createCommentVNode, createStaticVNode } from 'vue'
 import Row from '../../components/Row.vue'
 import Column from '../../components/Column.vue'
 
@@ -16,6 +16,37 @@ describe('Row', () => {
       slots: { default: () => 'Columns here' },
     })
     expect(wrapper.text()).toBe('Columns here')
+  })
+
+  it('uses an explicit width prop as the column width source', () => {
+    const wrapper = mount(Row, {
+      props: { width: 600 },
+      slots: { default: () => h(Column, () => 'x') },
+    })
+    expect(wrapper.find('div[data-maizzle-cw="600px"]').exists()).toBe(true)
+  })
+
+  it('excludes comment nodes when counting columns', () => {
+    const wrapper = mount(Row, {
+      slots: { default: () => [createCommentVNode('note'), h(Column, () => 'x')] },
+    })
+    expect(wrapper.findComponent(Column).exists()).toBe(true)
+  })
+
+  it('uses an explicit cols prop instead of counting children', () => {
+    const wrapper = mount(Row, {
+      props: { cols: 3 },
+      slots: { default: () => h(Column, () => 'x') },
+    })
+    expect(wrapper.findComponent(Column).exists()).toBe(true)
+  })
+
+  it('clears the column width source when width comes from a class', () => {
+    const wrapper = mount(Row, {
+      attrs: { class: 'w-[600px]' },
+      slots: { default: () => h(Column, () => 'x') },
+    })
+    expect(wrapper.find('div[data-maizzle-cw]').attributes('data-maizzle-cw')).toBe('')
   })
 
   describe('MSO conditional comments', () => {
@@ -102,6 +133,22 @@ describe('Row', () => {
         slots: { default: () => '   \n\t  ' },
       })
       expect(warnings().some(s => /\[maizzle\] <Row>/.test(s))).toBe(false)
+    })
+
+    it('skips comment nodes when checking for meaningful content', () => {
+      mount(Row, {
+        attrs: { 'data-maizzle-loc': '/loc-comment.vue:1' },
+        slots: { default: () => [createCommentVNode('note'), h('p', 'oops')] },
+      })
+      expect(warnings().some(s => /loc-comment\.vue/.test(s))).toBe(true)
+    })
+
+    it('does not warn for a standalone static vnode (symbol-type, no meaningful content)', () => {
+      mount(Row, {
+        attrs: { 'data-maizzle-loc': '/loc-static.vue:1' },
+        slots: { default: () => [createStaticVNode('<b>x</b>', 1)] },
+      })
+      expect(warnings().some(s => /loc-static\.vue/.test(s))).toBe(false)
     })
 
     it('shows just the filename, not the full path', () => {

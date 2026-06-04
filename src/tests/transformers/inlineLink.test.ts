@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { resolve } from 'node:path'
-import { inlineLink } from '../../transformers/inlineLink.ts'
+import { inlineLink, inlineLinkDom } from '../../transformers/inlineLink.ts'
+import { parse, serialize } from '../../utils/ast/index.ts'
 
 function run(html: string, filePath?: string): Promise<string> {
   return inlineLink(html, filePath)
@@ -36,6 +37,15 @@ describe('inlineLink', () => {
       const result = await run(html, fakeFilePath)
       expect(result).toContain('<link')
       expect(result).toContain('href="missing.css"')
+    })
+
+    it('inlines a top-level link whose parent is null (detached node)', async () => {
+      const dom = parse('<link rel="stylesheet" href="test.css">')
+      ;(dom[0] as any).parent = null
+      const result = serialize(await inlineLinkDom(dom, fakeFilePath))
+      expect(result).toContain('<style>')
+      expect(result).toContain('.test')
+      expect(result).not.toContain('<link')
     })
 
     it('skips local files when filePath is not provided', async () => {

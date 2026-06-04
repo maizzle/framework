@@ -41,7 +41,7 @@ export async function inlineLinkDom(dom: ChildNode[], filePath?: string): Promis
     if ((node as Element).name !== 'link') return
 
     const el = node as Element
-    const attrs = el.attribs || {}
+    const attrs = el.attribs
 
     if (attrs.rel !== 'stylesheet' || !attrs.href) return
 

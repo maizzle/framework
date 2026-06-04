@@ -25,6 +25,13 @@ describe('CodeBlock', () => {
       expect(html).toContain('style="color:')
     })
 
+    it('reads code from slot text when no code prop is set', async () => {
+      const html = await render({}, 'const x = 42')
+
+      expect(html).toContain('<code>')
+      expect(html).toContain('style="color:')
+    })
+
     it('highlights CSS code', async () => {
       const html = await render({ code: '.button { color: red; }', language: 'css' })
 
@@ -145,6 +152,13 @@ describe('CodeBlock', () => {
 
     it('renders nothing when code is only whitespace', async () => {
       const html = await render({ code: '   \n  ' })
+
+      expect(html).not.toContain('<code>')
+    })
+
+    it('ignores slot vnodes whose children are not plain text', async () => {
+      // Element child (non-string children) contributes no source.
+      const html = await render({}, h('span', null, [h('b', null, 'x')]) as any)
 
       expect(html).not.toContain('<code>')
     })

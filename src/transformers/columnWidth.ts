@@ -51,13 +51,9 @@ function resolveLength(value: string): string | null {
   const m = trimmed.match(/^([\d.]+)(px|rem|em|pt)?$/i)
   if (!m) return null
   const n = parseFloat(m[1])
-  switch ((m[2] || 'px').toLowerCase()) {
-    case 'px': return `${Math.round(n)}px`
-    case 'rem':
-    case 'em': return `${Math.round(n * 16)}px`
-    case 'pt': return `${Math.round(n * 1.333)}px`
-    default: return null
-  }
+  const unit = (m[2] || 'px').toLowerCase()
+  const factor = unit === 'rem' || unit === 'em' ? 16 : unit === 'pt' ? 1.333 : 1
+  return `${Math.round(n * factor)}px`
 }
 
 function divideLength(value: string, divisor: number): string | null {

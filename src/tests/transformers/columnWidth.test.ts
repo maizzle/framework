@@ -834,5 +834,118 @@ describe('columnWidth', () => {
       const html = `<!--[if mso]><v:rect style="height: __MAIZZLE_OH_o1__"><![endif]-->`
       expect(run(html)).toContain('height: 100%')
     })
+
+    it('substitutes an OH placeholder inside an element style', () => {
+      const html =
+        `<div data-maizzle-oh-id="o1" style="height: 200px"></div>`
+        + `<div style="height: __MAIZZLE_OH_o1__"></div>`
+      const out = run(html)
+      expect(out).toContain('style="height: 200px"')
+      expect(out).not.toContain('__MAIZZLE_OH_')
+    })
+
+    it('falls back to 100% for an unresolved OH placeholder in an element style', () => {
+      const html = `<div style="height: __MAIZZLE_OH_z__"></div>`
+      expect(run(html)).toContain('style="height: 100%"')
+    })
+  })
+
+  describe('unit conversion', () => {
+    it('resolves a parent width given in pt', () => {
+      const html = `<div data-maizzle-cw="" style="max-width: 450pt">${col('c1', 1)}</div>`
+      // 450pt → round(450 * 1.333) = 600px
+      expect(run(html)).toContain('width: 600px')
+    })
+
+    it('treats a unitless parent width as px', () => {
+      const html = `<div data-maizzle-cw="" style="max-width: 600">${col('c1', 1)}</div>`
+      expect(run(html)).toContain('width: 600px')
+    })
+
+    it('drops the width when the parent width is non-numeric', () => {
+      const html = `<div data-maizzle-cw="" style="max-width: auto">${col('c1', 2)}</div>`
+      expect(run(html)).not.toContain('__MAIZZLE_COLW_')
+    })
+  })
+
+  describe('helper branch coverage', () => {
+    it('preserves an !important declaration when re-serializing the column style', () => {
+      const html =
+        `<div data-maizzle-cw="600px">`
+        + `<div style="display: inline-block; min-width: __MAIZZLE_COLW_c1__; color: red !important;" data-maizzle-cw-id="c1" data-maizzle-cw-count="1"></div>`
+        + `</div>`
+      expect(run(html)).toContain('color: red !important')
+    })
+
+    it('drops the width when the column count is zero (divisor < 1)', () => {
+      const html =
+        `<div data-maizzle-cw="600px">`
+        + `<div style="display: inline-block; min-width: __MAIZZLE_COLW_c1__;" data-maizzle-cw-id="c1" data-maizzle-cw-count="0"></div>`
+        + `</div>`
+      expect(run(html)).not.toContain('__MAIZZLE_COLW_')
+    })
+
+    it('defaults the column count to 1 when the count attribute is absent', () => {
+      const html =
+        `<div data-maizzle-cw="600px">`
+        + `<div style="display: inline-block; min-width: __MAIZZLE_COLW_c1__;" data-maizzle-cw-id="c1"></div>`
+        + `</div>`
+      expect(run(html)).toContain('width: 600px')
+    })
+
+    it('ignores an ancestor whose data-maizzle-cw value is unresolvable and has no style', () => {
+      const html = `<div data-maizzle-cw="garbage">${col('c1', 1)}</div>`
+      expect(run(html)).not.toContain('__MAIZZLE_COLW_')
+    })
+
+    it('falls back to 100% for a decl COLW marker whose id is not a column', () => {
+      const html = `<td style="width: __MAIZZLE_COLW_ghost__"></td>`
+      expect(run(html)).toContain('width: 100%')
+    })
+
+    it('reads overlap height from min-height when only min-height is set', () => {
+      const html =
+        `<div data-maizzle-oh-id="o1" style="min-height: 100px"></div>`
+        + `<div style="height: __MAIZZLE_OH_o1__"></div>`
+      expect(run(html)).toContain('height: 100px')
+    })
+
+    it('falls back when the overlap-height target has a style but no height', () => {
+      const html =
+        `<div data-maizzle-oh-id="o1" style="color: red"></div>`
+        + `<div style="height: __MAIZZLE_OH_o1__"></div>`
+      expect(run(html)).toContain('height: 100%')
+    })
+
+    it('falls back when the overlap-height target has no style at all', () => {
+      const html =
+        `<div data-maizzle-oh-id="o1"></div>`
+        + `<div style="height: __MAIZZLE_OH_o1__"></div>`
+      expect(run(html)).toContain('height: 100%')
+    })
+
+    it('resolves a user percentage min-width against a percentage source via resolveLength', () => {
+      const html =
+        `<div data-maizzle-cw="50%">`
+        + `<div style="display: inline-block; min-width: 33.33%;" data-maizzle-cw-id="c1" data-maizzle-cw-count="2"></div>`
+        + `</div>`
+      // % source can't convert the user % to px, so resolveLength keeps the %
+      expect(run(html)).toContain('33.33%')
+    })
+
+    it('keeps a user percentage min-width when there is no ancestor source', () => {
+      const html = `<div style="display: inline-block; min-width: 50%;" data-maizzle-cw-id="c1" data-maizzle-cw-count="2"></div>`
+      expect(run(html)).toContain('width: 50%')
+    })
+
+    it('clamps a count-based width under the user max-width and subtracts own padding', () => {
+      const html =
+        `<div data-maizzle-cw="600px">`
+        + `<div style="display: inline-block; min-width: __MAIZZLE_COLW_c1__; max-width: 400px; padding: 0 10px;" data-maizzle-cw-id="c1" data-maizzle-cw-count="2"></div>`
+        + `</div>`
+      const out = run(html)
+      expect(out).not.toContain('__MAIZZLE_COLW_')
+      expect(out).toContain('width:')
+    })
   })
 })

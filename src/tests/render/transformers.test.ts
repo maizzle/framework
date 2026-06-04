@@ -355,6 +355,27 @@ describe('render', () => {
       expect(result.html).toContain('style="color: red;"')
     })
 
+    it('converts attributes to styles when css.inline.attributeToStyle is set', async () => {
+      symlinkSync(join(originalCwd, 'node_modules'), join(tempDir, 'node_modules'))
+
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template>
+          <html>
+            <head></head>
+            <body>
+              <table width="600"><tr><td>Hi</td></tr></table>
+            </body>
+          </html>
+        </template>
+      `)
+
+      const result = await render(join(tempDir, 'emails/test.vue'), {
+        css: { inline: { attributeToStyle: true } },
+      })
+
+      expect(result.html).toContain('width: 600px')
+    })
+
     it('does not inline CSS by default', async () => {
       symlinkSync(join(originalCwd, 'node_modules'), join(tempDir, 'node_modules'))
 

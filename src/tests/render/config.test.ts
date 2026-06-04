@@ -67,6 +67,45 @@ describe('render', () => {
       expect(result.config.css?.shorthand).toBe(true)
       expect(result.config.css?.inline).toBe(true)
     })
+
+    it('resolves string and object component source entries', async () => {
+      const config = await resolveConfig({
+        root: tempDir,
+        components: {
+          source: ['./widgets', '/abs/widgets', { path: './ui', prefix: 'Ui' }, { path: '/abs/ui', prefix: 'X' }],
+        },
+      })
+      const sources = config.components!.source as any[]
+      expect(sources[0]).toMatch(/[/\\]widgets$/)
+      expect(sources[1]).toBe('/abs/widgets')
+      expect(sources[2].path).toMatch(/[/\\]ui$/)
+      expect(sources[3].path).toBe('/abs/ui')
+    })
+
+    it('loads a scanned config file that has no default export', async () => {
+      writeFileSync(join(tempDir, 'maizzle.config.js'), 'export const css = { safe: false }')
+      const config = await resolveConfig({}, tempDir)
+      expect(config.css?.safe).toBe(false)
+      expect(config.output?.path).toBe('dist')
+    })
+
+    it('loads an explicit config path that has no default export', async () => {
+      writeFileSync(join(tempDir, 'custom.config.js'), 'export const css = { sixHex: false }')
+      const config = await resolveConfig('custom.config.js', tempDir)
+      expect(config.css?.sixHex).toBe(false)
+    })
+
+    it('loads a scanned config file with a default export', async () => {
+      writeFileSync(join(tempDir, 'maizzle.config.js'), 'export default { css: { safe: false } }')
+      const config = await resolveConfig({}, tempDir)
+      expect(config.css?.safe).toBe(false)
+    })
+
+    it('loads an explicit config path with a default export', async () => {
+      writeFileSync(join(tempDir, 'def.config.js'), 'export default { css: { sixHex: false } }')
+      const config = await resolveConfig('def.config.js', tempDir)
+      expect(config.css?.sixHex).toBe(false)
+    })
   })
 
   describe('custom vite config', () => {

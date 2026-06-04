@@ -27,6 +27,11 @@ describe('attributeToStyle', () => {
       const html = '<table bgcolor="#fff"></table>'
       expect(attributeToStyle(html)).toContain('style="background-color: #fff"')
     })
+
+    it('ignores a requested attribute with no style mapping', () => {
+      const html = '<div id="foo"></div>'
+      expect(run(html, ['id'])).toBe(html)
+    })
   })
 
   describe('width attribute', () => {

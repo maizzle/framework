@@ -3,7 +3,7 @@ import { createStaticVNode, inject, type PropType } from 'vue'
 import { createMarkdownExit, type MarkdownExitOptions } from 'markdown-exit'
 import { codeToHtml, type BundledTheme } from 'shiki'
 import { defu } from 'defu'
-import { MaizzleConfigKey } from '../composables/useConfig.ts'
+import { MaizzleConfigKey } from '../composables/useConfig'
 
 export default {
   props: {

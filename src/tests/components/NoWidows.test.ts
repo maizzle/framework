@@ -193,4 +193,41 @@ describe('NoWidows', () => {
       expect(wrapper.findComponent(TestComponent).exists()).toBe(true)
     })
   })
+
+  describe('vnode edge cases', () => {
+    it('processes an element with a single string child', () => {
+      const wrapper = mount(NoWidows, {
+        slots: { default: () => h('p', null, 'one two three four') }
+      })
+      expect(wrapper.html()).toContain('one two three&nbsp;four')
+    })
+
+    it('skips null and non-string children inside an element', () => {
+      const wrapper = mount(NoWidows, {
+        slots: { default: () => h('p', null, ['one two three four', null, 99]) }
+      })
+      const html = wrapper.html()
+      expect(html).toContain('one two three&nbsp;four')
+      expect(html).toContain('99')
+    })
+
+    it('processes the children of a Fragment', () => {
+      const wrapper = mount(NoWidows, {
+        slots: { default: () => h(Fragment, null, [h('span', null, 'one two three four')]) }
+      })
+      expect(wrapper.html()).toContain('one two three&nbsp;four')
+    })
+
+    it('leaves a void element with no children untouched', () => {
+      const wrapper = mount(NoWidows, {
+        slots: { default: () => h('br') }
+      })
+      expect(wrapper.html()).toContain('<br')
+    })
+
+    it('renders nothing when no default slot is provided', () => {
+      const wrapper = mount(NoWidows)
+      expect(wrapper.html()).toBe('')
+    })
+  })
 })

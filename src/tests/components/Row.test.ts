@@ -61,8 +61,8 @@ describe('Row', () => {
       warn.mockRestore()
     })
 
-    function warnings() {
-      return warn.mock.calls.map(c => String(c[0]))
+    function warnings(): string[] {
+      return warn.mock.calls.map((c: unknown[]) => String(c[0]))
     }
 
     it('warns when slot has an element child but no Column', () => {

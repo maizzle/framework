@@ -39,7 +39,7 @@ export async function prepare(options: PrepareOptions = {}): Promise<void> {
 
   const dtsDir = isLaravel()
     ? resolve(process.cwd(), 'resources/js/types/maizzle')
-    : resolve(config.root, '.maizzle')
+    : resolve(config.root ?? process.cwd(), '.maizzle')
   const displayPath = relative(process.cwd(), dtsDir) || dtsDir
 
   spinner.stopAndPersist({

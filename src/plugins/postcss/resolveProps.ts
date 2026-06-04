@@ -15,7 +15,7 @@
  * local var declarations (Tailwind composable pattern, user CSS).
  */
 
-import type { AtRule, Plugin, Root, Rule } from 'postcss'
+import type { AtRule, Declaration, Plugin, Root, Rule } from 'postcss'
 
 /** Check if a rule's selector includes :root */
 function isRootRule(rule: Rule): boolean {

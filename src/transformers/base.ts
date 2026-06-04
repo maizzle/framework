@@ -10,7 +10,7 @@ import type { ChildNode, Element } from 'domhandler'
  */
 export interface BaseUrlOptions {
   /** Base URL to prepend to relative links. */
-  url: string
+  url?: string
   /**
    * Tag/attribute scope for prepending. Omit to use the built-in defaults
    * (`a[href]`, `img[src]`, `link[href]`, etc.).

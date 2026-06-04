@@ -7,7 +7,7 @@ import { useOutlookFallback } from '../../composables/useOutlookFallback'
 
 function renderSsr(props: Record<string, unknown>) {
   const app = createSSRApp({
-    render: () => h(Img, props),
+    render: () => h(Img, props as any),
   })
   return renderToString(app)
 }

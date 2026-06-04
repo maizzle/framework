@@ -1,7 +1,7 @@
 import juice from 'juice'
 import { walk, parse, serialize } from '../utils/ast/index.ts'
 import type { ChildNode, Element } from 'domhandler'
-import type { Options as JuiceOptions } from 'juice'
+type JuiceOptions = NonNullable<Parameters<typeof juice>[1]>
 
 /**
  * Options for the `inlineCss` transformer. Accepts every Juice option plus a

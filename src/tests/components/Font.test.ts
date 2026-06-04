@@ -8,7 +8,7 @@ async function renderFont(props: Record<string, any>): Promise<RenderContext> {
   const ctx: RenderContext = { sfcEventHandlers: [] }
   const Wrapper = defineComponent({
     setup() {
-      return () => h(Font, props)
+      return () => h(Font, props as any)
     },
   })
   const app = createSSRApp(Wrapper)

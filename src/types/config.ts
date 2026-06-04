@@ -1,7 +1,9 @@
 import type { InlineConfig } from 'vite'
 import type { Plugin, Directive } from 'vue'
 import type { Options as MarkdownPluginOptions } from 'unplugin-vue-markdown/types'
-import type { Options as JuiceOptions } from 'juice'
+import type juice from 'juice'
+
+type JuiceOptions = NonNullable<Parameters<typeof juice>[1]>
 import type { TemplateInfo } from '../events/index.ts'
 
 export interface UrlQueryOptions {

@@ -7,7 +7,7 @@ import QrCode from '../../components/QrCode.vue'
 function render(props: Record<string, unknown>) {
   const app = createSSRApp({
     render: () => h(Suspense, null, {
-      default: () => h(QrCode, props),
+      default: () => h(QrCode, props as any),
     }),
   })
   return renderToString(app)

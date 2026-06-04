@@ -15,7 +15,7 @@ const mergedClass = computed(() => {
   const userHeight = heights.length ? heights[heights.length - 1][1] : null
   const userHasLeading = LEADING_RE.test(userClass)
 
-  const defaults = ['my-6', 'bg-slate-300']
+  const defaults = ['my-6', 'bg-gray-300']
   if (!userHeight) defaults.push('h-px')
   if (!userHasLeading && !userHeight) defaults.push('leading-px')
 

@@ -15,7 +15,7 @@ describe('Hr', () => {
       expect(html).toContain('h-px')
       expect(html).toContain('leading-px')
       expect(html).toContain('my-6')
-      expect(html).toContain('bg-slate-300')
+      expect(html).toContain('bg-gray-300')
     })
 
     it('contains zero-width joiner', () => {

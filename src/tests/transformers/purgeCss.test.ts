@@ -280,6 +280,28 @@ describe('purgeCss', () => {
       expect(result).not.toContain('</style>')
     })
 
+    it('skips empty style tags during deep purge', () => {
+      const html = `<html><head><style></style><style>.used { color: red }</style></head><body><div class="used">hi</div></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('.used')
+    })
+
+    it('skips empty embed style tags while restoring non-empty ones', () => {
+      const html = `<html><head><style embed></style><style embed>.keep { color: red }</style></head>`
+        + `<body><div class="keep">hi</div></body></html>`
+      const result = run(html, true)
+      // Non-empty embed CSS is preserved verbatim; the empty one is left alone.
+      expect(result).toContain('.keep { color: red }')
+    })
+
+    it('restores embed CSS while walking past sibling plain styles', () => {
+      const html = `<html><head><style>.used { color: red }</style><style embed>.kept { color: blue }</style></head>`
+        + `<body><div class="used kept">hi</div></body></html>`
+      const result = run(html, true)
+      expect(result).toContain('.kept { color: blue }')
+      expect(result).toContain('.used')
+    })
+
     it('preserves default safelisted selectors in deep purge', () => {
       const html = `<html><head><style>.gmail-fix { display: none } .outlook-reset { margin: 0 } .gone { color: red }</style></head><body><p>hi</p></body></html>`
       const result = run(html, true)

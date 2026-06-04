@@ -48,6 +48,13 @@ describe('Preheader', () => {
       expect(html).toContain('Bold text')
       expect(html).not.toContain('<strong>')
     })
+
+    it('yields no text when a node\'s children is a slots object', async () => {
+      // A component vnode's children is the slots object ({ default, _ }),
+      // which has no `children` key — it contributes no preview text.
+      const html = await render(h({ render: () => null }, null, { default: () => 'x' }))
+      expect((html.match(FILLER_RE) || []).length).toBe(200)
+    })
   })
 
   describe('filler count', () => {

@@ -134,17 +134,12 @@ const ASPECT_KEYWORDS: Record<string, string> = {
   'aspect-video': '16/9',
 }
 
+/**
+ * Vue normalizes a component's `class` attr to a string before it
+ * reaches `attrs`, so only the string/empty cases can occur here.
+ */
 function normalizeClass(value: unknown): string {
-  if (!value) return ''
-  if (typeof value === 'string') return value
-  if (Array.isArray(value)) return value.map(normalizeClass).filter(Boolean).join(' ')
-  if (typeof value === 'object') {
-    return Object.entries(value as Record<string, unknown>)
-      .filter(([, v]) => v)
-      .map(([k]) => k)
-      .join(' ')
-  }
-  return ''
+  return typeof value === 'string' ? value : ''
 }
 
 /**

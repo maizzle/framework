@@ -316,6 +316,19 @@ describe('Img', () => {
       expect(cls).not.toContain('aspect-video')
     })
 
+    it('accepts class as an array', async () => {
+      const html = await renderSsr({ src: 'img.jpg', width: 600, class: ['aspect-video', 'rounded-lg'] })
+      expect(html).toContain('padding-bottom:56.25%')
+      expect(html).toContain('rounded-lg')
+    })
+
+    it('accepts class as an object, keeping only truthy keys', async () => {
+      const html = await renderSsr({ src: 'img.jpg', width: 200, class: { 'aspect-square': true, 'rounded-lg': true, 'sr-only': false } })
+      expect(html).toContain('padding-bottom:100%')
+      expect(html).toContain('rounded-lg')
+      expect(html).not.toContain('sr-only')
+    })
+
     it('aspect-auto does NOT enable cropped mode', () => {
       const wrapper = mount(Img, {
         props: { src: 'img.jpg', width: 600 },

@@ -356,6 +356,14 @@ describe('base URL', () => {
       expect(result).toContain('src="https://cdn.example.com/photo.jpg"')
       expect(result).toContain('srcset="photo.jpg 1x"')
     })
+
+    it('leaves tags untouched when the tags option is neither an array nor an object', () => {
+      const html = '<img src="a.jpg">'
+      // Misconfigured `tags` (not array/object) — no tag is processed.
+      const result = base(html, { url: 'https://cdn.example.com/', tags: 'img' as any })
+      expect(result).toContain('src="a.jpg"')
+      expect(result).not.toContain('cdn.example.com')
+    })
   })
 
   describe('custom attributes', () => {
@@ -542,6 +550,25 @@ describe('base URL', () => {
       expect(result).toContain('src="https://other.com/remote.jpg"')
       expect(result).toContain('href="https://cdn.example.com/page.html"')
       expect(result).toContain('href="mailto:test@test.com"')
+    })
+  })
+
+  describe('edge cases', () => {
+    it('leaves an empty url() untouched', () => {
+      const result = base('<div style="background: url()"></div>', 'https://cdn.example.com/')
+      expect(result).toContain('url()')
+      expect(result).not.toContain('cdn.example.com')
+    })
+
+    it('returns the HTML unchanged when the base option is falsy', () => {
+      const html = '<a href="page.html">Link</a>'
+      expect(base(html, '')).toBe(html)
+    })
+
+    it('does nothing when the options object has a nullish url', () => {
+      const html = '<img src="a.jpg">'
+      const result = base(html, { url: null, tags: ['img'] } as any)
+      expect(result).toBe(html)
     })
   })
 })

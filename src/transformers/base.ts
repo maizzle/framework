@@ -88,13 +88,8 @@ function processCss(css: string, url: string): string {
 }
 
 function processInlineStyle(style: string, url: string): string {
-  try {
-    const { css } = postcss([postcssBaseUrl({ url })]).process(`a{${style}}`, { parser: safeParser, from: undefined })
-    const match = css.match(/a\s*\{\s*([\s\S]*?)\s*\}/)
-    return match?.[1]?.trim() ?? style
-  } catch {
-    return style
-  }
+  const { css } = postcss([postcssBaseUrl({ url })]).process(`a{${style}}`, { parser: safeParser, from: undefined })
+  return css.slice(css.indexOf('{') + 1, css.lastIndexOf('}')).trim()
 }
 
 function resolveOptions(input: string | BaseUrlOptions | undefined | null | false): BaseUrlOptions | undefined {
@@ -192,8 +187,6 @@ export function baseDom(dom: ChildNode[], options: string | BaseUrlOptions | und
       }
       return
     }
-
-    if (!el.attribs) return
 
     // Process tag-specific attributes (respects tags filter)
     const tagConfig = getTagConfig(el.name, resolved)

@@ -35,8 +35,8 @@
   "dependencies": {
     "@lucide/vue": "^1.16.0",
     "@maizzle/tailwindcss": "latest",
-    "@tailwindcss/postcss": "^4.2.2",
-    "@tailwindcss/vite": "^4.2.2",
+    "@tailwindcss/postcss": "^4.3.0",
+    "@tailwindcss/vite": "^4.3.0",
     "@unhead/vue": "^3.0.4",
     "@vitejs/plugin-vue": "^6.0.4",
     "@vueuse/core": "^14.2.1",

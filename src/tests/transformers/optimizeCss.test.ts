@@ -94,6 +94,20 @@ describe('optimizeCss', () => {
     })
   })
 
+  describe('text-decoration normalization', () => {
+    it('rewrites text-decoration-line to text-decoration', async () => {
+      const result = await run('.foo { text-decoration-line: underline }')
+      expect(result).toContain('text-decoration: underline')
+      expect(result).not.toContain('text-decoration-line')
+    })
+
+    it('leaves other declarations untouched', async () => {
+      const result = await run('.foo { text-decoration: underline; color: red }')
+      expect(result).toContain('text-decoration: underline')
+      expect(result).toContain('color: red')
+    })
+  })
+
   describe('@layer and @property — default', () => {
     it('removes @layer blocks', async () => {
       const result = await run('@layer base { .foo { color: red } } .keep { color: green }')

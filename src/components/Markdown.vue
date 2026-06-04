@@ -62,9 +62,9 @@ export default {
      * still works standalone, when no config is provided.
      */
     const mdConfig = inject(MaizzleConfigKey, undefined)?.markdown ?? {}
-    const markdownOptions = mdConfig.markdownOptions ?? mdConfig.markdownItOptions
-    const markdownUses = mdConfig.markdownUses ?? mdConfig.markdownItUses
-    const markdownSetup = mdConfig.markdownSetup ?? mdConfig.markdownItSetup
+    const markdownOptions = mdConfig.markdownOptions
+    const markdownUses = mdConfig.markdownUses
+    const markdownSetup = mdConfig.markdownSetup
     const theme = props.shikiTheme ?? mdConfig.shikiTheme ?? 'github-dark-high-contrast'
 
     const md = createMarkdownExit(defu(
@@ -89,7 +89,7 @@ export default {
      * code-block wrapping below composes over whatever they emit.
      */
     for (const use of markdownUses ?? []) {
-      if (Array.isArray(use)) md.use(...use)
+      if (Array.isArray(use)) md.use(use[0], ...use.slice(1))
       else md.use(use)
     }
     await markdownSetup?.(md)

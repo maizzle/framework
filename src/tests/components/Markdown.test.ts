@@ -46,6 +46,13 @@ describe('Markdown', () => {
       expect(html).toContain('<strong>bold text</strong>')
     })
 
+    it('ignores slot vnodes whose children are not plain text', async () => {
+      // Element child (non-string children) contributes no source.
+      const html = await render({}, h('span', null, [h('b', null, 'x')]) as any)
+
+      expect(html).toBe('')
+    })
+
     it('renders paragraphs', async () => {
       const html = await render({ content: 'Hello world' })
 
@@ -91,6 +98,15 @@ describe('Markdown', () => {
       const html = await render({ content: '```css\n.foo { color: red; }\n```', 'shiki-theme': 'github-light' })
 
       expect(html).toContain('background-color:#fff')
+    })
+
+    it('falls back gracefully when the fence language is unknown', async () => {
+      const html = await render({ content: '```notalang\nplain text\n```' })
+
+      // codeToHtml throws on an unknown language; highlight catches and
+      // returns '', so the block still renders (wrapped) with its text.
+      expect(html).toContain('plain text')
+      expect(html).toContain('<table class="w-full">')
     })
   })
 
@@ -169,6 +185,27 @@ describe('Markdown', () => {
       )
 
       expect(html).toContain('<span>raw</span>')
+    })
+
+    it('registers array-form plugins ([plugin, options]) from markdownUses', async () => {
+      const suffixer = (md: any, opts: any) => {
+        md.core.ruler.push('suffixer', (state: any) => {
+          for (const token of state.tokens) {
+            if (token.type === 'inline' && token.children) {
+              for (const child of token.children) {
+                if (child.type === 'text') child.content += opts.suffix
+              }
+            }
+          }
+        })
+      }
+
+      const html = await renderWithConfig(
+        { content: 'hi' },
+        { markdownUses: [[suffixer, { suffix: '!' }]] },
+      )
+
+      expect(html).toContain('<p>hi!</p>')
     })
 
     it('registers plugins from markdownUses', async () => {

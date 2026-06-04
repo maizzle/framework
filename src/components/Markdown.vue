@@ -98,11 +98,8 @@ export default {
       `<table class="w-full"><tr><td class="max-w-0 mso-padding-alt-4">${html}</td></tr></table>\n`
 
     const defaultFence = md.renderer.rules.fence!
-    md.renderer.rules.fence = (...args) => {
-      const result = defaultFence(...args)
-      if (typeof result === 'string') return wrapPre(result)
-      return result.then(wrapPre)
-    }
+    md.renderer.rules.fence = (...args) =>
+      Promise.resolve(defaultFence(...args)).then(wrapPre)
 
     const defaultCodeBlock = md.renderer.rules.code_block!
     md.renderer.rules.code_block = (...args) => wrapPre(defaultCodeBlock(...args) as string)

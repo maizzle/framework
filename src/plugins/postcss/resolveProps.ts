@@ -240,16 +240,10 @@ export default (): Plugin => {
         rule.remove()
       })
 
-      // Pass 3: clean up :root (same scope as pass 1)
+      // Pass 3: drop now-empty :root rules (their vars were removed in pass 2)
       root.walkRules((rule) => {
         if (!isRootRule(rule)) return
         if (rule.parent?.type !== 'root' && !isInLayer(rule)) return
-
-        rule.each((node) => {
-          if (node.type === 'decl' && node.prop.startsWith('--')) {
-            node.remove()
-          }
-        })
 
         if (rule.nodes?.length === 0) {
           rule.remove()

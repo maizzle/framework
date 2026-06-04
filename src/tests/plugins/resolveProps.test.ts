@@ -180,6 +180,33 @@ describe('resolveProps', () => {
       const result = await run('.foo { color: var(--unknown) }')
       expect(result).toContain('var(--unknown)')
     })
+
+    it('resolves a later var() after an unresolvable one with no fallback', async () => {
+      const result = await run(':root { --brand: red } .foo { background: var(--unknown) var(--brand) }')
+      expect(result).toContain('var(--unknown) red')
+    })
+
+    it('leaves a malformed var( with unbalanced parens untouched', async () => {
+      const result = await run('.foo { content: "var(--x" }')
+      expect(result).toContain('var(--x')
+    })
+  })
+
+  describe('edge cases', () => {
+    it('ignores @property whose name is not a custom property', async () => {
+      const result = await run('@property foo { syntax: "*"; inherits: false } .keep { color: red }')
+      expect(result).toContain('.keep')
+    })
+
+    it('leaves a :root var that references an unresolvable var unchanged', async () => {
+      const result = await run(':root { --alias: var(--unknown) } .foo { color: var(--alias) }')
+      expect(result).toContain('var(--unknown)')
+    })
+
+    it('skips non-declaration nodes when resolving a rule with var refs', async () => {
+      const result = await run(':root { --brand: red } .foo { /* note */ color: var(--brand) }')
+      expect(result).toContain('color: red')
+    })
   })
 
   describe('user custom properties', () => {

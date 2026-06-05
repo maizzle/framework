@@ -53,6 +53,25 @@ const plaintextContent = ref('')
 const sourceView = ref<'compiled' | 'vue' | 'plaintext'>('compiled')
 const copied = ref(false)
 
+/**
+ * Source views (Compiled HTML, Vue source, Plaintext) refresh lazily. On a
+ * save we only refetch the view currently on screen and bump
+ * `sourcesGeneration` to mark the others stale. Switching to a stale view
+ * keeps its previous content visible while a background refetch replaces it
+ * in place — so panels never flash empty. Each fetch stamps the generation
+ * it was initiated at so a save mid-fetch correctly leaves the view stale.
+ */
+const sourcesGeneration = ref(0)
+const compiledGen = ref(-1)
+const vueGen = ref(-1)
+const plaintextGen = ref(-1)
+
+function refreshSourceView(view: 'compiled' | 'vue' | 'plaintext') {
+  if (view === 'compiled' && (!sourceHtml.value || compiledGen.value < sourcesGeneration.value)) fetchSource()
+  if (view === 'vue' && (!vueSourceHtml.value || vueGen.value < sourcesGeneration.value)) fetchVueSource()
+  if (view === 'plaintext' && (!plaintextContent.value || plaintextGen.value < sourcesGeneration.value)) fetchPlaintext()
+}
+
 const iframeEl = ref<HTMLIFrameElement>()
 const compiledSourceEl = ref<HTMLElement>()
 const vueSourceEl = ref<HTMLElement>()
@@ -300,9 +319,11 @@ const plaintextLoading = ref(false)
 async function fetchSource() {
   if (sourceLoading.value) return
   sourceLoading.value = true
+  const gen = sourcesGeneration.value
   try {
     const res = await fetch(`/__maizzle/source/${route.params.template}`)
     sourceHtml.value = await res.text()
+    compiledGen.value = gen
   } finally {
     sourceLoading.value = false
   }
@@ -311,9 +332,11 @@ async function fetchSource() {
 async function fetchVueSource() {
   if (vueSourceLoading.value) return
   vueSourceLoading.value = true
+  const gen = sourcesGeneration.value
   try {
     const res = await fetch(`/__maizzle/vue-source/${route.params.template}`)
     vueSourceHtml.value = await res.text()
+    vueGen.value = gen
   } finally {
     vueSourceLoading.value = false
   }
@@ -322,9 +345,11 @@ async function fetchVueSource() {
 async function fetchPlaintext() {
   if (plaintextLoading.value) return
   plaintextLoading.value = true
+  const gen = sourcesGeneration.value
   try {
     const res = await fetch(`/__maizzle/plaintext/${route.params.template}`)
     plaintextContent.value = await res.text()
+    plaintextGen.value = gen
   } finally {
     plaintextLoading.value = false
   }
@@ -430,17 +455,11 @@ watch(() => props.templates, (templates) => {
 })
 
 watch(viewMode, (mode) => {
-  if (mode === 'source') {
-    if (sourceView.value === 'compiled' && !sourceHtml.value) fetchSource()
-    if (sourceView.value === 'vue' && !vueSourceHtml.value) fetchVueSource()
-    if (sourceView.value === 'plaintext' && !plaintextContent.value) fetchPlaintext()
-  }
+  if (mode === 'source') refreshSourceView(sourceView.value)
 })
 
 watch(sourceView, (view) => {
-  if (view === 'vue' && !vueSourceHtml.value) fetchVueSource()
-  if (view === 'compiled' && !sourceHtml.value) fetchSource()
-  if (view === 'plaintext' && !plaintextContent.value) fetchPlaintext()
+  refreshSourceView(view)
 })
 
 /**
@@ -482,11 +501,15 @@ if ((import.meta as any).hot) {
      * long as the new content's height is similar. Plaintext
      * interpolation updates a single text node, so scroll
      * is naturally preserved.
+     *
+     * Only the preview iframe and the currently-visible source view
+     * refresh eagerly; hidden source views are marked stale (via the
+     * generation bump) and refresh on next switch, keeping their old
+     * content on screen until then so panels never flash empty.
      */
     fetchTemplate()
-    fetchSource()
-    fetchVueSource()
-    fetchPlaintext()
+    sourcesGeneration.value++
+    if (viewMode.value === 'source') refreshSourceView(sourceView.value)
   })
 
   /**

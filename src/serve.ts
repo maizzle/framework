@@ -12,7 +12,7 @@ import { createPlaintext } from './plaintext.ts'
 import { stripForHtml, stripForPlaintext } from './utils/output-markers.ts'
 import { resolveConfig } from './config/index.ts'
 import { runTransformers } from './transformers/index.ts'
-import { createRenderer, type Renderer } from './render/createRenderer.ts'
+import { createRenderer, type Renderer, type RenderedTemplate } from './render/createRenderer.ts'
 import { _setCurrentTemplate } from './composables/useCurrentTemplate.ts'
 import { setActiveRenderer } from './render/active.ts'
 import { serveCompatibility } from './server/compatibility.ts'
@@ -181,6 +181,7 @@ function maizzleDevPlugin(
       server.watcher.on('add', async (file) => {
         if (isTemplateFile(file)) {
           await renderer.invalidateAll()
+          bumpGeneration()
           server.ws.send({ type: 'custom', event: 'maizzle:templates-changed' })
         }
       })
@@ -188,6 +189,7 @@ function maizzleDevPlugin(
       server.watcher.on('unlink', async (file) => {
         if (isTemplateFile(file)) {
           await renderer.invalidateAll()
+          bumpGeneration()
           server.ws.send({ type: 'custom', event: 'maizzle:templates-changed' })
         }
       })
@@ -214,6 +216,7 @@ function maizzleDevPlugin(
          * fresh content).
          */
         await renderer.invalidateAll()
+        bumpGeneration()
 
         if (
           isTemplateFile(file)
@@ -333,6 +336,53 @@ async function serveTemplateList(config: MaizzleConfig, res: any) {
   res.end(JSON.stringify(data))
 }
 
+interface DedupedRender {
+  /** Transformer output — before doctype prepend / stripForHtml / stripForPlaintext. */
+  rawHtml: string
+  doctype: string
+  templateConfig: MaizzleConfig
+  rendered: RenderedTemplate
+}
+
+/**
+ * Render-result memo for the dev server. A single template save makes the
+ * browser fire several endpoint requests in parallel (render, source, stats,
+ * plaintext, email) that each need the same SSR render + transformer output.
+ * Keying the in-flight Promise by `${generation}:${path}` collapses those into
+ * one render and dedupes concurrent requests. The watcher bumps the generation
+ * (and clears the cache) on every file/config change, so results never go
+ * stale. Each endpoint applies its own tail step (doctype prepend, strip,
+ * highlight, …) on top of `rawHtml`, keeping output byte-identical.
+ */
+let renderGeneration = 0
+const renderCache = new Map<string, Promise<DedupedRender>>()
+
+function bumpGeneration() {
+  renderGeneration++
+  renderCache.clear()
+}
+
+function getRendered(absolutePath: string, config: MaizzleConfig, renderer: Renderer): Promise<DedupedRender> {
+  const key = `${renderGeneration}:${absolutePath}`
+  let promise = renderCache.get(key)
+  if (!promise) {
+    promise = (async () => {
+      _setCurrentTemplate(parsePath(absolutePath))
+      try {
+        const rendered = await renderer.render(absolutePath, config)
+        const templateConfig = rendered.templateConfig
+        const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
+        const rawHtml = await runTransformers(rendered.html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
+        return { rawHtml, doctype, templateConfig, rendered }
+      } finally {
+        _setCurrentTemplate(undefined)
+      }
+    })()
+    renderCache.set(key, promise)
+  }
+  return promise
+}
+
 /**
  * SSR render a .vue template using the Renderer (not the dev UI server).
  */
@@ -350,19 +400,10 @@ async function serveRenderedTemplate(url: string, config: MaizzleConfig, rendere
   }
 
   const absolutePath = resolve(match)
-  _setCurrentTemplate(parsePath(absolutePath))
 
   try {
-    // Invalidate all modules so template + component changes are picked up
-    await renderer.invalidateAll()
-
-    const rendered = await renderer.render(absolutePath, config)
-    let html = rendered.html
-
-    const templateConfig = rendered.templateConfig
-    const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
-
-    html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
+    const { rawHtml, doctype } = await getRendered(absolutePath, config, renderer)
+    let html = rawHtml
     if (doctype) html = `${doctype}\n${html}`
 
     res.setHeader('Content-Type', 'text/html')
@@ -370,8 +411,6 @@ async function serveRenderedTemplate(url: string, config: MaizzleConfig, rendere
   } catch (error: any) {
     res.statusCode = 500
     res.end(`<pre>${error.stack || error.message}</pre>`)
-  } finally {
-    _setCurrentTemplate(undefined)
   }
 }
 
@@ -401,19 +440,10 @@ async function serveHighlightedSource(url: string, config: MaizzleConfig, render
   }
 
   const absolutePath = resolve(match)
-  _setCurrentTemplate(parsePath(absolutePath))
 
   try {
-    await renderer.invalidateAll()
-
-    const rendered = await renderer.render(absolutePath, config)
-    let html = rendered.html
-
-    const templateConfig = rendered.templateConfig
-    const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
-    html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
-
-    html = stripForHtml(doctype ? `${doctype}\n${html}` : html)
+    const { rawHtml, doctype } = await getRendered(absolutePath, config, renderer)
+    const html = stripForHtml(doctype ? `${doctype}\n${rawHtml}` : rawHtml)
 
     const hl = await getHighlighter()
     const highlighted = hl.codeToHtml(html, {
@@ -431,8 +461,6 @@ async function serveHighlightedSource(url: string, config: MaizzleConfig, render
   } catch (error: any) {
     res.statusCode = 500
     res.end(`<pre>${error.stack || error.message}</pre>`)
-  } finally {
-    _setCurrentTemplate(undefined)
   }
 }
 
@@ -486,26 +514,16 @@ async function servePlaintext(url: string, config: MaizzleConfig, renderer: Rend
   }
 
   const absolutePath = resolve(match)
-  _setCurrentTemplate(parsePath(absolutePath))
 
   try {
-    await renderer.invalidateAll()
-
-    const rendered = await renderer.render(absolutePath, config)
-    let html = rendered.html
-    const templateConfig = rendered.templateConfig
-    const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
-    html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
-
-    const plaintext = createPlaintext(stripForPlaintext(html))
+    const { rawHtml } = await getRendered(absolutePath, config, renderer)
+    const plaintext = createPlaintext(stripForPlaintext(rawHtml))
 
     res.setHeader('Content-Type', 'text/plain')
     res.end(plaintext)
   } catch (error: any) {
     res.statusCode = 500
     res.end(error.message)
-  } finally {
-    _setCurrentTemplate(undefined)
   }
 }
 
@@ -542,17 +560,10 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
   }
 
   const absolutePath = resolve(match)
-  _setCurrentTemplate(parsePath(absolutePath))
 
   try {
-    await renderer.invalidateAll()
-
-    const rendered = await renderer.render(absolutePath, config)
-    let html = rendered.html
-    const templateConfig = rendered.templateConfig
-    const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
-    html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
-    html = stripForHtml(html)
+    const { rawHtml } = await getRendered(absolutePath, config, renderer)
+    const html = stripForHtml(rawHtml)
 
     const sizeBytes = Buffer.byteLength(html, 'utf-8')
 
@@ -576,8 +587,6 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
   } catch (error: any) {
     res.statusCode = 500
     res.end(JSON.stringify({ error: error.message }))
-  } finally {
-    _setCurrentTemplate(undefined)
   }
 }
 
@@ -614,17 +623,10 @@ async function serveEmailEndpoint(url: string, req: any, res: any, config: Maizz
   }
 
   const absolutePath = resolve(match)
-  _setCurrentTemplate(parsePath(absolutePath))
 
   try {
-    await renderer.invalidateAll()
-
-    const rendered = await renderer.render(absolutePath, config)
-    let html = rendered.html
-    const templateConfig = rendered.templateConfig
-    const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
-    html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
-    if (doctype) html = `${doctype}\n${html}`
+    const { rawHtml, doctype, templateConfig } = await getRendered(absolutePath, config, renderer)
+    let html = doctype ? `${doctype}\n${rawHtml}` : rawHtml
 
     const text = createPlaintext(stripForPlaintext(html))
     html = stripForHtml(html)
@@ -640,8 +642,6 @@ async function serveEmailEndpoint(url: string, req: any, res: any, config: Maizz
   } catch (error: any) {
     res.statusCode = 500
     res.end(JSON.stringify({ success: false, message: error.message }))
-  } finally {
-    _setCurrentTemplate(undefined)
   }
 }
 

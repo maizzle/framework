@@ -1,16 +1,14 @@
-import { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync, rmSync } from 'node:fs'
-import { resolve, dirname, basename, relative, join, parse as parsePath } from 'node:path'
+import { mkdirSync, cpSync, existsSync, rmSync } from 'node:fs'
+import { resolve, dirname, relative, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { availableParallelism } from 'node:os'
 import { glob } from 'tinyglobby'
 import ora from 'ora'
 import { resolveConfig } from './config/index.ts'
 import { EventManager } from './events/index.ts'
-import { runTransformers } from './transformers/index.ts'
 import { createRenderer } from './render/createRenderer.ts'
-import { createPlaintext } from './plaintext.ts'
-import { stripForHtml, stripForPlaintext } from './utils/output-markers.ts'
 import { normalizeComponentSources } from './utils/componentSources.ts'
-import { _setCurrentTemplate } from './composables/useCurrentTemplate.ts'
-import defu from 'defu'
+import { buildTemplate, computeContentBase } from './render/buildTemplate.ts'
 import type { MaizzleConfig } from './types/index.ts'
 
 export interface BuildResult {
@@ -55,103 +53,47 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
     rmSync(outputPath, { recursive: true, force: true })
   }
 
-  const renderer = await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
   const outputFiles: string[] = []
+  let droppedAfterBuild = 0
 
-  try {
-    for (const templatePath of templateFiles) {
-      const absolutePath = resolve(templatePath)
-      const parsedPath = parsePath(absolutePath)
-      const template = { source: readFileSync(absolutePath, 'utf-8'), path: parsedPath }
+  const parallel = resolveParallel(config, templateFiles.length, configInput)
 
-      _setCurrentTemplate(parsedPath)
+  if (parallel.enabled) {
+    spinner.text = `Building ${templateFiles.length} templates across ${parallel.workers} workers...`
 
-      try {
-        await events.fireBeforeRender({ config, template })
+    const result = await runParallelBuild({
+      templateFiles,
+      workers: parallel.workers,
+      config,
+      configInput,
+      outputPath,
+      outputExtension,
+      contentBase,
+    })
 
-        const rendered = await renderer.render(absolutePath, config)
-
-        /**
-         * Register SFC event handlers collected during render so they take
-         * part in the post-render events (afterRender / afterTransform).
-         * They're cleared at the end of the iteration so they don't
-         * leak into the next template.
-         */
-        for (const { name, handler } of rendered.sfcEventHandlers) {
-          events.on(name, handler)
-        }
-
-        let html = await events.fireAfterRender({ config, template, html: rendered.html })
-
-        /**
-         * Use the per-template merged config (from defineConfig() in the SFC) so
-         * that template-level overrides like css.safe: false are respected
-         * by transformers.
-         */
-        const templateConfig = rendered.templateConfig
-
-        const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
-
-        if (templateConfig.useTransformers !== false) {
-          html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
-        }
-
-        html = await events.fireAfterTransform({ config, template, html })
-        if (doctype) html = `${doctype}\n${html}`
-
-        const htmlOut = stripForHtml(html)
-        const sfcOutputPath = rendered.outputPath
-        let outputFilePath: string
-
-        if (sfcOutputPath) {
-          const parsed = parsePath(resolve(sfcOutputPath))
-          const ext = parsed.ext ? parsed.ext.slice(1) : outputExtension
-          outputFilePath = join(parsed.dir, `${parsed.name}.${ext}`)
-        } else {
-          outputFilePath = resolveOutputPath(templatePath, outputPath, outputExtension, contentBase)
-        }
-
-        mkdirSync(dirname(outputFilePath), { recursive: true })
-        writeFileSync(outputFilePath, htmlOut)
-        outputFiles.push(outputFilePath)
-
-        // Generate plaintext version if configured
-        const globalPlaintext = templateConfig.plaintext
-        const sfcPlaintext = rendered.plaintext
-
-        if (globalPlaintext || sfcPlaintext) {
-          const globalCfg = typeof globalPlaintext === 'object' ? globalPlaintext : {}
-          const stripOptions = defu(sfcPlaintext?.options, globalCfg.options)
-          const plaintext = createPlaintext(stripForPlaintext(html), stripOptions)
-          const ptExtension = sfcPlaintext?.extension ?? globalCfg.extension ?? 'txt'
-
-          let ptOutputPath: string
-
-          if (sfcPlaintext?.destination) {
-            const name = basename(templatePath).replace(/\.(vue|md)$/, '')
-            ptOutputPath = join(resolve(sfcPlaintext.destination), `${name}.${ptExtension}`)
-          } else if (sfcOutputPath) {
-            const parsed = parsePath(outputFilePath)
-            ptOutputPath = join(parsed.dir, `${parsed.name}.${ptExtension}`)
-          } else if (globalCfg.destination) {
-            ptOutputPath = resolveOutputPath(templatePath, resolve(globalCfg.destination), ptExtension, contentBase)
-          } else {
-            ptOutputPath = resolveOutputPath(templatePath, outputPath, ptExtension, contentBase)
-          }
-
-          mkdirSync(dirname(ptOutputPath), { recursive: true })
-          writeFileSync(ptOutputPath, plaintext)
-        }
-      } finally {
-        _setCurrentTemplate(undefined)
-        events.clearSfcHandlers()
-      }
-    }
+    outputFiles.push(...result.files)
+    droppedAfterBuild = result.sfcAfterBuildCount
 
     await copyStatic(config, outputPath)
     await events.fireAfterBuild({ files: outputFiles, config })
-  } finally {
-    await renderer.close()
+  } else {
+    const renderer = await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
+
+    try {
+      for (const templatePath of templateFiles) {
+        const { files } = await buildTemplate(templatePath, { config, renderer, events, outputPath, outputExtension, contentBase })
+        outputFiles.push(...files)
+      }
+
+      await copyStatic(config, outputPath)
+      await events.fireAfterBuild({ files: outputFiles, config })
+    } finally {
+      await renderer.close()
+    }
+  }
+
+  if (droppedAfterBuild > 0) {
+    console.warn(`[maizzle] Skipped ${droppedAfterBuild} SFC-registered afterBuild handler(s): afterBuild can't run inside a parallel build worker. Move build-completion logic to the config's afterBuild hook.`)
   }
 
   const duration = ((Date.now() - start) / 1000).toFixed(2)
@@ -165,30 +107,118 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
 }
 
 /**
- * Extract the static (non-glob) prefix from content patterns.
- *
- * For example, `['/abs/path/emails/**\/*.vue']` → `'/abs/path/emails'`
- *
- * This is used to strip the content base from template paths
- * so the output preserves only the subdirectory structure.
+ * Default template count above which parallel build turns on. Benchmarked
+ * crossover (with the worker cap below) is ~25 templates; 50 leaves margin so
+ * auto-parallel only kicks in where it's a reliable win across hardware.
+ * Override per project with `parallel: { threshold }`.
  */
-function computeContentBase(patterns: string[]): string {
-  // Use the first non-negated pattern
-  const pattern = patterns.find(p => !p.startsWith('!')) ?? patterns[0]
+const DEFAULT_PARALLEL_THRESHOLD = 50
 
-  // Split on first glob character (* { ? [) and take the directory part
-  const staticPart = pattern.split(/[*{?[]/)[0]
+/**
+ * Default worker cap. Each worker runs a full Vite SSR renderer, so startup +
+ * contention outweighs added parallelism past ~8 — benchmarks showed 8 beating
+ * 12/16/23 at every size. Override with `parallel: { workers }`.
+ */
+const DEFAULT_MAX_WORKERS = 8
 
-  // Ensure we have a clean directory path (not a partial segment)
-  return resolve(staticPart.endsWith('/') ? staticPart : dirname(staticPart))
+/**
+ * Decide whether to build in parallel and with how many workers.
+ *
+ * `config.parallel`:
+ *   - omitted → parallel when `count > 50`, min(CPU count − 1, 8) workers
+ *   - `true`  → always parallel (ignores threshold), default workers
+ *   - `false` → always sequential
+ *   - `{ workers, threshold }` → parallel when `count > threshold` (default 50),
+ *     using `workers` threads (default min(CPU count − 1, 8))
+ *
+ * Workers reload the config file to recover function hooks, so parallel only
+ * applies to file-based configs (a path or the default cwd config) — an inline
+ * config object has no file to reload and always builds sequentially.
+ */
+export function resolveParallel(
+  config: MaizzleConfig,
+  count: number,
+  configInput: Partial<MaizzleConfig> | string | undefined,
+): { enabled: boolean; workers: number } {
+  const setting = config.parallel
+  if (setting === false) return { enabled: false, workers: 0 }
+
+  const fileBased = typeof configInput === 'string' || configInput == null
+  if (!fileBased) return { enabled: false, workers: 0 }
+
+  const cpus = availableParallelism()
+  const defaultWorkers = Math.min(Math.max(1, cpus - 1), DEFAULT_MAX_WORKERS)
+
+  let maxWorkers = defaultWorkers
+  let threshold = DEFAULT_PARALLEL_THRESHOLD
+  // `true` opts in regardless of count; object/omitted stay threshold-gated.
+  const ignoreThreshold = setting === true
+
+  if (typeof setting === 'object' && setting !== null) {
+    if (typeof setting.workers === 'number' && setting.workers > 0) maxWorkers = Math.floor(setting.workers)
+    if (typeof setting.threshold === 'number' && setting.threshold >= 0) threshold = Math.floor(setting.threshold)
+  }
+
+  if (!ignoreThreshold && count <= threshold) return { enabled: false, workers: 0 }
+
+  const workers = Math.min(maxWorkers, count)
+  return { enabled: workers >= 2 && count >= 2, workers }
 }
 
-function resolveOutputPath(templatePath: string, outputDir: string, extension: string, contentBase: string): string {
-  const name = basename(templatePath).replace(/\.(vue|md)$/, '')
-  const absTemplate = resolve(templatePath)
-  const rel = relative(contentBase, dirname(absTemplate))
+/**
+ * Run the build across worker threads. Each worker reloads the config (for its
+ * function hooks), builds its batch via the same `buildTemplate` as the
+ * sequential path, and returns the files it wrote. beforeCreate/afterBuild stay
+ * on the main thread (handled by the caller).
+ */
+async function runParallelBuild(opts: {
+  templateFiles: string[]
+  workers: number
+  config: MaizzleConfig
+  configInput: Partial<MaizzleConfig> | string | undefined
+  outputPath: string
+  outputExtension: string
+  contentBase: string
+}): Promise<{ files: string[]; sfcAfterBuildCount: number }> {
+  const { templateFiles, workers, config, configInput, outputPath, outputExtension, contentBase } = opts
 
-  return join(outputDir, rel, `${name}.${extension}`)
+  const { default: Tinypool } = await import('tinypool')
+  const workerPath = resolve(dirname(fileURLToPath(import.meta.url)), 'render/parallel/worker.mjs')
+
+  const configPath = typeof configInput === 'string' ? configInput : undefined
+  // Serializable snapshot of the post-beforeCreate config (functions dropped).
+  const configData = JSON.parse(JSON.stringify(config)) as Partial<MaizzleConfig>
+
+  const batches = shardEvenly(templateFiles, workers)
+
+  const pool = new Tinypool({ filename: workerPath, minThreads: batches.length, maxThreads: batches.length })
+
+  try {
+    const results = await Promise.all(
+      batches.map(templatePaths => pool.run({
+        templatePaths,
+        configPath,
+        configData,
+        outputPath,
+        outputExtension,
+        contentBase,
+      })),
+    )
+
+    return {
+      files: results.flatMap(r => r.files),
+      sfcAfterBuildCount: results.reduce((n, r) => n + r.sfcAfterBuildCount, 0),
+    }
+  } finally {
+    await pool.destroy()
+  }
+}
+
+/** Round-robin items into up to `buckets` non-empty groups for even balance. */
+function shardEvenly<T>(items: T[], buckets: number): T[][] {
+  const out: T[][] = Array.from({ length: buckets }, () => [])
+  items.forEach((item, i) => out[i % buckets].push(item))
+  return out.filter(b => b.length > 0)
 }
 
 async function copyStatic(config: MaizzleConfig, outputPath: string): Promise<void> {

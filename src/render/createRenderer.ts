@@ -44,7 +44,7 @@ export interface RenderedTemplate {
 }
 
 export interface Renderer {
-  render(input: string | Component, config: MaizzleConfig): Promise<RenderedTemplate>
+  render(input: string | Component, config: MaizzleConfig, opts?: { source?: string }): Promise<RenderedTemplate>
   invalidate(filePath: string): Promise<void>
   invalidateAll(): Promise<void>
   close(): Promise<void>
@@ -224,6 +224,15 @@ export async function createRenderer(
   let virtualSfcSource = ''
 
   /**
+   * Per-render source overrides keyed by absolute template path. Lets the
+   * build's beforeRender event rewrite a template's source before compile
+   * while keeping the real file id — so relative imports, asset URLs and
+   * component resolution still resolve against the actual file location
+   * (which the virtual-SFC path can't do).
+   */
+  const sourceOverrides = new Map<string, string>()
+
+  /**
    * Never load the host project's vite.config.ts here. Doing so pulls
    * every host plugin (Nitro, TanStack Start, the Maizzle plugin
    * itself, …) into this isolated SSR pipeline, where they override
@@ -245,6 +254,13 @@ export async function createRenderer(
         },
         load(id) {
           if (id === VIRTUAL_SFC_ID) return virtualSfcSource
+        },
+      },
+      {
+        name: 'maizzle:source-override',
+        load(id) {
+          const override = sourceOverrides.get(id.split('?')[0])
+          if (override !== undefined) return override
         },
       },
       vue({
@@ -375,7 +391,7 @@ export async function createRenderer(
   const server = await createServer(finalConfig)
 
   return {
-    async render(input: string | Component, config: MaizzleConfig): Promise<RenderedTemplate> {
+    async render(input: string | Component, config: MaizzleConfig, opts?: { source?: string }): Promise<RenderedTemplate> {
       let component: Component
       let configKey: InjectionKey<MaizzleConfig>
       let contextKey: InjectionKey<RenderContext>
@@ -396,7 +412,27 @@ export async function createRenderer(
           if (mod) server.moduleGraph.invalidateModule(mod)
           component = (await server.ssrLoadModule(VIRTUAL_SFC_ID)).default
         } else {
-          component = (await server.ssrLoadModule(input)).default
+          /**
+           * A beforeRender handler may have rewritten the source. Register it
+           * under the real path id and invalidate so ssrLoadModule compiles
+           * the override; clear + invalidate afterwards so the override never
+           * leaks into a later render of the same path.
+           */
+          const hasOverride = opts?.source !== undefined
+          if (hasOverride) {
+            sourceOverrides.set(input, opts!.source!)
+            const mod = await server.moduleGraph.getModuleByUrl(input)
+            if (mod) server.moduleGraph.invalidateModule(mod)
+          }
+          try {
+            component = (await server.ssrLoadModule(input)).default
+          } finally {
+            if (hasOverride) {
+              sourceOverrides.delete(input)
+              const mod = await server.moduleGraph.getModuleByUrl(input)
+              if (mod) server.moduleGraph.invalidateModule(mod)
+            }
+          }
         }
       } else {
         // Pre-compiled component — use directly imported keys

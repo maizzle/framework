@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { resolve, dirname, basename, relative, join, parse as parsePath } from 'node:path'
+import { resolve, dirname, basename, relative, join, sep, parse as parsePath } from 'node:path'
 import defu from 'defu'
 import { runTransformers } from '../transformers/index.ts'
 import { createPlaintext } from '../plaintext.ts'
@@ -120,8 +120,7 @@ export async function buildTemplate(
       let ptOutputPath: string
 
       if (sfcPlaintext?.destination) {
-        const name = basename(templatePath).replace(/\.(vue|md)$/, '')
-        ptOutputPath = join(resolve(sfcPlaintext.destination), `${name}.${ptExtension}`)
+        ptOutputPath = resolveOutputPath(templatePath, resolve(sfcPlaintext.destination), ptExtension, contentBase)
       } else if (sfcOutputPath) {
         const parsed = parsePath(outputFilePath)
         ptOutputPath = join(parsed.dir, `${parsed.name}.${ptExtension}`)
@@ -149,16 +148,36 @@ export async function buildTemplate(
  *
  * Used to strip the content base from template paths so the output preserves
  * only the subdirectory structure.
+ *
+ * With multiple positive patterns (multi-root setups), returns their common
+ * ancestor directory so templates from every root keep a clean relative path.
  */
 export function computeContentBase(patterns: string[]): string {
-  // Use the first non-negated pattern
-  const pattern = patterns.find(p => !p.startsWith('!')) ?? patterns[0]
+  const positives = patterns.filter(p => !p.startsWith('!'))
+  const sources = positives.length > 0 ? positives : patterns
 
-  // Split on first glob character (* { ? [) and take the directory part
-  const staticPart = pattern.split(/[*{?[]/)[0]
+  const bases = sources.map((pattern) => {
+    // Split on first glob character (* { ? [) and take the directory part
+    const staticPart = pattern.split(/[*{?[]/)[0]
+    // Ensure we have a clean directory path (not a partial segment)
+    return resolve(staticPart.endsWith('/') ? staticPart : dirname(staticPart))
+  })
 
-  // Ensure we have a clean directory path (not a partial segment)
-  return resolve(staticPart.endsWith('/') ? staticPart : dirname(staticPart))
+  return bases.reduce(commonPath)
+}
+
+/** Longest common directory path shared by two absolute paths. */
+function commonPath(a: string, b: string): string {
+  const aSegments = a.split(sep)
+  const bSegments = b.split(sep)
+  const shared: string[] = []
+
+  for (let i = 0; i < Math.min(aSegments.length, bSegments.length); i++) {
+    if (aSegments[i] !== bSegments[i]) break
+    shared.push(aSegments[i])
+  }
+
+  return shared.join(sep) || sep
 }
 
 export function resolveOutputPath(templatePath: string, outputDir: string, extension: string, contentBase: string): string {

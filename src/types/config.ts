@@ -539,6 +539,24 @@ export interface MaizzleConfig {
      */
     extension?: string
   }
+  /**
+   * Build templates in parallel across worker threads.
+   *
+   * - omitted (default): parallel when there are more than 50 templates
+   * - `true`: always parallel, using min(CPU count − 1, 8) workers
+   * - `false`: always sequential
+   * - `{ workers, threshold }`: parallel when the template count exceeds
+   *   `threshold` (default 50), using `workers` threads (default
+   *   min(CPU count − 1, 8)). Set `threshold: 0` to always parallelize.
+   *
+   * Note: more workers is not faster — each runs a full renderer, so ~8 is the
+   * sweet spot and over-provisioning slows builds down.
+   *
+   * Only applies to file-based configs (the CLI / a config path); an inline
+   * config object always builds sequentially. SFC-registered `afterBuild`
+   * handlers can't run in a worker — use the config `afterBuild` hook instead.
+   */
+  parallel?: boolean | { workers?: number; threshold?: number }
   /** Static file copying configuration. */
   static?: {
     /**

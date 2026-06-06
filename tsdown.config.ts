@@ -21,6 +21,8 @@ export default defineConfig({
       cpSync('src/components', 'dist/components', { recursive: true })
       // Copy dev UI (served at runtime by Vite)
       cpSync('src/server/ui', 'dist/server/ui', { recursive: true })
+      // Copy the parallel-build worker entry (plain JS, loaded by tinypool at runtime)
+      cpSync('src/render/parallel/worker.mjs', 'dist/render/parallel/worker.mjs')
     },
   },
 })

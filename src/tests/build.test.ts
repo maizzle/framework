@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mkdtempSync, writeFileSync, readFileSync, existsSync, mkdirSync, rmSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
-import { tmpdir } from 'node:os'
-import { build } from '../build.ts'
+import { tmpdir, availableParallelism } from 'node:os'
+import { build, resolveParallel } from '../build.ts'
+import { computeContentBase } from '../render/buildTemplate.ts'
 
 function createTempProject() {
   const dir = mkdtempSync(join(tmpdir(), 'maizzle-build-'))
@@ -149,6 +150,66 @@ describe('build', () => {
     delete (globalThis as any).__beforeRenderFired
   })
 
+  it('compiles the source returned from beforeRender', async () => {
+    writeSfc(tempDir, 'emails/test.vue', `
+      <template>
+        <div>ORIGINAL</div>
+      </template>
+    `)
+
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      export default {
+        beforeRender({ template }) {
+          return template.source.replace('ORIGINAL', 'REWRITTEN')
+        }
+      }
+    `)
+
+    const result = await build()
+    const html = readFileSync(result.files[0], 'utf-8')
+
+    expect(html).toContain('REWRITTEN')
+    expect(html).not.toContain('ORIGINAL')
+  })
+
+  it('uses beforeRender config mutations during compile, scoped per template', async () => {
+    writeSfc(tempDir, 'emails/a.vue', `
+      <script setup>
+        const config = useConfig()
+      </script>
+      <template>
+        <div>{{ config.greeting }}</div>
+      </template>
+    `)
+
+    writeSfc(tempDir, 'emails/b.vue', `
+      <script setup>
+        const config = useConfig()
+      </script>
+      <template>
+        <div>{{ config.greeting ?? 'none' }}</div>
+      </template>
+    `)
+
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      export default {
+        beforeRender({ template, config }) {
+          if (template.path.name === 'a') config.greeting = 'AAA'
+        }
+      }
+    `)
+
+    const result = await build()
+    const aHtml = readFileSync(result.files.find(f => f.includes('a.html'))!, 'utf-8')
+    const bHtml = readFileSync(result.files.find(f => f.includes('b.html'))!, 'utf-8')
+
+    // 'a' sees its own mutation
+    expect(aHtml).toContain('AAA')
+    // 'b' must NOT inherit 'a's mutation (per-template config clone)
+    expect(bHtml).not.toContain('AAA')
+    expect(bHtml).toContain('none')
+  })
+
   it('fires afterRender event and uses modified HTML', async () => {
     writeSfc(tempDir, 'emails/test.vue', `
       <template>
@@ -215,6 +276,109 @@ describe('build', () => {
     const content = readFileSync(marker, 'utf-8')
     expect(content).toContain('test.html')
   })
+
+  it('builds every template when experimental.parallel is set', async () => {
+    for (let i = 1; i <= 6; i++) {
+      writeSfc(tempDir, `emails/t${i}.vue`, `
+        <template>
+          <div>Template ${i}</div>
+        </template>
+      `)
+    }
+
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      export default {
+        parallel: { workers: 2, threshold: 0 }
+      }
+    `)
+
+    const result = await build()
+
+    expect(result.files).toHaveLength(6)
+    for (let i = 1; i <= 6; i++) {
+      const file = result.files.find(p => p.includes(`t${i}.html`))
+      expect(file, `output for t${i}`).toBeDefined()
+      expect(readFileSync(file!, 'utf-8')).toContain(`Template ${i}`)
+    }
+  }, 120_000)
+
+  it('runs config events and afterBuild during a parallel build', async () => {
+    for (let i = 1; i <= 4; i++) {
+      writeSfc(tempDir, `emails/e${i}.vue`, `
+        <script setup>
+          const config = useConfig()
+        </script>
+        <template>
+          <div>{{ config.injected }}|PLACEHOLDER</div>
+        </template>
+      `)
+    }
+
+    const marker = join(tempDir, 'afterbuild.count')
+
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      import { writeFileSync } from 'node:fs'
+
+      export default {
+        parallel: { workers: 2, threshold: 0 },
+        beforeRender({ template, config }) {
+          config.injected = 'IN-' + template.path.name
+        },
+        afterRender({ html }) {
+          return html.replace('PLACEHOLDER', 'AR')
+        },
+        afterBuild({ files }) {
+          writeFileSync('${marker.replace(/\\/g, '\\\\')}', String(files.length))
+        }
+      }
+    `)
+
+    const result = await build()
+
+    expect(result.files).toHaveLength(4)
+
+    const e1 = readFileSync(result.files.find(p => p.includes('e1.html'))!, 'utf-8')
+    // beforeRender config mutation reached compile (in the worker)
+    expect(e1).toContain('IN-e1')
+    // afterRender transform ran (in the worker)
+    expect(e1).toContain('AR')
+    expect(e1).not.toContain('PLACEHOLDER')
+
+    // afterBuild ran once on the main thread with the full file list
+    expect(readFileSync(marker, 'utf-8')).toBe('4')
+  }, 120_000)
+
+  it('warns about SFC-registered afterBuild handlers dropped in a parallel build', async () => {
+    for (let i = 1; i <= 2; i++) {
+      writeSfc(tempDir, `emails/w${i}.vue`, `
+        <script setup>
+          useEvent('afterBuild', () => {})
+        </script>
+        <template>
+          <div>Template ${i}</div>
+        </template>
+      `)
+    }
+
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      export default {
+        parallel: { workers: 2, threshold: 0 }
+      }
+    `)
+
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    let calls: unknown[][]
+    try {
+      await build()
+    } finally {
+      // Capture before restoring — mockRestore() clears the recorded calls.
+      calls = warn.mock.calls.slice()
+      warn.mockRestore()
+    }
+
+    expect(calls.some(c => String(c[0]).includes("afterBuild can't run inside a parallel build worker"))).toBe(true)
+  }, 120_000)
 
   it('fires beforeCreate to modify config', async () => {
     writeSfc(tempDir, 'emails/test.vue', `
@@ -687,5 +851,77 @@ describe('build', () => {
     const result = await build({ content: ['!emails/skip.vue'] })
 
     expect(result.files).toHaveLength(0)
+  })
+})
+
+describe('resolveParallel', () => {
+  const defaultWorkers = Math.min(Math.max(1, availableParallelism() - 1), 8)
+
+  it('is off by default at or below 50 templates', () => {
+    expect(resolveParallel({}, 50, undefined).enabled).toBe(false)
+  })
+
+  it('turns on by default above 50 templates (file-based config)', () => {
+    const result = resolveParallel({}, 51, undefined)
+    expect(result.enabled).toBe(defaultWorkers >= 2)
+    if (result.enabled) expect(result.workers).toBe(defaultWorkers)
+  })
+
+  it('gates on a custom threshold', () => {
+    expect(resolveParallel({ parallel: { threshold: 100 } }, 100, undefined).enabled).toBe(false)
+    expect(resolveParallel({ parallel: { threshold: 100 } }, 101, undefined).enabled).toBe(defaultWorkers >= 2)
+  })
+
+  it('threshold 0 always parallelizes (given ≥2 templates)', () => {
+    expect(resolveParallel({ parallel: { workers: 2, threshold: 0 } }, 4, undefined)).toEqual({ enabled: true, workers: 2 })
+  })
+
+  it('caps the default worker count at 8 regardless of CPU count', () => {
+    expect(resolveParallel({ parallel: true }, 1000, undefined).workers).toBeLessThanOrEqual(8)
+  })
+
+  it('lets an explicit worker count exceed the default cap', () => {
+    expect(resolveParallel({ parallel: { workers: 16, threshold: 0 } }, 100, undefined)).toEqual({ enabled: true, workers: 16 })
+  })
+
+  it('caps workers at the template count', () => {
+    expect(resolveParallel({ parallel: { workers: 8, threshold: 0 } }, 3, undefined)).toEqual({ enabled: true, workers: 3 })
+  })
+
+  it('true opts in below the default threshold', () => {
+    const result = resolveParallel({ parallel: true }, 4, undefined)
+    const expected = Math.min(defaultWorkers, 4)
+    expect(result.enabled).toBe(expected >= 2)
+  })
+
+  it('stays sequential when parallel is false', () => {
+    expect(resolveParallel({ parallel: false }, 1000, undefined).enabled).toBe(false)
+  })
+
+  it('stays sequential for inline-object configs (no file to reload hooks from)', () => {
+    expect(resolveParallel({ parallel: true }, 100, {}).enabled).toBe(false)
+  })
+})
+
+describe('computeContentBase', () => {
+  it('derives the static directory from a single glob pattern', () => {
+    expect(computeContentBase(['emails/**/*.vue'])).toBe(join(process.cwd(), 'emails'))
+  })
+
+  it('keeps a trailing-slash static part as-is', () => {
+    expect(computeContentBase(['emails/*.vue'])).toBe(join(process.cwd(), 'emails'))
+  })
+
+  it('returns the common ancestor of multiple positive patterns', () => {
+    expect(computeContentBase(['src/emails/**/*.vue', 'src/newsletters/**/*.vue']))
+      .toBe(join(process.cwd(), 'src'))
+  })
+
+  it('ignores negated patterns when computing the base', () => {
+    expect(computeContentBase(['emails/**/*.vue', '!emails/partials/**'])).toBe(join(process.cwd(), 'emails'))
+  })
+
+  it('falls back to all patterns when every pattern is negated', () => {
+    expect(computeContentBase(['!emails/**/*.vue'])).toBe(join(process.cwd(), '!emails'))
   })
 })

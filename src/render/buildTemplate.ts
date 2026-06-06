@@ -79,16 +79,17 @@ export async function buildTemplate(
       events.on(name, handler)
     }
 
-    let html = await events.fireAfterRender({ config: renderConfig, template, html: rendered.html })
-
     const templateConfig = rendered.templateConfig
+
+    let html = await events.fireAfterRender({ config: templateConfig, template, html: rendered.html })
+
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
 
     if (templateConfig.useTransformers !== false) {
       html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
     }
 
-    html = await events.fireAfterTransform({ config: renderConfig, template, html })
+    html = await events.fireAfterTransform({ config: templateConfig, template, html })
     if (doctype) html = `${doctype}\n${html}`
 
     const htmlOut = stripForHtml(html)

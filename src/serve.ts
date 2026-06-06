@@ -34,6 +34,21 @@ const pkg = (name: string) => {
   return resolved.slice(0, idx + marker.length)
 }
 
+/**
+ * Resolve a package's ESM entry via its `exports` map. Aliasing to the
+ * package directory bypasses `exports` (it only keys off the bare name),
+ * so directory resolution can fall back to a UMD/CJS bundle — which Vite 8
+ * flags `needsInterop` and then default-imports, breaking ESM-only deps
+ * like culori (named exports, no default). Point the alias at the real
+ * ESM entry instead.
+ */
+const pkgEsmEntry = (name: string) => {
+  const dir = pkg(name)
+  const pj = JSON.parse(readFileSync(resolve(dir, 'package.json'), 'utf-8'))
+  const entry = pj.exports?.['.']?.import ?? pj.module ?? pj.main
+  return resolve(dir, entry)
+}
+
 export interface ServeOptions {
   config?: Partial<MaizzleConfig> | string
   /** Override the dev server port (takes precedence over config.server.port) */
@@ -82,7 +97,9 @@ export async function serve(options: ServeOptions = {}) {
       alias: [
         { find: '@', replacement: devUIDir },
         { find: 'vue', replacement: resolve(pkg('vue'), 'dist/vue.runtime.esm-bundler.js') },
-        ...['vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', '@lucide/vue', 'class-variance-authority', 'clsx', 'tailwind-merge', 'culori']
+        // culori is ESM-only — alias to its ESM entry, not the package dir (see pkgEsmEntry)
+        { find: 'culori', replacement: pkgEsmEntry('culori') },
+        ...['vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', '@lucide/vue', 'class-variance-authority', 'clsx', 'tailwind-merge']
           .map(name => ({ find: name, replacement: pkg(name) })),
       ],
     },

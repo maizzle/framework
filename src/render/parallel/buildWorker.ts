@@ -1,4 +1,4 @@
-import defu from 'defu'
+import { createDefu } from 'defu'
 import { resolveConfig } from '../../config/index.ts'
 import { createRenderer } from '../createRenderer.ts'
 import { EventManager } from '../../events/index.ts'
@@ -24,6 +24,18 @@ export interface BuildWorkerResult {
 }
 
 /**
+ * Overlay config data with array-replace (not defu's default concat) so the
+ * main thread's arrays — content globs, plugin/source lists — fully replace the
+ * reloaded config's instead of duplicating every entry.
+ */
+const mergeConfig = createDefu((obj, key, value) => {
+  if (Array.isArray(value)) {
+    if (!(key in obj)) obj[key as keyof typeof obj] = value
+    return true
+  }
+})
+
+/**
  * Build one batch of templates in a worker thread.
  *
  * Config function hooks (beforeRender/afterRender/afterTransform) can't cross
@@ -37,7 +49,7 @@ export async function run(data: BuildWorkerData): Promise<BuildWorkerResult> {
   const { templatePaths, configPath, configData, outputPath, outputExtension, contentBase } = data
 
   const reloaded = await resolveConfig(configPath)
-  const config = defu(configData, reloaded) as MaizzleConfig
+  const config = mergeConfig(configData, reloaded) as MaizzleConfig
 
   const events = new EventManager()
   events.registerConfig(config)

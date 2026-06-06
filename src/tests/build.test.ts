@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mkdtempSync, writeFileSync, readFileSync, existsSync, mkdirSync, rmSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir, availableParallelism } from 'node:os'
 import { build, resolveParallel } from '../build.ts'
+import { computeContentBase } from '../render/buildTemplate.ts'
 
 function createTempProject() {
   const dir = mkdtempSync(join(tmpdir(), 'maizzle-build-'))
@@ -345,6 +346,38 @@ describe('build', () => {
 
     // afterBuild ran once on the main thread with the full file list
     expect(readFileSync(marker, 'utf-8')).toBe('4')
+  }, 120_000)
+
+  it('warns about SFC-registered afterBuild handlers dropped in a parallel build', async () => {
+    for (let i = 1; i <= 2; i++) {
+      writeSfc(tempDir, `emails/w${i}.vue`, `
+        <script setup>
+          useEvent('afterBuild', () => {})
+        </script>
+        <template>
+          <div>Template ${i}</div>
+        </template>
+      `)
+    }
+
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      export default {
+        parallel: { workers: 2, threshold: 0 }
+      }
+    `)
+
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    let calls: unknown[][]
+    try {
+      await build()
+    } finally {
+      // Capture before restoring — mockRestore() clears the recorded calls.
+      calls = warn.mock.calls.slice()
+      warn.mockRestore()
+    }
+
+    expect(calls.some(c => String(c[0]).includes("afterBuild can't run inside a parallel build worker"))).toBe(true)
   }, 120_000)
 
   it('fires beforeCreate to modify config', async () => {
@@ -867,5 +900,28 @@ describe('resolveParallel', () => {
 
   it('stays sequential for inline-object configs (no file to reload hooks from)', () => {
     expect(resolveParallel({ parallel: true }, 100, {}).enabled).toBe(false)
+  })
+})
+
+describe('computeContentBase', () => {
+  it('derives the static directory from a single glob pattern', () => {
+    expect(computeContentBase(['emails/**/*.vue'])).toBe(join(process.cwd(), 'emails'))
+  })
+
+  it('keeps a trailing-slash static part as-is', () => {
+    expect(computeContentBase(['emails/*.vue'])).toBe(join(process.cwd(), 'emails'))
+  })
+
+  it('returns the common ancestor of multiple positive patterns', () => {
+    expect(computeContentBase(['src/emails/**/*.vue', 'src/newsletters/**/*.vue']))
+      .toBe(join(process.cwd(), 'src'))
+  })
+
+  it('ignores negated patterns when computing the base', () => {
+    expect(computeContentBase(['emails/**/*.vue', '!emails/partials/**'])).toBe(join(process.cwd(), 'emails'))
+  })
+
+  it('falls back to all patterns when every pattern is negated', () => {
+    expect(computeContentBase(['!emails/**/*.vue'])).toBe(join(process.cwd(), '!emails'))
   })
 })

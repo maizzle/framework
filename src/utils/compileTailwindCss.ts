@@ -29,12 +29,12 @@ export function createTailwindProcessor(config: MaizzleConfig) {
 export function lowerCssSyntax(css: string): string {
   const result = transform({
     filename: 'email.css',
-    code: Buffer.from(css),
+    code: new TextEncoder().encode(css),
     minify: false,
     targets: { ie: 4 << 5 },
   })
 
-  return result.code.toString()
+  return new TextDecoder().decode(result.code)
 }
 
 export async function optimizeTailwindCss(css: string, config: MaizzleConfig): Promise<string> {

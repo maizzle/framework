@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { resolve } from 'pathe'
 import { createJiti } from 'jiti'
 import { fileURLToPath } from 'node:url'
 import { createDefu } from 'defu'
@@ -83,7 +83,7 @@ function normalizeConfig(
     merged.content = merged.content.map(p => {
       // Skip already-absolute or negated patterns
       if (p.startsWith('/') || p.startsWith('!')) return p
-      return resolve(root, p).replace(/\\/g, '/')
+      return resolve(root, p)
     })
   }
 
@@ -91,7 +91,7 @@ function normalizeConfig(
   if (merged.static?.source) {
     merged.static.source = merged.static.source.map(p => {
       if (p.startsWith('/') || p.startsWith('!')) return p
-      return resolve(root, p).replace(/\\/g, '/')
+      return resolve(root, p)
     })
   }
 

@@ -1,4 +1,4 @@
-import { resolve, dirname, relative } from 'node:path'
+import { resolve, dirname, relative } from 'pathe'
 import type { ChildNode, Element } from 'domhandler'
 import { walk } from '../utils/ast/index.ts'
 import { decodeStyleEntities } from '../utils/decodeStyleEntities.ts'

@@ -582,7 +582,7 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
     const { rawHtml } = await getRendered(absolutePath, config, renderer)
     const html = stripForHtml(rawHtml)
 
-    const sizeBytes = Buffer.byteLength(html, 'utf-8')
+    const sizeBytes = new TextEncoder().encode(html).length
 
     // Count images: <img> tags and CSS background images
     const imgTags = (html.match(/<img\b[^>]*>/gi) || []).length

@@ -35,6 +35,19 @@ describe('render', () => {
       expect(result.config.css?.preferUnitless).toBe(true)
     })
 
+    it('does not read maizzle.config from cwd', async () => {
+      writeFileSync(join(tempDir, 'maizzle.config.js'), 'export default { css: { safe: false } }')
+
+      const result = await render(`
+        <template>
+          <div>Test</div>
+        </template>
+      `)
+
+      // The on-disk config is ignored — defaults win, not the file's `safe: false`.
+      expect(result.config.css?.safe).toBe(true)
+    })
+
     it('uses template-level defineConfig()', async () => {
       const result = await render(`
         <script setup>

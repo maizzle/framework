@@ -41,6 +41,34 @@ export async function resolveConfig(
   // Programmatic config (object) overrides file config, which overrides defaults
   const programmaticConfig = typeof config === 'object' && config !== null ? config : {}
 
+  return normalizeConfig(programmaticConfig, fileConfig, cwd)
+}
+
+/**
+ * Resolve config from a programmatic object only — never touches disk.
+ *
+ * `render()` uses this so a stray `maizzle.config.{ts,js}` in `cwd` can't
+ * silently alter output: the config you pass is the config you get, layered
+ * over defaults. Callers who want the project's file config load it
+ * explicitly via {@link resolveConfig} and pass the result in.
+ */
+export function resolveConfigObject(
+  config?: Partial<MaizzleConfig>,
+  cwd: string = process.cwd(),
+): MaizzleConfig {
+  const programmaticConfig = config && typeof config === 'object' ? config : {}
+  return normalizeConfig(programmaticConfig, {}, cwd)
+}
+
+/**
+ * Merge programmatic config over file config over defaults, then resolve
+ * filesystem paths (root, content, static, components) relative to cwd/root.
+ */
+function normalizeConfig(
+  programmaticConfig: Partial<MaizzleConfig>,
+  fileConfig: Partial<MaizzleConfig>,
+  cwd: string,
+): MaizzleConfig {
   const merged = merge(programmaticConfig, fileConfig, defaults) as MaizzleConfig
 
   // Check if root was explicitly provided before resolving

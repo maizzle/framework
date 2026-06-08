@@ -1,5 +1,5 @@
 import { resolve, extname } from 'node:path'
-import { resolveConfig } from '../config/index.ts'
+import { resolveConfigObject } from '../config/index.ts'
 import { runTransformers } from '../transformers/index.ts'
 import { createPlaintext } from '../plaintext.ts'
 import { stripForHtml, stripForPlaintext } from '../utils/output-markers.ts'
@@ -38,7 +38,7 @@ export async function render(
     )
   }
 
-  const resolvedConfig = await resolveConfig(config)
+  const resolvedConfig = resolveConfigObject(config)
 
   /**
    * Reuse a renderer started by the Vite plugin when one is active.

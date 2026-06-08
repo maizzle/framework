@@ -1,4 +1,4 @@
-import { resolve, relative } from 'node:path'
+import { resolve, relative } from 'pathe'
 import type { ComponentSource } from '../types/config.ts'
 
 /**
@@ -72,7 +72,7 @@ export interface ComponentNameOptions {
 export function componentNameFromPath(opts: ComponentNameOptions): string {
   const { filePath, dirRoot, prefix, pathPrefix } = opts
 
-  const rel = relative(dirRoot, filePath).replace(/\\/g, '/')
+  const rel = relative(dirRoot, filePath)
   const noExt = rel.replace(/\.(vue|md)$/, '')
   const segments = noExt.split('/').map(pascalCase)
   const fileName = segments.pop() ?? ''

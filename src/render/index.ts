@@ -1,4 +1,4 @@
-import { resolve, extname } from 'node:path'
+import { resolve, extname } from 'pathe'
 import { resolveConfigObject } from '../config/index.ts'
 import { runTransformers } from '../transformers/index.ts'
 import { createPlaintext } from '../plaintext.ts'

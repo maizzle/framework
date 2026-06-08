@@ -1,4 +1,4 @@
-import { resolve } from 'node:path'
+import { resolve } from 'pathe'
 import type { ChildNode, Element, Comment } from 'domhandler'
 import { walk } from '../utils/ast/index.ts'
 import { compileTailwindCss } from '../utils/compileTailwindCss.ts'

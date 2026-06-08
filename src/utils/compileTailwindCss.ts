@@ -5,10 +5,8 @@ import safeParser from 'postcss-safe-parser'
 import { transform } from 'lightningcss'
 import resolveProps from '../plugins/postcss/resolveProps.ts'
 import pruneVars from '../plugins/postcss/pruneVars.ts'
-import { tailwindCleanup } from '../plugins/postcss/tailwindCleanup.ts'
-import { mergeMediaQueries } from '../plugins/postcss/mergeMediaQueries.ts'
-import { quoteFontFamilies } from '../plugins/postcss/quoteFontFamilies.ts'
 import { resolveMaizzleImports } from '../plugins/postcss/resolveMaizzleImports.ts'
+import { optimizeTailwindCss } from './optimizeTailwindCss.ts'
 import type { MaizzleConfig } from '../types/config.ts'
 
 export function createTailwindProcessor(config: MaizzleConfig) {
@@ -35,17 +33,6 @@ export function lowerCssSyntax(css: string): string {
   })
 
   return result.code.toString()
-}
-
-export async function optimizeTailwindCss(css: string, config: MaizzleConfig): Promise<string> {
-  const plugins: postcss.Plugin[] = [...tailwindCleanup(config), quoteFontFamilies()]
-
-  const mediaPlugin = mergeMediaQueries(config)
-  if (mediaPlugin) plugins.push(mediaPlugin)
-
-  const result = await postcss(plugins).process(css, { from: undefined })
-
-  return result.css
 }
 
 /**

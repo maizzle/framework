@@ -9,8 +9,15 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/browser.js",
+      "workerd": "./dist/browser.js",
+      "node": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js"
     }
   },
   "bin": {
@@ -21,7 +28,8 @@
     "bin"
   ],
   "scripts": {
-    "build": "tsdown",
+    "build": "node scripts/generate-tailwind-css.mjs && tsdown",
+    "generate:sources": "node scripts/generate-tailwind-css.mjs",
     "dev": "vitest",
     "lint": "oxlint",
     "test": "vitest run --coverage",
@@ -49,16 +57,19 @@
     "dom-serializer": "^3.0.0",
     "domhandler": "^6.0.1",
     "email-comb": "^7.1.3",
+    "es-module-lexer": "^2.1.0",
     "html-crush": "^6.1.3",
     "htmlparser2": "^12.0.0",
     "is-url-superb": "^6.1.0",
     "jiti": "^2.6.1",
     "juice": "^12.0.0",
+    "lightningcss-wasm": "^1.32.0",
     "maizzle": "latest",
     "markdown-exit": "^1.1.0-beta.2",
     "nodemailer": "^8.0.5",
     "ora": "^9.3.0",
     "oxfmt": "^0.53.0",
+    "pathe": "^2.0.3",
     "postcss": "^8.5.6",
     "postcss-calc": "^10.1.1",
     "postcss-merge-longhand": "^8.0.0",
@@ -68,6 +79,9 @@
     "query-string": "^9.3.1",
     "reka-ui": "^2.9.3",
     "string-strip-html": "^13.5.3",
+    "sucrase": "^3.35.1",
+    "sval": "^0.6.12",
+    "tailwindcss": "^4.3.0",
     "tinyglobby": "^0.2.15",
     "tinypool": "^2.1.0",
     "tw-animate-css": "^1.4.0",

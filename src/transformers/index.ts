@@ -18,11 +18,11 @@ import { entitiesDom } from './entities.ts'
 import { urlQueryDom } from './urlQuery.ts'
 import { purgeCssDom } from './purgeCss.ts'
 import { replaceStrings } from './replaceStrings.ts'
-import { format } from './format.ts'
 import { minifyCodeInline } from './minifyCodeInline.ts'
 import { minify } from './minify.ts'
 import type { MaizzleConfig } from '../types/config.ts'
 import type { TailwindBlock } from '../composables/renderContext.ts'
+import type { TransformOptions } from './env.ts'
 
 /**
  * Run all Maizzle transformers on the rendered HTML.
@@ -60,6 +60,7 @@ export async function runTransformers(
   filePath?: string,
   doctype?: string,
   tailwindBlocks?: TailwindBlock[],
+  opts?: TransformOptions,
 ): Promise<string> {
   /**
    * Per-transformer skip map — only honored when useTransformers is an object.
@@ -102,15 +103,15 @@ export async function runTransformers(
   let dom = parse(html)
 
   // 0. Inline <link> stylesheets
-  dom = await inlineLinkDom(dom, filePath)
+  dom = await inlineLinkDom(dom, filePath, opts?.readLinkFile)
 
   // 0.5. <Tailwind> component — compile per-block scoped CSS, inject into <head>
   if (tailwindBlocks?.length) {
-    dom = await tailwindComponent(dom, tailwindBlocks, effective, filePath)
+    dom = await tailwindComponent(dom, tailwindBlocks, effective, filePath, opts?.compileTailwind)
   }
 
   // 1. Tailwind CSS — always runs first
-  dom = await tailwindcss(dom, effective, filePath)
+  dom = await tailwindcss(dom, effective, filePath, opts?.compileTailwind)
 
   // 2. Safe class names
   if (enabled('safeSelectors')) dom = safeSelectorsDom(dom, effective.css)
@@ -185,7 +186,10 @@ export async function runTransformers(
   const minifyWillRun = enabled('minify') && !!effective.html?.minify
   if (enabled('prettify') && !minifyWillRun && effective.html?.format) {
     const formatOptions = typeof effective.html.format === 'object' ? effective.html.format : {}
-    result = await format(result, formatOptions)
+    const formatFn = opts?.format === undefined
+      ? (await import('./format.ts')).format
+      : opts.format
+    if (formatFn) result = await formatFn(result, formatOptions)
   }
 
   // 16. Minify

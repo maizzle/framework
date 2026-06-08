@@ -1,7 +1,6 @@
-import { readFileSync } from 'node:fs'
-import { resolve, dirname } from 'node:path'
 import type { ChildNode, Element } from 'domhandler'
 import { parse, serialize, walk } from '../utils/ast/index.ts'
+import type { ReadLinkFile } from './env.ts'
 
 /**
  * Inline `<link rel="stylesheet">` tags as `<style>` tags.
@@ -30,11 +29,20 @@ export async function inlineLink(html: string, filePath?: string): Promise<strin
 }
 
 /**
+ * Resolve the local-file reader: lazily import the Node default when the
+ * caller didn't specify one, honor `null` as an explicit opt-out (browser).
+ */
+async function resolveReader(readLinkFile?: ReadLinkFile | null): Promise<ReadLinkFile | null> {
+  if (readLinkFile === undefined) return (await import('./inlineLink.node.ts')).readLinkFile
+  return readLinkFile
+}
+
+/**
  * DOM-form of {@link inlineLink} used by the internal transformer pipeline.
  * Takes a parsed DOM, returns a parsed DOM — avoids redundant
  * serialize/parse round-trips when chained with other transformers.
  */
-export async function inlineLinkDom(dom: ChildNode[], filePath?: string): Promise<ChildNode[]> {
+export async function inlineLinkDom(dom: ChildNode[], filePath?: string, readLinkFile?: ReadLinkFile | null): Promise<ChildNode[]> {
   const links: { node: Element; parent: ChildNode; index: number }[] = []
 
   walk(dom, (node) => {
@@ -79,12 +87,11 @@ export async function inlineLinkDom(dom: ChildNode[], filePath?: string): Promis
     } else {
       if (!filePath) continue
 
-      try {
-        const absolutePath = resolve(dirname(filePath), href)
-        css = readFileSync(absolutePath, 'utf8')
-      } catch {
-        continue
-      }
+      const read = await resolveReader(readLinkFile)
+      if (!read) continue
+
+      css = read(href, filePath)
+      if (css === undefined) continue
     }
 
     const styleNode = {

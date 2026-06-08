@@ -1,9 +1,10 @@
 import { resolve } from 'node:path'
 import type { ChildNode, Element, Comment } from 'domhandler'
 import { walk } from '../utils/ast/index.ts'
-import { compileTailwindCss } from '../utils/compileTailwindCss.ts'
+import { cwd } from '../utils/cwd.ts'
 import type { TailwindBlock } from '../composables/renderContext.ts'
 import type { MaizzleConfig } from '../types/config.ts'
+import type { CompileTailwind } from './env.ts'
 
 const DEFAULT_SEED = '@import "@maizzle/tailwindcss" source(none);'
 
@@ -29,8 +30,10 @@ export async function tailwindComponent(
   blocks: TailwindBlock[],
   config: MaizzleConfig,
   filePath?: string,
+  compile?: CompileTailwind,
 ): Promise<ChildNode[]> {
   if (!blocks.length) return dom
+  const compileCss = compile ?? (await import('../utils/compileTailwindCss.ts')).compileTailwindCss
 
   const map = new Map<string, BlockMeta>()
   for (const b of blocks) {
@@ -69,7 +72,7 @@ export async function tailwindComponent(
     }
   })
 
-  const fromPath = filePath ?? resolve(process.cwd(), 'template.vue')
+  const fromPath = filePath ?? resolve(cwd(), 'template.vue')
 
   let head: Element | undefined
   walk(dom, (n) => {
@@ -89,7 +92,7 @@ export async function tailwindComponent(
     if (meta.nested) continue
 
     const cssInput = buildCssInput(meta.configCss, meta.classes)
-    const css = (await compileTailwindCss(cssInput, config, `${fromPath}?tw=${meta.id}`)).trim()
+    const css = (await compileCss(cssInput, config, `${fromPath}?tw=${meta.id}`)).trim()
     if (!css) continue
 
     const styleNode: Element = {

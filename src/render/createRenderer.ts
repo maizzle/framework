@@ -14,9 +14,7 @@ import Components from 'unplugin-vue-components/vite'
 import { unheadVueComposablesImports } from '@unhead/vue'
 import { defu as merge } from 'defu'
 import { glob, globSync } from 'tinyglobby'
-import { createSSRApp } from 'vue'
-import { renderToString } from 'vue/server-renderer'
-import { createHead } from '@unhead/vue/server'
+import { ssrRender, type RenderedTemplate } from './ssrRender.ts'
 import { MaizzleConfigKey } from '../composables/useConfig.ts'
 import { RenderContextKey } from '../composables/renderContext.ts'
 import { componentNameFromPath, type NormalizedComponentSource } from '../utils/componentSources.ts'
@@ -33,15 +31,7 @@ const vueServerRendererPkgDir = dirname(fileURLToPath(import.meta.resolve('@vue/
 const unheadVuePkgDir = resolve(dirname(fileURLToPath(import.meta.resolve('@unhead/vue'))), '..')
 const vueRouterPkgDir = dirname(fileURLToPath(import.meta.resolve('vue-router/package.json')))
 
-export interface RenderedTemplate {
-  html: string
-  doctype?: string
-  templateConfig: MaizzleConfig
-  sfcEventHandlers: RenderContext['sfcEventHandlers']
-  plaintext?: RenderContext['plaintext']
-  outputPath?: RenderContext['outputPath']
-  tailwindBlocks?: RenderContext['tailwindBlocks']
-}
+export type { RenderedTemplate } from './ssrRender.ts'
 
 export interface Renderer {
   render(input: string | Component, config: MaizzleConfig, opts?: { source?: string }): Promise<RenderedTemplate>
@@ -441,144 +431,7 @@ export async function createRenderer(
         contextKey = RenderContextKey
       }
 
-      const renderContext: RenderContext = {
-        doctype: undefined,
-        sfcConfig: undefined,
-        sfcEventHandlers: [],
-      }
-
-      const head = createHead({ disableDefaults: true })
-      const app = createSSRApp(component)
-      app.use(head)
-
-      // Register user Vue plugins, directives, and global properties
-      if (config.vue) {
-        const plugins = typeof config.vue.plugins === 'function'
-          ? config.vue.plugins()
-          : config.vue.plugins ?? []
-        for (const plugin of plugins) {
-          app.use(plugin)
-        }
-        for (const [name, directive] of Object.entries(config.vue.directives ?? {})) {
-          app.directive(name, directive)
-        }
-        Object.assign(app.config.globalProperties, config.vue.globalProperties)
-      }
-
-      app.provide(configKey, config)
-      app.provide(contextKey, renderContext)
-
-      const ssrContext: Record<string, any> = {}
-      let html: string = await renderToString(app, ssrContext)
-
-      const { headTags, bodyTags, bodyTagsOpen, htmlAttrs, bodyAttrs } = head.render()
-
-      // Inject head entries into the rendered HTML
-      if (htmlAttrs) {
-        html = html.replace(/<html([^>]*)>/, `<html$1 ${htmlAttrs}>`)
-      }
-      if (headTags) {
-        html = html.replace('</head>', `${headTags}\n</head>`)
-      }
-      if (bodyAttrs) {
-        html = html.replace(/<body([^>]*)>/, `<body$1 ${bodyAttrs}>`)
-      }
-      if (bodyTagsOpen) {
-        html = html.replace(/<body([^>]*)>/, `<body$1>\n${bodyTagsOpen}`)
-      }
-      if (bodyTags) {
-        html = html.replace('</body>', `${bodyTags}\n</body>`)
-      }
-
-      // Inject SSR teleport content into their target elements
-      const hasTeleports = ssrContext.teleports && Object.keys(ssrContext.teleports).length > 0
-      const hasFonts = (renderContext.fonts?.length ?? 0) > 0
-
-      if (hasTeleports || hasFonts) {
-        const { parse: parseDom, serialize: serializeDom, walk } = await import('../utils/ast/index.ts')
-        let dom = parseDom(html)
-
-        if (hasTeleports) {
-          for (const [rawTarget, content] of Object.entries(ssrContext.teleports) as [string, string][]) {
-            if (!content) continue
-
-            const prepend = rawTarget.endsWith(':start')
-            const target = prepend ? rawTarget.slice(0, -6) : rawTarget
-            const targetChildren = parseDom(content)
-
-            walk(dom, (node) => {
-              const el = node as import('domhandler').Element
-
-              if (!el.name) return
-
-              const matched
-                = target === el.name
-                || (target.startsWith('#') && el.attribs?.id === target.slice(1))
-                || (target.startsWith('.') && el.attribs?.class?.split(/\s+/).includes(target.slice(1)))
-
-              if (matched) {
-                for (const child of targetChildren) {
-                  child.parent = el as any
-                }
-
-                el.children = prepend
-                  ? [...targetChildren, ...(el.children || [])] as any
-                  : [...(el.children || []), ...targetChildren] as any
-              }
-            })
-          }
-        }
-
-        if (hasFonts) {
-          const { injectFonts } = await import('./injectFonts.ts')
-          injectFonts(dom, renderContext.fonts!, parseDom, walk)
-        }
-
-        html = serializeDom(dom)
-      }
-
-      // Inject preheader text from usePreheader() composable
-      if (renderContext.preheader) {
-        const { text, fillerCount } = renderContext.preheader
-        const filler = '\u2007\uFEFF\u034F '.repeat(fillerCount)
-        const previewHtml = `<div style="display:none">${text}${filler}\u00A0</div>`
-        html = html.replace(/<body([^>]*)>/, `<body$1>${previewHtml}`)
-      }
-
-      /**
-       * Strip Vue SSR fragment markers + teleport anchor comments. These
-       * are rendering hygiene, not transformer concerns — must run
-       * regardless of `useTransformers` state. Fragment markers contain
-       * `-->`, which would prematurely terminate MSO conditional
-       * comments downstream.
-       */
-      html = html
-        .replaceAll('<!--[-->', '')
-        .replaceAll('<!--]-->', '')
-        .replaceAll('<!--teleport start anchor-->', '')
-        .replaceAll('<!--teleport anchor-->', '')
-        .replaceAll('<!--teleport start-->', '')
-        .replaceAll('<!--teleport end-->', '')
-
-      return {
-        html,
-        doctype: renderContext.doctype,
-        /**
-         * Layer sfcConfig over config — sfcConfig is a partial override
-         * emitted by composables (defineConfig, useTransformers, etc.).
-         * A naive replacement (`sfcConfig ?? config`) drops defaults
-         * from the resolved config when the SFC only sets a single
-         * key, since the composables' inject() of globalConfig can
-         * return `{}` in dev when ssrLoadModule and the SFC's
-         * auto-imported module resolve to different module
-         * instances (different Symbols).
-         */
-        templateConfig: renderContext.sfcConfig ? merge(renderContext.sfcConfig, config) : config,
-        sfcEventHandlers: renderContext.sfcEventHandlers,
-        plaintext: renderContext.plaintext,
-        outputPath: renderContext.outputPath,
-        tailwindBlocks: renderContext.tailwindBlocks,
-      }
+      return ssrRender(component, config, { configKey, contextKey })
     },
 
     async invalidate(filePath: string): Promise<void> {

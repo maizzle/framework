@@ -1,7 +1,13 @@
 import { defineConfig } from 'tsdown'
 import { cpSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
 
-export default defineConfig({
+const root = dirname(fileURLToPath(import.meta.url))
+const browserStub = resolve(root, 'src/render/browserStubs.ts')
+
+// --- Node build: unbundled, mirrors src/ structure into dist/ ---------------
+const nodeBuild = defineConfig({
   entry: [
     'src/**/*.ts',
     '!src/**/*.test.ts',
@@ -26,3 +32,33 @@ export default defineConfig({
     },
   },
 })
+
+// --- Browser/edge build: single bundled, self-contained entry ---------------
+const browserBuild = defineConfig({
+  entry: { browser: 'src/render/browser.ts' },
+  format: 'esm',
+  dts: true,
+  unbundle: false,
+  platform: 'browser',
+  outDir: 'dist',
+  clean: false, // runs after nodeBuild — don't wipe its output
+  // Bundle only our own src; externalize every third-party/bare specifier so
+  // the consumer's bundler resolves them with browser conditions (and handles
+  // wasm assets for lightningcss-wasm, the browser build of @vue/compiler-sfc,
+  // etc.). Relative/absolute ids (our code + the stub alias) stay bundled.
+  // Match bare specifiers (not relative/absolute), but NOT `node:*` — external
+  // is resolved before alias, so `node:path` must fall through to the `pathe`
+  // alias below; any other `node:` builtin reaching here is a real leak.
+  external: [/^(?!node:)[^./]/],
+  alias: {
+    // Browser-safe path utils.
+    'node:path': 'pathe',
+    // Node-only transformer fallbacks → throwing stubs (never executed; the
+    // browser renderer injects real implementations).
+    [resolve(root, 'src/utils/compileTailwindCss.ts')]: browserStub,
+    [resolve(root, 'src/transformers/format.ts')]: browserStub,
+    [resolve(root, 'src/transformers/inlineLink.node.ts')]: browserStub,
+  },
+})
+
+export default [nodeBuild, browserBuild]

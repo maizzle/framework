@@ -1,9 +1,10 @@
 import { resolve, dirname, relative } from 'node:path'
 import type { ChildNode, Element } from 'domhandler'
 import { walk } from '../utils/ast/index.ts'
+import { cwd } from '../utils/cwd.ts'
 import { decodeStyleEntities } from '../utils/decodeStyleEntities.ts'
-import { compileTailwindCss } from '../utils/compileTailwindCss.ts'
 import type { MaizzleConfig } from '../types/config.ts'
+import type { CompileTailwind } from './env.ts'
 
 /**
  * Check if CSS content uses Tailwind features that require source scanning.
@@ -75,7 +76,8 @@ function buildSourceDirectives(dom: ChildNode[], config: MaizzleConfig, fromDir:
  * Runs as the first transformer in the pipeline so that subsequent
  * transformers (inliner, purge, etc.) work with fully compiled CSS.
  */
-export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, filePath?: string): Promise<ChildNode[]> {
+export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, filePath?: string, compile?: CompileTailwind): Promise<ChildNode[]> {
+  const compileCss = compile ?? (await import('../utils/compileTailwindCss.ts')).compileTailwindCss
   const styleTags: { node: Element; cssContent: string }[] = []
 
   walk(dom, (node) => {
@@ -108,7 +110,7 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
 
   if (!styleTags.length) return dom
 
-  const fromPath = filePath ?? resolve(process.cwd(), 'template.vue')
+  const fromPath = filePath ?? resolve(cwd(), 'template.vue')
   const fromDir = dirname(fromPath)
 
   // Only compute source directives if at least one style tag uses Tailwind
@@ -130,7 +132,7 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
       : cssContent
 
     try {
-      const optimized = await compileTailwindCss(fullCss, config, `${fromPath}?style=${i}`)
+      const optimized = await compileCss(fullCss, config, `${fromPath}?style=${i}`)
 
       // Replace the style tag's children with the compiled CSS
       node.children = [{

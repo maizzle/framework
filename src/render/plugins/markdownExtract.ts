@@ -22,7 +22,7 @@ export function markdownExtract(): Plugin {
 
       // Handle <Markdown>content</Markdown>
       transformed = transformed.replace(re, (_match, tag, attrs, content) => {
-        if (/(?:^|\s):content\b/.test(attrs) || /v-bind:content\b/.test(attrs)) return _match
+        if (/(?:^|\s):?content\b/.test(attrs) || /v-bind:content\b/.test(attrs)) return _match
 
         const stripped = content.replace(/^\n+/, '').replace(/\s+$/, '')
         if (!stripped) return _match
@@ -58,8 +58,11 @@ export function markdownExtract(): Plugin {
           return _match
         }
 
-        // Remove src prop, add content prop
-        const cleanAttrs = attrs.replace(/\s*\bsrc\s*=\s*"[^"]*"/, '')
+        // Drop the src prop and any content the slot pass already injected,
+        // so `src` resolves to a single content attribute (no duplicates).
+        const cleanAttrs = attrs
+          .replace(/\s*\bsrc\s*=\s*"[^"]*"/, '')
+          .replace(/\s*\bcontent\s*=\s*"[^"]*"/, '')
         const escaped = fileContent
           .replace(/&/g, '&amp;')
           .replace(/"/g, '&quot;')

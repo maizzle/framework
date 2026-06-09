@@ -42,6 +42,23 @@ describe('markdownExtract', () => {
     }
   })
 
+  it('leaves a tag that already has a plain content attribute untouched', () => {
+    expect(transform('<Markdown content="x">ignored</Markdown>', '/x/a.vue')).toBeUndefined()
+  })
+
+  it('does not emit duplicate content when src and slot are both present', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'mdx-'))
+    try {
+      writeFileSync(join(dir, 'note.md'), '# File')
+      const result = transform('<Markdown src="./note.md">slot</Markdown>', join(dir, 'page.vue'))
+      expect(result?.code).toContain('content="# File"')
+      expect(result?.code).not.toContain('src=')
+      expect((result?.code.match(/content=/g) ?? []).length).toBe(1)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
   it('leaves the tag untouched when the src file cannot be read', () => {
     const code = '<Markdown src="./missing.md" />'
     expect(transform(code, '/x/page.vue')).toBeUndefined()

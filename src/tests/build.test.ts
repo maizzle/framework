@@ -64,6 +64,21 @@ describe('build', () => {
     expect(result.files[0]).toContain('/dist/')
   })
 
+  it('refuses to clear an output path that is the cwd', async () => {
+    writeSfc(tempDir, 'emails/test.vue', `
+      <template>
+        <p>Test</p>
+      </template>
+    `)
+
+    // output.path '.' resolves to the project root (cwd) — clearing it would
+    // wipe the whole project, so the build must reject instead.
+    await expect(build({ output: { path: '.' } })).rejects.toThrow(/Refusing to clear output path/)
+
+    // The source template must still be intact (not deleted).
+    expect(existsSync(join(tempDir, 'emails/test.vue'))).toBe(true)
+  })
+
   it('respects output.extension config', async () => {
     writeSfc(tempDir, 'emails/test.vue', `
       <template>

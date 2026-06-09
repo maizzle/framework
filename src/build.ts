@@ -1,5 +1,5 @@
 import { mkdirSync, cpSync, existsSync, rmSync } from 'node:fs'
-import { resolve, dirname, relative, join } from 'node:path'
+import { resolve, dirname, relative, join, parse as parsePath, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { availableParallelism } from 'node:os'
 import { glob } from 'tinyglobby'
@@ -48,7 +48,15 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
     return { files: [], config }
   }
 
-  // Clear the output directory before writing fresh output
+  // Clear the output directory before writing fresh output. Guard against a
+  // misconfigured output.path (e.g. '.', '', '../..') that resolves to the
+  // project root or a parent of it — rmSync would wipe the whole project.
+  const cwd = process.cwd()
+  if (outputPath === parsePath(outputPath).root || outputPath === cwd || cwd.startsWith(outputPath + sep)) {
+    spinner.fail('Build failed')
+    throw new Error(`Refusing to clear output path "${outputPath}": it is the filesystem root, the current working directory, or a parent of it. Set output.path to a subdirectory like "dist".`)
+  }
+
   if (existsSync(outputPath)) {
     rmSync(outputPath, { recursive: true, force: true })
   }

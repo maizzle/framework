@@ -55,7 +55,7 @@ export interface ServeOptions {
   port?: number
   /** Expose the server on the network (e.g. --host) */
   host?: boolean | string
-  /** When true, suppresses the banner/URL output (used by the Vite plugin, which prints its own) */
+  /** When true, suppresses the startup banner/URL output. */
   silent?: boolean
 }
 
@@ -189,7 +189,11 @@ function maizzleDevPlugin(
 
       const userWatchPaths = config.server?.watch ?? []
       const watchPaths = [...defaultWatchPaths, ...userWatchPaths]
-      const isWatchedFile = createWatchedFileMatcher(watchPaths, config.root ?? process.cwd())
+      // Match against cwd, not config.root: the watched paths (maizzle/tailwind
+      // configs, locales) are project-root relative, and `watcher.add` below
+      // resolves them against cwd too. Using config.root would break matching
+      // when root points at a subdirectory (e.g. the Vite-plugin setup).
+      const isWatchedFile = createWatchedFileMatcher(watchPaths, process.cwd())
 
       for (const watchPath of watchPaths) {
         server.watcher.add(watchPath)
@@ -218,6 +222,10 @@ function maizzleDevPlugin(
           // Recreate the renderer so config changes (e.g. markdown.shikiTheme) take effect
           await renderer.close()
           renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
+
+          // Re-register the new renderer so user-land render() calls don't keep
+          // reusing the closed one (see setActiveRenderer above).
+          setActiveRenderer(renderer)
 
           /**
            * Push UI-relevant config bits so the dev UI reacts to live edits

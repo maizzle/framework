@@ -717,9 +717,10 @@ export interface MaizzleConfig {
   /**
    * Vite configuration options passed to the internal Vite SSR server.
    *
-   * Use this to add custom Vite plugins or other Vite options.
-   * If a `vite.config.{ts,js}` file exists in the project root, it takes
-   * precedence and this option is used as a fallback.
+   * Use this to add custom Vite plugins or other Vite options. The internal
+   * SSR server never loads a project `vite.config.{ts,js}` (it runs with
+   * `configFile: false`), so pass anything it needs here. These options are
+   * merged underneath Maizzle's required settings, which take precedence.
    *
    * @example
    * vite: {

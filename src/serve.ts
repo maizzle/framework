@@ -219,6 +219,10 @@ function maizzleDevPlugin(
           await renderer.close()
           renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
 
+          // Re-register the new renderer so user-land render() calls don't keep
+          // reusing the closed one (see setActiveRenderer above).
+          setActiveRenderer(renderer)
+
           /**
            * Push UI-relevant config bits so the dev UI reacts to live edits
            * without a page reload. Uses the same shape as the initial

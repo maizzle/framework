@@ -58,10 +58,11 @@ export const outlookFallbackProp = {
 /**
  * Default utility classes for a code-block `<pre>`. `whitespace-pre!` is
  * forced important so Gmail's stylesheet can't reset it to `normal`, and
- * `mb-0` strips the browser's default `<pre>` bottom margin.
+ * `m-0` strips the browser's default `<pre>` margins so it isn't spaced
+ * away from its wrapper.
  */
 export function codeBlockPreClass(bg: string): string {
-  return `font-mono bg-[${bg}] p-4 mb-0 overflow-auto whitespace-pre! [word-wrap:normal] [word-break:normal] [word-spacing:normal]`
+  return `font-mono bg-[${bg}] p-4 m-0 overflow-auto whitespace-pre! [word-wrap:normal] [word-break:normal] [word-spacing:normal]`
 }
 
 /**

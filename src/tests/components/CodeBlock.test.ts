@@ -71,7 +71,7 @@ describe('CodeBlock', () => {
 
       expect(html).toMatch(/<pre class="[^"]*\bbg-\[#fff\]/)
       expect(html).toMatch(/<pre class="[^"]*\bp-4\b/)
-      expect(html).toMatch(/<pre class="[^"]*\bmb-0\b/)
+      expect(html).toMatch(/<pre class="[^"]*\bm-0\b/)
       expect(html).toMatch(/<pre class="[^"]*\boverflow-auto\b/)
       expect(html).toMatch(/<pre class="[^"]*whitespace-pre!/)
       expect(html).toMatch(/<pre class="[^"]*\[word-wrap:normal\]/)

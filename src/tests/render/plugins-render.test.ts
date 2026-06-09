@@ -147,6 +147,21 @@ describe('render', () => {
       expect(result.html).toContain('From File')
     })
 
+    it('falls back gracefully when a .md fence uses an unknown language', async () => {
+      writeFileSync(join(tempDir, 'page.md'), [
+        '```notalang',
+        'plain text',
+        '```',
+      ].join('\n'))
+
+      // Shiki throws on an unknown language; the .md highlight callback must
+      // catch it and fall back, so the build does not crash.
+      const result = await render(join(tempDir, 'page.md'), { useTransformers: false })
+
+      expect(result.html).toContain('plain text')
+      expect(result.html).toContain('<table class="w-full">')
+    })
+
     it('accepts config prop for markdown-exit options', async () => {
       const result = await render(`
         <template>

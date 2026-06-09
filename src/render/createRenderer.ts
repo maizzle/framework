@@ -300,7 +300,11 @@ export async function createRenderer(
         markdownOptions: {
           async highlight(code: string, lang: string) {
             const { codeToHtml } = await import('shiki')
-            return codeToHtml(code, { lang, theme: shikiTheme })
+            try {
+              return await codeToHtml(code, { lang, theme: shikiTheme })
+            } catch {
+              return ''
+            }
           },
         },
         markdownSetup(md: MarkdownExit) {

@@ -55,7 +55,7 @@ export interface ServeOptions {
   port?: number
   /** Expose the server on the network (e.g. --host) */
   host?: boolean | string
-  /** When true, suppresses the banner/URL output (used by the Vite plugin, which prints its own) */
+  /** When true, suppresses the startup banner/URL output. */
   silent?: boolean
 }
 

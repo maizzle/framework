@@ -44,9 +44,9 @@ export function maizzle(configInput?: Partial<MaizzleConfig>): Plugin[] {
       maizzleServer = await serve({ config: configInput })
 
       // Clean up when the host server closes
-      hostServer.httpServer?.on('close', () => {
+      hostServer.httpServer?.on('close', async () => {
         if (maizzleServer) {
-          maizzleServer.close()
+          await maizzleServer.close()
           maizzleServer = null
         }
       })

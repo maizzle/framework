@@ -210,6 +210,45 @@ describe('build', () => {
     expect(bHtml).toContain('none')
   })
 
+  it('scopes nested beforeRender config mutations per template', async () => {
+    writeSfc(tempDir, 'emails/a.vue', `
+      <script setup>
+        const config = useConfig()
+      </script>
+      <template>
+        <div>{{ config.custom.val }}</div>
+      </template>
+    `)
+
+    writeSfc(tempDir, 'emails/b.vue', `
+      <script setup>
+        const config = useConfig()
+      </script>
+      <template>
+        <div>{{ config.custom.val }}</div>
+      </template>
+    `)
+
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      export default {
+        custom: { val: 'base' },
+        beforeRender({ template, config }) {
+          if (template.path.name === 'a') config.custom.val = 'AAA'
+        }
+      }
+    `)
+
+    const result = await build()
+    const aHtml = readFileSync(result.files.find(f => f.includes('a.html'))!, 'utf-8')
+    const bHtml = readFileSync(result.files.find(f => f.includes('b.html'))!, 'utf-8')
+
+    // 'a' sees its own nested mutation
+    expect(aHtml).toContain('AAA')
+    // 'b' must NOT inherit 'a's nested mutation (deep per-template clone)
+    expect(bHtml).not.toContain('AAA')
+    expect(bHtml).toContain('base')
+  })
+
   it('fires afterRender event and uses modified HTML', async () => {
     writeSfc(tempDir, 'emails/test.vue', `
       <template>

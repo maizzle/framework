@@ -777,6 +777,31 @@ describe('build', () => {
     expect(readFileSync(join(outputDir, 'public/images/logo.png'), 'utf-8')).toBe('fake-png-data')
   })
 
+  it('copies static assets from multiple source roots using each pattern base', async () => {
+    writeSfc(tempDir, 'emails/test.vue', `
+      <template><div>Test</div></template>
+    `)
+
+    mkdirSync(join(tempDir, 'public/img'), { recursive: true })
+    writeFileSync(join(tempDir, 'public/img/logo.png'), 'logo')
+    mkdirSync(join(tempDir, 'src/assets'), { recursive: true })
+    writeFileSync(join(tempDir, 'src/assets/app.css'), 'css')
+
+    await build({
+      static: {
+        source: [join(tempDir, 'public/**/*.*'), join(tempDir, 'src/assets/**/*.*')],
+        destination: 'assets',
+      },
+    })
+
+    const out = join(tempDir, 'dist/assets')
+    // Each file keeps the structure under its OWN pattern's base.
+    expect(existsSync(join(out, 'img/logo.png'))).toBe(true)
+    expect(existsSync(join(out, 'app.css'))).toBe(true)
+    // The second-root file must not escape the destination via ../ traversal.
+    expect(existsSync(join(tempDir, 'dist/src/assets/app.css'))).toBe(false)
+  })
+
   it('clears existing output directory before building', async () => {
     const outputDir = join(tempDir, 'dist')
     mkdirSync(outputDir, { recursive: true })

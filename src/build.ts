@@ -233,10 +233,21 @@ async function copyStatic(config: MaizzleConfig, outputPath: string): Promise<vo
   const sources = config.static?.source ?? ['public/**/*.*']
   const destination = config.static?.destination ?? 'public'
 
+  // One glob call so negation patterns still apply across the whole set.
   const files = await glob(sources)
 
+  // Absolute base dir to strip, per positive source pattern. Each file keeps
+  // the structure under its own pattern's base — using only sources[0] sends
+  // files from other roots to the wrong place (or escaping the output dir).
+  const bases = sources.filter(s => !s.startsWith('!')).map(staticBase)
+
   for (const file of files) {
-    const destPath = join(outputPath, destination, relative(dirname(sources[0]).replace(/\*.*$/, ''), file))
+    const abs = resolve(file)
+    const base = bases
+      .filter(b => abs === b || abs.startsWith(b + sep))
+      .sort((a, b) => b.length - a.length)[0] ?? bases[0] ?? resolve('.')
+
+    const destPath = join(outputPath, destination, relative(base, abs))
     const destDir = dirname(destPath)
 
     if (!existsSync(destDir)) {
@@ -245,4 +256,10 @@ async function copyStatic(config: MaizzleConfig, outputPath: string): Promise<vo
 
     cpSync(file, destPath)
   }
+}
+
+/** Absolute static (non-glob) prefix of a source pattern, used as the strip base. */
+function staticBase(pattern: string): string {
+  const staticPart = pattern.split(/[*{?[]/)[0]
+  return resolve(staticPart.endsWith('/') ? staticPart : dirname(staticPart))
 }

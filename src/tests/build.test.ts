@@ -5,6 +5,22 @@ import { tmpdir, availableParallelism } from 'node:os'
 import { build, resolveParallel } from '../build.ts'
 import { computeContentBase } from '../render/buildTemplate.ts'
 
+// Track ora.fail() calls so we can assert the spinner is stopped on error.
+const oraState = vi.hoisted(() => ({ failCalls: 0 }))
+vi.mock('ora', () => ({
+  default: () => {
+    const s: any = {
+      isSpinning: false,
+      text: '',
+      start() { s.isSpinning = true; return s },
+      stopAndPersist() { s.isSpinning = false; return s },
+      succeed() { s.isSpinning = false; return s },
+      fail() { s.isSpinning = false; oraState.failCalls++; return s },
+    }
+    return s
+  },
+}))
+
 function createTempProject() {
   const dir = mkdtempSync(join(tmpdir(), 'maizzle-build-'))
   return dir
@@ -62,6 +78,19 @@ describe('build', () => {
     const result = await build()
 
     expect(result.files[0]).toContain('/dist/')
+  })
+
+  it('stops the spinner when the build throws', async () => {
+    writeSfc(tempDir, 'emails/test.vue', `
+      <template><div>Test</div></template>
+    `)
+
+    oraState.failCalls = 0
+
+    await expect(build({ beforeCreate() { throw new Error('boom') } })).rejects.toThrow('boom')
+
+    // Without the try/catch the spinner would still be spinning (fail uncalled).
+    expect(oraState.failCalls).toBe(1)
   })
 
   it('refuses to clear an output path that is the cwd', async () => {

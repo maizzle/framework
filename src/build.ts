@@ -30,88 +30,93 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
   const start = Date.now()
   const spinner = ora({ text: 'Building templates...', spinner: 'circleHalves' }).start()
 
-  const config = await resolveConfig(configInput)
+  try {
+    const config = await resolveConfig(configInput)
 
-  const events = new EventManager()
-  events.registerConfig(config)
-  await events.fireBeforeCreate({ config })
+    const events = new EventManager()
+    events.registerConfig(config)
+    await events.fireBeforeCreate({ config })
 
-  const outputPath = resolve(config.output?.path ?? 'dist')
-  const outputExtension = config.output?.extension ?? 'html'
+    const outputPath = resolve(config.output?.path ?? 'dist')
+    const outputExtension = config.output?.extension ?? 'html'
 
-  const contentPatterns = config.content ?? ['emails/**/*.vue']
-  const contentBase = computeContentBase(contentPatterns)
-  const templateFiles = await glob(contentPatterns)
+    const contentPatterns = config.content ?? ['emails/**/*.vue']
+    const contentBase = computeContentBase(contentPatterns)
+    const templateFiles = await glob(contentPatterns)
 
-  if (templateFiles.length === 0) {
-    spinner.succeed('No templates found')
-    return { files: [], config }
-  }
+    if (templateFiles.length === 0) {
+      spinner.succeed('No templates found')
+      return { files: [], config }
+    }
 
-  // Clear the output directory before writing fresh output. Guard against a
-  // misconfigured output.path (e.g. '.', '', '../..') that resolves to the
-  // project root or a parent of it — rmSync would wipe the whole project.
-  const cwd = process.cwd()
-  if (outputPath === parsePath(outputPath).root || outputPath === cwd || cwd.startsWith(outputPath + sep)) {
-    spinner.fail('Build failed')
-    throw new Error(`Refusing to clear output path "${outputPath}": it is the filesystem root, the current working directory, or a parent of it. Set output.path to a subdirectory like "dist".`)
-  }
+    // Clear the output directory before writing fresh output. Guard against a
+    // misconfigured output.path (e.g. '.', '', '../..') that resolves to the
+    // project root or a parent of it — rmSync would wipe the whole project.
+    const cwd = process.cwd()
+    if (outputPath === parsePath(outputPath).root || outputPath === cwd || cwd.startsWith(outputPath + sep)) {
+      throw new Error(`Refusing to clear output path "${outputPath}": it is the filesystem root, the current working directory, or a parent of it. Set output.path to a subdirectory like "dist".`)
+    }
 
-  if (existsSync(outputPath)) {
-    rmSync(outputPath, { recursive: true, force: true })
-  }
+    if (existsSync(outputPath)) {
+      rmSync(outputPath, { recursive: true, force: true })
+    }
 
-  const outputFiles: string[] = []
-  let droppedAfterBuild = 0
+    const outputFiles: string[] = []
+    let droppedAfterBuild = 0
 
-  const parallel = resolveParallel(config, templateFiles.length, configInput)
+    const parallel = resolveParallel(config, templateFiles.length, configInput)
 
-  if (parallel.enabled) {
-    spinner.text = `Building ${templateFiles.length} templates across ${parallel.workers} workers...`
+    if (parallel.enabled) {
+      spinner.text = `Building ${templateFiles.length} templates across ${parallel.workers} workers...`
 
-    const result = await runParallelBuild({
-      templateFiles,
-      workers: parallel.workers,
-      config,
-      configInput,
-      outputPath,
-      outputExtension,
-      contentBase,
-    })
+      const result = await runParallelBuild({
+        templateFiles,
+        workers: parallel.workers,
+        config,
+        configInput,
+        outputPath,
+        outputExtension,
+        contentBase,
+      })
 
-    outputFiles.push(...result.files)
-    droppedAfterBuild = result.sfcAfterBuildCount
-
-    await copyStatic(config, outputPath)
-    await events.fireAfterBuild({ files: outputFiles, config })
-  } else {
-    const renderer = await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
-
-    try {
-      for (const templatePath of templateFiles) {
-        const { files } = await buildTemplate(templatePath, { config, renderer, events, outputPath, outputExtension, contentBase })
-        outputFiles.push(...files)
-      }
+      outputFiles.push(...result.files)
+      droppedAfterBuild = result.sfcAfterBuildCount
 
       await copyStatic(config, outputPath)
       await events.fireAfterBuild({ files: outputFiles, config })
-    } finally {
-      await renderer.close()
+    } else {
+      const renderer = await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
+
+      try {
+        for (const templatePath of templateFiles) {
+          const { files } = await buildTemplate(templatePath, { config, renderer, events, outputPath, outputExtension, contentBase })
+          outputFiles.push(...files)
+        }
+
+        await copyStatic(config, outputPath)
+        await events.fireAfterBuild({ files: outputFiles, config })
+      } finally {
+        await renderer.close()
+      }
     }
+
+    if (droppedAfterBuild > 0) {
+      console.warn(`[maizzle] Skipped ${droppedAfterBuild} SFC-registered afterBuild handler(s): afterBuild can't run inside a parallel build worker. Move build-completion logic to the config's afterBuild hook.`)
+    }
+
+    const duration = ((Date.now() - start) / 1000).toFixed(2)
+    const count = outputFiles.length
+    spinner.stopAndPersist({
+      symbol: '✅',
+      text: `Built ${count} template${count !== 1 ? 's' : ''} in ${duration}s`,
+    })
+
+    return { files: outputFiles, config }
+  } catch (err) {
+    // Stop the spinner so a thrown error doesn't leave it spinning forever.
+    if (spinner.isSpinning) spinner.fail('Build failed')
+    throw err
   }
-
-  if (droppedAfterBuild > 0) {
-    console.warn(`[maizzle] Skipped ${droppedAfterBuild} SFC-registered afterBuild handler(s): afterBuild can't run inside a parallel build worker. Move build-completion logic to the config's afterBuild hook.`)
-  }
-
-  const duration = ((Date.now() - start) / 1000).toFixed(2)
-  const count = outputFiles.length
-  spinner.stopAndPersist({
-    symbol: '✅',
-    text: `Built ${count} template${count !== 1 ? 's' : ''} in ${duration}s`,
-  })
-
-  return { files: outputFiles, config }
 }
 
 /**

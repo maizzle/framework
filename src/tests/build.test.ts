@@ -210,6 +210,45 @@ describe('build', () => {
     expect(bHtml).toContain('none')
   })
 
+  it('scopes nested beforeRender config mutations per template', async () => {
+    writeSfc(tempDir, 'emails/a.vue', `
+      <script setup>
+        const config = useConfig()
+      </script>
+      <template>
+        <div>{{ config.custom.val }}</div>
+      </template>
+    `)
+
+    writeSfc(tempDir, 'emails/b.vue', `
+      <script setup>
+        const config = useConfig()
+      </script>
+      <template>
+        <div>{{ config.custom.val }}</div>
+      </template>
+    `)
+
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      export default {
+        custom: { val: 'base' },
+        beforeRender({ template, config }) {
+          if (template.path.name === 'a') config.custom.val = 'AAA'
+        }
+      }
+    `)
+
+    const result = await build()
+    const aHtml = readFileSync(result.files.find(f => f.includes('a.html'))!, 'utf-8')
+    const bHtml = readFileSync(result.files.find(f => f.includes('b.html'))!, 'utf-8')
+
+    // 'a' sees its own nested mutation
+    expect(aHtml).toContain('AAA')
+    // 'b' must NOT inherit 'a's nested mutation (deep per-template clone)
+    expect(bHtml).not.toContain('AAA')
+    expect(bHtml).toContain('base')
+  })
+
   it('fires afterRender event and uses modified HTML', async () => {
     writeSfc(tempDir, 'emails/test.vue', `
       <template>
@@ -444,7 +483,7 @@ describe('build', () => {
 
       const result = await build({ plaintext: true })
 
-      expect(result.files).toHaveLength(1)
+      expect(result.files).toHaveLength(2)
 
       const txtPath = result.files[0].replace(/\.html$/, '.txt')
       expect(existsSync(txtPath)).toBe(true)
@@ -466,7 +505,7 @@ describe('build', () => {
 
       const result = await build({ plaintext: { destination: customPath } })
 
-      expect(result.files).toHaveLength(1)
+      expect(result.files).toHaveLength(2)
       expect(existsSync(join(customPath, 'test.txt'))).toBe(true)
     })
 
@@ -528,6 +567,23 @@ describe('build', () => {
       const txt = readFileSync(txtPath, 'utf-8')
       expect(txt).toContain('Hello from SFC')
       expect(txt).not.toContain('<div>')
+    })
+
+    it('includes plaintext files in result.files and the afterBuild payload', async () => {
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template>
+          <div>Hello</div>
+        </template>
+      `)
+
+      let afterBuildFiles: string[] = []
+      const result = await build({
+        plaintext: true,
+        afterBuild({ files }) { afterBuildFiles = files },
+      })
+
+      expect(result.files.some(f => f.endsWith('.txt'))).toBe(true)
+      expect(afterBuildFiles.some(f => f.endsWith('.txt'))).toBe(true)
     })
 
     it('usePlaintext() with custom extension', async () => {

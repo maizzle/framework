@@ -1,5 +1,8 @@
 import juice from 'juice'
 import { walk, parse, serialize } from '../utils/ast/index.ts'
+
+/** Juice's built-in code blocks, captured before any per-call mutation. */
+const DEFAULT_CODE_BLOCKS = { ...juice.codeBlocks }
 import type { ChildNode, Element } from 'domhandler'
 type JuiceOptions = NonNullable<Parameters<typeof juice>[1]>
 
@@ -99,7 +102,9 @@ export function inlineCssDom(dom: ChildNode[], options: InlineCssOptions = {}): 
   juice.widthElements = (widthElements ?? ['img', 'video']).map(i => i.toUpperCase()) as unknown as HTMLElement[]
   juice.heightElements = (heightElements ?? ['img', 'video']).map(i => i.toUpperCase()) as unknown as HTMLElement[]
 
-  // Add custom code blocks
+  // Reset to defaults each call so a previous template's custom code blocks
+  // don't accumulate on juice's module-global state, then add this call's.
+  juice.codeBlocks = { ...DEFAULT_CODE_BLOCKS }
   if (codeBlocks && typeof codeBlocks === 'object') {
     Object.entries(codeBlocks).forEach(([key, value]) => {
       if (value.start && value.end) {

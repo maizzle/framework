@@ -5,6 +5,7 @@ import { runTransformers } from '../transformers/index.ts'
 import { createPlaintext } from '../plaintext.ts'
 import { stripForHtml, stripForPlaintext } from '../utils/output-markers.ts'
 import { _setCurrentTemplate } from '../composables/useCurrentTemplate.ts'
+import { cloneConfig } from '../utils/cloneConfig.ts'
 import type { EventManager } from '../events/index.ts'
 import type { Renderer } from './createRenderer.ts'
 import type { MaizzleConfig } from '../types/index.ts'
@@ -57,7 +58,7 @@ export async function buildTemplate(
      * preheader, injecting fetched data, etc.) stay scoped to this template
      * instead of leaking into later ones through the shared config object.
      */
-    const renderConfig = defu({}, config) as MaizzleConfig
+    const renderConfig = cloneConfig(config)
     const originalSource = template.source
 
     await events.fireBeforeRender({ config: renderConfig, template })
@@ -133,6 +134,7 @@ export async function buildTemplate(
 
       mkdirSync(dirname(ptOutputPath), { recursive: true })
       writeFileSync(ptOutputPath, plaintext)
+      files.push(ptOutputPath)
     }
   } finally {
     _setCurrentTemplate(undefined)

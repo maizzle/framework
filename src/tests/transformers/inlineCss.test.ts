@@ -128,6 +128,19 @@ describe('inlineCss', () => {
       // Incomplete definition is ignored; normal inlining still happens.
       expect(result).toContain('color: red')
     })
+
+    it('does not leak custom code blocks into a later call', async () => {
+      const juice = (await import('juice')).default
+
+      run('<style>.red { color: {{% v %}}; }</style><p class="red">x</p>', {
+        codeBlocks: { Twig: { start: '{{%', end: '%}}' } },
+      })
+      expect(juice.codeBlocks).toHaveProperty('Twig')
+
+      // A subsequent call without codeBlocks must reset juice's global state.
+      run('<p>x</p>')
+      expect(juice.codeBlocks).not.toHaveProperty('Twig')
+    })
   })
 
   describe('embedded styles', () => {

@@ -76,7 +76,7 @@ export async function createRenderer(
   options: CreateRendererOptions = {},
 ): Promise<Renderer> {
   const { dts = false, markdown: markdownOptionsRaw, root = process.cwd(), componentDirs = [], vite: userViteConfig } = options
-  const { shikiTheme = 'github-light', ...markdownOptions } = markdownOptionsRaw ?? {}
+  const { shikiTheme = 'github-light', markdownSetup: userMarkdownSetup, ...restMarkdownConfig } = markdownOptionsRaw ?? {}
 
   /**
    * Sources without an explicit prefix get registered via unplugin's `dirs`
@@ -279,7 +279,7 @@ export async function createRenderer(
           },
         },
       }),
-      Markdown(merge(markdownOptions ?? {}, {
+      Markdown(merge(restMarkdownConfig, {
         headEnabled: true,
         wrapperDiv: false,
         wrapperClasses: 'prose',
@@ -307,7 +307,18 @@ export async function createRenderer(
             }
           },
         },
-        markdownSetup(md: MarkdownExit) {
+        /**
+         * Run the user's `markdownSetup` first (defu would otherwise drop the
+         * built-in one when both are functions), then always install the
+         * email-safe code-block wrapping on top — mirroring the `<Markdown>`
+         * component so `.md` templates and the component behave identically.
+         */
+        async markdownSetup(md: MarkdownExit) {
+          // `md` is cast because unplugin-vue-markdown bundles its own
+          // markdown-exit copy, so its `MarkdownExit` is nominally distinct
+          // from ours despite being structurally identical.
+          await userMarkdownSetup?.(md as unknown as Parameters<NonNullable<typeof userMarkdownSetup>>[0])
+
           const defaultFence = md.renderer.rules.fence!
           md.renderer.rules.fence = (...args) =>
             Promise.resolve(defaultFence(...args)).then(shikiToCodeBlock)

@@ -162,6 +162,22 @@ describe('render', () => {
       expect(result.html).toContain('<table class="w-full">')
     })
 
+    it('keeps email-safe code-block wrapping when a custom markdownSetup is set', async () => {
+      writeFileSync(join(tempDir, 'page.md'), [
+        '```js',
+        'const x = 1',
+        '```',
+      ].join('\n'))
+
+      // A user markdownSetup must not clobber the built-in fence wrapping.
+      const result = await render(join(tempDir, 'page.md'), {
+        useTransformers: false,
+        markdown: { markdownSetup() {} },
+      })
+
+      expect(result.html).toContain('<table class="w-full">')
+    })
+
     it('accepts config prop for markdown-exit options', async () => {
       const result = await render(`
         <template>

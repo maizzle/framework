@@ -96,6 +96,14 @@ describe('removeAttributes', () => {
       expect(result).toBe('<div data-id="test"></div><div></div>')
     })
 
+    it('matches every element with a global-flag regex (no stateful lastIndex)', () => {
+      const html = '<div data-x="v"></div><div data-x="v"></div><div data-x="v"></div>'
+      const result = run(html, [{ name: 'data-x', value: /v/g }])
+      // A /g regex is stateful: without resetting lastIndex it would skip the
+      // 2nd element. All three must lose the attribute.
+      expect(result).toBe('<div></div><div></div><div></div>')
+    })
+
     it('removes class when value matches pattern', () => {
       const html = '<div class="temp-123"></div><div class="keep"></div>'
       const result = run(html, [{ name: 'class', value: /^temp-/ }])

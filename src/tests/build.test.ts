@@ -5,6 +5,22 @@ import { tmpdir, availableParallelism } from 'node:os'
 import { build, resolveParallel } from '../build.ts'
 import { computeContentBase } from '../render/buildTemplate.ts'
 
+// Track ora.fail() calls so we can assert the spinner is stopped on error.
+const oraState = vi.hoisted(() => ({ failCalls: 0 }))
+vi.mock('ora', () => ({
+  default: () => {
+    const s: any = {
+      isSpinning: false,
+      text: '',
+      start() { s.isSpinning = true; return s },
+      stopAndPersist() { s.isSpinning = false; return s },
+      succeed() { s.isSpinning = false; return s },
+      fail() { s.isSpinning = false; oraState.failCalls++; return s },
+    }
+    return s
+  },
+}))
+
 function createTempProject() {
   const dir = mkdtempSync(join(tmpdir(), 'maizzle-build-'))
   return dir
@@ -62,6 +78,34 @@ describe('build', () => {
     const result = await build()
 
     expect(result.files[0]).toContain('/dist/')
+  })
+
+  it('stops the spinner when the build throws', async () => {
+    writeSfc(tempDir, 'emails/test.vue', `
+      <template><div>Test</div></template>
+    `)
+
+    oraState.failCalls = 0
+
+    await expect(build({ beforeCreate() { throw new Error('boom') } })).rejects.toThrow('boom')
+
+    // Without the try/catch the spinner would still be spinning (fail uncalled).
+    expect(oraState.failCalls).toBe(1)
+  })
+
+  it('refuses to clear an output path that is the cwd', async () => {
+    writeSfc(tempDir, 'emails/test.vue', `
+      <template>
+        <p>Test</p>
+      </template>
+    `)
+
+    // output.path '.' resolves to the project root (cwd) — clearing it would
+    // wipe the whole project, so the build must reject instead.
+    await expect(build({ output: { path: '.' } })).rejects.toThrow(/Refusing to clear output path/)
+
+    // The source template must still be intact (not deleted).
+    expect(existsSync(join(tempDir, 'emails/test.vue'))).toBe(true)
   })
 
   it('respects output.extension config', async () => {
@@ -760,6 +804,31 @@ describe('build', () => {
     expect(existsSync(join(outputDir, 'public/images/logo.png'))).toBe(true)
     expect(existsSync(join(outputDir, 'public/images/icon.png'))).toBe(true)
     expect(readFileSync(join(outputDir, 'public/images/logo.png'), 'utf-8')).toBe('fake-png-data')
+  })
+
+  it('copies static assets from multiple source roots using each pattern base', async () => {
+    writeSfc(tempDir, 'emails/test.vue', `
+      <template><div>Test</div></template>
+    `)
+
+    mkdirSync(join(tempDir, 'public/img'), { recursive: true })
+    writeFileSync(join(tempDir, 'public/img/logo.png'), 'logo')
+    mkdirSync(join(tempDir, 'src/assets'), { recursive: true })
+    writeFileSync(join(tempDir, 'src/assets/app.css'), 'css')
+
+    await build({
+      static: {
+        source: [join(tempDir, 'public/**/*.*'), join(tempDir, 'src/assets/**/*.*')],
+        destination: 'assets',
+      },
+    })
+
+    const out = join(tempDir, 'dist/assets')
+    // Each file keeps the structure under its OWN pattern's base.
+    expect(existsSync(join(out, 'img/logo.png'))).toBe(true)
+    expect(existsSync(join(out, 'app.css'))).toBe(true)
+    // The second-root file must not escape the destination via ../ traversal.
+    expect(existsSync(join(tempDir, 'dist/src/assets/app.css'))).toBe(false)
   })
 
   it('clears existing output directory before building', async () => {

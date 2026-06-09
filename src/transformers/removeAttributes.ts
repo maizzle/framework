@@ -87,7 +87,10 @@ export function removeAttributesDom(dom: ChildNode[], attributes: RemoveAttribut
         // Remove if value matches exactly
         shouldRemove = currentValue === attrValue
       } else if (attrValue instanceof RegExp) {
-        // Remove if value matches regex
+        // Remove if value matches regex. Reset lastIndex first: a user-supplied
+        // /g or /y regex is stateful across .test() calls, so reusing it over
+        // many elements would otherwise match only every other one.
+        attrValue.lastIndex = 0
         shouldRemove = attrValue.test(currentValue)
       } else {
         // Default: remove if empty

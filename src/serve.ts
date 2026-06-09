@@ -199,23 +199,37 @@ function maizzleDevPlugin(
         server.watcher.add(watchPath)
       }
 
-      server.watcher.on('add', async (file) => {
+      /**
+       * Serialize watcher work onto one chain. The change handler closes and
+       * recreates the renderer across awaits; without serialization a second
+       * event firing mid-reload closes a stale renderer and leaks the new one.
+       * Errors are caught so one failed task doesn't break the chain.
+       */
+      let watcherChain: Promise<void> = Promise.resolve()
+      const enqueue = (task: () => Promise<void>): Promise<void> => {
+        watcherChain = watcherChain.then(task).catch((err) => {
+          console.error('[maizzle] watcher task failed:', err)
+        })
+        return watcherChain
+      }
+
+      server.watcher.on('add', file => enqueue(async () => {
         if (isTemplateFile(file)) {
           await renderer.invalidateAll()
           bumpGeneration()
           server.ws.send({ type: 'custom', event: 'maizzle:templates-changed' })
         }
-      })
+      }))
 
-      server.watcher.on('unlink', async (file) => {
+      server.watcher.on('unlink', file => enqueue(async () => {
         if (isTemplateFile(file)) {
           await renderer.invalidateAll()
           bumpGeneration()
           server.ws.send({ type: 'custom', event: 'maizzle:templates-changed' })
         }
-      })
+      }))
 
-      server.watcher.on('change', async (file) => {
+      server.watcher.on('change', file => enqueue(async () => {
         if (isWatchedFile(file)) {
           config = await resolveConfig(configInput)
 
@@ -249,7 +263,7 @@ function maizzleDevPlugin(
         ) {
           server.ws.send({ type: 'custom', event: 'maizzle:template-updated', data: { file } })
         }
-      })
+      }))
 
       // API middleware (before Vite's middleware)
       server.middlewares.use(async (req: any, res: any, next: any) => {

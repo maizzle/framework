@@ -5,6 +5,10 @@ import { tmpdir } from 'node:os'
 import type { ViteDevServer } from 'vite'
 import { serve } from '../serve.ts'
 import { getActiveRenderer } from '../render/active.ts'
+import * as rendererMod from '../render/createRenderer.ts'
+import type { Renderer } from '../render/createRenderer.ts'
+
+const realCreateRenderer = rendererMod.createRenderer
 
 describe('serve dev server', () => {
   let tempDir: string
@@ -56,6 +60,49 @@ describe('serve dev server', () => {
       expect(getActiveRenderer()).not.toBe(before)
     }, { timeout: 15000, interval: 100 })
   }, 30000)
+
+  it('serializes rapid config changes so no renderer is leaked', async () => {
+    writeFileSync(join(tempDir, 'maizzle.config.js'), 'export default {}\n')
+
+    // Wrap createRenderer to record every instance and whether it was closed.
+    // The race closes the same (stale) renderer repeatedly and leaks the
+    // intermediate ones; serialized reloads close each before the next.
+    const created: Renderer[] = []
+    const closed = new Set<Renderer>()
+    const spy = vi.spyOn(rendererMod, 'createRenderer').mockImplementation(async (opts) => {
+      const r = await realCreateRenderer(opts)
+      created.push(r)
+      const origClose = r.close.bind(r)
+      r.close = async () => { closed.add(r); return origClose() }
+      return r
+    })
+
+    try {
+      server = await serve({ port: 3157, silent: true })
+      const before = getActiveRenderer()
+      expect(before).toBeTruthy()
+
+      const cfg = resolve(tempDir, 'maizzle.config.js')
+      server.watcher.emit('change', cfg)
+      server.watcher.emit('change', cfg)
+
+      await vi.waitFor(() => {
+        expect(getActiveRenderer()).not.toBe(before)
+      }, { timeout: 20000, interval: 100 })
+
+      // Let in-flight reloads settle (close() carries a 600ms dts drain).
+      await new Promise(r => setTimeout(r, 2000))
+
+      // Every renderer ever created except the current active one must have
+      // been closed. A leaked intermediate renderer fails this.
+      const active = getActiveRenderer()
+      for (const r of created) {
+        if (r !== active) expect(closed.has(r)).toBe(true)
+      }
+    } finally {
+      spy.mockRestore()
+    }
+  }, 40000)
 
   it('clears the active renderer on close', async () => {
     server = await serve({ port: 3157, silent: true })

@@ -92,9 +92,13 @@ export function buildCodeBlock(
  * HTML. Falls back to a white background for unhighlighted blocks.
  */
 export function shikiToCodeBlock(highlighted: string): string {
-  const bg = highlighted.match(/background-color:\s*(#[0-9a-fA-F]+)/)?.[1] ?? '#fff'
-  const codeContent = highlighted
-    .trim()
+  const trimmed = highlighted.trim()
+  // Read the background only from the opening <pre> tag's style, never from
+  // the code body — otherwise a `background-color:` inside the snippet (e.g. a
+  // CSS example, or any unhighlighted block) would hijack the wrapper color.
+  const preTag = trimmed.match(/^<pre[^>]*>/)?.[0] ?? ''
+  const bg = preTag.match(/background-color:\s*(#[0-9a-fA-F]+)/)?.[1] ?? '#fff'
+  const codeContent = trimmed
     .replace(/^<pre[^>]*><code[^>]*>/, '')
     .replace(/<\/code><\/pre>$/, '')
 

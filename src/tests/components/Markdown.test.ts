@@ -108,6 +108,16 @@ describe('Markdown', () => {
       expect(html).toContain('plain text')
       expect(html).toContain('<table class="w-full">')
     })
+
+    it('does not pull the wrapper background from the code body', async () => {
+      // Unknown languages skip Shiki and hit the plain <pre><code> path. A
+      // background-color in the snippet must not become the wrapper color —
+      // it should fall back to white.
+      const html = await render({ content: '```notalang\n.box { background-color: #f00 }\n```' })
+
+      expect(html).toContain('bg-[#fff]')
+      expect(html).not.toContain('bg-[#f00]')
+    })
   })
 
   describe('wrapper', () => {

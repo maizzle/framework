@@ -444,7 +444,7 @@ describe('build', () => {
 
       const result = await build({ plaintext: true })
 
-      expect(result.files).toHaveLength(1)
+      expect(result.files).toHaveLength(2)
 
       const txtPath = result.files[0].replace(/\.html$/, '.txt')
       expect(existsSync(txtPath)).toBe(true)
@@ -466,7 +466,7 @@ describe('build', () => {
 
       const result = await build({ plaintext: { destination: customPath } })
 
-      expect(result.files).toHaveLength(1)
+      expect(result.files).toHaveLength(2)
       expect(existsSync(join(customPath, 'test.txt'))).toBe(true)
     })
 
@@ -528,6 +528,23 @@ describe('build', () => {
       const txt = readFileSync(txtPath, 'utf-8')
       expect(txt).toContain('Hello from SFC')
       expect(txt).not.toContain('<div>')
+    })
+
+    it('includes plaintext files in result.files and the afterBuild payload', async () => {
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template>
+          <div>Hello</div>
+        </template>
+      `)
+
+      let afterBuildFiles: string[] = []
+      const result = await build({
+        plaintext: true,
+        afterBuild({ files }) { afterBuildFiles = files },
+      })
+
+      expect(result.files.some(f => f.endsWith('.txt'))).toBe(true)
+      expect(afterBuildFiles.some(f => f.endsWith('.txt'))).toBe(true)
     })
 
     it('usePlaintext() with custom extension', async () => {

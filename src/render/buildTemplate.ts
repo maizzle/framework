@@ -133,6 +133,7 @@ export async function buildTemplate(
 
       mkdirSync(dirname(ptOutputPath), { recursive: true })
       writeFileSync(ptOutputPath, plaintext)
+      files.push(ptOutputPath)
     }
   } finally {
     _setCurrentTemplate(undefined)

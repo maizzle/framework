@@ -266,5 +266,6 @@ async function copyStatic(config: MaizzleConfig, outputPath: string): Promise<vo
 /** Absolute static (non-glob) prefix of a source pattern, used as the strip base. */
 function staticBase(pattern: string): string {
   const staticPart = pattern.split(/[*{?[]/)[0]
-  return resolve(staticPart.endsWith('/') ? staticPart : dirname(staticPart))
+  // Treat both separators as trailing: resolved patterns use '\' on Windows.
+  return resolve(/[/\\]$/.test(staticPart) ? staticPart : dirname(staticPart))
 }

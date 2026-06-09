@@ -189,7 +189,11 @@ function maizzleDevPlugin(
 
       const userWatchPaths = config.server?.watch ?? []
       const watchPaths = [...defaultWatchPaths, ...userWatchPaths]
-      const isWatchedFile = createWatchedFileMatcher(watchPaths, config.root ?? process.cwd())
+      // Match against cwd, not config.root: the watched paths (maizzle/tailwind
+      // configs, locales) are project-root relative, and `watcher.add` below
+      // resolves them against cwd too. Using config.root would break matching
+      // when root points at a subdirectory (e.g. the Vite-plugin setup).
+      const isWatchedFile = createWatchedFileMatcher(watchPaths, process.cwd())
 
       for (const watchPath of watchPaths) {
         server.watcher.add(watchPath)

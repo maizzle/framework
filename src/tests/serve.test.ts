@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import type { ViteDevServer } from 'vite'
@@ -38,6 +38,22 @@ describe('serve dev server', () => {
       const after = getActiveRenderer()
       expect(after).toBeTruthy()
       expect(after).not.toBe(before)
+    }, { timeout: 15000, interval: 100 })
+  }, 30000)
+
+  it('detects a root-level config change when config.root is a subdirectory', async () => {
+    writeFileSync(join(tempDir, 'maizzle.config.js'), 'export default {}\n')
+    mkdirSync(join(tempDir, 'emails'), { recursive: true })
+
+    server = await serve({ config: { root: 'emails' }, port: 3157, silent: true })
+
+    const before = getActiveRenderer()
+
+    // Config file lives at cwd, not under root — the watcher must still match it.
+    server.watcher.emit('change', resolve(tempDir, 'maizzle.config.js'))
+
+    await vi.waitFor(() => {
+      expect(getActiveRenderer()).not.toBe(before)
     }, { timeout: 15000, interval: 100 })
   }, 30000)
 

@@ -1,7 +1,7 @@
-import { existsSync } from 'node:fs'
-import { resolve } from 'pathe'
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve, dirname, extname, join } from 'pathe'
 import { createJiti } from 'jiti'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createDefu } from 'defu'
 
 // defu that replaces arrays: if user provides content: ['x'], it replaces the default, not appends
@@ -131,6 +131,52 @@ function normalizeConfig(
   return merged
 }
 
+/**
+ * Whether Node can natively `import()` this file as ESM — true for `.mjs`
+ * and for `.js` whose nearest package.json declares `"type": "module"`.
+ * jiti hands such files to Node's native loader, which caches them in the
+ * (unbustable) module registry, so we import them ourselves with a fresh
+ * query instead. Everything else (CJS, TS) goes through jiti, which already
+ * re-evaluates per instance.
+ */
+export function isNativeESM(absolutePath: string): boolean {
+  const ext = extname(absolutePath)
+  if (ext === '.mjs') return true
+  if (ext === '.cjs' || ext === '.ts' || ext === '.mts' || ext === '.cts') return false
+
+  let dir = dirname(absolutePath)
+  for (;;) {
+    const pkgPath = join(dir, 'package.json')
+    if (existsSync(pkgPath)) {
+      try {
+        return JSON.parse(readFileSync(pkgPath, 'utf-8')).type === 'module'
+      } catch {
+        return false
+      }
+    }
+    const parent = dirname(dir)
+    if (parent === dir) return false
+    dir = parent
+  }
+}
+
+/**
+ * Monotonic nonce appended to native-import URLs so each load is fresh even
+ * when two reloads land in the same millisecond.
+ */
+let configLoadNonce = 0
+
+async function importConfig(absolutePath: string, jiti: ReturnType<typeof createJiti>): Promise<MaizzleConfig> {
+  if (isNativeESM(absolutePath)) {
+    const url = `${pathToFileURL(absolutePath).href}?t=${Date.now()}-${configLoadNonce++}`
+    const mod = await import(url) as any
+    return mod.default ?? mod
+  }
+
+  const mod = await jiti.import(absolutePath) as any
+  return mod.default ?? mod
+}
+
 async function loadConfig(
   configPath?: string,
   cwd: string = process.cwd(),
@@ -145,8 +191,7 @@ async function loadConfig(
       throw new Error(`Config file not found: ${absolutePath}`)
     }
 
-    const mod = await jiti.import(absolutePath) as any
-    return mod.default ?? mod
+    return importConfig(absolutePath, jiti)
   }
 
   // Otherwise scan cwd for known config file names
@@ -154,8 +199,7 @@ async function loadConfig(
     const filepath = resolve(cwd, filename)
 
     if (existsSync(filepath)) {
-      const mod = await jiti.import(filepath) as any
-      return mod.default ?? mod
+      return importConfig(filepath, jiti)
     }
   }
 

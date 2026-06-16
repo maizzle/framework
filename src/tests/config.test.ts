@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
-import { resolveConfig } from '../config/index.ts'
+import { resolveConfig, isNativeESM } from '../config/index.ts'
 import { defaults } from '../config/defaults.ts'
 
 describe('resolveConfig', () => {
@@ -84,6 +84,32 @@ describe('resolveConfig', () => {
     await expect(
       resolveConfig('nonexistent.config.js', tempDir)
     ).rejects.toThrow('Config file not found')
+  })
+
+  describe('isNativeESM', () => {
+    // Native ESM is loaded via Node's import() (cache-busted on reload);
+    // everything else goes through jiti. Misclassifying drives both stale
+    // configs (false negatives) and load failures (false positives).
+    it('treats .mjs as native ESM regardless of package.json', () => {
+      writeFileSync(join(tempDir, 'package.json'), '{ "type": "commonjs" }')
+      expect(isNativeESM(join(tempDir, 'maizzle.config.mjs'))).toBe(true)
+    })
+
+    it('treats .cjs and TS configs as non-native', () => {
+      expect(isNativeESM(join(tempDir, 'maizzle.config.cjs'))).toBe(false)
+      expect(isNativeESM(join(tempDir, 'maizzle.config.ts'))).toBe(false)
+      expect(isNativeESM(join(tempDir, 'maizzle.config.mts'))).toBe(false)
+    })
+
+    it('treats a .js config as native only under "type": "module"', () => {
+      writeFileSync(join(tempDir, 'package.json'), '{ "type": "module" }')
+      expect(isNativeESM(join(tempDir, 'maizzle.config.js'))).toBe(true)
+    })
+
+    it('treats a .js config as non-native without "type": "module"', () => {
+      writeFileSync(join(tempDir, 'package.json'), '{}')
+      expect(isNativeESM(join(tempDir, 'maizzle.config.js'))).toBe(false)
+    })
   })
 
   it('merges user config with defaults using defu', async () => {

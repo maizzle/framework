@@ -97,6 +97,25 @@ describe('inlineCss', () => {
     })
   })
 
+  describe('inlineDuplicateProperties', () => {
+    const html = '<style>.a { font-size: medium; } .b { font-size: max(16px, 1rem); }</style><p class="a b">x</p>'
+
+    it('collapses duplicate properties to a single declaration by default', () => {
+      const result = run(html)
+      expect(result.match(/font-size:/g)).toHaveLength(1)
+      expect(result).toMatch(/font-size: max\(16px, ?1rem\)/)
+      expect(result).not.toContain('font-size: medium')
+    })
+
+    it('keeps duplicates when data-juice-duplicates is present on the element', () => {
+      const marked = '<style>.a { font-size: medium; } .b { font-size: max(16px, 1rem); }</style><p class="a b" data-juice-duplicates>x</p>'
+      const result = run(marked)
+      expect(result.match(/font-size:/g)).toHaveLength(2)
+      expect(result).toContain('font-size: medium')
+      expect(result).toMatch(/font-size: max\(16px, ?1rem\)/)
+    })
+  })
+
   describe('codeBlocks', () => {
     it('ignores EJS code blocks by default', () => {
       const html = '<style>.red { color: <%= colorVar %>; }</style><p class="red">Text</p>'

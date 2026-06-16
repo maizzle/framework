@@ -134,6 +134,7 @@ const htmlXmlns = computed(() => outlookFallback ? {
       :lang="lang"
       :dir="dir"
       style="font-size: medium;"
+      data-juice-duplicates
       v-bind="{ ...attrs, class: undefined }"
       :class="articleMergedClass"
     >

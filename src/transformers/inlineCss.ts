@@ -162,7 +162,7 @@ export function inlineCssDom(dom: ChildNode[], options: InlineCssOptions = {}): 
       applyHeightAttributes: juicePassthrough.applyHeightAttributes ?? true,
       preservedSelectors: safelist ?? [],
       ...customCSS ? { extraCss: customCSS } : {},
-      inlineDuplicateProperties: juicePassthrough.inlineDuplicateProperties ?? true,
+      inlineDuplicateProperties: juicePassthrough.inlineDuplicateProperties ?? false,
       ...juicePassthrough,
     }
 

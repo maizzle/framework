@@ -216,7 +216,7 @@ Delete `tailwind.config.js`. Replace `tailwindcss-preset-email` with `@maizzle/t
 </Head>
 ```
 
-Token naming: `colors.brand` → `--color-brand`, `fontFamily.display` → `--font-display`, `spacing.lg` → `--spacing-lg`. Built-in `<Layout>` already imports `@maizzle/tailwindcss` — the `<style>` block is only needed for `@theme` customisation or when not using `<Layout>`. Full Tailwind story: `references/STYLING.md`.
+Token naming: `colors.brand` → `--color-brand`, `fontFamily.display` → `--font-display`, `spacing.lg` → `--spacing-lg`. `@theme` tokens must live in the same `<style>` block that imports Tailwind — built-in `<Layout>` owns its own `<head>` and import (compiled in isolation), so you can't add tokens to it. To customize the theme, drop `<Layout>` and write your own `<Html>`/`<Head>`/`<Body>` with a `<style>` block that imports `@maizzle/tailwindcss` and defines `@theme`. Full Tailwind story: `references/STYLING.md`.
 
 ## Events
 

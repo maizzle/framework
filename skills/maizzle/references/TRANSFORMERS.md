@@ -47,7 +47,7 @@ The DOM is parsed once, walked by all DOM-based transformers, then serialized; s
 
 **Attribute to style** — `true` covers all supported attrs, `string[]` narrows it. Maps: `width`/`height` → px (auto-detected unit), `bgcolor` → `background-color`, `background` → `background-image: url(...)`, `align` → `text-align` (or `float`/`margin` on tables), `valign` → `vertical-align`.
 
-**CSS inline (Juice)** — Maizzle adds: `preferUnitlessValues` (default `true`, e.g. `0px` → `0`), `safelist`, `customCSS`, `styleToAttribute`, `widthElements` (default `['img','video']`), `heightElements`, `excludedProperties` (default `['--tw-shadow']`), `codeBlocks` (EJS/HBS preserved). Juice keys passed through include `removeStyleTags`, `removeInlinedSelectors` (default `true`), `applyWidth/HeightAttributes`, `inlineDuplicateProperties`.
+**CSS inline (Juice)** — Maizzle adds: `preferUnitlessValues` (default `true`, e.g. `0px` → `0`), `safelist`, `customCSS`, `styleToAttribute`, `widthElements` (default `['img','video']`), `heightElements`, `excludedProperties` (default `['--tw-shadow']`), `codeBlocks` (EJS/HBS preserved). Juice keys passed through include `removeStyleTags`, `removeInlinedSelectors` (default `true`), `applyWidth/HeightAttributes`, `inlineDuplicateProperties` (default `false`). Per-element overrides: `data-juice-duplicates` keeps duplicate same-property declarations on that element (e.g. a `font-size` fallback alongside a modern value), `data-juice-important` toggles `!important` preservation.
 
 **MSO placeholder resolution** — internal step that pins `<Container>`'s MSO `<table>` width and `msoStyle` from the inlined CSS once it's known.
 

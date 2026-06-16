@@ -56,7 +56,7 @@
     "juice": "^12.0.0",
     "maizzle": "latest",
     "markdown-exit": "^1.1.0-beta.2",
-    "nodemailer": "^8.0.5",
+    "nodemailer": "^9.0.0",
     "ora": "^9.3.0",
     "oxfmt": "^0.53.0",
     "pathe": "^2.0.3",

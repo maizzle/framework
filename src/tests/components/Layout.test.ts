@@ -273,6 +273,20 @@ describe('Layout', () => {
       expect(articleClass).toContain('font-mono')
       expect(articleClass).not.toMatch(/\bfont-inter\b/)
     })
+
+    it('forwards non-class attributes onto the article div', async () => {
+      const result = await render(`
+        <template>
+          <Layout data-foo="bar">
+            <div>Test</div>
+          </Layout>
+        </template>
+      `, { useTransformers: false })
+
+      expect(result.html).toMatch(/<div[^>]*role="article"[^>]*\bdata-foo="bar"/)
+      const bodyMatch = result.html.match(/<body[^>]*>/)
+      expect(bodyMatch![0]).not.toContain('data-foo')
+    })
   })
 
   describe('slot', () => {

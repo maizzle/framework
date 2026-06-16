@@ -130,4 +130,31 @@ describe('serve dev server', () => {
       expect(events).toContain('maizzle:template-updated')
     }, { timeout: 15000, interval: 100 })
   }, 30000)
+
+  it('fires beforeRender/afterRender/afterTransform when rendering a template', async () => {
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      export default {
+        beforeRender({ template }) {
+          return template.source.replace('Original', 'BeforeRender')
+        },
+        afterRender({ html }) {
+          return html.replace('BeforeRender', 'AfterRender')
+        },
+        afterTransform({ html }) {
+          return html + '<!-- transformed -->'
+        },
+      }
+    `)
+    mkdirSync(join(tempDir, 'emails'), { recursive: true })
+    writeFileSync(join(tempDir, 'emails/welcome.vue'), '<template><div>Original</div></template>\n')
+
+    server = await serve({ port: 3157, silent: true })
+
+    const res = await fetch('http://localhost:3157/__maizzle/render/emails/welcome')
+    const html = await res.text()
+
+    expect(html).toContain('AfterRender')
+    expect(html).not.toContain('Original')
+    expect(html).toContain('<!-- transformed -->')
+  }, 30000)
 })

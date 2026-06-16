@@ -12,6 +12,8 @@ import { createPlaintext } from './plaintext.ts'
 import { stripForHtml, stripForPlaintext } from './utils/output-markers.ts'
 import { resolveConfig } from './config/index.ts'
 import { runTransformers } from './transformers/index.ts'
+import { EventManager } from './events/index.ts'
+import { cloneConfig } from './utils/cloneConfig.ts'
 import { createRenderer, type Renderer, type RenderedTemplate } from './render/createRenderer.ts'
 import { _setCurrentTemplate } from './composables/useCurrentTemplate.ts'
 import { setActiveRenderer } from './render/active.ts'
@@ -84,13 +86,17 @@ export async function serve(options: ServeOptions = {}) {
    */
   setActiveRenderer(renderer)
 
+  const events = new EventManager()
+  events.registerConfig(config)
+  await events.fireBeforeCreate({ config })
+
   const server = await createServer({
     configFile: false,
     plugins: [
       // Vue and Tailwind are only for the dev UI SPA, not for email templates
       vue(),
       tailwindcss(),
-      maizzleDevPlugin(config, renderer, options.config),
+      maizzleDevPlugin(config, renderer, events, options.config),
     ],
     resolve: {
       dedupe: ['vue'],
@@ -157,6 +163,7 @@ export async function serve(options: ServeOptions = {}) {
 function maizzleDevPlugin(
   config: MaizzleConfig,
   renderer: Renderer,
+  events: EventManager,
   configInput: Partial<MaizzleConfig> | string | undefined,
 ) {
   return {
@@ -233,6 +240,11 @@ function maizzleDevPlugin(
         if (isWatchedFile(file)) {
           config = await resolveConfig(configInput)
 
+          // Re-register event handlers against the reloaded config (the config
+          // object is replaced wholesale, so old handlers would be stale).
+          events.clear()
+          events.registerConfig(config)
+
           // Recreate the renderer so config changes (e.g. markdown.shikiTheme) take effect
           await renderer.close()
           renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
@@ -274,11 +286,11 @@ function maizzleDevPlugin(
         }
 
         if (url.startsWith('/__maizzle/render/')) {
-          return await serveRenderedTemplate(url, config, renderer, res)
+          return await serveRenderedTemplate(url, config, renderer, events, res)
         }
 
         if (url.startsWith('/__maizzle/source/')) {
-          return await serveHighlightedSource(url, config, renderer, res)
+          return await serveHighlightedSource(url, config, renderer, events, res)
         }
 
         if (url.startsWith('/__maizzle/compatibility/')) {
@@ -294,15 +306,15 @@ function maizzleDevPlugin(
         }
 
         if (url.startsWith('/__maizzle/plaintext/')) {
-          return await servePlaintext(url, config, renderer, res)
+          return await servePlaintext(url, config, renderer, events, res)
         }
 
         if (url.startsWith('/__maizzle/stats/')) {
-          return await serveStats(url, config, renderer, res)
+          return await serveStats(url, config, renderer, events, res)
         }
 
         if (url.startsWith('/__maizzle/email/') && req.method === 'POST') {
-          return await serveEmailEndpoint(url, req, res, config, renderer)
+          return await serveEmailEndpoint(url, req, res, config, renderer, events)
         }
 
         if (url === '/__maizzle/email-config') {
@@ -401,20 +413,49 @@ function bumpGeneration() {
   renderCache.clear()
 }
 
-function getRendered(absolutePath: string, config: MaizzleConfig, renderer: Renderer): Promise<DedupedRender> {
+function getRendered(absolutePath: string, config: MaizzleConfig, renderer: Renderer, events: EventManager): Promise<DedupedRender> {
   const key = `${renderGeneration}:${absolutePath}`
   let promise = renderCache.get(key)
   if (!promise) {
     promise = (async () => {
       _setCurrentTemplate(parsePath(absolutePath))
       try {
-        const rendered = await renderer.render(absolutePath, config)
+        /**
+         * Mirror the build's per-template event pipeline (see buildTemplate)
+         * so dev preview fires the same beforeRender / afterRender /
+         * afterTransform hooks and matches production output. Clone config so
+         * beforeRender mutations stay scoped to this render.
+         */
+        const renderConfig = cloneConfig(config)
+        const template = { source: readFileSync(absolutePath, 'utf-8'), path: parsePath(absolutePath) }
+        const originalSource = template.source
+
+        await events.fireBeforeRender({ config: renderConfig, template })
+
+        const rendered = await renderer.render(
+          absolutePath,
+          renderConfig,
+          template.source !== originalSource ? { source: template.source } : undefined,
+        )
+
+        for (const { name, handler } of rendered.sfcEventHandlers) {
+          events.on(name, handler)
+        }
+
         const templateConfig = rendered.templateConfig
+        let html = await events.fireAfterRender({ config: templateConfig, template, html: rendered.html })
         const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
-        const rawHtml = await runTransformers(rendered.html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
+
+        if (templateConfig.useTransformers !== false) {
+          html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks)
+        }
+
+        const rawHtml = await events.fireAfterTransform({ config: templateConfig, template, html })
+
         return { rawHtml, doctype, templateConfig, rendered }
       } finally {
         _setCurrentTemplate(undefined)
+        events.clearSfcHandlers()
       }
     })()
     renderCache.set(key, promise)
@@ -425,7 +466,7 @@ function getRendered(absolutePath: string, config: MaizzleConfig, renderer: Rend
 /**
  * SSR render a .vue template using the Renderer (not the dev UI server).
  */
-async function serveRenderedTemplate(url: string, config: MaizzleConfig, renderer: Renderer, res: any) {
+async function serveRenderedTemplate(url: string, config: MaizzleConfig, renderer: Renderer, events: EventManager, res: any) {
   const templateSlug = url.replace('/__maizzle/render/', '').replace(/\?.*$/, '')
 
   const contentPatterns = config.content ?? ['emails/**/*.vue']
@@ -441,7 +482,7 @@ async function serveRenderedTemplate(url: string, config: MaizzleConfig, rendere
   const absolutePath = resolve(match)
 
   try {
-    const { rawHtml, doctype } = await getRendered(absolutePath, config, renderer)
+    const { rawHtml, doctype } = await getRendered(absolutePath, config, renderer, events)
     let html = rawHtml
     if (doctype) html = `${doctype}\n${html}`
 
@@ -465,7 +506,7 @@ async function getHighlighter() {
   return highlighter
 }
 
-async function serveHighlightedSource(url: string, config: MaizzleConfig, renderer: Renderer, res: any) {
+async function serveHighlightedSource(url: string, config: MaizzleConfig, renderer: Renderer, events: EventManager, res: any) {
   const templateSlug = url.replace('/__maizzle/source/', '').replace(/\?.*$/, '')
 
   const contentPatterns = config.content ?? ['emails/**/*.vue']
@@ -481,7 +522,7 @@ async function serveHighlightedSource(url: string, config: MaizzleConfig, render
   const absolutePath = resolve(match)
 
   try {
-    const { rawHtml, doctype } = await getRendered(absolutePath, config, renderer)
+    const { rawHtml, doctype } = await getRendered(absolutePath, config, renderer, events)
     const html = stripForHtml(doctype ? `${doctype}\n${rawHtml}` : rawHtml)
 
     const hl = await getHighlighter()
@@ -539,7 +580,7 @@ async function serveVueSource(url: string, config: MaizzleConfig, res: any) {
   }
 }
 
-async function servePlaintext(url: string, config: MaizzleConfig, renderer: Renderer, res: any) {
+async function servePlaintext(url: string, config: MaizzleConfig, renderer: Renderer, events: EventManager, res: any) {
   const templateSlug = url.replace('/__maizzle/plaintext/', '').replace(/\?.*$/, '')
 
   const contentPatterns = config.content ?? ['emails/**/*.vue']
@@ -555,7 +596,7 @@ async function servePlaintext(url: string, config: MaizzleConfig, renderer: Rend
   const absolutePath = resolve(match)
 
   try {
-    const { rawHtml } = await getRendered(absolutePath, config, renderer)
+    const { rawHtml } = await getRendered(absolutePath, config, renderer, events)
     const plaintext = createPlaintext(stripForPlaintext(rawHtml))
 
     res.setHeader('Content-Type', 'text/plain')
@@ -585,7 +626,7 @@ function humanFileSize(bytes: number, si = false, dp = 2) {
   return bytes.toFixed(dp) + ' ' + units[u]
 }
 
-async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer, res: any) {
+async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer, events: EventManager, res: any) {
   const templateSlug = url.replace('/__maizzle/stats/', '').replace(/\?.*$/, '')
 
   const contentPatterns = config.content ?? ['emails/**/*.vue']
@@ -601,7 +642,7 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
   const absolutePath = resolve(match)
 
   try {
-    const { rawHtml } = await getRendered(absolutePath, config, renderer)
+    const { rawHtml } = await getRendered(absolutePath, config, renderer, events)
     const html = stripForHtml(rawHtml)
 
     const sizeBytes = new TextEncoder().encode(html).length
@@ -629,7 +670,7 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
   }
 }
 
-async function serveEmailEndpoint(url: string, req: any, res: any, config: MaizzleConfig, renderer: Renderer) {
+async function serveEmailEndpoint(url: string, req: any, res: any, config: MaizzleConfig, renderer: Renderer, events: EventManager) {
   const templateSlug = url.replace('/__maizzle/email/', '').replace(/\?.*$/, '')
 
   const contentPatterns = config.content ?? ['emails/**/*.vue']
@@ -664,7 +705,7 @@ async function serveEmailEndpoint(url: string, req: any, res: any, config: Maizz
   const absolutePath = resolve(match)
 
   try {
-    const { rawHtml, doctype, templateConfig } = await getRendered(absolutePath, config, renderer)
+    const { rawHtml, doctype, templateConfig } = await getRendered(absolutePath, config, renderer, events)
     let html = doctype ? `${doctype}\n${rawHtml}` : rawHtml
 
     const text = createPlaintext(stripForPlaintext(html))

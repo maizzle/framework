@@ -28,6 +28,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const devUIDir = resolve(__dirname, 'server/ui')
 
 const require = createRequire(import.meta.url)
+
+const version = JSON.parse(
+  readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../package.json'), 'utf-8'),
+).version
+
 const pkg = (name: string) => {
   const resolved = require.resolve(name).replace(/\\/g, '/')
   const marker = `node_modules/${name}`
@@ -748,7 +753,7 @@ export function printBanner(server: ViteDevServer, startupTime?: number) {
   }
 
   info('')
-  info(`  \x1b[32m\x1b[1mMAIZZLE\x1b[0m\x1b[32m v6.0.0\x1b[0m  \x1b[2mready in\x1b[0m \x1b[1m${time}\x1b[0m ms`)
+  info(`  \x1b[32m\x1b[1mMAIZZLE\x1b[0m\x1b[32m v${version}\x1b[0m  \x1b[2mready in\x1b[0m \x1b[1m${time}\x1b[0m ms`)
   info('')
   server.printUrls()
   info('')

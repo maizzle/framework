@@ -1,10 +1,10 @@
 import { format as oxfmt } from 'oxfmt'
 import { defu as merge } from 'defu'
-import type { FormatOptions } from 'oxfmt'
+import type { FormatConfig } from 'oxfmt'
 
-export type { FormatOptions } from 'oxfmt'
+export type { FormatConfig } from 'oxfmt'
 
-const DEFAULT_OPTIONS: FormatOptions = {
+const DEFAULT_OPTIONS: FormatConfig = {
   printWidth: 320,
   htmlWhitespaceSensitivity: 'ignore',
   embeddedLanguageFormatting: 'off',
@@ -17,7 +17,7 @@ const DEFAULT_OPTIONS: FormatOptions = {
  * you pass.
  *
  * @param html    HTML string to format.
- * @param options [oxfmt `FormatOptions`](https://github.com/oxc-project/oxfmt).
+ * @param options [oxfmt `FormatConfig`](https://github.com/oxc-project/oxfmt).
  * @returns       The formatted HTML string.
  *
  * @example
@@ -25,7 +25,7 @@ const DEFAULT_OPTIONS: FormatOptions = {
  *
  * const pretty = await format(html, { useTabs: true, tabWidth: 4 })
  */
-export async function format(html: string, options: FormatOptions = {}): Promise<string> {
+export async function format(html: string, options: FormatConfig = {}): Promise<string> {
   const merged = merge(options, DEFAULT_OPTIONS)
   const result = await oxfmt('input.html', html, merged)
   return result.code

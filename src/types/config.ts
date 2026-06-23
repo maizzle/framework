@@ -360,7 +360,7 @@ export interface HtmlConfig {
    *
    * Set to `true` to enable with defaults, or pass options.
    */
-  format?: boolean | import('oxfmt').FormatOptions
+  format?: boolean | import('oxfmt').FormatConfig
   /**
    * Minify the HTML output.
    *

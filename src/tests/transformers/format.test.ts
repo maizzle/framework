@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { format, type FormatOptions } from '../../transformers/format.ts'
+import { format, type FormatConfig } from '../../transformers/format.ts'
 
-async function run(html: string, option?: boolean | FormatOptions): Promise<string> {
+async function run(html: string, option?: boolean | FormatConfig): Promise<string> {
   if (option === false) return html
   const opts = (option === true || option == null) ? {} : option
   return format(html, opts)

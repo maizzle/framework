@@ -23,7 +23,6 @@ export const defaults: MaizzleConfig = {
   },
   html: {
     decodeEntities: true,
-    format: true,
   },
   useTransformers: true,
 }

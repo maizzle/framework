@@ -21,10 +21,10 @@ export default {
       type: String as PropType<BundledTheme>,
       default: 'github-light'
     },
-    /** CSS class for the wrapping table cell. @default 'max-w-0 mso-padding-alt-4' */
+    /** Extra CSS classes for the wrapping table cell, merged over the base `max-w-0 mso-padding-alt-4`. */
     tdClass: {
       type: String,
-      default: 'max-w-0 mso-padding-alt-4'
+      default: ''
     }
   },
   inheritAttrs: false,
@@ -59,7 +59,7 @@ export default {
       .replace(/<\/code><\/pre>$/, '')
 
     const preClass = twMerge(codeBlockPreClass(bg), attrs.class as string)
-    const tdClass = twMerge(`bg-[${bg}]`, props.tdClass)
+    const tdClass = twMerge(`bg-[${bg}] max-w-0 mso-padding-alt-4`, props.tdClass)
     const styleAttr = attrs.style ? ` style="${attrs.style}"` : ''
 
     const html = buildCodeBlock(codeContent, bg, { preClass, tdClass, styleAttr })

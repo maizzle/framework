@@ -100,6 +100,20 @@ describe('CodeBlock', () => {
       expect(html).toMatch(/<td class="[^"]*\bbg-\[#fff\]/)
     })
 
+    it('keeps base td-class defaults when a custom td-class is passed', async () => {
+      const html = await render({ code: '<div>test</div>', 'td-class': 'custom-class' })
+
+      expect(html).toMatch(/<td class="[^"]*\bmax-w-0\b/)
+      expect(html).toMatch(/<td class="[^"]*\bmso-padding-alt-4\b/)
+    })
+
+    it('lets a custom td-class override a conflicting base utility via twMerge', async () => {
+      const html = await render({ code: '<div>test</div>', 'td-class': 'max-w-full' })
+
+      expect(html).toMatch(/<td class="[^"]*\bmax-w-full\b/)
+      expect(html).not.toMatch(/<td class="[^"]*\bmax-w-0\b/)
+    })
+
     it('sets the shiki theme background on the wrapping td as a class', async () => {
       const html = await render({ code: '<div>test</div>' })
 

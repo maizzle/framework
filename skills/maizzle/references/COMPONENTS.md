@@ -1,16 +1,13 @@
 # Maizzle Components Reference
-
 All components below auto-import — no imports needed.
 
 ## Conventions
-
 - **`outlookFallback`** (bool, default `true`) is available on `<Layout>`, `<Html>`, `<Body>`, `<Container>`, `<Section>`, `<Column>`, `<Button>`, `<Spacer>`, `<Img>`. Setting `false` skips MSO ghost tables, VML, `xmlns:v/o`, and mso-only CSS for that component + descendants. Each component also inherits the value from any ancestor that set it.
 - `<Container>`/`<Section>` auto-wrap in an MSO conditional `<table>`. `<Column>` auto-wraps in an MSO `<td>`.
 - **Auto MSO `<td>` hoist:** `<Container>`/`<Section>`/`<Column>` copy `background-color`+`padding*` from classes onto the MSO `<td>` — don't restate them via `mso-style` (reserve it for Outlook-only overrides). Skipped with a horizontal border, or on `<Column>` percentage widths.
 - Use kebab-case for camelCase props in templates (`body-class`, `dark-src`, `mso-style`).
 
 ## Index
-
 **Document scaffolding:** `<Layout>` `<Html>` `<Head>` `<Body>` `<Tailwind>` `<Font>` `<Preheader>`
 **Layout primitives:** `<Container>` `<Section>` `<Row>` `<Column>`
 **Content:** `<Heading>` `<Text>` `<Link>` `<Button>` `<Img>` `<Hr>` `<Spacer>` `<Markdown>` `<CodeBlock>` `<CodeInline>` `<QrCode>`
@@ -19,7 +16,6 @@ All components below auto-import — no imports needed.
 ---
 
 ## Layout
-
 Full HTML document scaffold: `<html>` (+VML/Office NS) + `<head>` (charset/viewport/format-detection/color-scheme meta, MSO font reset, Tailwind import, Inter from Google Fonts) + `<body>` + `<div role="article">`. Replaces `<Html> + <Head> + <Tailwind> + <Body>`.
 
 Props: `lang` (default `'en'`), `dir` (`'ltr'`/`'rtl'`, default `'ltr'`), `bodyClass`, `ariaLabel`, `doubleHead` (render empty `<head>` first — Yahoo Android workaround).
@@ -29,7 +25,6 @@ Props: `lang` (default `'en'`), `dir` (`'ltr'`/`'rtl'`, default `'ltr'`), `bodyC
 ```
 
 ## Html
-
 `<html>` with `lang`, `dir`, and (by default) VML/Office XML namespaces. Use directly when not using `<Layout>`.
 
 Props: `lang` (default `'en'`), `dir`, `xmlns` (default `true`), `doctype` (overrides config + `useDoctype()`).
@@ -44,17 +39,14 @@ Props: `lang` (default `'en'`), `dir`, `xmlns` (default `true`), `doctype` (over
 ```
 
 ## Head
-
 `<head>` with email-safe defaults (charset, x-apple-disable-message-reformatting, viewport).
 
 Props: `double` (bool, default `false`) — renders empty `<head></head>` first (Yahoo Android workaround).
 
 ## Body
-
 `<body>` with `<div role="article">` wrapper. Props: `xmlLang` (defaults to parent `<Html>` `lang`), `dir`, `ariaLabel`.
 
 ## Tailwind
-
 Compile Tailwind from classes used inside the wrapped block and inject into `<head>`. Required only when not using `<Layout>`. Errors without a `<Head />` in the template.
 
 Slots: `default` (content; classes scanned), `config` (raw CSS replacing the default `@import "@maizzle/tailwindcss";` seed; read at setup, never rendered).
@@ -72,7 +64,6 @@ Slots: `default` (content; classes scanned), `config` (raw CSS replacing the def
 Sibling `<Tailwind>` blocks share class names (later wins after inlining). Nested ones flatten upward; inner `#config` is ignored.
 
 ## Font
-
 Load a web font and register a Tailwind `font-{slug}` utility. Emits a `<link>` and a `--font-{slug}` token merged into the Tailwind compile.
 
 Props: `family` (required), `weights` (number[], default `[400]`), `styles` (`('normal'|'italic')[]`, default `['normal']`; including `'italic'` switches URL to `ital,wght`), `display` (default `'swap'`), `provider` (`'google'`/`'bunny'`, default `'google'`), `url` (pre-built stylesheet URL — overrides `provider`/`weights`/`styles`/`display`), `fallback` (custom stack; default category-aware).
@@ -85,7 +76,6 @@ Props: `family` (required), `weights` (number[], default `[400]`), `styles` (`('
 Script form: `useFont({ family: 'Roboto', weights: [400, 600] })`. Deduplicated by family (first registration wins).
 
 ## Preheader
-
 Hidden preview text teleported to `<body>` start, padded with invisible fillers so clients don't pull body text into the inbox snippet.
 
 Props: `spaces` (number) — explicit filler count; auto-derived to fill a ~200-char preview budget when omitted.
@@ -97,7 +87,6 @@ Props: `spaces` (number) — explicit filler count; auto-derived to fill a ~200-
 Script form: `usePreheader('text', { spaces })`.
 
 ## Container
-
 Centered wrapper (`<div>` + MSO `<table>`). Two modes:
 - **Prop mode** — set `width`: feeds resolved width to descendant Rows/Columns for auto `min-width` + natural stacking.
 - **Tailwind mode** — omit `width`, use classes (`max-w-xl mx-auto`). MSO width auto-derives from resolved CSS, fallback 600px.
@@ -112,19 +101,16 @@ Props: `width` (max-width on div + width on MSO table), `msoStyle` (inline CSS o
 ```
 
 ## Section
-
 Full-width content block (`<div>` + MSO `<table>`).
 
 Props: `width` (`max-width` + MSO table width; without it, MSO width auto-derives from a width utility/inline style, fallback `100%`), `msoStyle` (Outlook-only overrides; padding/bg auto-hoist, see [Conventions](#conventions)).
 
 ## Row
-
 Multi-column row. Auto-detects `<Column>` children and feeds widths.
 
 Props: `width` (override inherited container width for column math), `cols` (explicit column count; useful with `v-for`/`v-if` where auto-detection misses).
 
 ## Column
-
 Inline-block `<div>` (`vertical-align: top`, `font-size: 16px` reset), wrapped in MSO `<td>` with calculated width.
 
 - With Container `width`: auto-calculates `min-width = containerWidth ÷ columns`. Stacks naturally, no media queries.
@@ -144,19 +130,15 @@ See `PATTERNS.md` for equal columns, percentage widths, equal-height, reverse st
 ```
 
 ## Heading
-
 `<h1>`–`<h6>`, `m-0` by default. Prop: `level` (string|number 1–6, default `1`).
 
 ## Text
-
 `<p>` (default) or `<span>`. Prop: `as` (`'p'`/`'span'`).
 
 ## Link
-
 `<a>` with `text-decoration: none`. Prop: `href` (required).
 
 ## Button
-
 Bulletproof CTA `<a>` styled as a button, with MSO spacer `<i>` for Outlook padding. Defaults: solid indigo (`#4338ca`) bg, white text, 16/24px padding, 4px radius. **No** `bgColor`/`color` prop — override colors via Tailwind classes or inline `style`.
 
 Props: `href` (required), `variant` (`'solid'`(default)/`'outline'`/`'ghost'`/`'link'`), `align` (`'center'`/`'right'`; left is default — omit it), `icon` (URL), `iconWidth` (default `12`), `iconPosition` (`'left'`/`'right'`(default)), `iconClass`, `iconAlt`, `msoPt` (default `'16px'` — `mso-text-raise` on inner span), `msoPb` (default `'31px'` — bottom spacer mso-text-raise), `msoPx` (default `150` — horizontal padding via `mso-font-width`; bare numbers → `%`).
@@ -167,7 +149,6 @@ Props: `href` (required), `variant` (`'solid'`(default)/`'outline'`/`'ghost'`/`'
 ```
 
 ## Img
-
 Plain `<img>`, or `<picture>` when `darkSrc`/`motionSrc` is set. Defaults: `max-width: 100%`, `vertical-align: middle`. `width` renders unitless.
 
 Props: `src` (required; static fallback when `motionSrc` set), `alt`, `width` (required), `darkSrc` (`prefers-color-scheme: dark` variant), `motionSrc` (`prefers-reduced-motion: no-preference` variant; MIME auto-derived), `href` (wraps output in `<a>`).
@@ -178,7 +159,6 @@ Props: `src` (required; static fallback when `motionSrc` set), `alt`, `width` (r
 ```
 
 ### Cropped mode
-
 `aspect` (or a Tailwind `aspect-*` class) switches to a cropped `background-image` wrapper + VML `<v:rect>` for Outlook. No `<img>` — wrapper is `role="img"` + `aria-label` from `alt`.
 
 - `aspect` — `'16:9'`, `'16/9'`, `'4:3'`, `'1:1'`, etc. Prop wins over class.
@@ -196,7 +176,6 @@ Props: `src` (required; static fallback when `motionSrc` set), `alt`, `width` (r
 ```
 
 ## Hr
-
 `<div role="separator">` with defaults `h-px leading-px my-6 bg-slate-300`. Override via class: height (`h-*`/`leading-*`), margin (`m*-*`), color (`bg-*`).
 
 ```vue
@@ -204,7 +183,6 @@ Props: `src` (required; static fallback when `motionSrc` set), `alt`, `width` (r
 ```
 
 ## Spacer
-
 Vertical (`<div role="separator">` + zero-width joiner; size with `h-*`/`leading-*`) or horizontal (`<i>` with em-spaces + `mso-font-width`).
 
 Props: `type` (`'vertical'`(default)/`'horizontal'`), `width` (horizontal only, default `16` px).
@@ -216,7 +194,6 @@ Props: `type` (`'vertical'`(default)/`'horizontal'`), `width` (horizontal only, 
 ```
 
 ## Markdown
-
 Render Markdown via `markdown-exit` + Shiki. Source via `content`, `src`, or slot.
 
 Props: `content` (overrides slot), `src` (path to `.md`, resolved at build), `shikiTheme` (default `'github-dark-high-contrast'`), `wrapper` (wrap output in `<div>`, default `false`), `config` (extra `markdown-exit` options).
@@ -229,7 +206,6 @@ Props: `content` (overrides slot), `src` (path to `.md`, resolved at build), `sh
 For prose defaults, `@import "@maizzle/tailwindcss/prose"` + `class="prose"` (needs `wrapper`).
 
 ## CodeBlock
-
 Shiki-highlighted code block wrapped in an Outlook-safe table. Source via `code` or slot.
 
 Props: `code` (falls back to slot), `language` (default `'html'`), `theme` (Shiki theme name, default `'github-light'`), `tdClass` (default `'max-w-0 mso-padding-alt-4'`).
@@ -239,7 +215,6 @@ Props: `code` (falls back to slot), `language` (default `'html'`), `theme` (Shik
 ```
 
 ## CodeInline
-
 Inline `<code>`. Two modes:
 - **Plain (default)** — light-gray bg + border; content HTML-escaped. No Shiki pass.
 - **Highlighted** — set `theme` to opt into Shiki; cell bg switches to the theme bg.
@@ -252,7 +227,6 @@ Props: `code` (falls back to slot), `language` (default `'html'`; only used when
 ```
 
 ## QrCode
-
 Scannable QR rendered as a `<table>` of `<td>` cells — no SVG, no image. Sized via `size-*`/`w-*`/`h-*`; default 120 px (`size-30`).
 
 Props: `value` (required — URL/text/MECARD/vCard/Wi-Fi etc.), `ecc` (`'L'`/`'M'`(default)/`'Q'`/`'H'` — ~7/15/25/30% recovery), `border` (quiet zone modules, default `1`), `alt` (`aria-label`).
@@ -267,7 +241,6 @@ Colors: `bg-*` (and `dark:bg-*`) paint the table background (light cells stay tr
 QR HTML can grow tens of KB — don't duplicate the same code in one email (Gmail clipping). Windows Outlook ignores media queries, so codes render light there.
 
 ## Outlook
-
 Wrap content in MSO conditional comments. Default targets all MSO versions.
 
 Props (versions are years `2003`/`2007`/`2010`/`2013`/`2016`/`2019`; lists comma-separated): `only`, `not`, `lt`, `lte`, `gt`, `gte`. Also `open`/`close` — raw HTML injected inside the conditional before/after slot, bypassing Vue's parser (for unbalanced ghost-table openers).
@@ -278,7 +251,6 @@ Props (versions are years `2003`/`2007`/`2010`/`2013`/`2016`/`2019`; lists comma
 ```
 
 ## NotOutlook
-
 Hide content from all Outlook versions (`<!--[if !mso]><!-->...<!--<![endif]-->`). No props.
 
 ```vue
@@ -287,7 +259,6 @@ Hide content from all Outlook versions (`<!--[if !mso]><!-->...<!--<![endif]-->`
 ```
 
 ## OutlookBg
-
 VML markup for Outlook background images (Outlook ignores CSS `background-image`). Wraps slot in `v:rect` + `v:fill` + `v:textbox`.
 
 Props: `width` (default `'600px'`), `height` (auto-sizes if absent), `src`, `type` (`'frame'`(default)/`'tile'`/`'pattern'`/`'solid'`/`'gradient'`/`'gradientradial'`), `backgroundPosition` (e.g. `'top,center'` — convenience for `origin`/`position`), `origin`/`position`/`sizes`/`aspect` (VML internals), `color`, `fillcolor` (default `'none'`), `fill` (default `true`), `stroke` (default `false`), `strokecolor`, `inset` (default `'0,0,0,0'` — textbox padding).
@@ -301,7 +272,6 @@ Props: `width` (default `'600px'`), `height` (auto-sizes if absent), `src`, `typ
 ```
 
 ## Vml
-
 General-purpose VML primitive for Outlook. Emits a chosen VML shape (`v:rect` / `v:roundrect` / `v:oval` / `v:line`) inside `<!--[if mso]>` with an optional `<v:fill>` child and a `<v:textbox>` slot wrapper. Use for shapes, gradients, rounded outlines, dividers — anything VML can render that isn't a plain bg image (use `<OutlookBg>` for that).
 
 Props:

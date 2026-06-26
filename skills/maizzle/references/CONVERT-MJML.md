@@ -1,9 +1,7 @@
 # Converting MJML to Maizzle
-
 Guide for converting MJML templates to Maizzle 6 (Vue SFC) templates.
 
 ## Syntax Changes
-
 | MJML | Maizzle |
 |---|---|
 | `attribute="value"` (style as XML attrs) | `class="..."` (Tailwind) or inline `style="..."` |
@@ -18,7 +16,6 @@ Guide for converting MJML templates to Maizzle 6 (Vue SFC) templates.
 | `<mj-title>` | `useHead({ title: '...' })` |
 
 ## Component Mapping
-
 | MJML | Maizzle | Notes |
 |---|---|---|
 | `<mjml>` | `<Html>` (or `<Layout>` for full doc setup) | |
@@ -47,7 +44,6 @@ Guide for converting MJML templates to Maizzle 6 (Vue SFC) templates.
 | `<mj-carousel>` / `<mj-accordion>` | _(not supported)_ | Interactive content rarely renders. Flatten to stacked sections / hero+button. |
 
 ## Maizzle-Only Components & Features
-
 | Component | Purpose |
 |---|---|
 | `<Layout>` | Full document scaffold (replaces `<mjml> + <mj-head> + <mj-body>`). Props: `lang`, `dir`, `body-class`, `aria-label`, `double-head`, `outlook-fallback`. |
@@ -72,11 +68,9 @@ Guide for converting MJML templates to Maizzle 6 (Vue SFC) templates.
 ## Conversion Steps
 
 ### 1. File format
-
 `.mjml` XML → `.vue` SFC with `<script setup>` + `<template>`.
 
 ### 2. Document structure
-
 Recommended — `<Layout>` sets everything up:
 
 ```vue
@@ -99,7 +93,6 @@ MJML-like with explicit `<Html>`/`<Head>`/`<Body>` and `<Tailwind>`:
 ```
 
 ### 3. Title and preheader
-
 ```vue
 <script setup>
 useHead({ title: 'Welcome to Acme' })
@@ -112,7 +105,6 @@ useHead({ title: 'Welcome to Acme' })
 ```
 
 ### 4. Per-tag defaults
-
 MJML's `<mj-attributes>` block disappears. Three replacements:
 
 - **Style defaults** (font, color, size): Tailwind classes on a wrapper, or `@theme` inside the Tailwind import.
@@ -132,7 +124,6 @@ MJML's `<mj-attributes>` block disappears. Three replacements:
 ```
 
 ### 5. Sections, columns, widths
-
 ```vue
 <Section>
   <Row>
@@ -143,7 +134,6 @@ MJML's `<mj-attributes>` block disappears. Three replacements:
 ```
 
 ### 6. Buttons and dividers
-
 Drop MJML's per-tag style attrs; replace with Tailwind classes.
 
 ```vue
@@ -152,11 +142,9 @@ Drop MJML's per-tag style attrs; replace with Tailwind classes.
 ```
 
 ### 7. Spacer
-
 `<mj-spacer height="32px" />` → `<Spacer class="h-8" />`. For Outlook fine-tuning use `mso-line-height-alt-*`.
 
 ### 8. Includes → components
-
 `<mj-include path="./header.mjml" />` → place a component in `components/Header.vue`, then use `<Header />`. Auto-imported.
 
 ```vue
@@ -169,7 +157,6 @@ Drop MJML's per-tag style attrs; replace with Tailwind classes.
 ```
 
 ### 9. Templating data
-
 MJML files don't take props natively. In Maizzle, `defineProps()` lets the template own its inputs:
 
 ```vue
@@ -186,7 +173,6 @@ const props = defineProps({
 ```
 
 ### 10. Compiling
-
 Replace `mjml emails/welcome.mjml -o dist/welcome.html` with `npx maizzle build`, or programmatically:
 
 ```ts
@@ -197,7 +183,6 @@ const { html } = await render('emails/welcome.vue', { name: 'Alex' })
 ```
 
 ## Full Example: Welcome Email
-
 **MJML:**
 
 ```xml
@@ -249,7 +234,6 @@ useHead({ title: 'Welcome to Acme' })
 ```
 
 ## Common Pitfalls
-
 1. Treating `<Body>` like `<mj-body width="...">` — width lives on `<Container>`.
 2. Setting Button colors via `background-color` attribute — use Tailwind classes (`class="bg-blue-600 text-white"`) or inline `style`.
 3. Using `<Heading as="h2">` — prop is `level="2"` (number, not tag name).

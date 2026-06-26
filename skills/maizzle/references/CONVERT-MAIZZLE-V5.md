@@ -1,9 +1,7 @@
 # Converting Maizzle 5 to Maizzle 6
-
 Migrate Maizzle 5 projects (PostHTML + Tailwind v3 + YAML frontmatter) to Maizzle 6 (Vue SFC SSR + Tailwind v4 CSS-first + `defineConfig()`). v6 is a complete rewrite — prefer scaffolding fresh with `npx maizzle new` and porting over.
 
 ## Project Layout
-
 | Maizzle 5 | Maizzle 6 |
 |---|---|
 | `emails/*.html` | `emails/*.vue` (or `*.md` for prose) |
@@ -15,7 +13,6 @@ Migrate Maizzle 5 projects (PostHTML + Tailwind v3 + YAML frontmatter) to Maizzl
 Tag resolution: `<x-card.header>` → `components/card/header.vue` → auto-imports as `<CardHeader>` (kebab-to-PascalCase, `directoryAsNamespace` + `collapseSamePrefixes`).
 
 ## Expressions
-
 PostHTML expressions are gone. Use Vue's template syntax:
 
 | Maizzle 5 (PostHTML) | Maizzle 6 (Vue) |
@@ -40,7 +37,6 @@ ESP / mail-merge syntax (`{{ mailchimp_var }}`, `*|MERGE|*`, etc.) that you need
 An `<each>` body that emits sibling elements per iteration (e.g. a separator `<tr>` then a content `<tr>`) needs `<template v-for>` — v-for on one element can't wrap multiple roots.
 
 ## Components
-
 PostHTML components → Vue components. Definition: wrap body in `<template>`, replace `<yield />` with `<slot />`. Usage: `<x-card>` → `<Card>`. `<component src="...">` / `<module href="...">` → auto-imported PascalCased tag; `locals="..."` → `v-bind="..."`.
 
 Sizing/styling moved from props to Tailwind classes:
@@ -70,7 +66,6 @@ For Outlook fine-tuning of spacer height: `mso-line-height-alt-*` utility.
 ```
 
 ## `.vue` Templates: No Frontmatter
-
 `.vue` templates have **no frontmatter**. Move it into `<script setup>` via `defineConfig()`:
 
 ```diff
@@ -94,7 +89,6 @@ Prefer dedicated composables for common cases: `usePreheader`, `usePlaintext`, `
 `{{ page.x }}` no longer exists — values are just local bindings in `<script setup>`.
 
 ## `.md` Templates: Frontmatter Still Works
-
 `.md` templates **keep YAML frontmatter** — it's parsed automatically and head keys (`title`, `description`, `meta`) are injected via `@unhead/vue`. `.md` files also support `<script setup>` at the top.
 
 ```md
@@ -118,7 +112,6 @@ Special frontmatter keys for `.md`:
 - The whole frontmatter object is passed as `frontmatter` prop to the wrapping layout. `MarkdownLayout` reads `lang`, `dir`, `ariaLabel`, etc. from it.
 
 ## `config.js` → `maizzle.config.ts`
-
 ```ts
 import { defineConfig } from '@maizzle/framework'
 
@@ -201,7 +194,6 @@ Per-template plaintext: `usePlaintext()` in `<script setup>` instead of frontmat
 ```
 
 ## Tailwind v3 → v4
-
 Delete `tailwind.config.js`. Replace `tailwindcss-preset-email` with `@maizzle/tailwindcss`. Port `theme.extend.*` to a `@theme {}` block:
 
 ```vue
@@ -219,7 +211,6 @@ Delete `tailwind.config.js`. Replace `tailwindcss-preset-email` with `@maizzle/t
 Token naming: `colors.brand` → `--color-brand`, `fontFamily.display` → `--font-display`, `spacing.lg` → `--spacing-lg`. `@theme` tokens must live in the same `<style>` block that imports Tailwind — built-in `<Layout>` owns its own `<head>` and import (compiled in isolation), so you can't add tokens to it. To customize the theme, drop `<Layout>` and write your own `<Html>`/`<Head>`/`<Body>` with a `<style>` block that imports `@maizzle/tailwindcss` and defines `@theme`. Full Tailwind story: `references/STYLING.md`.
 
 ## Events
-
 Event handlers register at the root of the config; signatures changed.
 
 **`afterTransformers` → `afterTransform`**:

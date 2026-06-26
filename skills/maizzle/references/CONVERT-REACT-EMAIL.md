@@ -1,9 +1,7 @@
 # Converting React Email to Maizzle
-
 Guide for converting React Email (JSX/TSX) templates and components to Maizzle 6 (Vue SFC) templates.
 
 ## Syntax Changes
-
 | React Email | Maizzle |
 |---|---|
 | `className="..."` | `class="..."` |
@@ -18,7 +16,6 @@ Guide for converting React Email (JSX/TSX) templates and components to Maizzle 6
 Vue templates need a colon prefix to bind dynamic values (`:href="resetUrl"`); strings without a colon are static.
 
 ## Component Mapping
-
 | React Email | Maizzle | Notes |
 |---|---|---|
 | `<Html>` | `<Html>` | Or `<Layout>` for full document setup. |
@@ -42,7 +39,6 @@ Vue templates need a colon prefix to bind dynamic values (`:href="resetUrl"`); s
 | `<Font fontFamily webFont>` | _(use `<link>` in `<Head>`)_ | No `<Font>` component required; `<Layout>` includes Inter by default. |
 
 ## Maizzle-Only Components & Features
-
 | Component | Purpose |
 |---|---|
 | `<Layout>` | Full document scaffold. Replaces `Html > Tailwind > Head + Body`. Props: `lang`, `dir`, `body-class`, `aria-label`, `double-head`, `outlook-fallback`. |
@@ -65,18 +61,15 @@ Vue templates need a colon prefix to bind dynamic values (`:href="resetUrl"`); s
 ## Conversion Steps
 
 ### 1. File format
-
 `.tsx` default-export function → `.vue` SFC with `<script setup>` + `<template>`.
 
 ### 2. Remove React Email boilerplate
-
 - Drop all imports — Maizzle's components and composables auto-import.
 - Drop `<Tailwind>` and `pixelBasedPreset` — not needed.
 - Drop the `export default function` wrapper.
 - `Welcome.PreviewProps = {...}` → `defineProps({...})` with defaults.
 
 ### 3. Document structure
-
 Recommended:
 
 ```vue
@@ -108,7 +101,6 @@ Manual control:
 ```
 
 ### 4. Props
-
 ```vue
 <script setup>
 const props = defineProps({
@@ -120,7 +112,6 @@ const props = defineProps({
 ```
 
 ### 5. Control flow
-
 ```vue
 <Text v-if="isVip">VIP member</Text>
 <Text v-if="status === 'active'">Active</Text>
@@ -129,7 +120,6 @@ const props = defineProps({
 ```
 
 ### 6. Styling
-
 `className` → `class`. Tailwind utilities mostly identical (Maizzle uses Tailwind v4).
 
 Drop email-workaround classes Maizzle handles internally:
@@ -148,7 +138,6 @@ Customize Tailwind theme inline:
 ```
 
 ### 7. Images
-
 Drop manual `baseURL` concatenation. Use `url.base` in `maizzle.config.ts` or `<WithUrl>`. Place files in `public/`.
 
 ```vue
@@ -160,14 +149,12 @@ export default defineConfig({ url: { base: 'https://cdn.example.com/emails/' } }
 ```
 
 ### 8. Dividers
-
 ```vue
 <Hr class="bg-gray-200 my-5" />
 <Hr class="h-0.5 bg-blue-300" />
 ```
 
 ### 9. Preheader
-
 `<Preview>` (must be first inside `<Body>`) → `<Preheader>` (anywhere; auto-teleported):
 
 ```vue
@@ -178,7 +165,6 @@ export default defineConfig({ url: { base: 'https://cdn.example.com/emails/' } }
 ```
 
 ## Full Example: Password Reset
-
 **React Email:**
 
 ```tsx
@@ -242,7 +228,6 @@ const props = defineProps({
 ```
 
 ## Common Pitfalls
-
 1. `<Heading as="h2">` — it's `level="2"`.
 2. Keeping `box-border` / `block text-center no-underline` on `<Button>` — internal.
 3. Forgetting `xs:w-full` on Columns when you want mobile stacking with explicit widths.

@@ -1,5 +1,4 @@
 # CLI
-
 Run via `npx maizzle …` or install globally with `npm i -g maizzle`.
 
 | Command | Description |

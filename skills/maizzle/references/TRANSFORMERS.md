@@ -1,17 +1,14 @@
 # Maizzle Transformers Reference
-
 After Vue SSR renders a template, Maizzle pipes the HTML through a fixed sequence of transformers before writing the file. Order matters: CSS is compiled, inlined, then purged; HTML formatting/minification runs last.
 
 Disable the whole pipeline with `useTransformers: false` (config or composable). Toggle individual transformers with `useTransformers: { inlineCss: false, minify: true }`. See `CONFIGURATION.md` for the full surface.
 
-## Defaults at a Glance
+## Defaults
+On by default: `css.inline`, `css.purge`, `css.shorthand`, `css.safe`, `css.preferUnitless`, `css.sixHex`, `html.decodeEntities`, `addAttributes` (table + img defaults).
 
-On by default: `css.inline`, `css.purge`, `css.shorthand`, `css.safe`, `css.preferUnitless`, `css.sixHex`, `html.decodeEntities`, `html.format`, `addAttributes` (table + img defaults).
-
-Off by default: `html.minify`, `attributeToStyle`, `url.base`, `url.query`, `replaceStrings`, custom `filters`, custom `removeAttributes`.
+Off by default: `html.minify`, `html.format`, `attributeToStyle`, `url.base`, `url.query`, `replaceStrings`, custom `filters`, custom `removeAttributes`.
 
 ## Pipeline Order
-
 The DOM is parsed once, walked by all DOM-based transformers, then serialized; string-only transformers run last.
 
 | # | Stage | Driven by | Default |
@@ -38,7 +35,6 @@ The DOM is parsed once, walked by all DOM-based transformers, then serialized; s
 | 16 | Minify | `html.minify` | off |
 
 ## Per-Transformer Notes
-
 **Inline `<link>`** — local `href` paths are always inlined; remote URLs only when the `<link>` carries an `inline` attribute. `<style>` tags marked `raw`, `embed`, or `data-embed` are skipped (raw drops the marker; embed/data-embed are preserved for the inliner).
 
 **Tailwind CSS** — compiles utilities found in the rendered DOM. Lowers modern CSS (nesting, `oklch`, `color-mix`, `@property`) via lightningcss with an IE 1 target so most clients render it. Merges duplicate `@media` queries. Honors `css.base` and `css.exclude`.

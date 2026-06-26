@@ -1,9 +1,7 @@
 # Styling Guide
-
 Tailwind utilities first, inline `style="..."` as the escape hatch.
 
 ## Default Approach
-
 Maizzle compiles Tailwind v4 from your component classes into a single `<style>` block and (by default) inlines those declarations onto each element via Juice. Write Tailwind utilities the same way you would for the web — Maizzle's `@maizzle/tailwindcss` plugin handles the email-safe bits.
 
 ```vue
@@ -18,7 +16,6 @@ Maizzle compiles Tailwind v4 from your component classes into a single `<style>`
 `<Layout>` imports `@maizzle/tailwindcss`, ships email-safe meta tags, MSO font reset, and Inter. Reach for explicit `<Html> + <Head> + <Tailwind> + <Body>` only when you need manual control. Use inline `style="..."` for one-offs the utility system can't express cleanly (specific MSO rules, computed values, third-party templating expressions).
 
 ## Email-Client Realities
-
 - **No SVG, no WebP fallback in Outlook**. Use PNG/JPEG, or pair `<NotOutlook>` + `<Outlook>` with a fallback image.
 - **No native flex/grid in older Outlook**. Use `<Row>`/`<Column>` (inline-block + MSO `<td>`) for multi-column layouts.
 - **Responsive variants** (`sm:`, `xs:`): progressive enhancement; not all clients support media queries.
@@ -27,7 +24,6 @@ Maizzle compiles Tailwind v4 from your component classes into a single `<style>`
 - **`rem` units**: Maizzle converts to pixels at compile time.
 
 ## Layout Defaults
-
 Pin page width to what you need (default 600px) — Maizzle handles the Outlook ghost table.
 
 ```vue
@@ -37,7 +33,6 @@ Pin page width to what you need (default 600px) — Maizzle handles the Outlook 
 ```
 
 ## Typography
-
 `<Heading>` and `<Text>` reset margins (`m-0`) so you compose spacing from utilities.
 
 ```vue
@@ -48,7 +43,6 @@ Pin page width to what you need (default 600px) — Maizzle handles the Outlook 
 ```
 
 ### Line height
-
 `text-*` sizes ship a paired `line-height` (`xs`16 `sm`20 `base`24 `lg`28 `xl`28 `2xl`32 `3xl`36 `4xl`40; `5xl`+ = size px). Don't add a `leading-*` that restates it — only to deviate. No paired leading on `text-xxs`/`text-2xs`/`text-2sm`/`text-0` or arbitrary sizes — use the slash form (`text-[32px]/10`).
 
 Inter is loaded by `<Layout>`. Register additional families with `<Font>` (or `useFont()`):
@@ -59,7 +53,6 @@ Inter is loaded by `<Layout>`. Register additional families with `<Font>` (or `u
 ```
 
 ## Colors & Brand
-
 Define brand tokens once with `@theme` and reference them as semantic Tailwind utilities. Never hardcode hex values in templates.
 
 Per-template `<Tailwind>` block:
@@ -103,14 +96,12 @@ Project-wide `tailwind.css`:
 ```
 
 ## Images
-
 - PNG/JPEG/GIF only.
 - Public CDN URL or `public/`-served path. Absolute URLs in production.
 - Always set `alt` and `width` (Maizzle requires `width`, unitless).
 - Framework handles responsive sizing via `class="max-w-full align-middle"`.
 
 ## Buttons
-
 `<Button>` handles MSO padding, font-width spacing, and `text-decoration: none`. Don't add `box-border`. Style with utilities; pick a variant for the base look.
 
 ```vue
@@ -121,7 +112,6 @@ Project-wide `tailwind.css`:
 ```
 
 ## Spacing & Dividers
-
 - Prefer `mt-*` over `mb-*` for gaps between blocks — put the gap on the *following* element so the last child leaves no orphaned trailing space inside its container's padding.
 - `<Button>` is `inline-block` by default, so it ignores `mt-*`/`mb-*` — space it with `mt-*` on the next element, or with `<Spacer>`, or set the button to `block`.
 - `<Spacer class="h-8" />` for vertical space (`h-*` preferred, `leading-*` also works). For Outlook fine-tune use `mso-line-height-alt-*`.
@@ -133,7 +123,6 @@ Project-wide `tailwind.css`:
 ```
 
 ## Responsive
-
 Two breakpoints calibrated for inboxes:
 - `sm:` — `@media (max-width: 600px)`
 - `xs:` — `@media (max-width: 430px)`
@@ -141,7 +130,6 @@ Two breakpoints calibrated for inboxes:
 See [PATTERNS.md](./PATTERNS.md) for common responsive patterns.
 
 ## Dark Mode
-
 Outlook desktop on Windows ignores media queries, so dark variants only apply where supported (Apple Mail, modern iOS Mail, some Outlook builds).
 
 ```vue
@@ -155,7 +143,6 @@ Outlook desktop on Windows ignores media queries, so dark variants only apply wh
 For images that need a dark variant, prefer `<Img dark-src="...">` (`<picture>` with `prefers-color-scheme` source).
 
 ## Footer Pattern
-
 Address + copyright + unsubscribe with Handlebars syntax passed through to the ESP via `<Raw>`:
 
 ```vue
@@ -167,13 +154,11 @@ Address + copyright + unsubscribe with Handlebars syntax passed through to the E
 ```
 
 ## Production Hygiene
-
 - **Keep output ≤ 102 KB** to avoid Gmail clipping. CSS purge is on by default; minify (`html.minify: true`) for production.
 - **Use absolute URLs** for images and links in shipped templates. `<WithUrl>` or `url.base` config rewrite relatives at build time.
 - **Reuse, don't repeat**: factor recurring pieces (logos, footers, button presets) into components under `components/` — they auto-import.
 
 ## Brand Brief Checklist
-
 Before authoring a new template, offer to collect from the user:
 
 - **Primary color** (hex or Tailwind palette) — buttons, links, accents.

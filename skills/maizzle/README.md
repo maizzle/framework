@@ -1,8 +1,6 @@
 # Maizzle Agent Skill
 
-> **Work in progress.** This skill targets Maizzle 6, which is currently in beta. APIs and configuration may change before the stable release.
-
-This directory contains an Agent Skill for building production-ready HTML emails with Maizzle, Vue components, and Tailwind CSS 4.
+This directory contains an Agent Skill for building production-ready HTML emails with Vue components and Tailwind CSS 4 in Maizzle 6.
 
 ## Structure
 

@@ -269,6 +269,12 @@ export async function createRenderer(
           transformAssetUrls: false,
           compilerOptions: {
             /**
+             * Keep template whitespace intact — the default `condense`
+             * mode collapses/strips whitespace between tags,
+             * which can alter plaintext output.
+             */
+            whitespace: 'preserve',
+            /**
              * AMP4Email tags (<amp-carousel>, <amp-img>, <amp-list> ...)
              * render verbatim — skip the component resolver. Users who
              * want to wrap an amp tag in a Vue component should register

@@ -87,7 +87,7 @@
   },
   "devDependencies": {
     "@types/culori": "^4.0.1",
-    "@types/node": "^25.2.3",
+    "@types/node": "^26.0.1",
     "@types/nodemailer": "^8.0.0",
     "@types/postcss-safe-parser": "^5.0.4",
     "@vitest/coverage-v8": "^4.0.18",

@@ -44,7 +44,7 @@ export interface RenderedTemplate {
 }
 
 export interface Renderer {
-  render(input: string | Component, config: MaizzleConfig, opts?: { source?: string }): Promise<RenderedTemplate>
+  render(input: string | Component, config: MaizzleConfig, opts?: { source?: string; props?: Record<string, any> }): Promise<RenderedTemplate>
   invalidate(filePath: string): Promise<void>
   invalidateAll(): Promise<void>
   close(): Promise<void>
@@ -412,7 +412,7 @@ export async function createRenderer(
   const server = await createServer(finalConfig)
 
   return {
-    async render(input: string | Component, config: MaizzleConfig, opts?: { source?: string }): Promise<RenderedTemplate> {
+    async render(input: string | Component, config: MaizzleConfig, opts?: { source?: string; props?: Record<string, any> }): Promise<RenderedTemplate> {
       let component: Component
       let configKey: InjectionKey<MaizzleConfig>
       let contextKey: InjectionKey<RenderContext>
@@ -469,7 +469,7 @@ export async function createRenderer(
       }
 
       const head = createHead({ disableDefaults: true })
-      const app = createSSRApp(component)
+      const app = createSSRApp(component, opts?.props)
       app.use(head)
 
       // Register user Vue plugins, directives, and global properties

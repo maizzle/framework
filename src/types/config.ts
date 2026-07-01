@@ -744,6 +744,18 @@ export interface MaizzleConfig {
    * }
    */
   vue?: VueConfig
+  /**
+   * Props passed to the template's root component when rendering
+   * programmatically. Map 1:1 to the template's `defineProps`. Not
+   * merged into `useConfig()`.
+   *
+   * Props not declared via `defineProps` fall through as HTML
+   * attributes on the root element, so declare every prop you pass.
+   *
+   * @example
+   * render('./welcome.vue', { props: { name: 'Ava', plan: 'Pro' } })
+   */
+  props?: Record<string, any>
 
   // Events
 

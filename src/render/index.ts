@@ -5,6 +5,7 @@ import { createPlaintext } from '../plaintext.ts'
 import { stripForHtml, stripForPlaintext } from '../utils/output-markers.ts'
 import defu from 'defu'
 import type { Component } from 'vue'
+import type { ComponentProps } from 'vue-component-type-helpers'
 import type { MaizzleConfig } from '../types/index.ts'
 import { createRenderer } from './createRenderer.ts'
 import { getActiveRenderer } from './active.ts'
@@ -20,12 +21,25 @@ export interface RenderResult {
 }
 
 /**
+ * Render a Vue component to a fully-transformed HTML string.
+ */
+export async function render<TComponent extends Component>(
+  component: TComponent,
+  config?: Partial<MaizzleConfig<ComponentProps<TComponent>>>,
+): Promise<RenderResult>;
+
+/**
  * Render a Vue SFC email template to a fully-transformed HTML string.
  * Accepts a file path or a raw SFC source string.
  */
 export async function render(
-  template: string | Component,
+  template: string,
   config?: Partial<MaizzleConfig>,
+): Promise<RenderResult>;
+
+export async function render<TComponent extends Component>(
+  template: string | TComponent,
+  config?: Partial<MaizzleConfig<ComponentProps<TComponent>>>,
 ): Promise<RenderResult> {
   if (template == null) {
     throw new Error(

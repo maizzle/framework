@@ -493,7 +493,7 @@ export type ComponentSource =
     pathPrefix?: boolean
   }
 
-export interface MaizzleConfig {
+export interface MaizzleConfig<TProps = Record<string, any>> {
   /**
    * Root directory for the Maizzle email project.
    *
@@ -755,7 +755,7 @@ export interface MaizzleConfig {
    * @example
    * render('./welcome.vue', { props: { name: 'Ava', plan: 'Pro' } })
    */
-  props?: Record<string, any>
+  props?: TProps
 
   // Events
 

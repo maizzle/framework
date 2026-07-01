@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { defineComponent, h, type PropType } from 'vue'
 import { rmSync } from 'node:fs'
 import { render } from '../../render/index.ts'
 import { createTempProject } from './_helpers.ts'
@@ -30,6 +31,30 @@ describe('render props', () => {
     })
 
     expect(result.html).toContain('Hello Ava')
+  })
+
+  it('passes props to strongly typed component', async () => {
+    const component = defineComponent({
+      props: {
+        title: {
+          type: String as PropType<'Mr' | 'Ms' | 'Mx'>,
+          required: true,
+        },
+        name: {
+          type: String as PropType<string>,
+          required: true,
+        },
+      },
+      setup(props) {
+        return () => h('div', `Hello ${props.title} ${props.name}`)
+      }
+    })
+
+    const result = await render(component, {
+      props: { title: 'Mx', name: 'Ava' },
+    })
+
+    expect(result.html).toContain('Hello Mx Ava')
   })
 
   it('does not leak props into useConfig() or the returned config', async () => {

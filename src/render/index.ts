@@ -39,6 +39,7 @@ export async function render(
   }
 
   const resolvedConfig = resolveConfigObject(config)
+  const { props, ...templateConfig } = resolvedConfig
 
   /**
    * Reuse a renderer started by the Vite plugin when one is active.
@@ -59,7 +60,7 @@ export async function render(
       && ['.vue', '.md'].includes(extname(template))
       && !template.includes('\n')
 
-    const rendered = await renderer.render(isFile ? resolve(template) : template, resolvedConfig)
+    const rendered = await renderer.render(isFile ? resolve(template) : template, templateConfig, { props })
     let html = rendered.html
 
     const doctype = rendered.doctype ?? rendered.templateConfig.doctype ?? '<!DOCTYPE html>'

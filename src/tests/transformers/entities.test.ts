@@ -118,6 +118,30 @@ describe('entities', () => {
     })
   })
 
+  describe('comment nodes', () => {
+    it('encodes entities inside comments by default', () => {
+      const result = run('<!--[if mso]>\u00A0\u00A0<![endif]-->', true)
+      expect(result).toBe('<!--[if mso]>&nbsp;&nbsp;<![endif]-->')
+    })
+
+    it('encodes comments regardless of conditional syntax', () => {
+      const result = run('<!-- \u00A0 -->', true)
+      expect(result).toBe('<!-- &nbsp; -->')
+    })
+
+    it('scope.comments false leaves comments untouched', () => {
+      const html = '<!--[if mso]>\u00A0<![endif]--><p>\u00A0</p>'
+      const result = entities(html, true, { comments: false })
+      expect(result).toBe('<!--[if mso]>\u00A0<![endif]--><p>&nbsp;</p>')
+    })
+
+    it('scope.text false leaves text nodes untouched', () => {
+      const html = '<!--[if mso]>\u00A0<![endif]--><p>\u00A0</p>'
+      const result = entities(html, true, { text: false })
+      expect(result).toBe('<!--[if mso]>&nbsp;<![endif]--><p>\u00A0</p>')
+    })
+  })
+
   describe('edge cases', () => {
     it('handles empty HTML', () => {
       const result = run('', true)

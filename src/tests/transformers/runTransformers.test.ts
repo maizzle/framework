@@ -77,4 +77,11 @@ describe('runTransformers config branches', () => {
     expect(result).not.toContain('data-x')
     expect(result).toContain('data-keep')
   })
+
+  it('preserves whitespace-only MSO conditionals through purge and minify', async () => {
+    const spacer = '<html><head></head><body><!--[if mso]>\u00A0\u00A0<![endif]--><p>x</p></body></html>'
+    const result = await runTransformers(spacer, { css: { purge: true }, html: { minify: true } })
+    expect(result).toContain('<!--[if mso]>&nbsp;&nbsp;')
+    expect(result).toContain('<![endif]-->')
+  })
 })

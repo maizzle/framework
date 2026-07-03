@@ -511,6 +511,25 @@ export async function createRenderer(
         html = html.replace('</body>', `${bodyTags}\n</body>`)
       }
 
+      /**
+       * Strip Vue SSR fragment markers + teleport anchor comments. These
+       * are rendering hygiene, not transformer concerns — must run
+       * regardless of `useTransformers` state. Fragment markers contain
+       * `-->`, which would prematurely terminate MSO conditional
+       * comments downstream — including in the DOM round-trip below,
+       * whose parser would otherwise close `<!--[if mso]>` at a
+       * marker's `-->` and mangle the conditional on re-serialize.
+       */
+      const stripSsrMarkers = (str: string) => str
+        .replaceAll('<!--[-->', '')
+        .replaceAll('<!--]-->', '')
+        .replaceAll('<!--teleport start anchor-->', '')
+        .replaceAll('<!--teleport anchor-->', '')
+        .replaceAll('<!--teleport start-->', '')
+        .replaceAll('<!--teleport end-->', '')
+
+      html = stripSsrMarkers(html)
+
       // Inject SSR teleport content into their target elements
       const hasTeleports = ssrContext.teleports && Object.keys(ssrContext.teleports).length > 0
       const hasFonts = (renderContext.fonts?.length ?? 0) > 0
@@ -525,7 +544,7 @@ export async function createRenderer(
 
             const prepend = rawTarget.endsWith(':start')
             const target = prepend ? rawTarget.slice(0, -6) : rawTarget
-            const targetChildren = parseDom(content)
+            const targetChildren = parseDom(stripSsrMarkers(content))
 
             walk(dom, (node) => {
               const el = node as import('domhandler').Element
@@ -565,21 +584,6 @@ export async function createRenderer(
         const previewHtml = `<div style="display:none">${text}${filler}\u00A0</div>`
         html = html.replace(/<body([^>]*)>/, `<body$1>${previewHtml}`)
       }
-
-      /**
-       * Strip Vue SSR fragment markers + teleport anchor comments. These
-       * are rendering hygiene, not transformer concerns — must run
-       * regardless of `useTransformers` state. Fragment markers contain
-       * `-->`, which would prematurely terminate MSO conditional
-       * comments downstream.
-       */
-      html = html
-        .replaceAll('<!--[-->', '')
-        .replaceAll('<!--]-->', '')
-        .replaceAll('<!--teleport start anchor-->', '')
-        .replaceAll('<!--teleport anchor-->', '')
-        .replaceAll('<!--teleport start-->', '')
-        .replaceAll('<!--teleport end-->', '')
 
       return {
         html,

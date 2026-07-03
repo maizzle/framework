@@ -49,6 +49,26 @@ describe('createRenderer', () => {
     expect(result.html).toContain('fonts.googleapis.com')
   })
 
+  it('keeps MSO conditionals intact when Preheader triggers the teleport DOM round-trip', async () => {
+    const config = await resolveConfig({ root: tempDir })
+    const result = await render(
+      `<template>
+        <Html>
+          <Head />
+          <Body>
+            <Preheader>Preview text</Preheader>
+            <Outlook><img src="https://example.com/image-a.gif"></Outlook>
+            <NotOutlook><img src="https://example.com/image-b.gif"></NotOutlook>
+          </Body>
+        </Html>
+      </template>`,
+      config,
+    )
+    expect(result.html).toContain('<!--[if mso]><img src="https://example.com/image-a.gif"><![endif]-->')
+    expect(result.html).toContain('<!--[if !mso]><!--><img src="https://example.com/image-b.gif"')
+    expect(result.html).not.toContain('---->')
+  })
+
   it('wraps a markdown code fence in a table with shiki highlighting', async () => {
     writeFileSync(join(tempDir, 'page.md'), '# Title\n\n```js\nconst x = 1\n```\n')
     const result = await render(join(tempDir, 'page.md'), { useTransformers: false })

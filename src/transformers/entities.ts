@@ -30,9 +30,25 @@ const DEFAULT_ENTITIES: Record<string, string> = {
 }
 
 /**
- * Replace literal Unicode characters in text nodes with their HTML entity
- * equivalents (zero-width joiners, non-breaking spaces, smart quotes,
- * dashes, etc.) for better email-client rendering.
+ * Node types {@link entitiesDom} encodes. Both default to `true`.
+ */
+export interface EntitiesScope {
+  /** Encode entities in text nodes */
+  text?: boolean
+  /**
+   * Encode entities in comment nodes. MSO conditional comment content is
+   * rendered by Outlook, and comment data survives parse round-trips
+   * un-decoded — so encoding here protects whitespace-only conditionals
+   * (e.g. `<Outlook>&nbsp;</Outlook>` spacers) from being collapsed
+   * or removed by email-comb and html-crush downstream.
+   */
+  comments?: boolean
+}
+
+/**
+ * Replace literal Unicode characters in text and comment nodes with their
+ * HTML entity equivalents (zero-width joiners, non-breaking spaces, smart
+ * quotes, dashes, etc.) for better email-client rendering.
  *
  * @param html   HTML string to transform.
  * @param custom Extra entries merged on top of the built-in entity map, or
@@ -52,8 +68,8 @@ const DEFAULT_ENTITIES: Record<string, string> = {
  * // Disable the transform
  * entities('hello world', false)
  */
-export function entities(html: string, custom: EntitiesConfig = true): string {
-  return serialize(entitiesDom(parse(html), custom))
+export function entities(html: string, custom: EntitiesConfig = true, scope: EntitiesScope = {}): string {
+  return serialize(entitiesDom(parse(html), custom, scope))
 }
 
 /**
@@ -61,7 +77,7 @@ export function entities(html: string, custom: EntitiesConfig = true): string {
  * Takes a parsed DOM, returns a parsed DOM — avoids redundant
  * serialize/parse round-trips when chained with other transformers.
  */
-export function entitiesDom(dom: ChildNode[], custom: EntitiesConfig = true): ChildNode[] {
+export function entitiesDom(dom: ChildNode[], custom: EntitiesConfig = true, scope: EntitiesScope = {}): ChildNode[] {
   if (!custom) return dom
 
   const map = typeof custom === 'object'
@@ -69,7 +85,10 @@ export function entitiesDom(dom: ChildNode[], custom: EntitiesConfig = true): Ch
     : DEFAULT_ENTITIES
 
   walk(dom, (node) => {
-    if (node.type === 'text') {
+    if (
+      (node.type === 'text' && scope.text !== false)
+      || (node.type === 'comment' && scope.comments !== false)
+    ) {
       for (const [char, entity] of Object.entries(map)) {
         node.data = node.data.split(char).join(entity)
       }

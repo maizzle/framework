@@ -47,6 +47,7 @@ import type { TailwindBlock } from '../composables/renderContext.ts'
  * 9.  Filters
  * 10. Base URL
  * 11. URL query
+ * 11.5 Entities in comment nodes (before purge — protects MSO conditionals)
  * 12. Purge CSS (serializes/parses internally around email-comb)
  * 13. Entities
  * + Vue-generated comments stripped here (on serialized string)
@@ -164,6 +165,16 @@ export async function runTransformers(
     const { _options: queryOptions, ...queryParams } = effective.url.query as Record<string, unknown>
     dom = urlQueryDom(dom, queryParams, (queryOptions ?? {}) as import('../types/config.ts').UrlQueryOptions)
   }
+
+  /**
+   * 11.5. Encode entities in comment nodes before purge/minify. Raw
+   * invisible chars (e.g. U+00A0 from Vue decoding &nbsp; at compile
+   * time) inside MSO conditionals make email-comb remove the whole
+   * "whitespace-only" conditional and html-crush collapse the chars.
+   * Text nodes are skipped here — purge's internal parse round-trip
+   * would decode them again — comment data survives un-decoded.
+   */
+  if (enabled('entities')) dom = entitiesDom(dom, effective.html?.decodeEntities, { text: false })
 
   // 12. Remove unused CSS (serializes/parses internally around email-comb)
   if (enabled('purgeCss') && effective.css?.purge) {

@@ -604,6 +604,21 @@ export interface MaizzleConfig {
      */
     port?: number
     /**
+     * Expose the dev server on the network.
+     *
+     * Set to `true` to listen on all interfaces (prints a network URL +
+     * QR code), or pass a string to bind a specific address. The
+     * `--host` CLI flag takes precedence over this.
+     *
+     * @default false
+     *
+     * @example
+     * server: {
+     *   host: true,
+     * }
+     */
+    host?: boolean | string
+    /**
      * Additional file paths to watch for changes.
      *
      * @default []

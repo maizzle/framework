@@ -131,6 +131,27 @@ describe('serve dev server', () => {
     }, { timeout: 15000, interval: 100 })
   }, 30000)
 
+  it('prefers options.host over config.server.host', async () => {
+    server = await serve({
+      host: '127.0.0.1',
+      config: { server: { host: '0.0.0.0' } },
+      port: 3157,
+      silent: true,
+    })
+
+    expect(server.config.server.host).toBe('127.0.0.1')
+  }, 30000)
+
+  it('falls back to config.server.host when options.host is undefined', async () => {
+    server = await serve({
+      config: { server: { host: '127.0.0.1' } },
+      port: 3157,
+      silent: true,
+    })
+
+    expect(server.config.server.host).toBe('127.0.0.1')
+  }, 30000)
+
   it('fires beforeRender/afterRender/afterTransform when rendering a template', async () => {
     writeFileSync(join(tempDir, 'maizzle.config.js'), `
       export default {

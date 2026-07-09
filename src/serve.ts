@@ -80,6 +80,7 @@ export async function serve(options: ServeOptions = {}) {
 
   let config = await resolveConfig(options.config)
   const port = options.port ?? config.server?.port ?? 3000
+  const host = options.host ?? config.server?.host
 
   // Create a renderer for SSR rendering email templates (with dts for dev)
   let renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
@@ -132,7 +133,7 @@ export async function serve(options: ServeOptions = {}) {
     },
     server: {
       port,
-      host: options.host,
+      host,
       fs: {
         allow: [process.cwd(), config.root ?? process.cwd(), devUIDir, ...['vue', 'vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', '@lucide/vue', 'class-variance-authority', 'clsx', 'tailwind-merge', 'culori'].map(pkg)],
       },

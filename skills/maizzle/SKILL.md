@@ -83,6 +83,8 @@ Surgical edits: change only what was asked. Keep existing structure, components,
 
 Reach for built-in components over raw HTML unless explicitly asked for — they encode email-client quirks. Style with Tailwind utilities; arbitrary values are fine. Don't add `box-border` or `align="left"` on `<Button>` (left is the default), or `border-solid border-*` on `<Hr>` (use `bg-*` for color).
 
+**No box-sizing in email.** Never put `padding` (or a left/right `border`) on an element that also sets an explicit width — a `<Column>` with any `w-*`/`min-w-*`/`max-w-*`, or a `<Section>`/`<Container>` given a `width`. The padding adds to the outer width (content-box), so columns overflow and stack instead of sitting side by side. Put the width on the outer element and the padding on a **nested `<Section class="px-* border-0">`** (or, in hand-rolled tables, on the `<td>`). A width-less `<Section>`/`<Container>` is `width:auto`, which absorbs padding safely — `px-*` there is fine. (Bottom/top borders and vertical padding don't affect width, so they're fine on width elements.) See PATTERNS.md → Gutters between columns.
+
 Don't add a `leading-*` that restates a `text-*` size's built-in line-height — `text-*` sizes ship a paired `line-height`; add `leading-*` only to deviate (pairs in `references/STYLING.md`).
 
 Don't add `mso-style` to repeat padding/bg for Outlook — `<Container>`, `<Section>`, `<Column>` auto-hoist `background-color`/`padding*` from your classes onto the MSO `<td>`. Reserve `mso-style` for Outlook-only overrides. (Skipped if the element has a horizontal border, or on `<Column>` with a percentage width.)

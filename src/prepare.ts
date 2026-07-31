@@ -1,4 +1,6 @@
-import { relative, resolve } from 'node:path'
+import { cpSync, existsSync, rmSync } from 'node:fs'
+import { dirname, relative, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import ora from 'ora'
 import { resolveConfig } from './config/index.ts'
 import { createRenderer } from './render/createRenderer.ts'
@@ -46,4 +48,18 @@ export async function prepare(options: PrepareOptions = {}): Promise<void> {
     symbol: '✅',
     text: `Types generated in ${displayPath}`,
   })
+
+  // Copy the bundled Maizzle skill into the project's `.claude/skills/` so
+  // Claude Code auto-discovers it (it never scans `node_modules/`) and it stays
+  // in sync with the installed framework version on every install/upgrade.
+  const skillSrc = resolve(dirname(fileURLToPath(import.meta.url)), '../skills/maizzle')
+  if (existsSync(skillSrc)) {
+    const skillDest = resolve(process.cwd(), '.claude/skills/maizzle')
+    rmSync(skillDest, { recursive: true, force: true })
+    cpSync(skillSrc, skillDest, { recursive: true })
+    ora().stopAndPersist({
+      symbol: '✅',
+      text: `Maizzle skill installed in ${relative(process.cwd(), skillDest) || skillDest}`,
+    })
+  }
 }

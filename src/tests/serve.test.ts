@@ -152,6 +152,28 @@ describe('serve dev server', () => {
     expect(server.config.server.host).toBe('127.0.0.1')
   }, 30000)
 
+  it('passes config.vite.server options (watch.ignored) to the dev server', async () => {
+    server = await serve({
+      config: { vite: { server: { watch: { ignored: ['**/some-share/**'] } } } },
+      port: 3157,
+      silent: true,
+    })
+
+    expect(server.config.server.watch?.ignored).toContain('**/some-share/**')
+  }, 30000)
+
+  it('keeps Maizzle fs.allow when config.vite.server.fs.allow is set', async () => {
+    server = await serve({
+      config: { vite: { server: { fs: { allow: ['/custom/allowed'] } } } },
+      port: 3157,
+      silent: true,
+    })
+
+    // User path merged in, Maizzle's cwd still present (not replaced).
+    expect(server.config.server.fs.allow).toContain('/custom/allowed')
+    expect(server.config.server.fs.allow).toContain(process.cwd())
+  }, 30000)
+
   it('fires beforeRender/afterRender/afterTransform when rendering a template', async () => {
     writeFileSync(join(tempDir, 'maizzle.config.js'), `
       export default {

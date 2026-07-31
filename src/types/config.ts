@@ -737,9 +737,17 @@ export interface MaizzleConfig {
    * `configFile: false`), so pass anything it needs here. These options are
    * merged underneath Maizzle's required settings, which take precedence.
    *
+   * The `server` block is also applied to the dev server — use it to pass
+   * Vite server options such as `watch.ignored` (e.g. to stop the file
+   * watcher from crashing on network shares). Maizzle's `port`, `host`
+   * and `fs.allow` still take precedence.
+   *
    * @example
    * vite: {
    *   plugins: [myPlugin()],
+   *   server: {
+   *     watch: { ignored: ['**\/some-network-share/**'] },
+   *   },
    * }
    */
   vite?: InlineConfig

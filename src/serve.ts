@@ -132,10 +132,14 @@ export async function serve(options: ServeOptions = {}) {
       ],
     },
     server: {
+      // Cherry-pick Vite's `server` options (e.g. watch.ignored) from the
+      // user's `vite` config; Maizzle's required keys below take precedence.
+      ...config.vite?.server,
       port,
       host,
       fs: {
-        allow: [process.cwd(), config.root ?? process.cwd(), devUIDir, ...['vue', 'vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', '@lucide/vue', 'class-variance-authority', 'clsx', 'tailwind-merge', 'culori'].map(pkg)],
+        ...config.vite?.server?.fs,
+        allow: [process.cwd(), config.root ?? process.cwd(), devUIDir, ...['vue', 'vue-router', 'reka-ui', '@vueuse/core', '@vueuse/shared', '@lucide/vue', 'class-variance-authority', 'clsx', 'tailwind-merge', 'culori'].map(pkg), ...(config.vite?.server?.fs?.allow ?? [])],
       },
     },
     customLogger: customLogger(),

@@ -290,6 +290,31 @@ function toggleDarkMode() {
   darkMode.value = !darkMode.value
 }
 
+const vFade = {
+  mounted(el: HTMLElement) {
+    const update = () => {
+      const max = el.scrollWidth - el.clientWidth
+      el.style.setProperty('--fade-l', el.scrollLeft > 1 ? 'transparent' : '#000')
+      el.style.setProperty('--fade-r', el.scrollLeft < max - 1 ? 'transparent' : '#000')
+    }
+    ;(el as any)._fade = update
+    el.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    ;(el as any)._fadeObserver = observer
+    requestAnimationFrame(update)
+  },
+  updated(el: HTMLElement) {
+    requestAnimationFrame((el as any)._fade)
+  },
+  unmounted(el: HTMLElement) {
+    el.removeEventListener('scroll', (el as any)._fade)
+    window.removeEventListener('resize', (el as any)._fade)
+    ;(el as any)._fadeObserver?.disconnect()
+  },
+}
+
 onMounted(() => {
   document.addEventListener('keydown', onKeydown)
   window.addEventListener('blur', onWindowBlur)
@@ -329,7 +354,9 @@ onUnmounted(() => {
           </SidebarGroup>
 
           <SidebarGroup v-for="(items, dir) in grouped" :key="dir" v-else>
-            <SidebarGroupLabel>{{ dir }}</SidebarGroupLabel>
+            <SidebarGroupLabel>
+              <span v-fade class="min-w-0 overflow-x-auto whitespace-nowrap scrollbar-hide fade-scroll">{{ dir }}</span>
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem v-for="t in items" :key="t.path">

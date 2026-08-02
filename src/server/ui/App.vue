@@ -300,6 +300,9 @@ const vFade = {
     ;(el as any)._fade = update
     el.addEventListener('scroll', update, { passive: true })
     window.addEventListener('resize', update)
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    ;(el as any)._fadeObserver = observer
     requestAnimationFrame(update)
   },
   updated(el: HTMLElement) {
@@ -308,6 +311,7 @@ const vFade = {
   unmounted(el: HTMLElement) {
     el.removeEventListener('scroll', (el as any)._fade)
     window.removeEventListener('resize', (el as any)._fade)
+    ;(el as any)._fadeObserver?.disconnect()
   },
 }
 

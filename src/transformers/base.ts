@@ -54,30 +54,42 @@ const defaultTagConfig: Record<string, Record<string, string | boolean>> = Objec
 )
 
 const postcssBaseUrl: postcss.PluginCreator<{ url: string }> = (opts) => {
+  const rewriteDecl = (decl: postcss.Declaration) => {
+    if (!decl.value.includes('url(')) return
+
+    const parsed = valueParser(decl.value)
+    let changed = false
+
+    parsed.walk(node => {
+      if (node.type !== 'function' || node.value !== 'url') return
+
+      const urlNode = node.nodes[0]
+      if (!urlNode) return
+
+      if (isAbsoluteUrl(urlNode.value)) return
+
+      urlNode.value = opts!.url + urlNode.value
+      changed = true
+    })
+
+    if (changed) {
+      decl.value = parsed.toString()
+    }
+  }
+
   return {
     postcssPlugin: 'postcss-base-url',
-    Declaration(decl) {
-      if (!decl.value.includes('url(')) return
-
-      const parsed = valueParser(decl.value)
-      let changed = false
-
-      parsed.walk(node => {
-        if (node.type !== 'function' || node.value !== 'url') return
-
-        const urlNode = node.nodes[0]
-        if (!urlNode) return
-
-        if (isAbsoluteUrl(urlNode.value)) return
-
-        urlNode.value = opts!.url + urlNode.value
-        changed = true
-      })
-
-      if (changed) {
-        decl.value = parsed.toString()
-      }
-    }
+    /**
+     * Walk declarations once, in `OnceExit`, rather than via the visitor
+     * `Declaration` hook. The visitor re-runs on nodes it mutates, and a
+     * relative base (e.g. `/images/`) never makes the URL absolute — so the
+     * guard `isAbsoluteUrl` stays false and it re-prepends the base forever
+     * (`/images//images/…`), hanging the build. A single manual pass rewrites
+     * each declaration exactly once.
+     */
+    OnceExit(root) {
+      root.walkDecls(rewriteDecl)
+    },
   }
 }
 postcssBaseUrl.postcss = true

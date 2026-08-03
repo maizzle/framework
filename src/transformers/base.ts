@@ -200,25 +200,31 @@ export function baseDom(dom: ChildNode[], options: string | BaseUrlOptions | und
       return
     }
 
-    // Process tag-specific attributes (respects tags filter)
+    // Rewrite url() in an inline style attribute. Controlled by `inlineCss`
+    // only — NOT the `tags` filter, which restricts source-attribute rewriting
+    // (src/href/…). A `tags: ['img']` config must still rewrite the background
+    // image on a `<td style="…url(bg.jpg)…">`, matching how <style> tags work.
+    if (inlineCss && el.attribs.style?.includes('url(')) {
+      const newStyle = processInlineStyle(el.attribs.style, baseUrl)
+      if (newStyle !== el.attribs.style) {
+        el.attribs.style = newStyle
+      }
+    }
+
+    // Process tag-specific source attributes (respects tags filter)
     const tagConfig = getTagConfig(el.name, resolved)
 
     if (tagConfig || resolved.tags === undefined) {
       for (const [attr, value] of Object.entries(el.attribs)) {
-        if (!value) continue
+        if (!value || attr === 'style') continue
 
         const attrConfig = tagConfig?.[attr]
-        if (!attrConfig && attr !== 'style') continue
+        if (!attrConfig) continue
 
         if (attr === 'srcset' && (attrConfig === true || typeof attrConfig === 'string')) {
           const newSrcset = processSrcset(value, typeof attrConfig === 'string' ? attrConfig : baseUrl)
           if (newSrcset !== value) {
             el.attribs.srcset = newSrcset
-          }
-        } else if (attr === 'style' && inlineCss && value.includes('url(')) {
-          const newStyle = processInlineStyle(value, baseUrl)
-          if (newStyle !== value) {
-            el.attribs.style = newStyle
           }
         } else if (attrConfig === true && !isAbsoluteUrl(value)) {
           el.attribs[attr] = baseUrl + value
@@ -253,12 +259,12 @@ export function baseDom(dom: ChildNode[], options: string | BaseUrlOptions | und
 
 function rewriteVMLs(html: string, url: string): string {
   html = html.replace(/<v:image[^>]+src="?([^"\s]+)"/gi, (match, src) => {
-    if (isAbsoluteUrl(src)) return match
+    if (isAbsoluteUrl(src) || src.startsWith(url)) return match
     return match.replace(src, url + src)
   })
 
   html = html.replace(/<v:fill[^>]+src="?([^"\s]+)"/gi, (match, src) => {
-    if (isAbsoluteUrl(src)) return match
+    if (isAbsoluteUrl(src) || src.startsWith(url)) return match
     return match.replace(src, url + src)
   })
 
@@ -272,7 +278,14 @@ function rewriteMsoComments(html: string, url: string): string {
     for (const attr of sourceAttributes) {
       const attrRegex = new RegExp(`\\b${attr}="([^"]+)"`, 'gi')
       result = result.replace(attrRegex, (match, value) => {
-        if (isAbsoluteUrl(value)) return match
+        /**
+         * `startsWith(url)` guards against a relative base being prepended
+         * twice: `rewriteVMLs` runs first and prefixes `v:image`/`v:fill`
+         * `src`; this generic pass would otherwise re-prefix the same
+         * attribute (`/images//images/…`) since a relative base never trips
+         * `isAbsoluteUrl`. Absolute bases self-guard via `isAbsoluteUrl`.
+         */
+        if (isAbsoluteUrl(value) || value.startsWith(url)) return match
 
         if (attr === 'srcset') {
           return `srcset="${processSrcset(value, url)}"`

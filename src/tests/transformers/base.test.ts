@@ -308,6 +308,15 @@ describe('base URL', () => {
       expect(result).toContain('src="https://cdn.example.com/b.js"')
     })
 
+    it('still rewrites inline style url() when tags are restricted', () => {
+      // The tags filter restricts source attributes (src/href/…), not the
+      // CSS url() rewriting — that is governed by `inlineCss`. A background
+      // image on a non-listed tag (<td>) must still be prefixed.
+      const html = '<td style="background-image: url(bg.jpg)"></td>'
+      const result = run(html, { url: { base: { url: 'https://cdn.example.com/', tags: ['img'] } } })
+      expect(result).toContain('url(https://cdn.example.com/bg.jpg)')
+    })
+
     it('accepts object-format tags with per-attribute config', () => {
       const html = '<img src="a.jpg" srcset="b.jpg 1x"><a href="page.html">Link</a>'
       const result = run(html, {
@@ -445,6 +454,23 @@ describe('base URL', () => {
       const html = '<v:fill src="https://other.com/bg.png"/>'
       const result = run(html, { url: { base: 'https://cdn.example.com/' } })
       expect(result).toContain('src="https://other.com/bg.png"')
+    })
+
+    it('prefixes v:fill in MSO comments once with a relative base', () => {
+      // rewriteVMLs and rewriteMsoComments both target src inside MSO
+      // comments; a relative base never trips isAbsoluteUrl, so without the
+      // startsWith guard the src is prefixed twice (/images//images/…).
+      const html = '<!--[if gte vml 1]><v:fill src="bg.png"/><![endif]-->'
+      const result = run(html, { url: { base: '/images/' } })
+      expect(result).toContain('src="/images/bg.png"')
+      expect(result).not.toContain('/images//images/')
+    })
+
+    it('prefixes v:image in MSO comments once with a relative base', () => {
+      const html = '<!--[if gte vml 1]><v:image src="hero.png"/><![endif]-->'
+      const result = run(html, { url: { base: '/images/' } })
+      expect(result).toContain('src="/images/hero.png"')
+      expect(result).not.toContain('/images//images/')
     })
   })
 

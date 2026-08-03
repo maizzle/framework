@@ -243,6 +243,22 @@ describe('base URL', () => {
       const result = run(html, { url: { base: 'https://cdn.example.com/' } })
       expect(result).toBe(html)
     })
+
+    it('prepends a relative base to url() exactly once (no infinite re-prepend)', () => {
+      // A relative base never makes the URL absolute; the PostCSS declaration
+      // must not be re-visited, or it re-prepends forever and hangs.
+      const html = '<style>.bg { background-image: url(bg.jpg) }</style>'
+      const result = run(html, { url: { base: '/images/' } })
+      expect(result).toContain('url(/images/bg.jpg)')
+      expect(result).not.toContain('/images//images/')
+    })
+
+    it('prepends a relative base in an inline style exactly once', () => {
+      const html = '<div style="background-image: url(bg.jpg)"></div>'
+      const result = run(html, { url: { base: '/images/' } })
+      expect(result).toContain('url(/images/bg.jpg)')
+      expect(result).not.toContain('/images//images/')
+    })
   })
 
   describe('inlineCss option', () => {

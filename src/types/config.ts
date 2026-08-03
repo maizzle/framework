@@ -398,6 +398,21 @@ export interface VueConfig {
   directives?: Record<string, Directive>
   /** Properties added to `app.config.globalProperties`, available in all templates. */
   globalProperties?: Record<string, unknown>
+  /**
+   * Tags to treat as native custom elements. The template compiler skips
+   * component resolution for a matching tag, so it renders verbatim (no
+   * "Failed to resolve component" warning) while its Tailwind classes are
+   * still scanned.
+   *
+   * Match by exact tag name (`string`), pattern (`RegExp`), or a predicate
+   * (`(tag) => boolean`). Pass one value or an array. `amp-*` tags are always
+   * treated as custom elements regardless of this option.
+   *
+   * @example
+   * // VML / Office tags used inside MSO conditional comments
+   * customElements: [/^v:/, /^o:/]
+   */
+  customElements?: string | RegExp | (string | RegExp)[] | ((tag: string) => boolean)
 }
 
 /**

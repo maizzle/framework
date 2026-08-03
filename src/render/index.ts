@@ -53,6 +53,7 @@ export async function render(
     root: resolvedConfig.root,
     componentDirs: normalizeComponentSources(resolvedConfig.components?.source, process.cwd()),
     vite: resolvedConfig.vite,
+    customElements: resolvedConfig.vue?.customElements,
   })
 
   try {

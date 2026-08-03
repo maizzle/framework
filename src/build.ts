@@ -85,7 +85,7 @@ export async function build(configInput?: Partial<MaizzleConfig> | string): Prom
       await copyStatic(config, outputPath)
       await events.fireAfterBuild({ files: outputFiles, config })
     } else {
-      const renderer = await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
+      const renderer = await createRenderer({ markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite, customElements: config.vue?.customElements })
 
       try {
         for (const templatePath of templateFiles) {

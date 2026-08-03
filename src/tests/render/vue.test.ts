@@ -621,4 +621,89 @@ describe('render', () => {
       expect(result.html).toContain('<amp-carousel layout="responsive">native</amp-carousel>')
     })
   })
+
+  describe('user-defined custom elements', () => {
+    const VML = `
+      <template>
+        <v:group class="h-4 w-8" coordorigin="0 0" coordsize="32 16">
+          <v:oval class="size-4" fillcolor="#030712"></v:oval>
+        </v:group>
+      </template>
+    `
+
+    it('renders a matched tag (RegExp) verbatim, attributes and class intact', async () => {
+      // useTransformers: false → raw SSR output, so the class text stays on the
+      // element (proving it survives compilation and remains Tailwind-scannable).
+      const result = await render(VML, { vue: { customElements: [/^v:/] }, useTransformers: false })
+
+      expect(result.html).toContain('<v:group class="h-4 w-8"')
+      expect(result.html).toContain('coordsize="32 16"')
+      expect(result.html).toContain('<v:oval class="size-4"')
+      expect(result.html).toContain('fillcolor="#030712"')
+    })
+
+    it('a matching component resolves by default (control)', async () => {
+      writeSfc(tempDir, 'components/CustomBox.vue', `
+        <template>
+          <div class="vue-wrapper"><slot /></div>
+        </template>
+      `)
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template><custom-box>content</custom-box></template>
+      `)
+
+      const result = await render(join(tempDir, 'emails/test.vue'))
+
+      // Kebab tag resolves to the PascalCase component.
+      expect(result.html).toContain('class="vue-wrapper"')
+    })
+
+    it('a custom element bypasses component resolution and renders native', async () => {
+      writeSfc(tempDir, 'components/CustomBox.vue', `
+        <template>
+          <div class="vue-wrapper"><slot /></div>
+        </template>
+      `)
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template><custom-box>content</custom-box></template>
+      `)
+
+      const result = await render(join(tempDir, 'emails/test.vue'), {
+        vue: { customElements: ['custom-box'] },
+      })
+
+      // Marked custom → stays a raw element, the component is not used.
+      expect(result.html).not.toContain('class="vue-wrapper"')
+      expect(result.html).toContain('<custom-box>content</custom-box>')
+    })
+
+    it('accepts an exact tag name (string)', async () => {
+      const result = await render(`
+        <template><my-widget data-id="1">hi</my-widget></template>
+      `, { vue: { customElements: ['my-widget'] } })
+
+      expect(result.html).toContain('<my-widget data-id="1">hi</my-widget>')
+    })
+
+    it('accepts a predicate function', async () => {
+      const result = await render(`
+        <template><o:idmap data-v="1"></o:idmap></template>
+      `, { vue: { customElements: (tag: string) => tag.startsWith('o:') } })
+
+      expect(result.html).toContain('<o:idmap')
+      expect(result.html).toContain('data-v="1"')
+    })
+
+    it('keeps amp-* native even when customElements targets other tags', async () => {
+      const result = await render(`
+        <template>
+          <amp-img src="a.jpg" width="600" height="300" />
+          <v:oval></v:oval>
+        </template>
+      `, { vue: { customElements: [/^v:/] } })
+
+      expect(result.html).toContain('<amp-img')
+      expect(result.html).toContain('<v:oval')
+    })
+  })
 })

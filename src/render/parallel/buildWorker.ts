@@ -59,6 +59,7 @@ export async function run(data: BuildWorkerData): Promise<BuildWorkerResult> {
     root: config.root,
     componentDirs: normalizeComponentSources(config.components?.source, process.cwd()),
     vite: config.vite,
+    customElements: config.vue?.customElements,
   })
 
   const files: string[] = []

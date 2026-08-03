@@ -694,6 +694,32 @@ describe('render', () => {
       expect(result.html).toContain('data-v="1"')
     })
 
+    it('matches successive tags with a global/sticky RegExp (no lastIndex leak)', async () => {
+      /**
+       * A `g`/`y` regex advances lastIndex on test(). If that state leaked
+       * across the compiler's per-tag isCustomElement calls, the second tag
+       * would miss and resolve to its component. `mz-widget` has a matching
+       * component, so a leak would render the wrapper — deterministic signal.
+       */
+      writeSfc(tempDir, 'components/MzWidget.vue', `
+        <template><div class="vue-wrapper"><slot /></div></template>
+      `)
+      writeSfc(tempDir, 'emails/test.vue', `
+        <template>
+          <mz-box></mz-box>
+          <mz-widget>content</mz-widget>
+        </template>
+      `)
+
+      const result = await render(join(tempDir, 'emails/test.vue'), {
+        vue: { customElements: [/^mz-/g] },
+      })
+
+      // Both tags stay native; the component is never used for mz-widget.
+      expect(result.html).not.toContain('class="vue-wrapper"')
+      expect(result.html).toContain('<mz-widget>content</mz-widget>')
+    })
+
     it('keeps amp-* native even when customElements targets other tags', async () => {
       const result = await render(`
         <template>

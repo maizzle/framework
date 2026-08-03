@@ -85,7 +85,15 @@ function toCustomElementPredicate(
   const exact = new Set<string>()
   const regexes: RegExp[] = []
   for (const pattern of patterns) {
-    if (pattern instanceof RegExp) regexes.push(pattern)
+    if (pattern instanceof RegExp) {
+      /**
+       * Strip `g`/`y` flags: `test()` on a global/sticky regex advances
+       * `lastIndex`, so reusing the user's instance across tags would
+       * match intermittently. Clone without them (and don't mutate the
+       * user's regex) — for a tag test these flags carry no useful meaning.
+       */
+      regexes.push(new RegExp(pattern.source, pattern.flags.replace(/[gy]/g, '')))
+    }
     else exact.add(pattern)
   }
 

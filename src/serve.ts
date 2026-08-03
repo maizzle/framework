@@ -83,7 +83,7 @@ export async function serve(options: ServeOptions = {}) {
   const host = options.host ?? config.server?.host
 
   // Create a renderer for SSR rendering email templates (with dts for dev)
-  let renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
+  let renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite, customElements: config.vue?.customElements })
 
   /**
    * Register so user-land render() calls reuse this renderer instead of
@@ -257,7 +257,7 @@ function maizzleDevPlugin(
 
           // Recreate the renderer so config changes (e.g. markdown.shikiTheme) take effect
           await renderer.close()
-          renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite })
+          renderer = await createRenderer({ dts: true, markdown: config.markdown, root: config.root, componentDirs: normalizeComponentSources(config.components?.source, process.cwd()), vite: config.vite, customElements: config.vue?.customElements })
 
           // Re-register the new renderer so user-land render() calls don't keep
           // reusing the closed one (see setActiveRenderer above).

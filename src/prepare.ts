@@ -29,6 +29,7 @@ export async function prepare(options: PrepareOptions = {}): Promise<void> {
     root: config.root,
     componentDirs: normalizeComponentSources(config.components?.source, process.cwd()),
     vite: config.vite,
+    customElements: config.vue?.customElements,
   })
 
   try {

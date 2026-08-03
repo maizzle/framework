@@ -22,7 +22,7 @@ import { RenderContextKey } from '../composables/renderContext.ts'
 import { componentNameFromPath, type NormalizedComponentSource } from '../utils/componentSources.ts'
 import { shikiToCodeBlock } from '../components/utils.ts'
 import type { Component, InjectionKey } from 'vue'
-import type { MaizzleConfig, MarkdownConfig } from '../types/index.ts'
+import type { MaizzleConfig, MarkdownConfig, VueConfig } from '../types/index.ts'
 import type { MarkdownExit } from 'markdown-exit'
 import type { RenderContext } from '../composables/renderContext.ts'
 
@@ -64,6 +64,40 @@ export interface CreateRendererOptions {
   componentDirs?: NormalizedComponentSource[]
   /** User Vite config options to merge into the internal SSR server */
   vite?: InlineConfig
+  /**
+   * Extra tags to treat as native custom elements (in addition to the
+   * built-in `amp-*`), so the compiler skips component resolution for them.
+   */
+  customElements?: VueConfig['customElements']
+}
+
+/**
+ * Build a predicate from the user's `vue.customElements` option. Accepts an
+ * exact tag name, a `RegExp`, an array of either, or a predicate function.
+ */
+function toCustomElementPredicate(
+  value: VueConfig['customElements'],
+): (tag: string) => boolean {
+  if (typeof value === 'function') return value
+  if (value == null) return () => false
+
+  const patterns = Array.isArray(value) ? value : [value]
+  const exact = new Set<string>()
+  const regexes: RegExp[] = []
+  for (const pattern of patterns) {
+    if (pattern instanceof RegExp) {
+      /**
+       * Strip `g`/`y` flags: `test()` on a global/sticky regex advances
+       * `lastIndex`, so reusing the user's instance across tags would
+       * match intermittently. Clone without them (and don't mutate the
+       * user's regex) — for a tag test these flags carry no useful meaning.
+       */
+      regexes.push(new RegExp(pattern.source, pattern.flags.replace(/[gy]/g, '')))
+    }
+    else exact.add(pattern)
+  }
+
+  return (tag: string) => exact.has(tag) || regexes.some(re => re.test(tag))
 }
 
 /**
@@ -75,7 +109,8 @@ export interface CreateRendererOptions {
 export async function createRenderer(
   options: CreateRendererOptions = {},
 ): Promise<Renderer> {
-  const { dts = false, markdown: markdownOptionsRaw, root = process.cwd(), componentDirs = [], vite: userViteConfig } = options
+  const { dts = false, markdown: markdownOptionsRaw, root = process.cwd(), componentDirs = [], vite: userViteConfig, customElements } = options
+  const isUserCustomElement = toCustomElementPredicate(customElements)
   const { shikiTheme = 'github-light', markdownSetup: userMarkdownSetup, ...restMarkdownConfig } = markdownOptionsRaw ?? {}
 
   /**
@@ -280,8 +315,11 @@ export async function createRenderer(
              * want to wrap an amp tag in a Vue component should register
              * it under a PascalCase name (e.g. `components/AmpCarousel.vue`
              * → `<AmpCarousel>`).
+             *
+             * User-defined tags (config `vue.customElements`, e.g. VML `v:*`)
+             * extend this — they render verbatim for the same reason.
              */
-            isCustomElement: (tag: string) => tag.startsWith('amp-'),
+            isCustomElement: (tag: string) => tag.startsWith('amp-') || isUserCustomElement(tag),
           },
         },
       }),

@@ -257,14 +257,24 @@ export function baseDom(dom: ChildNode[], options: string | BaseUrlOptions | und
   return dom
 }
 
+/**
+ * True when `value` already sits under `url` — used to skip re-prefixing an
+ * already-based URL (e.g. after `rewriteVMLs` runs before `rewriteMsoComments`)
+ * without matching a mere string prefix: base `/images` must NOT swallow
+ * `/images2/…`, so we require a path boundary (exact match or a following `/`).
+ */
+function isUnderBase(value: string, url: string): boolean {
+  return value === url || value.startsWith(url.endsWith('/') ? url : `${url}/`)
+}
+
 function rewriteVMLs(html: string, url: string): string {
   html = html.replace(/<v:image[^>]+src="?([^"\s]+)"/gi, (match, src) => {
-    if (isAbsoluteUrl(src) || src.startsWith(url)) return match
+    if (isAbsoluteUrl(src) || isUnderBase(src, url)) return match
     return match.replace(src, url + src)
   })
 
   html = html.replace(/<v:fill[^>]+src="?([^"\s]+)"/gi, (match, src) => {
-    if (isAbsoluteUrl(src) || src.startsWith(url)) return match
+    if (isAbsoluteUrl(src) || isUnderBase(src, url)) return match
     return match.replace(src, url + src)
   })
 
@@ -279,13 +289,13 @@ function rewriteMsoComments(html: string, url: string): string {
       const attrRegex = new RegExp(`\\b${attr}="([^"]+)"`, 'gi')
       result = result.replace(attrRegex, (match, value) => {
         /**
-         * `startsWith(url)` guards against a relative base being prepended
-         * twice: `rewriteVMLs` runs first and prefixes `v:image`/`v:fill`
-         * `src`; this generic pass would otherwise re-prefix the same
-         * attribute (`/images//images/…`) since a relative base never trips
+         * `isUnderBase` guards against a relative base being prepended twice:
+         * `rewriteVMLs` runs first and prefixes `v:image`/`v:fill` `src`; this
+         * generic pass would otherwise re-prefix the same attribute
+         * (`/images//images/…`) since a relative base never trips
          * `isAbsoluteUrl`. Absolute bases self-guard via `isAbsoluteUrl`.
          */
-        if (isAbsoluteUrl(value) || value.startsWith(url)) return match
+        if (isAbsoluteUrl(value) || isUnderBase(value, url)) return match
 
         if (attr === 'srcset') {
           return `srcset="${processSrcset(value, url)}"`

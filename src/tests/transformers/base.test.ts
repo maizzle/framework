@@ -472,6 +472,16 @@ describe('base URL', () => {
       expect(result).toContain('src="/images/hero.png"')
       expect(result).not.toContain('/images//images/')
     })
+
+    it('rewrites v:image/v:fill under /images2 with a no-trailing-slash base /images', () => {
+      // The skip guard must match at a path boundary, not a bare string
+      // prefix — base `/images` must not swallow a `/images2/…` source.
+      const image = run('<v:image src="/images2/hero.png"/>', { url: { base: '/images' } })
+      expect(image).toContain('src="/images/images2/hero.png"')
+
+      const fill = run('<v:fill src="/images2/bg.png"/>', { url: { base: '/images' } })
+      expect(fill).toContain('src="/images/images2/bg.png"')
+    })
   })
 
   describe('MSO comments', () => {

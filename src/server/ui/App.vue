@@ -344,7 +344,7 @@ onUnmounted(() => {
       </SidebarHeader>
 
       <SidebarContent>
-        <ScrollArea class="flex-1">
+        <ScrollArea class="flex-1 min-h-0">
           <SidebarGroup v-if="loading">
             <p class="px-2 py-4 text-xs text-gray-500 dark:text-gray-400">Loading emails...</p>
           </SidebarGroup>

@@ -203,7 +203,7 @@ const MsoIconGap = () => createStaticVNode(
         <MsoSpacerLeft v-if="outlookFallback" />
         <template v-if="icon && iconPosition === 'left'">
           <span :style="textSpanStyle">
-            <img :src="icon" :width="parsedIconWidth" :alt="iconAlt" style="vertical-align: baseline; max-width: 100%;" :class="iconClass">
+            <img :src="icon" :width="parsedIconWidth" :alt="iconAlt" :class="twMerge('max-w-full align-baseline', iconClass)">
           </span>
           <MsoIconGap v-if="outlookFallback" />
         </template>
@@ -211,7 +211,7 @@ const MsoIconGap = () => createStaticVNode(
         <template v-if="icon && iconPosition === 'right'">
           <MsoIconGap v-if="outlookFallback" />
           <span :style="textSpanStyle">
-            <img :src="icon" :width="parsedIconWidth" :alt="iconAlt" style="vertical-align: baseline; max-width: 100%;" :class="iconClass">
+            <img :src="icon" :width="parsedIconWidth" :alt="iconAlt" :class="twMerge('max-w-full align-baseline', iconClass)">
           </span>
         </template>
         <MsoSpacerRight v-if="outlookFallback" />

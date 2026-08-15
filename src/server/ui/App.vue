@@ -129,16 +129,22 @@ watch(sidebarOpen, (open) => {
   localStorage.setItem('maizzle:sidebar', open ? 'open' : 'closed')
 })
 
-async function fetchTemplates() {
+async function fetchTemplates(revealActive = false) {
   const res = await fetch('/__maizzle/templates')
   templates.value = await res.json()
   loading.value = false
+  // On first load (e.g. after a dev-server restart) reveal the template being
+  // viewed so a restart doesn't leave you lost in a long sidebar.
+  if (revealActive && isPreviewRoute.value) {
+    await nextTick()
+    scrollSidebarToTemplate(route.path)
+  }
 }
 
-onMounted(fetchTemplates)
+onMounted(() => fetchTemplates(true))
 
 if ((import.meta as any).hot) {
-  (import.meta as any).hot.on('maizzle:templates-changed', fetchTemplates)
+  (import.meta as any).hot.on('maizzle:templates-changed', () => fetchTemplates())
 }
 
 const grouped = computed(() => {
@@ -250,13 +256,27 @@ function getFileName(path: string) {
   return path.split('/').pop() || path
 }
 
+/**
+ * Reveal a template in the sidebar. Jumping via the palette (or landing on a
+ * template after a dev-server restart) otherwise leaves the active item
+ * scrolled out of view in large projects.
+ */
+function scrollSidebarToTemplate(href: string) {
+  // CSS.escape the value — hrefs come from file paths and may contain
+  // characters that would otherwise break the attribute selector.
+  document.querySelector(`[data-sidebar-template=${CSS.escape(href)}]`)?.scrollIntoView({ block: 'center' })
+}
+
 function onCommandSelect(href: string) {
   // Keep the query so navigating to a template doesn't lose the search;
   // restore it after Reka's select-reset has wiped the filter.
   const query = commandSearch.value
   closeCommandPalette()
   router.push(href)
-  nextTick(() => { commandSearch.value = query })
+  nextTick(() => {
+    commandSearch.value = query
+    scrollSidebarToTemplate(href)
+  })
 }
 
 function openExternal(url: string) {
@@ -386,8 +406,9 @@ onUnmounted(() => {
                     as-child
                     size="sm"
                     :is-active="isActive(t.href)"
+                    class="data-[active=true]:font-semibold"
                   >
-                    <RouterLink :to="t.href" class="truncate">
+                    <RouterLink :to="t.href" :data-sidebar-template="t.href" class="truncate">
                       <span class="mz-tpl-icon size-4 shrink-0 opacity-70" :class="t.path.endsWith('.md') ? 'mz-tpl-icon-md' : 'mz-tpl-icon-vue'" />
                       <span class="truncate">{{ t.name }}</span>
                     </RouterLink>

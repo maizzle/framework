@@ -211,20 +211,14 @@ async function copySource() {
   await navigator.clipboard.writeText(el.textContent || '')
 }
 
-const commandGrouped = computed(() => {
-  const groups: Record<string, Template[]> = {}
-
-  for (const t of templates.value) {
-    const parts = t.path.split('/')
-    const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : '.'
-    if (!groups[dir]) groups[dir] = []
-    groups[dir].push(t)
-  }
-
-  return groups
-})
-
 const { contains } = useFilter({ sensitivity: 'base' })
+
+/**
+ * Cap how many template results render at once. Rendering every template as
+ * a CommandItem freezes the palette on the first keystroke in large projects
+ * (100s–1000s of templates), so we only render the matches, up to this many.
+ */
+const MAX_TEMPLATE_RESULTS = 50
 
 const filteredTemplatesCount = computed(() => {
   const tokens = commandSearch.value.split(/\s+/).filter(Boolean)
@@ -236,6 +230,25 @@ const filteredTemplatesCount = computed(() => {
   }
   return count
 })
+
+/** The matching templates (capped), grouped by directory, for rendering. */
+const filteredCommandGrouped = computed(() => {
+  const groups: Record<string, Template[]> = {}
+  const tokens = commandSearch.value.split(/\s+/).filter(Boolean)
+  if (tokens.length === 0) return groups
+  let count = 0
+  for (const t of templates.value) {
+    const haystack = `${getFileName(t.path)} ${t.path.split('/').join(' ')}`
+    if (!tokens.every(token => contains(haystack, token))) continue
+    const parts = t.path.split('/')
+    const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : '.'
+    ;(groups[dir] ??= []).push(t)
+    if (++count >= MAX_TEMPLATE_RESULTS) break
+  }
+  return groups
+})
+
+const templatesTruncated = computed(() => filteredTemplatesCount.value > MAX_TEMPLATE_RESULTS)
 
 function getFileName(path: string) {
   return path.split('/').pop() || path
@@ -539,7 +552,7 @@ onUnmounted(() => {
 
         <!-- Templates -->
         <template v-if="commandSearch">
-          <CommandGroup v-for="(items, dir) in commandGrouped" :key="dir" :heading="String(dir)">
+          <CommandGroup v-for="(items, dir) in filteredCommandGrouped" :key="dir" :heading="String(dir)">
             <CommandItem
               v-for="t in items"
               :key="t.path"
@@ -568,7 +581,8 @@ onUnmounted(() => {
           Close
         </span>
         <span v-if="commandSearch" class="ml-auto">
-          {{ filteredTemplatesCount }} {{ filteredTemplatesCount === 1 ? 'result' : 'results' }}
+          <template v-if="templatesTruncated">Showing {{ MAX_TEMPLATE_RESULTS }} of {{ filteredTemplatesCount }} — refine to narrow</template>
+          <template v-else>{{ filteredTemplatesCount }} {{ filteredTemplatesCount === 1 ? 'result' : 'results' }}</template>
         </span>
       </div>
     </CommandDialog>

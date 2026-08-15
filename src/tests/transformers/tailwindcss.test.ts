@@ -297,4 +297,94 @@ describe('tailwindcss', () => {
       expect(result).toContain('color: red')
     })
   })
+
+  describe('gradients', () => {
+    const tw = '@import "tailwindcss" source(none);'
+
+    function gradient(classes: string): Promise<string> {
+      const html = `<style>${tw} @source inline("${classes}");</style><div class="${classes}">x</div>`
+      return run(html, undefined, { postcss: { removeAtRules: [] } })
+    }
+
+    it('flattens a linear gradient into a single email-safe declaration', async () => {
+      const result = await gradient('bg-linear-to-bl from-indigo-50 to-indigo-600')
+
+      expect(result).toContain('.bg-linear-gradient-to-bl-from-indigo-50-to-indigo-600')
+      expect(result).toContain('background-image: linear-gradient(to bottom left, #eef2ff, #4f39f6)')
+      // Rewrites the element to the single generated class
+      expect(result).toContain('<div class="bg-linear-gradient-to-bl-from-indigo-50-to-indigo-600">')
+      // No leftover Tailwind gradient machinery
+      expect(result).not.toContain('--tw-gradient')
+      expect(result).not.toContain('var(--tw-gradient-stops)')
+      expect(result).not.toContain('.from-indigo-50')
+    })
+
+    it('resolves via stops and keeps declared colors', async () => {
+      const result = await gradient('bg-linear-to-r from-red-500 via-yellow-400 to-green-600')
+
+      expect(result).toContain('background-image: linear-gradient(to right, #fb2c36, #fac800, #00a544)')
+    })
+
+    it('defaults a missing stop to transparent', async () => {
+      const result = await gradient('bg-linear-to-r from-indigo-500')
+
+      expect(result).toContain('linear-gradient(to right, #625fff, rgba(0, 0, 0, 0))')
+    })
+
+    it('writes transparent stops (normalized like all colors)', async () => {
+      const result = await gradient('bg-linear-to-r from-blue-500 to-transparent')
+
+      // lightningcss lowers the `transparent` keyword to rgba, same as
+      // everywhere else in Maizzle's output.
+      expect(result).toContain('linear-gradient(to right, #3080ff, rgba(0, 0, 0, 0))')
+    })
+
+    it('supports angle directions', async () => {
+      const result = await gradient('bg-linear-45 from-indigo-500 to-pink-500')
+
+      expect(result).toContain('linear-gradient(45deg, #625fff, #f6339a)')
+    })
+
+    it('strips the interpolation method from radial gradients', async () => {
+      const result = await gradient('bg-radial from-red-500 to-green-600')
+
+      // No `in oklab` interpolation keyword leaks into the gradient
+      expect(result).toContain('background-image: radial-gradient(#fb2c36, #00a544)')
+    })
+
+    it('supports conic gradients with an angle', async () => {
+      const result = await gradient('bg-conic-180 from-blue-500 to-pink-500')
+
+      expect(result).toContain('conic-gradient(from 180deg, #3080ff, #f6339a)')
+    })
+
+    it('keeps explicit non-default stop positions and omits defaults', async () => {
+      const result = await gradient('bg-linear-to-r from-indigo-500 from-25% to-pink-500 to-90%')
+
+      expect(result).toContain('linear-gradient(to right, #625fff 25%, #f6339a 90%)')
+    })
+
+    it('supports arbitrary color values', async () => {
+      const result = await gradient('bg-linear-to-r from-[#ff0000] to-[#0000ff]')
+
+      expect(result).toContain('linear-gradient(to right, red, #00f)')
+      expect(result).toContain('.bg-linear-gradient-to-r-from-ff0000-to-0000ff')
+    })
+
+    it('reuses one rule for elements sharing a gradient', async () => {
+      const html = `<style>${tw} @source inline("bg-linear-to-r from-red-500 to-blue-500");</style>`
+        + '<div class="bg-linear-to-r from-red-500 to-blue-500">a</div>'
+        + '<div class="bg-linear-to-r from-red-500 to-blue-500">b</div>'
+      const result = await run(html, undefined, { postcss: { removeAtRules: [] } })
+
+      const occurrences = result.split('.bg-linear-gradient-to-r-from-red-500-to-blue-500 {').length - 1
+      expect(occurrences).toBe(1)
+    })
+
+    it('preserves non-gradient classes on the element', async () => {
+      const result = await gradient('p-4 bg-linear-to-r from-red-500 to-blue-500 rounded')
+
+      expect(result).toMatch(/<div class="p-4 rounded bg-linear-gradient-to-r-from-red-500-to-blue-500">/)
+    })
+  })
 })

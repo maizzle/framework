@@ -5,13 +5,14 @@ import safeParser from 'postcss-safe-parser'
 import { transform } from 'lightningcss'
 import resolveProps from '../plugins/postcss/resolveProps.ts'
 import pruneVars from '../plugins/postcss/pruneVars.ts'
+import flattenGradients, { type GradientCombo } from '../plugins/postcss/flattenGradients.ts'
 import { tailwindCleanup } from '../plugins/postcss/tailwindCleanup.ts'
 import { mergeMediaQueries } from '../plugins/postcss/mergeMediaQueries.ts'
 import { quoteFontFamilies } from '../plugins/postcss/quoteFontFamilies.ts'
 import { resolveMaizzleImports } from '../plugins/postcss/resolveMaizzleImports.ts'
 import type { MaizzleConfig } from '../types/config.ts'
 
-export function createTailwindProcessor(config: MaizzleConfig) {
+export function createTailwindProcessor(config: MaizzleConfig, gradientCombos: GradientCombo[] = []) {
   return postcss([
     // Must run before @tailwindcss/postcss so it sees absolute import paths
     resolveMaizzleImports(),
@@ -20,6 +21,9 @@ export function createTailwindProcessor(config: MaizzleConfig) {
       transformAssetUrls: false,
       optimize: false,
     }),
+    // Flatten Tailwind's gradient var machinery into email-safe declarations
+    // before the var()/color resolution steps run.
+    flattenGradients(gradientCombos),
     resolveProps(),
     postcssCalc({}),
     pruneVars(),
@@ -57,8 +61,9 @@ export async function compileTailwindCss(
   cssInput: string,
   config: MaizzleConfig,
   from: string,
+  gradientCombos: GradientCombo[] = [],
 ): Promise<string> {
-  const processor = createTailwindProcessor(config)
+  const processor = createTailwindProcessor(config, gradientCombos)
   const result = await processor.process(cssInput, { from, parser: safeParser })
   const lowered = lowerCssSyntax(result.css)
   return optimizeTailwindCss(lowered, config)

@@ -3,6 +3,7 @@ import type { ChildNode, Element } from 'domhandler'
 import { walk } from '../utils/ast/index.ts'
 import { decodeStyleEntities } from '../utils/decodeStyleEntities.ts'
 import { compileTailwindCss } from '../utils/compileTailwindCss.ts'
+import type { GradientCombo } from '../plugins/postcss/flattenGradients.ts'
 import type { MaizzleConfig } from '../types/config.ts'
 
 /**
@@ -57,6 +58,84 @@ function buildSourceDirectives(dom: ChildNode[], config: MaizzleConfig, fromDir:
   }
 
   return directives.join('\n')
+}
+
+const GRADIENT_FN_RE = /^bg-(linear|radial|conic)\b/
+const GRADIENT_GENERATED_RE = /^bg-(linear|radial|conic)-gradient-/
+const GRADIENT_STOP_RE = /^(from|via|to)-/
+
+/** Rank a stop class so generated names are stable regardless of author order. */
+function stopRank(cls: string): number {
+  const prefix = cls.startsWith('from-') ? 0 : cls.startsWith('via-') ? 1 : 2
+  const isPosition = /^(from|via|to)-\d+%$/.test(cls) ? 1 : 0
+  return prefix * 2 + isPosition
+}
+
+/** Sanitize a class token into a valid, readable CSS class name fragment. */
+function sanitize(token: string): string {
+  return token
+    .replace(/[[\]#()]/g, '')
+    .replace(/[/,.%\s]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+/**
+ * Detect Tailwind gradient class combinations on DOM elements.
+ *
+ * A gradient only works once its `bg-linear/radial/conic` direction class
+ * combines with `from-*`/`via-*`/`to-*` stops on the same element. This
+ * collects those per-element combos, rewrites each element to a single
+ * readable class (e.g. `bg-linear-gradient-to-bl-from-indigo-50-to-indigo-600`),
+ * and returns the combos so the flattenGradients plugin can emit one flat
+ * `background-image` rule per unique combo.
+ */
+function collectGradientCombos(dom: ChildNode[]): GradientCombo[] {
+  const bySignature = new Map<string, GradientCombo>()
+  const usedNames = new Map<string, string>()
+
+  walk(dom, (node) => {
+    const el = node as Element
+    const cls = el.attribs?.class
+    if (!cls) return
+
+    const tokens = cls.split(/\s+/).filter(Boolean)
+    const fnClass = tokens.find(t => GRADIENT_FN_RE.test(t) && !GRADIENT_GENERATED_RE.test(t))
+    if (!fnClass) return
+
+    const gradientClasses = tokens.filter(
+      t => (GRADIENT_FN_RE.test(t) && !GRADIENT_GENERATED_RE.test(t)) || GRADIENT_STOP_RE.test(t),
+    )
+    const stops = gradientClasses.filter(t => t !== fnClass).sort((a, b) => stopRank(a) - stopRank(b) || a.localeCompare(b))
+    const ordered = [fnClass, ...stops]
+    const signature = ordered.join(' ')
+
+    let combo = bySignature.get(signature)
+    if (!combo) {
+      const fn = fnClass.match(GRADIENT_FN_RE)![1]
+      const dirRemainder = fnClass.replace(new RegExp(`^bg-${fn}-?`), '')
+      const parts = [dirRemainder, ...stops].filter(Boolean).map(sanitize)
+      let name = `bg-${fn}-gradient${parts.length ? `-${parts.join('-')}` : ''}`
+
+      // Guard against sanitize collisions from distinct combos.
+      const existing = usedNames.get(name)
+      if (existing && existing !== signature) {
+        let n = 2
+        while (usedNames.has(`${name}-${n}`)) n++
+        name = `${name}-${n}`
+      }
+      usedNames.set(name, signature)
+
+      combo = { className: name, classes: ordered }
+      bySignature.set(signature, combo)
+    }
+
+    // Replace the gradient utilities with the single generated class.
+    const rest = tokens.filter(t => !gradientClasses.includes(t))
+    el.attribs.class = [...rest, combo.className].join(' ')
+  })
+
+  return [...bySignature.values()]
 }
 
 /**
@@ -117,6 +196,15 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
     ? buildSourceDirectives(dom, config, fromDir)
     : ''
 
+  /**
+   * Collect gradient combos and rewrite elements to single classes.
+   * Runs after source directives are built (so the utility classes are
+   * still scanned) and only feeds the first Tailwind style tag, whose
+   * `:root` holds the theme colors the flat rules reference.
+   */
+  const gradientCombos = hasTailwindStyles ? collectGradientCombos(dom) : []
+  const firstTailwindStyle = styleTags.findIndex(({ cssContent }) => usesTailwind(cssContent))
+
   for (let i = 0; i < styleTags.length; i++) {
     const { node, cssContent } = styleTags[i]
 
@@ -129,8 +217,10 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
       ? `${cssContent}\n${sourceDirectives}`
       : cssContent
 
+    const combos = i === firstTailwindStyle ? gradientCombos : []
+
     try {
-      const optimized = await compileTailwindCss(fullCss, config, `${fromPath}?style=${i}`)
+      const optimized = await compileTailwindCss(fullCss, config, `${fromPath}?style=${i}`, combos)
 
       // Replace the style tag's children with the compiled CSS
       node.children = [{

@@ -386,5 +386,20 @@ describe('tailwindcss', () => {
 
       expect(result).toMatch(/<div class="p-4 rounded bg-linear-gradient-to-r-from-red-500-to-blue-500">/)
     })
+
+    it('keeps the gradient in the source position of the original utility', async () => {
+      // Later author CSS at equal specificity must still win, so the
+      // generated rule takes the utility's place rather than moving to
+      // the end of the stylesheet.
+      const html = `<style>${tw} @source inline("bg-linear-to-r from-red-500 to-blue-500");`
+        + ' .hero { background-image: url(fallback.png) }</style>'
+        + '<div class="hero bg-linear-to-r from-red-500 to-blue-500">x</div>'
+      const result = await run(html, undefined, { postcss: { removeAtRules: [] } })
+
+      const gradientAt = result.indexOf('.bg-linear-gradient-to-r-from-red-500-to-blue-500 {')
+      const authorAt = result.indexOf('.hero {')
+      expect(gradientAt).toBeGreaterThan(-1)
+      expect(gradientAt).toBeLessThan(authorAt)
+    })
   })
 })

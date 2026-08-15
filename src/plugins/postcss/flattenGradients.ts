@@ -21,7 +21,8 @@
  * every other Tailwind color. The dead utility rules are then removed.
  */
 
-import type { Plugin, Root, Rule } from 'postcss'
+import { Rule } from 'postcss'
+import type { Plugin, Root } from 'postcss'
 
 const PLUGIN_NAME = 'postcss-flatten-gradients'
 
@@ -44,6 +45,8 @@ interface UtilityInfo {
   fromPosition?: string
   viaPosition?: string
   toPosition?: string
+  /** The source rule, used to anchor the generated rule in the cascade. */
+  rule?: Rule
 }
 
 const GRADIENT_UTILITY_RE = /^(from|via|to)-|^bg-(linear|radial|conic)\b/
@@ -117,6 +120,7 @@ export default (combos: GradientCombo[] = []): Plugin => {
           }
         })
 
+        info.rule = rule
         utilities.set(cls, info)
       })
 
@@ -162,9 +166,21 @@ export default (combos: GradientCombo[] = []): Plugin => {
 
         const args = direction ? `${direction}, ${stops.join(', ')}` : stops.join(', ')
 
-        root.append({ selector: `.${combo.className}` } as Rule)
-        const created = root.last as Rule
-        created.append({ prop: 'background-image', value: `${fn}-gradient(${args})` })
+        const generated = new Rule({ selector: `.${combo.className}` })
+        generated.append({ prop: 'background-image', value: `${fn}-gradient(${args})` })
+
+        /**
+         * Insert at the position of the source utility rule (still present
+         * — removal happens below) so the gradient keeps that rule's place
+         * in the cascade. Appending to the root would move it past any
+         * later author CSS that should override it.
+         */
+        const anchor = fnInfo?.rule
+        if (anchor?.parent) {
+          anchor.before(generated)
+        } else {
+          root.append(generated)
+        }
       }
 
       // Remove the now-dead gradient utility rules.

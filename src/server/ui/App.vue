@@ -220,35 +220,31 @@ const { contains } = useFilter({ sensitivity: 'base' })
  */
 const MAX_TEMPLATE_RESULTS = 50
 
-const filteredTemplatesCount = computed(() => {
-  const tokens = commandSearch.value.split(/\s+/).filter(Boolean)
-  if (tokens.length === 0) return 0
-  let count = 0
-  for (const t of templates.value) {
-    const haystack = `${getFileName(t.path)} ${t.path.split('/').join(' ')}`
-    if (tokens.every(token => contains(haystack, token))) count++
-  }
-  return count
-})
-
-/** The matching templates (capped), grouped by directory, for rendering. */
-const filteredCommandGrouped = computed(() => {
+/**
+ * Match templates against the search in a single pass: count every match for
+ * the footer, but only group the first MAX_TEMPLATE_RESULTS for rendering.
+ */
+const templateResults = computed(() => {
   const groups: Record<string, Template[]> = {}
   const tokens = commandSearch.value.split(/\s+/).filter(Boolean)
-  if (tokens.length === 0) return groups
-  let count = 0
+  if (tokens.length === 0) return { groups, total: 0 }
+  let total = 0
   for (const t of templates.value) {
     const haystack = `${getFileName(t.path)} ${t.path.split('/').join(' ')}`
     if (!tokens.every(token => contains(haystack, token))) continue
-    const parts = t.path.split('/')
-    const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : '.'
-    ;(groups[dir] ??= []).push(t)
-    if (++count >= MAX_TEMPLATE_RESULTS) break
+    total++
+    if (total <= MAX_TEMPLATE_RESULTS) {
+      const parts = t.path.split('/')
+      const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : '.'
+      ;(groups[dir] ??= []).push(t)
+    }
   }
-  return groups
+  return { groups, total }
 })
 
-const templatesTruncated = computed(() => filteredTemplatesCount.value > MAX_TEMPLATE_RESULTS)
+const filteredCommandGrouped = computed(() => templateResults.value.groups)
+const filteredTemplatesCount = computed(() => templateResults.value.total)
+const templatesTruncated = computed(() => templateResults.value.total > MAX_TEMPLATE_RESULTS)
 
 function getFileName(path: string) {
   return path.split('/').pop() || path

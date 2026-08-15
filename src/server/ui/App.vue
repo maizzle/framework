@@ -211,31 +211,40 @@ async function copySource() {
   await navigator.clipboard.writeText(el.textContent || '')
 }
 
-const commandGrouped = computed(() => {
-  const groups: Record<string, Template[]> = {}
-
-  for (const t of templates.value) {
-    const parts = t.path.split('/')
-    const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : '.'
-    if (!groups[dir]) groups[dir] = []
-    groups[dir].push(t)
-  }
-
-  return groups
-})
-
 const { contains } = useFilter({ sensitivity: 'base' })
 
-const filteredTemplatesCount = computed(() => {
+/**
+ * Cap how many template results render at once. Rendering every template as
+ * a CommandItem freezes the palette on the first keystroke in large projects
+ * (100s–1000s of templates), so we only render the matches, up to this many.
+ */
+const MAX_TEMPLATE_RESULTS = 50
+
+/**
+ * Match templates against the search in a single pass: count every match for
+ * the footer, but only group the first MAX_TEMPLATE_RESULTS for rendering.
+ */
+const templateResults = computed(() => {
+  const groups: Record<string, Template[]> = {}
   const tokens = commandSearch.value.split(/\s+/).filter(Boolean)
-  if (tokens.length === 0) return 0
-  let count = 0
+  if (tokens.length === 0) return { groups, total: 0 }
+  let total = 0
   for (const t of templates.value) {
     const haystack = `${getFileName(t.path)} ${t.path.split('/').join(' ')}`
-    if (tokens.every(token => contains(haystack, token))) count++
+    if (!tokens.every(token => contains(haystack, token))) continue
+    total++
+    if (total <= MAX_TEMPLATE_RESULTS) {
+      const parts = t.path.split('/')
+      const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : '.'
+      ;(groups[dir] ??= []).push(t)
+    }
   }
-  return count
+  return { groups, total }
 })
+
+const filteredCommandGrouped = computed(() => templateResults.value.groups)
+const filteredTemplatesCount = computed(() => templateResults.value.total)
+const templatesTruncated = computed(() => templateResults.value.total > MAX_TEMPLATE_RESULTS)
 
 function getFileName(path: string) {
   return path.split('/').pop() || path
@@ -539,7 +548,7 @@ onUnmounted(() => {
 
         <!-- Templates -->
         <template v-if="commandSearch">
-          <CommandGroup v-for="(items, dir) in commandGrouped" :key="dir" :heading="String(dir)">
+          <CommandGroup v-for="(items, dir) in filteredCommandGrouped" :key="dir" :heading="String(dir)">
             <CommandItem
               v-for="t in items"
               :key="t.path"
@@ -568,7 +577,8 @@ onUnmounted(() => {
           Close
         </span>
         <span v-if="commandSearch" class="ml-auto">
-          {{ filteredTemplatesCount }} {{ filteredTemplatesCount === 1 ? 'result' : 'results' }}
+          <template v-if="templatesTruncated">Showing {{ MAX_TEMPLATE_RESULTS }} of {{ filteredTemplatesCount }} — refine to narrow</template>
+          <template v-else>{{ filteredTemplatesCount }} {{ filteredTemplatesCount === 1 ? 'result' : 'results' }}</template>
         </span>
       </div>
     </CommandDialog>

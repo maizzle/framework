@@ -27,12 +27,13 @@ const forwardedProps = useForwardProps(delegatedProps)
 
 const { filterState } = useCommand()
 
-// Sync external v-model → internal filter
+// Sync external v-model → internal filter (immediate so a preset value
+// populates the filter when the palette re-opens)
 watch(() => props.modelValue, (val) => {
   if (val !== undefined && val !== filterState.search) {
     filterState.search = val
   }
-})
+}, { immediate: true })
 
 // Sync internal filter → external v-model
 watch(() => filterState.search, (val) => {

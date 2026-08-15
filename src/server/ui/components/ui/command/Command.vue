@@ -68,7 +68,10 @@ function filterItems() {
   filterState.filtered.count = itemCount
 }
 
-watch(() => filterState.search, () => {
+// Re-run on search change and whenever the item set changes, so a search
+// applied before items register (e.g. a restored query on re-open) filters
+// once those items mount instead of being stuck on "no results".
+watch([() => filterState.search, () => allItems.value.size], () => {
   filterItems()
 })
 

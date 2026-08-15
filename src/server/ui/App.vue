@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, watchEffect } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted, watch, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { Monitor, CodeXml, Smartphone, ChevronDown, ArrowUp, ArrowDown, CornerDownLeft, Check, Search, FileCode, FileText, Code, BookText, MailQuestion, Moon, Sun } from '@lucide/vue'
 import SidebarClose from '@/components/SidebarClose.vue'
@@ -169,13 +169,23 @@ const modKey = isMac ? '⌘' : 'Ctrl'
 const commandOpen = ref(false)
 const commandSearch = ref('')
 
-watch(commandOpen, (open) => {
-  if (!open) commandSearch.value = ''
-})
+/**
+ * The search survives closing the palette so you can refine a query instead
+ * of retyping it (handy when hunting through hundreds of emails). It is only
+ * cleared when an actual command runs; selecting a template keeps the query
+ * so you can come back to the same list.
+ *
+ * Reka resets its filter whenever an item is selected, which would wipe the
+ * query, so template selection restores it on the next tick.
+ */
+function closeCommandPalette(clear = false) {
+  commandOpen.value = false
+  if (clear) commandSearch.value = ''
+}
 
 
 async function copyHtml() {
-  commandOpen.value = false
+  closeCommandPalette(true)
   const slug = route.params.template as string
   if (!slug) return
   const res = await fetch(`/__maizzle/render/${slug}`)
@@ -183,7 +193,7 @@ async function copyHtml() {
 }
 
 async function copyPlaintext() {
-  commandOpen.value = false
+  closeCommandPalette(true)
   const slug = route.params.template as string
   if (!slug) return
   const res = await fetch(`/__maizzle/plaintext/${slug}`)
@@ -191,7 +201,7 @@ async function copyPlaintext() {
 }
 
 async function copySource() {
-  commandOpen.value = false
+  closeCommandPalette(true)
   const slug = route.params.template as string
   if (!slug) return
   const res = await fetch(`/__maizzle/vue-source/${slug}`)
@@ -227,18 +237,21 @@ const filteredTemplatesCount = computed(() => {
   return count
 })
 
-
 function getFileName(path: string) {
   return path.split('/').pop() || path
 }
 
 function onCommandSelect(href: string) {
-  commandOpen.value = false
+  // Keep the query so navigating to a template doesn't lose the search;
+  // restore it after Reka's select-reset has wiped the filter.
+  const query = commandSearch.value
+  closeCommandPalette()
   router.push(href)
+  nextTick(() => { commandSearch.value = query })
 }
 
 function openExternal(url: string) {
-  commandOpen.value = false
+  closeCommandPalette(true)
   window.open(url, '_blank', 'noopener')
 }
 
@@ -286,7 +299,7 @@ function onWindowBlur() {
 }
 
 function toggleDarkMode() {
-  commandOpen.value = false
+  closeCommandPalette(true)
   darkMode.value = !darkMode.value
 }
 

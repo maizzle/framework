@@ -262,7 +262,9 @@ function getFileName(path: string) {
  * scrolled out of view in large projects.
  */
 function scrollSidebarToTemplate(href: string) {
-  document.querySelector(`[data-sidebar-template="${href}"]`)?.scrollIntoView({ block: 'center' })
+  // CSS.escape the value — hrefs come from file paths and may contain
+  // characters that would otherwise break the attribute selector.
+  document.querySelector(`[data-sidebar-template=${CSS.escape(href)}]`)?.scrollIntoView({ block: 'center' })
 }
 
 function onCommandSelect(href: string) {

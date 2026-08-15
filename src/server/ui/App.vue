@@ -236,7 +236,9 @@ const templateResults = computed(() => {
   if (tokens.length === 0) return { groups, total: 0 }
   let total = 0
   for (const t of templates.value) {
-    const haystack = `${getFileName(t.path)} ${t.path.split('/').join(' ')}`
+    // Include the raw path so slash-style queries (e.g. "marketing/headers")
+    // match, alongside the space-split path for whitespace tokens.
+    const haystack = `${getFileName(t.path)} ${t.path} ${t.path.split('/').join(' ')}`
     if (!tokens.every(token => contains(haystack, token))) continue
     total++
     if (total <= MAX_TEMPLATE_RESULTS) {
@@ -578,7 +580,7 @@ onUnmounted(() => {
             >
               <span class="mz-tpl-icon size-3 shrink-0 opacity-70" :class="t.path.endsWith('.md') ? 'mz-tpl-icon-md' : 'mz-tpl-icon-vue'" />
               <span>{{ getFileName(t.path) }}</span>
-              <span class="sr-only">{{ ' ' + t.path.split('/').join(' ') }}</span>
+              <span class="sr-only">{{ ' ' + t.path + ' ' + t.path.split('/').join(' ') }}</span>
             </CommandItem>
           </CommandGroup>
         </template>

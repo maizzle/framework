@@ -21,10 +21,11 @@ metadata:
 Build and send HTML emails that work in all major email clients, with Vue components and Tailwind CSS.
 
 ## Install
-Scaffold a project (interactive when `[starter]` and `[directory]` are omitted):
+Scaffold a project. The official Maizzle 6 starter is `maizzle/maizzle`, branch `master`:
 ```sh
-npx maizzle new [user/repo] [directory]
+npx maizzle new maizzle/maizzle#master [directory]
 ```
+For i18n (multi-language) emails, use `maizzle/starter-i18n#master`.
 
 Add to an existing project:
 ```sh

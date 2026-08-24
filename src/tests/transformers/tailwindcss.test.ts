@@ -296,6 +296,14 @@ describe('tailwindcss', () => {
       expect(result).toContain('.foo')
       expect(result).toContain('color: red')
     })
+
+    it('falls back to a cwd-based path when no filePath is given', async () => {
+      const html = '<style>.foo { color: red }</style>'
+      const result = serialize(await tailwindcss(parse(html), {}))
+
+      expect(result).toContain('.foo')
+      expect(result).toContain('color: red')
+    })
   })
 
   describe('rewriteImportsSourceNone', () => {
@@ -459,6 +467,39 @@ describe('tailwindcss', () => {
       const result = await gradient('p-4 bg-linear-to-r from-red-500 to-blue-500 rounded')
 
       expect(result).toMatch(/<div class="p-4 rounded bg-linear-gradient-to-r-from-red-500-to-blue-500">/)
+    })
+
+    it('suffixes generated names when distinct combos sanitize to the same class', async () => {
+      /**
+       * All three arbitrary values sanitize to `from-ff0000` ([, ], #,
+       * and parens are stripped), so the second and third combos must
+       * get -2/-3 suffixes instead of reusing the first combo's name.
+       */
+      const html = `<style>${tw}</style>`
+        + '<div class="bg-linear-to-r from-[#ff0000]">a</div>'
+        + '<div class="bg-linear-to-r from-[ff0000]">b</div>'
+        + '<div class="bg-linear-to-r from-[(ff0000)]">c</div>'
+      const result = await run(html, undefined, { postcss: { removeAtRules: [] } })
+
+      expect(result).toContain('<div class="bg-linear-gradient-to-r-from-ff0000">a</div>')
+      expect(result).toContain('<div class="bg-linear-gradient-to-r-from-ff0000-2">b</div>')
+      expect(result).toContain('<div class="bg-linear-gradient-to-r-from-ff0000-3">c</div>')
+    })
+
+    it('orders equal-rank stops alphabetically in the generated name', async () => {
+      const html = `<style>${tw}</style>`
+        + '<div class="bg-linear-to-r via-[#bb0000] via-[#aa0000]">x</div>'
+      const result = await run(html, undefined, { postcss: { removeAtRules: [] } })
+
+      expect(result).toContain('<div class="bg-linear-gradient-to-r-via-aa0000-via-bb0000">x</div>')
+    })
+
+    it('names a bare gradient function with no direction or stops', async () => {
+      const html = `<style>${tw}</style>`
+        + '<div class="bg-radial">x</div>'
+      const result = await run(html, undefined, { postcss: { removeAtRules: [] } })
+
+      expect(result).toContain('<div class="bg-radial-gradient">x</div>')
     })
 
     it('keeps the gradient in the source position of the original utility', async () => {

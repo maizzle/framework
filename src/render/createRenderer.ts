@@ -479,7 +479,7 @@ export async function createRenderer(
        * files), but keep the framework's own built-in components
        * (in node_modules when installed from npm).
        */
-      if (file && file.includes('node_modules') && !file.startsWith(builtinsDir)) continue
+      if (file && file.includes('/node_modules/') && !file.startsWith(`${builtinsDir}/`)) continue
       if (file && isAbsolute(file)) files.add(file)
       /**
        * Traversal is tracked per module node, not per file, so virtual

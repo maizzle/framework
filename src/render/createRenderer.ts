@@ -466,19 +466,29 @@ export async function createRenderer(
     const mods = server.moduleGraph.getModulesByFile(normalizePath(entryPath))
     if (!mods || mods.size === 0) return undefined
     const builtinsDir = normalizePath(frameworkComponentsDir)
-    const seen = new Set<string>()
+    const files = new Set<string>()
+    const visited = new Set<unknown>()
     const queue = [...mods]
     while (queue.length) {
       const m = queue.pop() as any
-      const file = m?.file ? normalizePath(m.file) : undefined
-      // Skip node_modules deps and virtual modules, but keep the framework's
-      // own built-in components (in node_modules when installed from npm).
-      if (!file || seen.has(file) || !isAbsolute(file)) continue
-      if (file.includes('node_modules') && !file.startsWith(builtinsDir)) continue
-      seen.add(file)
-      for (const dep of m.ssrImportedModules ?? m.importedModules ?? []) queue.push(dep)
+      if (!m || visited.has(m)) continue
+      visited.add(m)
+      const file = m.file ? normalizePath(m.file) : undefined
+      /**
+       * Prune node_modules subtrees (their imports can't be project
+       * files), but keep the framework's own built-in components
+       * (in node_modules when installed from npm).
+       */
+      if (file && file.includes('node_modules') && !file.startsWith(builtinsDir)) continue
+      if (file && isAbsolute(file)) files.add(file)
+      /**
+       * Traversal is tracked per module node, not per file, so virtual
+       * modules (no file) and query variants of an already-seen file
+       * still contribute their imports.
+       */
+      for (const dep of [...(m.ssrImportedModules ?? []), ...(m.importedModules ?? [])]) queue.push(dep)
     }
-    return [...seen]
+    return [...files]
   }
 
   return {

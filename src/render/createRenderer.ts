@@ -1,4 +1,4 @@
-import { dirname, relative as relPath, resolve } from 'node:path'
+import { dirname, isAbsolute, relative as relPath, resolve } from 'node:path'
 import { mkdirSync, writeFileSync, existsSync, rmSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { isLaravel } from '../utils/detect.ts'
@@ -6,7 +6,7 @@ import { rowSourceLocation } from './plugins/rowSourceLocation.ts'
 import { rawExtract } from './plugins/rawExtract.ts'
 import { codeBlockExtract } from './plugins/codeBlockExtract.ts'
 import { markdownExtract } from './plugins/markdownExtract.ts'
-import { createServer, mergeConfig, type InlineConfig, type Plugin } from 'vite'
+import { createServer, mergeConfig, normalizePath, type InlineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Markdown from 'unplugin-vue-markdown/vite'
 import AutoImport from 'unplugin-auto-import/vite'
@@ -41,6 +41,13 @@ export interface RenderedTemplate {
   plaintext?: RenderContext['plaintext']
   outputPath?: RenderContext['outputPath']
   tailwindBlocks?: RenderContext['tailwindBlocks']
+  /**
+   * Absolute paths of every project file in the template's module
+   * import closure (the template itself, its components, imported
+   * modules). Undefined for virtual/pre-compiled renders where no
+   * file entry exists.
+   */
+  sourceFiles?: string[]
 }
 
 export interface Renderer {
@@ -449,6 +456,41 @@ export async function createRenderer(
 
   const server = await createServer(finalConfig)
 
+  /**
+   * Walk the SSR module graph from a template entry and collect every
+   * project file it (transitively) imports — components resolved by
+   * unplugin appear as real static imports, so built-ins and userland
+   * components are all reachable here. node_modules deps are skipped.
+   */
+  function collectSourceFiles(entryPath: string): string[] | undefined {
+    const mods = server.moduleGraph.getModulesByFile(normalizePath(entryPath))
+    if (!mods || mods.size === 0) return undefined
+    const builtinsDir = normalizePath(frameworkComponentsDir)
+    const files = new Set<string>()
+    const visited = new Set<unknown>()
+    const queue = [...mods]
+    while (queue.length) {
+      const m = queue.pop() as any
+      if (!m || visited.has(m)) continue
+      visited.add(m)
+      const file = m.file ? normalizePath(m.file) : undefined
+      /**
+       * Prune node_modules subtrees (their imports can't be project
+       * files), but keep the framework's own built-in components
+       * (in node_modules when installed from npm).
+       */
+      if (file && file.includes('/node_modules/') && !file.startsWith(`${builtinsDir}/`)) continue
+      if (file && isAbsolute(file)) files.add(file)
+      /**
+       * Traversal is tracked per module node, not per file, so virtual
+       * modules (no file) and query variants of an already-seen file
+       * still contribute their imports.
+       */
+      for (const dep of [...(m.ssrImportedModules ?? []), ...(m.importedModules ?? [])]) queue.push(dep)
+    }
+    return [...files]
+  }
+
   return {
     async render(input: string | Component, config: MaizzleConfig, opts?: { source?: string; props?: Record<string, any> }): Promise<RenderedTemplate> {
       let component: Component
@@ -623,9 +665,14 @@ export async function createRenderer(
         html = html.replace(/<body([^>]*)>/, `<body$1>${previewHtml}`)
       }
 
+      const sourceFiles = typeof input === 'string' && !input.includes('<template') && !input.includes('<script')
+        ? collectSourceFiles(input)
+        : undefined
+
       return {
         html,
         doctype: renderContext.doctype,
+        sourceFiles,
         /**
          * Layer sfcConfig over config — sfcConfig is a partial override
          * emitted by composables (defineConfig, useTransformers, etc.).

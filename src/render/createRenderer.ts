@@ -1,4 +1,4 @@
-import { dirname, relative as relPath, resolve } from 'node:path'
+import { dirname, isAbsolute, relative as relPath, resolve } from 'node:path'
 import { mkdirSync, writeFileSync, existsSync, rmSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { isLaravel } from '../utils/detect.ts'
@@ -6,7 +6,7 @@ import { rowSourceLocation } from './plugins/rowSourceLocation.ts'
 import { rawExtract } from './plugins/rawExtract.ts'
 import { codeBlockExtract } from './plugins/codeBlockExtract.ts'
 import { markdownExtract } from './plugins/markdownExtract.ts'
-import { createServer, mergeConfig, type InlineConfig, type Plugin } from 'vite'
+import { createServer, mergeConfig, normalizePath, type InlineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Markdown from 'unplugin-vue-markdown/vite'
 import AutoImport from 'unplugin-auto-import/vite'
@@ -463,17 +463,18 @@ export async function createRenderer(
    * components are all reachable here. node_modules deps are skipped.
    */
   function collectSourceFiles(entryPath: string): string[] | undefined {
-    const mods = server.moduleGraph.getModulesByFile(entryPath)
+    const mods = server.moduleGraph.getModulesByFile(normalizePath(entryPath))
     if (!mods || mods.size === 0) return undefined
+    const builtinsDir = normalizePath(frameworkComponentsDir)
     const seen = new Set<string>()
     const queue = [...mods]
     while (queue.length) {
       const m = queue.pop() as any
-      const file: string | null | undefined = m?.file
+      const file = m?.file ? normalizePath(m.file) : undefined
       // Skip node_modules deps and virtual modules, but keep the framework's
       // own built-in components (in node_modules when installed from npm).
-      if (!file || seen.has(file) || !file.startsWith('/')) continue
-      if (file.includes('node_modules') && !file.startsWith(frameworkComponentsDir)) continue
+      if (!file || seen.has(file) || !isAbsolute(file)) continue
+      if (file.includes('node_modules') && !file.startsWith(builtinsDir)) continue
       seen.add(file)
       for (const dep of m.ssrImportedModules ?? m.importedModules ?? []) queue.push(dep)
     }

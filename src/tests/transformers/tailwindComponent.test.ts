@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { describe, it, expect } from 'vitest'
 import { tailwindComponent } from '../../transformers/tailwindComponent.ts'
 import { parse, serialize } from '../../utils/ast/index.ts'
@@ -33,5 +34,27 @@ describe('tailwindComponent', () => {
     const dom = parse('<head></head><!--mz-tw:a--><!--/mz-tw:b-->')
     const out = serialize(await tailwindComponent(dom, [{ id: 'a', css: '' }, { id: 'b', css: '' }], {}))
     expect(out).not.toContain('mz-tw:')
+  })
+
+  describe('css.scopedSources', () => {
+    const fixture = path.resolve(import.meta.dirname, 'fixtures/scoped-source.html')
+    const filePath = path.resolve(import.meta.dirname, 'test.html')
+
+    it('scans files from the template import closure by default', async () => {
+      // `tracking-widest` only exists in the fixture file, not in the block
+      const dom = parse('<head></head><!--mz-tw:b1--><div class="underline"></div><!--/mz-tw:b1-->')
+      const out = serialize(await tailwindComponent(dom, [{ id: 'b1' }], { postcss: { removeAtRules: [] } }, filePath, [fixture]))
+
+      expect(out).toContain('.underline')
+      expect(out).toContain('.tracking-widest')
+    })
+
+    it('ignores sourceFiles when scopedSources is false', async () => {
+      const dom = parse('<head></head><!--mz-tw:b1--><div class="underline"></div><!--/mz-tw:b1-->')
+      const out = serialize(await tailwindComponent(dom, [{ id: 'b1' }], { postcss: { removeAtRules: [] }, css: { scopedSources: false } }, filePath, [fixture]))
+
+      expect(out).toContain('.underline')
+      expect(out).not.toContain('.tracking-widest')
+    })
   })
 })

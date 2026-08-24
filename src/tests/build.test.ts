@@ -517,6 +517,66 @@ describe('build', () => {
     }
   })
 
+  describe('css.scopedSources', () => {
+    /**
+     * Card renders nothing (v-if="false"), so `uppercase` never reaches
+     * the rendered DOM — it can only be found by scanning the component
+     * file itself. `lowercase` lives in a project file outside the
+     * template's import closure.
+     */
+    function writeScopedProject(dir: string) {
+      symlinkSync(join(originalCwd, 'node_modules'), join(dir, 'node_modules'))
+
+      writeSfc(dir, 'components/Card.vue', `
+        <template>
+          <div v-if="false" class="uppercase">hidden</div>
+        </template>
+      `)
+
+      writeSfc(dir, 'stray.vue', `
+        <template>
+          <div class="lowercase">not imported anywhere</div>
+        </template>
+      `)
+
+      writeSfc(dir, 'emails/test.vue', `
+        <template>
+          <html>
+            <head>
+              <style>@import "tailwindcss";</style>
+            </head>
+            <body>
+              <div class="underline">Test</div>
+              <Card />
+            </body>
+          </html>
+        </template>
+      `)
+    }
+
+    it('scans only the template import closure by default', async () => {
+      writeScopedProject(tempDir)
+
+      const result = await build({ css: { inline: false, purge: false } })
+      const html = readFileSync(result.files[0], 'utf-8')
+
+      expect(html).toContain('.underline')
+      expect(html).toContain('.uppercase')
+      expect(html).not.toContain('.lowercase')
+    })
+
+    it('scans the whole project when scopedSources is false', async () => {
+      writeScopedProject(tempDir)
+
+      const result = await build({ css: { inline: false, purge: false, scopedSources: false } })
+      const html = readFileSync(result.files[0], 'utf-8')
+
+      expect(html).toContain('.underline')
+      expect(html).toContain('.uppercase')
+      expect(html).toContain('.lowercase')
+    })
+  })
+
   describe('plaintext', () => {
     it('generates .txt file alongside HTML with plaintext: true', async () => {
       writeSfc(tempDir, 'emails/welcome.vue', `

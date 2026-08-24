@@ -61,6 +61,7 @@ export async function runTransformers(
   filePath?: string,
   doctype?: string,
   tailwindBlocks?: TailwindBlock[],
+  sourceFiles?: string[],
 ): Promise<string> {
   /**
    * Per-transformer skip map — only honored when useTransformers is an object.
@@ -107,11 +108,11 @@ export async function runTransformers(
 
   // 0.5. <Tailwind> component — compile per-block scoped CSS, inject into <head>
   if (tailwindBlocks?.length) {
-    dom = await tailwindComponent(dom, tailwindBlocks, effective, filePath)
+    dom = await tailwindComponent(dom, tailwindBlocks, effective, filePath, sourceFiles)
   }
 
   // 1. Tailwind CSS — always runs first
-  dom = await tailwindcss(dom, effective, filePath)
+  dom = await tailwindcss(dom, effective, filePath, sourceFiles)
 
   // 2. Safe class names
   if (enabled('safeSelectors')) dom = safeSelectorsDom(dom, effective.css)

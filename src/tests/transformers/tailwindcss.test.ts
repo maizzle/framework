@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
-import { tailwindcss } from '../../transformers/tailwindcss.ts'
+import { tailwindcss, rewriteImportsSourceNone } from '../../transformers/tailwindcss.ts'
 import { parse, serialize } from '../../utils/ast/index.ts'
 import type { MaizzleConfig } from '../../types/config.ts'
 
@@ -295,6 +295,80 @@ describe('tailwindcss', () => {
 
       expect(result).toContain('.foo')
       expect(result).toContain('color: red')
+    })
+  })
+
+  describe('rewriteImportsSourceNone', () => {
+    it('appends source(none) to a tailwindcss import', () => {
+      expect(rewriteImportsSourceNone('@import "tailwindcss";'))
+        .toBe('@import "tailwindcss" source(none);')
+    })
+
+    it('appends source(none) to a @maizzle/tailwindcss import', () => {
+      expect(rewriteImportsSourceNone('@import "@maizzle/tailwindcss";'))
+        .toBe('@import "@maizzle/tailwindcss" source(none);')
+    })
+
+    it('handles subpath imports', () => {
+      expect(rewriteImportsSourceNone('@import "tailwindcss/utilities";'))
+        .toBe('@import "tailwindcss/utilities" source(none);')
+    })
+
+    it('preserves existing modifiers', () => {
+      expect(rewriteImportsSourceNone('@import "tailwindcss/utilities" important;'))
+        .toBe('@import "tailwindcss/utilities" important source(none);')
+    })
+
+    it('skips imports that already have a source() modifier', () => {
+      expect(rewriteImportsSourceNone('@import "tailwindcss" source(none);'))
+        .toBe('@import "tailwindcss" source(none);')
+      expect(rewriteImportsSourceNone('@import "tailwindcss" source("../src");'))
+        .toBe('@import "tailwindcss" source("../src");')
+    })
+
+    it('ignores non-Tailwind imports', () => {
+      expect(rewriteImportsSourceNone('@import "./custom.css";'))
+        .toBe('@import "./custom.css";')
+    })
+  })
+
+  describe('css.scopedSources', () => {
+    const fixture = path.resolve(__dirname, 'fixtures/scoped-source.html')
+
+    it('scans files from the template import closure by default', async () => {
+      // `tracking-widest` only exists in the fixture file, not in the DOM
+      const html = '<style>@import "tailwindcss";</style><div class="underline">Test</div>'
+      const result = await tailwindcss(parse(html), { postcss: { removeAtRules: [] } }, path.resolve(__dirname, 'test.html'), [fixture]).then(serialize)
+
+      expect(result).toContain('.underline')
+      expect(result).toContain('.tracking-widest')
+      expect(result).toContain('letter-spacing:')
+    })
+
+    it('ignores sourceFiles when scopedSources is false', async () => {
+      const html = '<style>@import "tailwindcss" source(none);</style><div class="underline">Test</div>'
+      const result = await tailwindcss(parse(html), { postcss: { removeAtRules: [] }, css: { scopedSources: false } }, path.resolve(__dirname, 'test.html'), [fixture]).then(serialize)
+
+      expect(result).toContain('.underline')
+      expect(result).not.toContain('.tracking-widest')
+    })
+
+    it('falls back to non-scoped behavior when no sourceFiles are available', async () => {
+      const html = '<style>@import "tailwindcss" source(none);</style><div class="underline">Test</div>'
+      const result = await run(html, undefined, { postcss: { removeAtRules: [] } })
+
+      expect(result).toContain('.underline')
+      expect(result).not.toContain('.tracking-widest')
+    })
+
+    it('respects a user source() modifier in scoped mode', async () => {
+      // Import already pins source(none) — the rewrite must not touch it,
+      // and closure files are still added via @source directives.
+      const html = '<style>@import "tailwindcss" source(none);</style><div class="underline">Test</div>'
+      const result = await tailwindcss(parse(html), { postcss: { removeAtRules: [] } }, path.resolve(__dirname, 'test.html'), [fixture]).then(serialize)
+
+      expect(result).toContain('.underline')
+      expect(result).toContain('.tracking-widest')
     })
   })
 

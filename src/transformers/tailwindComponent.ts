@@ -1,6 +1,7 @@
-import { resolve } from 'pathe'
+import { resolve, relative, dirname } from 'pathe'
 import type { ChildNode, Element, Comment } from 'domhandler'
 import { walk } from '../utils/ast/index.ts'
+import { rewriteImportsSourceNone } from './tailwindcss.ts'
 import { compileTailwindCss } from '../utils/compileTailwindCss.ts'
 import type { TailwindBlock } from '../composables/renderContext.ts'
 import type { MaizzleConfig } from '../types/config.ts'
@@ -29,6 +30,7 @@ export async function tailwindComponent(
   blocks: TailwindBlock[],
   config: MaizzleConfig,
   filePath?: string,
+  sourceFiles?: string[],
 ): Promise<ChildNode[]> {
   if (!blocks.length) return dom
 
@@ -85,10 +87,12 @@ export async function tailwindComponent(
    * the existing tailwindcss transformer out of recompiling
    * already-compiled CSS.
    */
+  const scoped = config.css?.scopedSources !== false && !!sourceFiles?.length
+
   for (const meta of map.values()) {
     if (meta.nested) continue
 
-    const cssInput = buildCssInput(meta.configCss, meta.classes)
+    const cssInput = buildCssInput(meta.configCss, meta.classes, scoped ? { sourceFiles: sourceFiles!, fromDir: dirname(fromPath) } : undefined)
     const css = (await compileTailwindCss(cssInput, config, `${fromPath}?tw=${meta.id}`)).trim()
     if (!css) continue
 
@@ -125,11 +129,31 @@ export async function tailwindComponent(
   return dom
 }
 
-function buildCssInput(configCss: string | undefined, classes: Set<string>): string {
-  const seed = configCss ?? DEFAULT_SEED
+function buildCssInput(
+  configCss: string | undefined,
+  classes: Set<string>,
+  scope?: { sourceFiles: string[]; fromDir: string },
+): string {
+  let seed = configCss ?? DEFAULT_SEED
 
-  if (!classes.size) return seed
+  const parts: string[] = []
 
-  const inline = [...classes].join(' ').replace(/"/g, '\\"')
-  return `${seed}\n@source inline("${inline}");`
+  /**
+   * Scoped mode: disable auto source detection in the user's config
+   * CSS and point the scanner at the template's import closure
+   * instead, mirroring the main tailwindcss transformer.
+   */
+  if (scope) {
+    seed = rewriteImportsSourceNone(seed)
+    for (const file of scope.sourceFiles) {
+      parts.push(`@source "${relative(scope.fromDir, file)}";`)
+    }
+  }
+
+  if (classes.size) {
+    const inline = [...classes].join(' ').replace(/"/g, '\\"')
+    parts.push(`@source inline("${inline}");`)
+  }
+
+  return parts.length ? `${seed}\n${parts.join('\n')}` : seed
 }

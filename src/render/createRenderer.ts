@@ -41,6 +41,13 @@ export interface RenderedTemplate {
   plaintext?: RenderContext['plaintext']
   outputPath?: RenderContext['outputPath']
   tailwindBlocks?: RenderContext['tailwindBlocks']
+  /**
+   * Absolute paths of every project file in the template's module
+   * import closure (the template itself, its components, imported
+   * modules). Undefined for virtual/pre-compiled renders where no
+   * file entry exists.
+   */
+  sourceFiles?: string[]
 }
 
 export interface Renderer {
@@ -449,6 +456,30 @@ export async function createRenderer(
 
   const server = await createServer(finalConfig)
 
+  /**
+   * Walk the SSR module graph from a template entry and collect every
+   * project file it (transitively) imports — components resolved by
+   * unplugin appear as real static imports, so built-ins and userland
+   * components are all reachable here. node_modules deps are skipped.
+   */
+  function collectSourceFiles(entryPath: string): string[] | undefined {
+    const mods = server.moduleGraph.getModulesByFile(entryPath)
+    if (!mods || mods.size === 0) return undefined
+    const seen = new Set<string>()
+    const queue = [...mods]
+    while (queue.length) {
+      const m = queue.pop() as any
+      const file: string | null | undefined = m?.file
+      // Skip node_modules deps and virtual modules, but keep the framework's
+      // own built-in components (in node_modules when installed from npm).
+      if (!file || seen.has(file) || !file.startsWith('/')) continue
+      if (file.includes('node_modules') && !file.startsWith(frameworkComponentsDir)) continue
+      seen.add(file)
+      for (const dep of m.ssrImportedModules ?? m.importedModules ?? []) queue.push(dep)
+    }
+    return [...seen]
+  }
+
   return {
     async render(input: string | Component, config: MaizzleConfig, opts?: { source?: string; props?: Record<string, any> }): Promise<RenderedTemplate> {
       let component: Component
@@ -623,9 +654,14 @@ export async function createRenderer(
         html = html.replace(/<body([^>]*)>/, `<body$1>${previewHtml}`)
       }
 
+      const sourceFiles = typeof input === 'string' && !input.includes('<template') && !input.includes('<script')
+        ? collectSourceFiles(input)
+        : undefined
+
       return {
         html,
         doctype: renderContext.doctype,
+        sourceFiles,
         /**
          * Layer sfcConfig over config — sfcConfig is a partial override
          * emitted by composables (defineConfig, useTransformers, etc.).

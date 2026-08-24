@@ -27,17 +27,32 @@ function usesTailwind(css: string): boolean {
  *    expressions, and the template itself — Tailwind's scanner handles
  *    the actual class extraction from these raw values
  */
-function buildSourceDirectives(dom: ChildNode[], config: MaizzleConfig, fromDir: string): string {
+function buildSourceDirectives(dom: ChildNode[], config: MaizzleConfig, fromDir: string, sourceFiles?: string[]): string {
   const directives: string[] = []
 
-  // Exclude output dir and user-configured paths
-  const excludePaths = [
-    resolve(config.output?.path ?? 'dist'),
-    ...(config.css?.exclude ?? []).map(p => resolve(p)),
-  ]
+  const scoped = config.css?.scopedSources !== false && !!sourceFiles?.length
 
-  for (const p of excludePaths) {
-    directives.push(`@source not "${relative(fromDir, resolve(p))}";`)
+  if (scoped) {
+    /**
+     * Scoped mode: point Tailwind's scanner at exactly the files in
+     * this template's import closure instead of auto-detecting from
+     * the project root. Auto-detection is disabled by appending
+     * `source(none)` to the Tailwind import (see
+     * rewriteImportsSourceNone below).
+     */
+    for (const file of sourceFiles!) {
+      directives.push(`@source "${relative(fromDir, file)}";`)
+    }
+  } else {
+    // Exclude output dir and user-configured paths
+    const excludePaths = [
+      resolve(config.output?.path ?? 'dist'),
+      ...(config.css?.exclude ?? []).map(p => resolve(p)),
+    ]
+
+    for (const p of excludePaths) {
+      directives.push(`@source not "${relative(fromDir, resolve(p))}";`)
+    }
   }
 
   /**
@@ -139,6 +154,18 @@ function collectGradientCombos(dom: ChildNode[]): GradientCombo[] {
 }
 
 /**
+ * Append ` source(none)` to Tailwind imports so auto source detection
+ * is off and only our explicit `@source` directives apply. Skips
+ * imports that already carry a `source(...)` modifier.
+ */
+export function rewriteImportsSourceNone(css: string): string {
+  return css.replace(
+    /(@import\s+["'](?:@maizzle\/)?tailwindcss(?:\/[^"']*)?["'][^;]*);/g,
+    (match, stmt) => stmt.includes('source(') ? match : `${stmt} source(none);`,
+  )
+}
+
+/**
  * Tailwind CSS transformer.
  *
  * Compiles CSS inside <style> tags in the DOM using
@@ -146,7 +173,8 @@ function collectGradientCombos(dom: ChildNode[]): GradientCombo[] {
  *
  * Configures Tailwind sources to scan:
  * - Rendered class attributes (via `@source inline`) for all classes from all components
- * - User project files (via Tailwind's auto-detection from base/from path)
+ * - The template's module import closure (via `@source` directives), or user
+ *   project files (via Tailwind's auto-detection) when `css.scopedSources` is off
  *
  * User `@source` and `@source not directives` in style tags are preserved.
  * Source directives are only added to style tags that import Tailwind.
@@ -154,7 +182,7 @@ function collectGradientCombos(dom: ChildNode[]): GradientCombo[] {
  * Runs as the first transformer in the pipeline so that subsequent
  * transformers (inliner, purge, etc.) work with fully compiled CSS.
  */
-export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, filePath?: string): Promise<ChildNode[]> {
+export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, filePath?: string, sourceFiles?: string[]): Promise<ChildNode[]> {
   const styleTags: { node: Element; cssContent: string }[] = []
 
   walk(dom, (node) => {
@@ -193,8 +221,10 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
   // Only compute source directives if at least one style tag uses Tailwind
   const hasTailwindStyles = styleTags.some(({ cssContent }) => usesTailwind(cssContent))
   const sourceDirectives = hasTailwindStyles
-    ? buildSourceDirectives(dom, config, fromDir)
+    ? buildSourceDirectives(dom, config, fromDir, sourceFiles)
     : ''
+
+  const scoped = config.css?.scopedSources !== false && !!sourceFiles?.length
 
   /**
    * Collect gradient combos and rewrite elements to single classes.
@@ -213,8 +243,9 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
      * plain CSS doesn't need them and @tailwindcss/postcss would
      * leave the directives unconsumed in the output.
      */
-    const fullCss = usesTailwind(cssContent)
-      ? `${cssContent}\n${sourceDirectives}`
+    const usesTw = usesTailwind(cssContent)
+    const fullCss = usesTw
+      ? `${scoped ? rewriteImportsSourceNone(cssContent) : cssContent}\n${sourceDirectives}`
       : cssContent
 
     const combos = i === firstTailwindStyle ? gradientCombos : []

@@ -82,6 +82,17 @@ export interface CssConfig {
    */
   base?: string
   /**
+   * Scope Tailwind source scanning to each template's module import
+   * closure (the template file plus every component/module it actually
+   * uses) instead of scanning the whole project for every template.
+   *
+   * Set to `false` to restore whole-project scanning, e.g. when classes
+   * live in files Maizzle can't trace through imports.
+   *
+   * @default true
+   */
+  scopedSources?: boolean
+  /**
    * Remove unused CSS.
    *
    * Set to `true` to enable with defaults, or pass an options object.

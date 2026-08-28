@@ -98,6 +98,20 @@ export async function serve(options: ServeOptions = {}) {
 
   const server = await createServer({
     configFile: false,
+    /**
+     * Root at the dev UI directory, not process.cwd(). With the host
+     * project as Vite root, the watcher recursively watches the entire
+     * host tree (vendor dirs, build output, …) — on large projects this
+     * exhausts inotify watch limits — and the host's own
+     * `server.watch.ignored` cannot reach this server. The UI is served
+     * via middleware + /@fs/ URLs and never needed the cwd root.
+     * `appType: 'custom'` keeps Vite from serving devUIDir/index.html
+     * itself, which would bypass the config-injecting middleware.
+     * The paths Maizzle actually reacts to are added explicitly in
+     * maizzleDevPlugin's configureServer.
+     */
+    root: devUIDir,
+    appType: 'custom',
     plugins: [
       // Vue and Tailwind are only for the dev UI SPA, not for email templates
       vue(),
@@ -214,6 +228,29 @@ function maizzleDevPlugin(
 
       for (const watchPath of watchPaths) {
         server.watcher.add(watchPath)
+      }
+
+      /**
+       * With the dev UI directory as Vite root, the host cwd is no longer
+       * watched wholesale — add the trees Maizzle reacts to explicitly:
+       * template content, config root, component sources, and the static
+       * prefixes of the watch globs above. Directories, not globs: the
+       * server runs with Vite's default `disableGlobbing`, so globs passed
+       * to `watcher.add` are treated literally.
+       */
+      const globFreePrefix = (pattern: string) => {
+        const prefix = pattern.split(/[*?{]/)[0]
+        return prefix.endsWith('/') ? prefix.slice(0, -1) : prefix
+      }
+      const templateWatchRoots = [
+        ...(config.content ?? ['emails/**/*.vue']).map(globFreePrefix),
+        ...normalizeComponentSources(config.components?.source, process.cwd()).map(s => s.path),
+        ...(config.root ? [config.root] : []),
+        ...watchPaths.map(globFreePrefix),
+      ].filter(Boolean)
+
+      for (const watchRoot of new Set(templateWatchRoots)) {
+        server.watcher.add(watchRoot)
       }
 
       /**

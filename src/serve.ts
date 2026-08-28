@@ -236,14 +236,15 @@ function maizzleDevPlugin(
        * template content, config root, component sources, and the static
        * prefixes of the watch globs above. Directories, not globs: the
        * server runs with Vite's default `disableGlobbing`, so globs passed
-       * to `watcher.add` are treated literally.
+       * to `watcher.add` are treated literally. Negated content patterns
+       * are excludes and produce no watch root.
        */
       const globFreePrefix = (pattern: string) => {
         const prefix = pattern.split(/[*?{]/)[0]
         return prefix.endsWith('/') ? prefix.slice(0, -1) : prefix
       }
       const templateWatchRoots = [
-        ...(config.content ?? ['emails/**/*.vue']).map(globFreePrefix),
+        ...(config.content ?? ['emails/**/*.vue']).filter(p => !p.startsWith('!')).map(globFreePrefix),
         ...normalizeComponentSources(config.components?.source, process.cwd()).map(s => s.path),
         ...(config.root ? [config.root] : []),
         ...watchPaths.map(globFreePrefix),

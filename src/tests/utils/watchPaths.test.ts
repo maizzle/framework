@@ -82,6 +82,27 @@ describe('deriveWatchRoots', () => {
     expect(deriveWatchRoots({ ...base, watchPaths: ['*.json'] })).toEqual([cwd])
   })
 
+  it('stops the static prefix at bracket character classes', () => {
+    expect(deriveWatchRoots({ ...base, content: ['/project/locales/[a-z]/**'] }))
+      .toEqual(['/project/locales'])
+    expect(deriveWatchRoots({ ...base, watchPaths: ['locales/[a-z]/**/*.json'] }))
+      .toEqual(['locales'])
+  })
+
+  it('stops the static prefix at extglob openers', () => {
+    expect(deriveWatchRoots({ ...base, content: ['/project/emails/+(a|b)/**/*.vue'] }))
+      .toEqual(['/project/emails'])
+    expect(deriveWatchRoots({ ...base, content: ['/project/emails/@(de|en)/**/*.vue'] }))
+      .toEqual(['/project/emails'])
+    expect(deriveWatchRoots({ ...base, watchPaths: ['locales/!(draft)/**'] }))
+      .toEqual(['locales'])
+  })
+
+  it('keeps bare parentheses in directory names literal', () => {
+    expect(deriveWatchRoots({ ...base, watchPaths: ['locales (alt)/*.json'] }))
+      .toEqual(['locales (alt)'])
+  })
+
   it('drops negated watch patterns', () => {
     expect(deriveWatchRoots({ ...base, watchPaths: ['locales/**', '!locales/**/ignored.json'] }))
       .toEqual(['locales'])

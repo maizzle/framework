@@ -45,8 +45,16 @@ export function deriveWatchRoots(options: {
 }): string[] {
   const { content, componentDirs, root, watchPaths, cwd } = options
 
+  // Stop at any glob syntax across both glob backends in use — pathe's
+  // matchesGlob for the watched-file matcher (wildcards, ?, braces, bracket
+  // classes) and tinyglobby/picomatch for template listing (additionally
+  // extglobs: +(…), @(…), !(…), matched as two-char openers so bare
+  // parentheses in directory names stay literal). Splitting too late would
+  // leave a literal never-existing path as the root and silently lose
+  // coverage; splitting too early merely watches the parent directory,
+  // which still covers the target — so err on the side of splitting.
   const globFreePrefix = (pattern: string) => {
-    const prefix = pattern.split(/[*?{]/)[0]
+    const prefix = pattern.split(/[*?{[]|[+@!]\(/)[0]
     return prefix.endsWith('/') ? prefix.slice(0, -1) : prefix
   }
 

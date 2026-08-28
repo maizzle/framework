@@ -5,12 +5,19 @@ import { matchesGlob, relative } from 'pathe'
  * chokidar matches any of the given globs. Patterns are interpreted as
  * project-relative; a leading `./` is stripped so user-supplied globs like
  * `./locales/**` behave identically to `locales/**`.
+ *
+ * Negated patterns (`!…`) are excludes: a file matches when it matches an
+ * include pattern and no exclude pattern. They must not reach `matchesGlob`
+ * as-is — it treats a lone negated pattern as "everything except", which
+ * under `some()` would make the predicate true for almost every file.
  */
 export function createWatchedFileMatcher(patterns: string[], cwd: string) {
-  const normalized = patterns.map(p => p.replace(/^\.\//, ''))
+  const stripDotSlash = (p: string) => p.replace(/^\.\//, '')
+  const includes = patterns.filter(p => !p.startsWith('!')).map(stripDotSlash)
+  const excludes = patterns.filter(p => p.startsWith('!')).map(p => stripDotSlash(p.slice(1)))
   return (file: string) => {
     const rel = relative(cwd, file)
-    return normalized.some(p => matchesGlob(rel, p))
+    return includes.some(p => matchesGlob(rel, p)) && !excludes.some(p => matchesGlob(rel, p))
   }
 }
 

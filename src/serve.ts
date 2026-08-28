@@ -219,21 +219,24 @@ function maizzleDevPlugin(
       ]
 
       /**
-       * (Re)establish file watching for a resolved config: the watch globs
-       * themselves, the matcher used by the change handler below, and — with
-       * the dev UI directory as Vite root, the host cwd is no longer watched
-       * wholesale — the directories those globs and the template content live
-       * in (see deriveWatchRoots). Runs once here and again after a config
-       * reload, so content, components.source, root, and server.watch edits
-       * take effect without a server restart. Roots a reload leaves behind
-       * stay watched until restart — superfluous but harmless.
+       * (Re)establish file watching for a resolved config: the matcher used
+       * by the change handler below, and — with the dev UI directory as Vite
+       * root, the host cwd is no longer watched wholesale — the directories
+       * the watch globs and the template content live in (see
+       * deriveWatchRoots). Only derived roots are added to the watcher: the
+       * server runs with Vite's default `disableGlobbing`, so raw glob
+       * patterns would be treated as literal paths, and plain file paths
+       * survive derivation as themselves. Runs once here and again after a
+       * config reload, so content, components.source, root, and server.watch
+       * edits take effect without a server restart. Roots a reload leaves
+       * behind stay watched until restart — superfluous but harmless.
        *
        * Match against cwd, not config.root: the watched paths (maizzle/tailwind
        * configs, locales) are project-root relative, and `watcher.add`
        * resolves them against cwd too. Using config.root would break matching
        * when root points at a subdirectory (e.g. the Vite-plugin setup).
        */
-      const applyWatchPaths = (cfg: typeof config) => {
+      const applyWatchPaths = (cfg: MaizzleConfig) => {
         const watchPaths = [...defaultWatchPaths, ...(cfg.server?.watch ?? [])]
         const watchRoots = deriveWatchRoots({
           content: cfg.content ?? ['emails/**/*.vue'],
@@ -243,8 +246,8 @@ function maizzleDevPlugin(
           cwd: process.cwd(),
         })
 
-        for (const path of [...watchPaths, ...watchRoots]) {
-          server.watcher.add(path)
+        for (const watchRoot of watchRoots) {
+          server.watcher.add(watchRoot)
         }
 
         return createWatchedFileMatcher(watchPaths, process.cwd())

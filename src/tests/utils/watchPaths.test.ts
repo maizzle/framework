@@ -29,6 +29,23 @@ describe('createWatchedFileMatcher', () => {
     const matcher = createWatchedFileMatcher(['locales/**'], cwd)
     expect(matcher('/elsewhere/locales/en.json')).toBe(false)
   })
+
+  it('rejects files matched by a negated pattern', () => {
+    const matcher = createWatchedFileMatcher(['locales/**', '!locales/ignored.json'], cwd)
+    expect(matcher('/project/locales/en.json')).toBe(true)
+    expect(matcher('/project/locales/ignored.json')).toBe(false)
+  })
+
+  it('strips a leading "./" from negated patterns too', () => {
+    const matcher = createWatchedFileMatcher(['locales/**', '!./locales/ignored.json'], cwd)
+    expect(matcher('/project/locales/ignored.json')).toBe(false)
+  })
+
+  it('matches nothing when only negated patterns are given', () => {
+    const matcher = createWatchedFileMatcher(['!locales/**'], cwd)
+    expect(matcher('/project/emails/welcome.vue')).toBe(false)
+    expect(matcher('/project/locales/en.json')).toBe(false)
+  })
 })
 
 describe('deriveWatchRoots', () => {

@@ -112,6 +112,13 @@ export async function serve(options: ServeOptions = {}) {
      */
     root: devUIDir,
     appType: 'custom',
+    /**
+     * Vite derives `publicDir` from `root`, so keep serving the project's
+     * `public/` directory: templates reference images as `/logo.png`
+     * (the default `static.source` copies `public/**` on build) and
+     * the preview iframe resolves those against this server.
+     */
+    publicDir: resolve(process.cwd(), 'public'),
     plugins: [
       // Vue and Tailwind are only for the dev UI SPA, not for email templates
       vue(),

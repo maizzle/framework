@@ -200,4 +200,15 @@ describe('serve dev server', () => {
     expect(html).not.toContain('Original')
     expect(html).toContain('<!-- transformed -->')
   }, 30000)
+
+  it('serves the project public/ directory so template image paths resolve', async () => {
+    mkdirSync(join(tempDir, 'public'), { recursive: true })
+    writeFileSync(join(tempDir, 'public/logo.png'), 'png')
+
+    server = await serve({ port: 3157, silent: true })
+
+    const res = await fetch('http://localhost:3157/logo.png')
+    expect(res.status).toBe(200)
+    expect(await res.text()).toBe('png')
+  }, 30000)
 })

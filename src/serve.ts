@@ -21,7 +21,7 @@ import { serveCompatibility } from './server/compatibility.ts'
 import { serveLint } from './server/linter.ts'
 import { sendEmail } from './server/email.ts'
 import { normalizeComponentSources } from './utils/componentSources.ts'
-import { createWatchedFileMatcher } from './utils/watchPaths.ts'
+import { createWatchedFileMatcher, deriveWatchRoots } from './utils/watchPaths.ts'
 import type { MaizzleConfig } from './types/index.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -98,6 +98,27 @@ export async function serve(options: ServeOptions = {}) {
 
   const server = await createServer({
     configFile: false,
+    /**
+     * Root at the dev UI directory, not process.cwd(). With the host
+     * project as Vite root, the watcher recursively watches the entire
+     * host tree (vendor dirs, build output, …) — on large projects this
+     * exhausts inotify watch limits — and the host's own
+     * `server.watch.ignored` cannot reach this server. The UI is served
+     * via middleware + /@fs/ URLs and never needed the cwd root.
+     * `appType: 'custom'` keeps Vite from serving devUIDir/index.html
+     * itself, which would bypass the config-injecting middleware.
+     * The paths Maizzle actually reacts to are added explicitly in
+     * maizzleDevPlugin's configureServer.
+     */
+    root: devUIDir,
+    appType: 'custom',
+    /**
+     * Vite derives `publicDir` from `root`, so keep serving the project's
+     * `public/` directory: templates reference images as `/logo.png`
+     * (the default `static.source` copies `public/**` on build) and
+     * the preview iframe resolves those against this server.
+     */
+    publicDir: resolve(process.cwd(), 'public'),
     plugins: [
       // Vue and Tailwind are only for the dev UI SPA, not for email templates
       vue(),
@@ -204,17 +225,42 @@ function maizzleDevPlugin(
         'locales/**',
       ]
 
-      const userWatchPaths = config.server?.watch ?? []
-      const watchPaths = [...defaultWatchPaths, ...userWatchPaths]
-      // Match against cwd, not config.root: the watched paths (maizzle/tailwind
-      // configs, locales) are project-root relative, and `watcher.add` below
-      // resolves them against cwd too. Using config.root would break matching
-      // when root points at a subdirectory (e.g. the Vite-plugin setup).
-      const isWatchedFile = createWatchedFileMatcher(watchPaths, process.cwd())
+      /**
+       * (Re)establish file watching for a resolved config: the matcher used
+       * by the change handler below, and — with the dev UI directory as Vite
+       * root, the host cwd is no longer watched wholesale — the directories
+       * the watch globs and the template content live in (see
+       * deriveWatchRoots). Only derived roots are added to the watcher: the
+       * server runs with Vite's default `disableGlobbing`, so raw glob
+       * patterns would be treated as literal paths, and plain file paths
+       * survive derivation as themselves. Runs once here and again after a
+       * config reload, so content, components.source, root, and server.watch
+       * edits take effect without a server restart. Roots a reload leaves
+       * behind stay watched until restart — superfluous but harmless.
+       *
+       * Match against cwd, not config.root: the watched paths (maizzle/tailwind
+       * configs, locales) are project-root relative, and `watcher.add`
+       * resolves them against cwd too. Using config.root would break matching
+       * when root points at a subdirectory (e.g. the Vite-plugin setup).
+       */
+      const applyWatchPaths = (cfg: MaizzleConfig) => {
+        const watchPaths = [...defaultWatchPaths, ...(cfg.server?.watch ?? [])]
+        const watchRoots = deriveWatchRoots({
+          content: cfg.content ?? ['emails/**/*.vue'],
+          componentDirs: normalizeComponentSources(cfg.components?.source, process.cwd()).map(s => s.path),
+          root: cfg.root,
+          watchPaths,
+          cwd: process.cwd(),
+        })
 
-      for (const watchPath of watchPaths) {
-        server.watcher.add(watchPath)
+        for (const watchRoot of watchRoots) {
+          server.watcher.add(watchRoot)
+        }
+
+        return createWatchedFileMatcher(watchPaths, process.cwd())
       }
+
+      let isWatchedFile = applyWatchPaths(config)
 
       /**
        * Serialize watcher work onto one chain. The change handler closes and
@@ -262,6 +308,11 @@ function maizzleDevPlugin(
           // Re-register the new renderer so user-land render() calls don't keep
           // reusing the closed one (see setActiveRenderer above).
           setActiveRenderer(renderer)
+
+          // Re-establish watching against the reloaded config so moved
+          // content, components.source, root, or server.watch values keep
+          // emitting events without a server restart.
+          isWatchedFile = applyWatchPaths(config)
 
           /**
            * Push UI-relevant config bits so the dev UI reacts to live edits

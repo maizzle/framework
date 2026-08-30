@@ -284,6 +284,16 @@ export async function createRenderer(
    */
   const maizzleConfig: InlineConfig = {
     configFile: false,
+    /**
+     * Without an explicit root, Vite roots this SSR server at
+     * process.cwd() and its watcher recursively watches the entire host
+     * project — on large projects this exhausts inotify watch limits.
+     * The renderer only needs its watcher for component dirs (unplugin
+     * d.ts regeneration); template invalidation is driven externally via
+     * invalidateAll(). Root at the Maizzle root instead; component dirs
+     * outside it are re-added to the watcher after createServer below.
+     */
+    root: resolve(root),
     plugins: [
       rawExtract(),
       codeBlockExtract(),
@@ -455,6 +465,15 @@ export async function createRenderer(
     : maizzleConfig
 
   const server = await createServer(finalConfig)
+
+  /**
+   * With the narrowed root above, component dirs outside the Maizzle root
+   * are no longer covered by the root watch — add them explicitly so
+   * unplugin still sees add/unlink events.
+   */
+  for (const dir of [resolve(root, 'components'), ...dirSources.map(s => s.path)]) {
+    server.watcher.add(dir)
+  }
 
   /**
    * Walk the SSR module graph from a template entry and collect every

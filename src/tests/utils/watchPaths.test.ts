@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createWatchedFileMatcher } from '../../utils/watchPaths.ts'
+import { createWatchedFileMatcher, deriveWatchRoots } from '../../utils/watchPaths.ts'
 
 describe('createWatchedFileMatcher', () => {
   const cwd = '/project'
@@ -28,5 +28,91 @@ describe('createWatchedFileMatcher', () => {
   it('returns false for files outside the project root', () => {
     const matcher = createWatchedFileMatcher(['locales/**'], cwd)
     expect(matcher('/elsewhere/locales/en.json')).toBe(false)
+  })
+
+  it('rejects files matched by a negated pattern', () => {
+    const matcher = createWatchedFileMatcher(['locales/**', '!locales/ignored.json'], cwd)
+    expect(matcher('/project/locales/en.json')).toBe(true)
+    expect(matcher('/project/locales/ignored.json')).toBe(false)
+  })
+
+  it('strips a leading "./" from negated patterns too', () => {
+    const matcher = createWatchedFileMatcher(['locales/**', '!./locales/ignored.json'], cwd)
+    expect(matcher('/project/locales/ignored.json')).toBe(false)
+  })
+
+  it('matches nothing when only negated patterns are given', () => {
+    const matcher = createWatchedFileMatcher(['!locales/**'], cwd)
+    expect(matcher('/project/emails/welcome.vue')).toBe(false)
+    expect(matcher('/project/locales/en.json')).toBe(false)
+  })
+})
+
+describe('deriveWatchRoots', () => {
+  const cwd = '/project'
+  const base = { content: [], componentDirs: [], watchPaths: [], cwd }
+
+  it('uses the static prefix of resolved content globs', () => {
+    expect(deriveWatchRoots({ ...base, content: ['/project/emails/**/*.vue'] }))
+      .toEqual(['/project/emails'])
+  })
+
+  it('drops negated content patterns', () => {
+    expect(deriveWatchRoots({ ...base, content: ['/project/emails/**/*.vue', '!emails/**/skip.vue'] }))
+      .toEqual(['/project/emails'])
+  })
+
+  it('includes component dirs and root verbatim', () => {
+    expect(deriveWatchRoots({ ...base, componentDirs: ['/project/shared-components'], root: '/project/emails' }))
+      .toEqual(['/project/shared-components', '/project/emails'])
+  })
+
+  it('uses the static prefix of watch globs', () => {
+    expect(deriveWatchRoots({ ...base, watchPaths: ['locales/**', './translations/**/*.json'] }))
+      .toEqual(['locales', './translations'])
+  })
+
+  it('keeps plain file watch paths as-is', () => {
+    expect(deriveWatchRoots({ ...base, watchPaths: ['maizzle.config.ts'] }))
+      .toEqual(['maizzle.config.ts'])
+  })
+
+  it('falls back to cwd for watch patterns with no static prefix', () => {
+    expect(deriveWatchRoots({ ...base, watchPaths: ['**/*.json'] })).toEqual([cwd])
+    expect(deriveWatchRoots({ ...base, watchPaths: ['*.json'] })).toEqual([cwd])
+  })
+
+  it('stops the static prefix at bracket character classes', () => {
+    expect(deriveWatchRoots({ ...base, content: ['/project/locales/[a-z]/**'] }))
+      .toEqual(['/project/locales'])
+    expect(deriveWatchRoots({ ...base, watchPaths: ['locales/[a-z]/**/*.json'] }))
+      .toEqual(['locales'])
+  })
+
+  it('stops the static prefix at extglob openers', () => {
+    expect(deriveWatchRoots({ ...base, content: ['/project/emails/+(a|b)/**/*.vue'] }))
+      .toEqual(['/project/emails'])
+    expect(deriveWatchRoots({ ...base, content: ['/project/emails/@(de|en)/**/*.vue'] }))
+      .toEqual(['/project/emails'])
+    expect(deriveWatchRoots({ ...base, watchPaths: ['locales/!(draft)/**'] }))
+      .toEqual(['locales'])
+  })
+
+  it('keeps bare parentheses in directory names literal', () => {
+    expect(deriveWatchRoots({ ...base, watchPaths: ['locales (alt)/*.json'] }))
+      .toEqual(['locales (alt)'])
+  })
+
+  it('drops negated watch patterns', () => {
+    expect(deriveWatchRoots({ ...base, watchPaths: ['locales/**', '!locales/**/ignored.json'] }))
+      .toEqual(['locales'])
+  })
+
+  it('deduplicates roots across sources', () => {
+    expect(deriveWatchRoots({
+      ...base,
+      content: ['/project/emails/**/*.vue', '/project/emails/**/*.md'],
+      root: '/project/emails',
+    })).toEqual(['/project/emails'])
   })
 })

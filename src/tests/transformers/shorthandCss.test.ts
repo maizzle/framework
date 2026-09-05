@@ -68,6 +68,36 @@ describe('shorthandCss', () => {
       expect(result).not.toContain('border-style:')
       expect(result).not.toContain('border-color:')
     })
+
+    it('converts four border sides to shorthand', () => {
+      const html = '<p style="border-top: 1px solid #000; border-right: 1px solid #000; border-bottom: 1px solid #000; border-left: 1px solid #000;">Text</p>'
+      expect(run(html)).toBe('<p style="border: 1px solid #000;">Text</p>')
+    })
+
+    it('keeps !important when merging border', () => {
+      const html = '<p style="border-width: 1px !important; border-style: solid !important; border-color: #000 !important;">Text</p>'
+      expect(run(html)).toBe('<p style="border: 1px solid #000 !important;">Text</p>')
+    })
+
+    it('does not merge border with mixed !important', () => {
+      const html = '<p style="border-width: 1px !important; border-style: solid; border-color: #000;">Text</p>'
+      expect(run(html)).not.toContain('border:')
+    })
+
+    it('does not merge border with per-side values', () => {
+      const html = '<p style="border-width: 1px 2px; border-style: solid; border-color: #000;">Text</p>'
+      expect(run(html)).not.toContain('border:')
+    })
+
+    it('does not merge border with custom properties', () => {
+      const html = '<p style="border-width: var(--w); border-style: solid; border-color: #000;">Text</p>'
+      expect(run(html)).not.toContain('border:')
+    })
+
+    it('does not merge partial border longhand', () => {
+      const html = '<p style="border-style: solid; border-color: #000;">Text</p>'
+      expect(run(html)).not.toContain('border:')
+    })
   })
 
   describe('tag filtering', () => {

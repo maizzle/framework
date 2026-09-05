@@ -1,4 +1,4 @@
-import postcss from 'postcss'
+import postcss, { list, type Declaration, type Plugin } from 'postcss'
 import safeParser from 'postcss-safe-parser'
 import mergeLonghand from 'postcss-merge-longhand'
 import type { ChildNode, Element } from 'domhandler'
@@ -39,6 +39,53 @@ export interface ShorthandCssOptions {
  *   { tags: ['p'] },
  * )
  */
+/**
+ * Fold `border-width`, `border-style` and `border-color` into `border`.
+ *
+ * postcss-merge-longhand stopped doing this in 8.0.3 because the
+ * shorthand also resets `border-image`. Email clients don't support
+ * `border-image`, so the merge is safe for inline styles.
+ */
+const mergeBorder: Plugin = {
+  postcssPlugin: 'maizzle-merge-border',
+  OnceExit(root) {
+    root.walkRules((rule) => {
+      const decls: Declaration[] = []
+
+      for (const prop of ['border-width', 'border-style', 'border-color']) {
+        const found = rule.nodes.filter(
+          (node): node is Declaration => node.type === 'decl' && node.prop.toLowerCase() === prop,
+        )
+        if (found.length !== 1) return
+        decls.push(found[0])
+      }
+
+      const [width, style, color] = decls
+      const { important } = width
+
+      for (const decl of decls) {
+        if (
+          decl.important !== important
+          || list.space(decl.value).length !== 1
+          || /var\s*\(/i.test(decl.value)
+        ) return
+      }
+
+      const last = decls.reduce((a, b) => (rule.index(b) > rule.index(a) ? b : a))
+
+      last.replaceWith({
+        prop: 'border',
+        value: `${width.value} ${style.value} ${color.value}`,
+        important,
+      })
+
+      for (const decl of decls) {
+        if (decl !== last) decl.remove()
+      }
+    })
+  },
+}
+
 export function shorthandCss(html: string, options: ShorthandCssOptions = {}): string {
   return serialize(shorthandCssDom(parse(html), options))
 }
@@ -61,6 +108,7 @@ export function shorthandCssDom(dom: ChildNode[], options: ShorthandCssOptions =
     try {
       const { css } = postcss()
         .use(mergeLonghand)
+        .use(mergeBorder)
         .process(`div { ${styleValue} }`, { parser: safeParser })
       const match = css.match(/div\s*\{\s*([^}]+)\s*\}/)
       if (match && match[1]) {

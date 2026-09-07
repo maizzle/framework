@@ -1,6 +1,18 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createSSRApp, h } from 'vue'
+import { renderToString } from '@vue/server-renderer'
 import Spacer from '../../components/Spacer.vue'
+
+/**
+ * happy-dom 20.12+ validates inline style properties against
+ * Chromium's list and silently drops unknown ones such as
+ * mso-font-width, so Outlook-only styles are asserted
+ * against SSR output, which is what Maizzle ships.
+ */
+function renderSSR(props = {}) {
+  return renderToString(createSSRApp({ render: () => h(Spacer, props) }))
+}
 
 describe('Spacer', () => {
   describe('vertical', () => {
@@ -95,14 +107,14 @@ describe('Spacer', () => {
       expect(wrapper.html()).toContain('width: 48px')
     })
 
-    it('sets mso-font-width to 100% for 16px width', () => {
-      const wrapper = mount(Spacer, { props: { type: 'horizontal', width: 16 } })
-      expect(wrapper.html()).toContain('mso-font-width: 100%')
+    it('sets mso-font-width to 100% for 16px width', async () => {
+      const html = await renderSSR({ type: 'horizontal', width: 16 })
+      expect(html).toContain('mso-font-width:100%')
     })
 
-    it('sets mso-font-width to 200% for 32px width', () => {
-      const wrapper = mount(Spacer, { props: { type: 'horizontal', width: 32 } })
-      expect(wrapper.html()).toContain('mso-font-width: 200%')
+    it('sets mso-font-width to 200% for 32px width', async () => {
+      const html = await renderSSR({ type: 'horizontal', width: 32 })
+      expect(html).toContain('mso-font-width:200%')
     })
 
     it('uses multiple emsps for widths over 80px', () => {
@@ -113,26 +125,24 @@ describe('Spacer', () => {
       expect(emspCount).toBe(5)
     })
 
-    it('caps mso-font-width at 500%', () => {
-      const wrapper = mount(Spacer, { props: { type: 'horizontal', width: 360 } })
-      const html = wrapper.html()
-      const match = html.match(/mso-font-width: (\d+)%/)
+    it('caps mso-font-width at 500%', async () => {
+      const html = await renderSSR({ type: 'horizontal', width: 360 })
+      const match = html.match(/mso-font-width:(\d+)%/)
       expect(match).toBeTruthy()
       expect(Number(match![1])).toBeLessThanOrEqual(500)
     })
 
-    it('calculates correct mso-font-width for 360px', () => {
-      const wrapper = mount(Spacer, { props: { type: 'horizontal', width: 360 } })
+    it('calculates correct mso-font-width for 360px', async () => {
+      const html = await renderSSR({ type: 'horizontal', width: 360 })
       // 5 emsps × 16px = 80px base, 360/80 = 4.5 → 450%
-      expect(wrapper.html()).toContain('mso-font-width: 450%')
+      expect(html).toContain('mso-font-width:450%')
     })
   })
 
   describe('outlookFallback=false', () => {
-    it('omits mso-font-width on horizontal', () => {
-      const html = mount(Spacer, {
-        props: { outlookFallback: false, type: 'horizontal', width: 32 },
-      }).html()
+    it('omits mso-font-width on horizontal', async () => {
+      const html = await renderSSR({ outlookFallback: false, type: 'horizontal', width: 32 })
+      expect(html).toContain('width: 32px')
       expect(html).not.toContain('mso-font-width')
     })
   })

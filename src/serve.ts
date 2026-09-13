@@ -507,9 +507,7 @@ function getRendered(absolutePath: string, config: MaizzleConfig, renderer: Rend
         let html = await events.fireAfterRender({ config: templateConfig, template, html: rendered.html })
         const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
 
-        if (templateConfig.useTransformers !== false) {
-          html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks, rendered.sourceFiles)
-        }
+        html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks, rendered.sourceFiles)
 
         const rawHtml = await events.fireAfterTransform({ config: templateConfig, template, html })
 

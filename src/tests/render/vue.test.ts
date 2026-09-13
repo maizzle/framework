@@ -118,7 +118,7 @@ describe('render', () => {
       `)
 
       expect(result.html).toContain('<!--[if mso]>')
-      expect(result.html).toContain('<table>')
+      expect(result.html).toContain('<table cellpadding="0" cellspacing="0" role="none">')
       expect(result.html).toContain('<tr>')
       expect(result.html).toContain('<td>')
       expect(result.html).toContain('INSIDE')
@@ -131,7 +131,7 @@ describe('render', () => {
 
       const openIdx = result.html.indexOf('<!--[if mso]>')
       const closeIdx = result.html.indexOf('<![endif]-->')
-      const tableOpenIdx = result.html.indexOf('<table>')
+      const tableOpenIdx = result.html.indexOf('<table ')
       const tableCloseIdx = result.html.indexOf('</table>')
       expect(tableOpenIdx).toBeGreaterThan(openIdx)
       expect(tableCloseIdx).toBeGreaterThan(tableOpenIdx)

@@ -78,6 +78,47 @@ describe('runTransformers config branches', () => {
     expect(result).toContain('data-keep')
   })
 
+  describe('<Outlook> placeholders', () => {
+    const open = (cond = 'mso') => `<!--[if ${cond}]>__MAIZZLE_MSO_OPEN__<![endif]-->`
+    const close = '<!--[if mso]>__MAIZZLE_MSO_CLOSE__<![endif]-->'
+
+    it('inlines, purges and rewrites markup inside the conditional', async () => {
+      const source = '<html><head><style>.a{color:red}.w{width:44px}.zzz{color:blue}@media screen{.mq{color:green}}</style></head><body>'
+        + `<table class="w">${open()}<tr><td class="a mq">\u200D</td></tr>${close}</table>`
+        + `${open()}<img src="/a.png" data-juice-duplicates="false" class="a">${close}`
+        + '</body></html>'
+
+      const result = await runTransformers(source, {
+        css: { inline: true, purge: true },
+        url: { base: 'https://example.com' },
+      })
+
+      expect(result).toContain('<!--[if mso]><tr><td class="mq" style="color: red;">&zwj;</td></tr><![endif]-->')
+      expect(result).toContain('<!--[if mso]><img src="https://example.com/a.png" style="color: red;" alt><![endif]-->')
+      expect(result).not.toContain('__MAIZZLE_MSO_')
+      expect(result).toContain('.mq')
+      expect(result).not.toContain('.zzz')
+    })
+
+    it('keeps unbalanced open/close fragments around the slot', async () => {
+      const source = '<html><head></head><body>'
+        + `${open('(gt mso 11)&(lt mso 16)')}<table><tr><td>${close}<p>x</p>${open()}</td></tr></table>${close}`
+        + '</body></html>'
+
+      const result = await runTransformers(source, {})
+
+      expect(result).toContain('<!--[if (gt mso 11)&(lt mso 16)]><table cellpadding="0" cellspacing="0" role="none"><tr><td><![endif]-->')
+      expect(result).toContain('<p>x</p><!--[if mso]></td></tr></table><![endif]-->')
+    })
+
+    it('resolves placeholders when the pipeline is disabled', async () => {
+      const source = `<p>${open('mso 12')}<span class="a">x</span>${close}</p>`
+
+      expect(await runTransformers(source, { useTransformers: false }))
+        .toBe('<p><!--[if mso 12]><span class="a">x</span><![endif]--></p>')
+    })
+  })
+
   it('preserves whitespace-only MSO conditionals through purge and minify', async () => {
     const spacer = '<html><head></head><body><!--[if mso]>\u00A0\u00A0<![endif]--><p>x</p></body></html>'
     const result = await runTransformers(spacer, { css: { purge: true }, html: { minify: true } })

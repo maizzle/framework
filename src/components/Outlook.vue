@@ -124,8 +124,14 @@ export default {
       return 'mso'
     })
 
-    const start = computed(() => `<!--[if ${condition.value}]>${props.open}`)
-    const end = computed(() => `${props.close}<![endif]-->`)
+    /**
+     * Placeholder conditionals, not the real `<!--[if]>…<![endif]-->`
+     * block: the slot must stay real DOM so the transformers can
+     * inline, purge and rewrite it. `msoConditionals` collapses
+     * the pair into one hidden conditional after they run.
+     */
+    const start = computed(() => `<!--[if ${condition.value}]>__MAIZZLE_MSO_OPEN__<![endif]-->${props.open}`)
+    const end = computed(() => `${props.close}<!--[if mso]>__MAIZZLE_MSO_CLOSE__<![endif]-->`)
 
     return () => [
       createStaticVNode(start.value, 1),

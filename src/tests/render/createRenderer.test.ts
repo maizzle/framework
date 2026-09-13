@@ -64,7 +64,7 @@ describe('createRenderer', () => {
       </template>`,
       config,
     )
-    expect(result.html).toContain('<!--[if mso]><img src="https://example.com/image-a.gif"><![endif]-->')
+    expect(result.html).toContain('<!--[if mso]><img src="https://example.com/image-a.gif" alt><![endif]-->')
     expect(result.html).toContain('<!--[if !mso]><!--><img src="https://example.com/image-b.gif"')
     expect(result.html).not.toContain('---->')
   })

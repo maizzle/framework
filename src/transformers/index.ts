@@ -17,6 +17,7 @@ import { baseDom } from './base.ts'
 import { entitiesDom } from './entities.ts'
 import { urlQueryDom } from './urlQuery.ts'
 import { purgeCssDom } from './purgeCss.ts'
+import { msoConditionals } from './msoConditionals.ts'
 import { replaceStrings } from './replaceStrings.ts'
 import { format } from './format.ts'
 import { minifyCodeInline } from './minifyCodeInline.ts'
@@ -51,6 +52,7 @@ import type { TailwindBlock } from '../composables/renderContext.ts'
  * 12. Purge CSS (serializes/parses internally around email-comb)
  * 13. Entities
  * + Vue-generated comments stripped here (on serialized string)
+ * 13.5 Outlook placeholders → MSO conditional comments
  * 14. Replace strings
  * 15. Prettify
  * 16. Minify
@@ -64,9 +66,13 @@ export async function runTransformers(
   sourceFiles?: string[],
 ): Promise<string> {
   /**
+   * Whole-pipeline opt-out. `<Outlook>` placeholders still have to
+   * become real conditional comments, so that one step always runs.
+   */
+  if (config.useTransformers === false) return msoConditionals(html)
+
+  /**
    * Per-transformer skip map — only honored when useTransformers is an object.
-   * Whole-pipeline opt-out (`useTransformers === false`) is handled upstream
-   * in build.ts / render so we never reach this function in that case.
    *
    * A toggle set to `true` *force-enables* its transformer for this run
    * by layering on the matching config slice (e.g. `prettify: true`
@@ -189,6 +195,9 @@ export async function runTransformers(
   // Serialize once — remaining transformers operate on the HTML string
   const isXhtml = doctype ? /xhtml/i.test(doctype) : false
   let result = serialize(dom, { selfClosingTags: isXhtml })
+
+  // 13.5. Collapse <Outlook> placeholders into MSO conditional comments
+  result = msoConditionals(result)
 
   // 14. Replace strings
   if (enabled('replaceStrings')) result = replaceStrings(result, effective)

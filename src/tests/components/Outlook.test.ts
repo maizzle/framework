@@ -23,12 +23,12 @@ describe('Outlook', () => {
       expect(html).toContain('<![endif]-->')
     })
 
-    it('outputs comments in the correct order', async () => {
+    it('outputs placeholders in the correct order', async () => {
       const html = await renderRaw()
 
-      const startIdx = html.indexOf('<!--[if mso]>')
+      const startIdx = html.indexOf('<!--[if mso]>__MAIZZLE_MSO_OPEN__<![endif]-->')
       const contentIdx = html.indexOf('<p>Test</p>')
-      const endIdx = html.indexOf('<![endif]-->')
+      const endIdx = html.indexOf('<!--[if mso]>__MAIZZLE_MSO_CLOSE__<![endif]-->')
 
       expect(startIdx).toBeGreaterThanOrEqual(0)
       expect(startIdx).toBeLessThan(contentIdx)
@@ -134,14 +134,14 @@ describe('Outlook', () => {
   })
 
   describe('open and close props', () => {
-    it('inserts open prop after the conditional start', async () => {
+    it('inserts open prop after the opening placeholder', async () => {
       const html = await renderRaw({ open: '<table><tr><td>' })
-      expect(html).toContain('<!--[if mso]><table><tr><td>')
+      expect(html).toContain('__MAIZZLE_MSO_OPEN__<![endif]--><table><tr><td>')
     })
 
-    it('inserts close prop before the conditional end', async () => {
+    it('inserts close prop before the closing placeholder', async () => {
       const html = await renderRaw({ close: '</td></tr></table>' })
-      expect(html).toContain('</td></tr></table><![endif]-->')
+      expect(html).toContain('</td></tr></table><!--[if mso]>__MAIZZLE_MSO_CLOSE__')
     })
 
     it('preserves unbalanced open and close fragments around the slot', async () => {
@@ -150,9 +150,9 @@ describe('Outlook', () => {
         () => h('p', 'inside')
       )
 
-      const openIdx = html.indexOf('<!--[if mso]><table><tr><td>')
+      const openIdx = html.indexOf('<![endif]--><table><tr><td>')
       const slotIdx = html.indexOf('<p>inside</p>')
-      const closeIdx = html.indexOf('</td></tr></table><![endif]-->')
+      const closeIdx = html.indexOf('</td></tr></table><!--[if mso]>')
 
       expect(openIdx).toBeGreaterThanOrEqual(0)
       expect(slotIdx).toBeGreaterThan(openIdx)
@@ -165,8 +165,8 @@ describe('Outlook', () => {
         open: '<table>',
         close: '</table>',
       })
-      expect(html).toContain('<!--[if mso 15]><table>')
-      expect(html).toContain('</table><![endif]-->')
+      expect(html).toContain('<!--[if mso 15]>__MAIZZLE_MSO_OPEN__<![endif]--><table>')
+      expect(html).toContain('</table><!--[if mso]>__MAIZZLE_MSO_CLOSE__<![endif]-->')
     })
 
     it('emits raw HTML verbatim without escaping', async () => {

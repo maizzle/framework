@@ -20,8 +20,10 @@ import { setActiveRenderer } from './render/active.ts'
 import { serveCompatibility } from './server/compatibility.ts'
 import { serveLint } from './server/linter.ts'
 import { sendEmail } from './server/email.ts'
+import { serveStaticFile } from './server/static.ts'
 import { normalizeComponentSources } from './utils/componentSources.ts'
 import { createWatchedFileMatcher, deriveWatchRoots } from './utils/watchPaths.ts'
+import { staticBase } from './utils/staticPaths.ts'
 import type { MaizzleConfig } from './types/index.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -263,6 +265,34 @@ function maizzleDevPlugin(
       let isWatchedFile = applyWatchPaths(config)
 
       /**
+       * Serve the `static.source` directories at `/<static.destination>`,
+       * mirroring what `build` copies to the output dir, so templates that
+       * reference `/images/logo.png` resolve in the preview iframe. Each
+       * positive pattern's glob-free prefix is mounted (looked up on disk
+       * per request, so files added after startup are served) and added
+       * to the watcher so the preview refreshes on changes. Runs again
+       * after a config reload; the middleware below reads the current
+       * mounts on every request.
+       */
+      const applyStaticMounts = (cfg: MaizzleConfig) => {
+        const sources = cfg.static?.source ?? ['public/**/*.*']
+        const destination = (cfg.static?.destination ?? 'public').replace(/^\/+|\/+$/g, '')
+        const prefix = destination ? `/${destination}` : ''
+        const bases = [...new Set(sources.filter(s => !s.startsWith('!')).map(staticBase))]
+
+        for (const base of bases) {
+          server.watcher.add(base)
+        }
+
+        return {
+          mounts: bases.map(base => ({ prefix, base })),
+          isStaticFile: createWatchedFileMatcher(sources, process.cwd()),
+        }
+      }
+
+      let { mounts: staticMounts, isStaticFile } = applyStaticMounts(config)
+
+      /**
        * Serialize watcher work onto one chain. The change handler closes and
        * recreates the renderer across awaits; without serialization a second
        * event firing mid-reload closes a stale renderer and leaks the new one.
@@ -281,6 +311,8 @@ function maizzleDevPlugin(
           await renderer.invalidateAll()
           bumpGeneration()
           server.ws.send({ type: 'custom', event: 'maizzle:templates-changed' })
+        } else if (isStaticFile(file)) {
+          server.ws.send({ type: 'custom', event: 'maizzle:template-updated', data: { file } })
         }
       }))
 
@@ -289,6 +321,8 @@ function maizzleDevPlugin(
           await renderer.invalidateAll()
           bumpGeneration()
           server.ws.send({ type: 'custom', event: 'maizzle:templates-changed' })
+        } else if (isStaticFile(file)) {
+          server.ws.send({ type: 'custom', event: 'maizzle:template-updated', data: { file } })
         }
       }))
 
@@ -313,6 +347,7 @@ function maizzleDevPlugin(
           // content, components.source, root, or server.watch values keep
           // emitting events without a server restart.
           isWatchedFile = applyWatchPaths(config)
+          ;({ mounts: staticMounts, isStaticFile } = applyStaticMounts(config))
 
           /**
            * Push UI-relevant config bits so the dev UI reacts to live edits
@@ -333,6 +368,7 @@ function maizzleDevPlugin(
         if (
           isTemplateFile(file)
           || isWatchedFile(file)
+          || isStaticFile(file)
         ) {
           server.ws.send({ type: 'custom', event: 'maizzle:template-updated', data: { file } })
         }
@@ -380,6 +416,19 @@ function maizzleDevPlugin(
 
         if (url === '/__maizzle/email-config') {
           return serveEmailConfig(config, res)
+        }
+
+        next()
+      })
+
+      // Static assets from `static.source`, mounted at `/<static.destination>`
+      server.middlewares.use((req: any, res: any, next: any) => {
+        const url: string = req.url || '/'
+
+        for (const { prefix, base } of staticMounts) {
+          if (url === prefix || url.startsWith(`${prefix}/`) || url.startsWith(`${prefix}?`)) {
+            if (serveStaticFile(base, url.slice(prefix.length) || '/', res)) return
+          }
         }
 
         next()

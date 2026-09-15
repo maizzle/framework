@@ -8,6 +8,7 @@ import { resolveConfig } from './config/index.ts'
 import { EventManager } from './events/index.ts'
 import { createRenderer } from './render/createRenderer.ts'
 import { normalizeComponentSources } from './utils/componentSources.ts'
+import { staticBase } from './utils/staticPaths.ts'
 import { buildTemplate, computeContentBase } from './render/buildTemplate.ts'
 import type { MaizzleConfig } from './types/index.ts'
 
@@ -261,11 +262,4 @@ async function copyStatic(config: MaizzleConfig, outputPath: string): Promise<vo
 
     cpSync(file, destPath)
   }
-}
-
-/** Absolute static (non-glob) prefix of a source pattern, used as the strip base. */
-function staticBase(pattern: string): string {
-  const staticPart = pattern.split(/[*{?[]/)[0]
-  // Treat both separators as trailing: resolved patterns use '\' on Windows.
-  return resolve(/[/\\]$/.test(staticPart) ? staticPart : dirname(staticPart))
 }

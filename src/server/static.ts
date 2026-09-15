@@ -60,7 +60,20 @@ export function serveStaticFile(base: string, urlPath: string, res: ServerRespon
   res.setHeader('Content-Type', MIME[extname(file).toLowerCase()] ?? 'application/octet-stream')
   res.setHeader('Content-Length', size)
   res.setHeader('Cache-Control', 'no-cache')
-  createReadStream(file).pipe(res)
+  const stream = createReadStream(file)
+  stream.once('error', (error) => {
+    if (res.headersSent) {
+      res.destroy(error)
+      return
+    }
+
+    res.removeHeader('Content-Type')
+    res.removeHeader('Content-Length')
+    res.removeHeader('Cache-Control')
+    res.statusCode = 404
+    res.end()
+  })
+  stream.pipe(res)
 
   return true
 }

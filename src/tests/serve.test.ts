@@ -27,6 +27,63 @@ describe('serve dev server', () => {
     rmSync(tempDir, { recursive: true, force: true })
   })
 
+  const baseUrl = () => server!.resolvedUrls!.local[0].replace(/\/$/, '')
+
+  it('serves static.source directories at /<static.destination>', async () => {
+    mkdirSync(join(tempDir, 'images'), { recursive: true })
+    writeFileSync(join(tempDir, 'images', 'logo.png'), 'png-bytes')
+
+    server = await serve({ config: { static: { source: ['images/**/*.*'], destination: 'images' } }, port: 3157, silent: true })
+
+    const res = await fetch(`${baseUrl()}/images/logo.png`)
+    expect(res.status).toBe(200)
+    expect(await res.text()).toBe('png-bytes')
+
+    expect((await fetch(`${baseUrl()}/images/missing.png`)).status).toBe(404)
+  }, 30000)
+
+  it('serves the default public/ directory at / and /public', async () => {
+    mkdirSync(join(tempDir, 'public'), { recursive: true })
+    writeFileSync(join(tempDir, 'public', 'logo.png'), 'png-bytes')
+
+    server = await serve({ port: 3157, silent: true })
+
+    expect((await fetch(`${baseUrl()}/logo.png`)).status).toBe(200)
+    expect((await fetch(`${baseUrl()}/public/logo.png`)).status).toBe(200)
+  }, 30000)
+
+  it('serves static files added after the server started', async () => {
+    server = await serve({ config: { static: { source: ['images/**/*.*'], destination: 'images' } }, port: 3157, silent: true })
+
+    mkdirSync(join(tempDir, 'images'), { recursive: true })
+    writeFileSync(join(tempDir, 'images', 'late.png'), 'late')
+
+    const res = await fetch(`${baseUrl()}/images/late.png`)
+    expect(res.status).toBe(200)
+    expect(await res.text()).toBe('late')
+  }, 30000)
+
+  it('re-mounts static directories when the config changes', async () => {
+    writeFileSync(join(tempDir, 'maizzle.config.js'), "export default { static: { source: ['images/**/*.*'], destination: 'images' } }\n")
+    mkdirSync(join(tempDir, 'images'), { recursive: true })
+    mkdirSync(join(tempDir, 'assets'), { recursive: true })
+    writeFileSync(join(tempDir, 'images', 'a.png'), 'a')
+    writeFileSync(join(tempDir, 'assets', 'b.png'), 'b')
+
+    server = await serve({ port: 3157, silent: true })
+
+    expect((await fetch(`${baseUrl()}/images/a.png`)).status).toBe(200)
+    expect((await fetch(`${baseUrl()}/assets/b.png`)).status).toBe(404)
+
+    writeFileSync(join(tempDir, 'maizzle.config.js'), "export default { static: { source: ['assets/**/*.*'], destination: 'assets' } }\n")
+    server.watcher.emit('change', resolve(tempDir, 'maizzle.config.js'))
+
+    await vi.waitFor(async () => {
+      expect((await fetch(`${baseUrl()}/assets/b.png`)).status).toBe(200)
+      expect((await fetch(`${baseUrl()}/images/a.png`)).status).toBe(404)
+    }, { timeout: 15000, interval: 100 })
+  }, 30000)
+
   it('refreshes the active renderer when the config file changes', async () => {
     writeFileSync(join(tempDir, 'maizzle.config.js'), 'export default {}\n')
 

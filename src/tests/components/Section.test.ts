@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { defineComponent } from 'vue'
 import Section from '../../components/Section.vue'
 
 describe('Section', () => {
@@ -139,6 +140,23 @@ describe('Section', () => {
     it('detects width utilities behind variant prefixes', () => {
       const html = mount(Section, { attrs: { class: 'sm:max-w-xl' } }).html()
       expect(html).toMatch(/style="width: __MAIZZLE_MSOW_s\d+__"/)
+    })
+  })
+
+  describe('class merging', () => {
+    it('resolves conflicts in a concatenated class string', () => {
+      const wrapper = mount(Section, { attrs: { class: 'pt-36 bg-red-800 pt-20 bg-red-600' } })
+      expect(wrapper.find('div').classes()).toEqual(['pt-20', 'bg-red-600'])
+    })
+
+    it('lets a class passed to a wrapper component win over the root defaults', () => {
+      const Hero = defineComponent({
+        components: { Section },
+        template: '<Section class="p-0 px-6 pt-36 bg-red-800"><slot /></Section>',
+      })
+      const wrapper = mount(Hero, { attrs: { class: 'bg-red-600 pt-20' } })
+      const classes = wrapper.find('div').classes()
+      expect(classes).toEqual(['p-0', 'px-6', 'bg-red-600', 'pt-20'])
     })
   })
 

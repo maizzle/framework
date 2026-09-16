@@ -68,7 +68,7 @@ const tdId = outlookFallback ? nextId('st') : null
 
 const mergedClass = computed(() => {
   const userClass = (attrs.class as string) ?? ''
-  if (props.width == null) return userClass || undefined
+  if (props.width == null) return userClass ? twMerge(userClass) : undefined
   return twMerge(`max-w-[${normalizeToPixels(props.width)}]`, userClass)
 })
 

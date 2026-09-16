@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue'
-import { twMerge } from 'tailwind-merge'
+import { twMerge } from '../utils/twMerge'
 
 defineOptions({ inheritAttrs: false })
 

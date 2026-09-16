@@ -1,6 +1,6 @@
 <script lang="ts">
 import { createStaticVNode, type PropType } from 'vue'
-import { twMerge } from 'tailwind-merge'
+import { twMerge } from '../utils/twMerge'
 import { encode } from 'uqr'
 
 type Ecc = 'L' | 'M' | 'Q' | 'H'

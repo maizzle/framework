@@ -5,7 +5,7 @@ const warnedLocations = new Set<string>()
 <script setup lang="ts">
 import { Comment, Text, computed, createStaticVNode, provide, useAttrs, useSlots, Fragment } from 'vue'
 import type { VNode } from 'vue'
-import { twMerge } from 'tailwind-merge'
+import { twMerge } from '../utils/twMerge'
 import Column from './Column.vue'
 import { hasWidthInStyle, hasWidthUtility, normalizeToPixels, outlookFallbackProp } from './utils.ts'
 import { useOutlookFallback } from '../composables/useOutlookFallback'

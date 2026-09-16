@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useAttrs, createStaticVNode } from 'vue'
 import type { PropType } from 'vue'
-import { twMerge } from 'tailwind-merge'
+import { twMerge } from '../utils/twMerge'
 import { outlookFallbackProp } from './utils.ts'
 import { useOutlookFallback } from '../composables/useOutlookFallback'
 

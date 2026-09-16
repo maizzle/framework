@@ -44,6 +44,24 @@ describe('Img', () => {
       expect(cls).toContain('align-middle')
     })
 
+    it('lets user classes replace the default utilities', () => {
+      const wrapper = mount(Img, {
+        props: { src: 'img.png', width: 100 },
+        attrs: { class: 'max-w-none align-top rounded' },
+      })
+      expect(wrapper.find('img').classes()).toEqual(['max-w-none', 'align-top', 'rounded'])
+    })
+
+    it('passes through other attributes', () => {
+      const wrapper = mount(Img, {
+        props: { src: 'img.png', width: 100 },
+        attrs: { class: 'rounded', title: 'Hi', 'data-x': '1' },
+      })
+      const img = wrapper.find('img')
+      expect(img.attributes('title')).toBe('Hi')
+      expect(img.attributes('data-x')).toBe('1')
+    })
+
     it('does not wrap in picture element without darkSrc or motionSrc', () => {
       const wrapper = mount(Img, { props: { src: 'img.png', width: 100 } })
       expect(wrapper.find('picture').exists()).toBe(false)

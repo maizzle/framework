@@ -40,6 +40,9 @@ export { useBaseUrl } from './composables/useBaseUrl.ts'
 export { useUrlQuery } from './composables/useUrlQuery.ts'
 export { useHead } from '@unhead/vue'
 
+// Utilities
+export { twMerge } from './utils/twMerge.ts'
+
 // Types
 export type { MaizzleConfig, HtmlConfig, UrlConfig, UrlQuery, UrlQueryOptions, CssConfig, AttributesConfig, EntitiesConfig, FilterFunction, FiltersConfig, PlaintextConfig, ComponentSource } from './types/index.ts'
 

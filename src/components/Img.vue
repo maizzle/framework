@@ -254,6 +254,12 @@ const NotMsoBefore = () => createStaticVNode('<!--[if !mso]><!-->', 1)
 const NotMsoAfter = () => createStaticVNode('<!--<![endif]-->', 1)
 
 const imgClass = 'max-w-full align-middle'
+const imgMergedClass = computed(() => twMerge(imgClass, parsedClass.value.className))
+
+const restAttrs = computed(() => {
+  const { class: _, ...rest } = attrs
+  return rest
+})
 
 const cropClass = computed(() =>
   twMerge(
@@ -317,16 +323,16 @@ const cropClass = computed(() =>
     <picture>
       <source v-if="darkSrc" :srcset="darkSrc" media="(prefers-color-scheme: dark)">
       <source v-if="motionSrc" :srcset="motionSrc" :type="motionType || undefined" media="(prefers-reduced-motion: no-preference)">
-      <img v-bind="attrs" :src="src" :alt="alt" :width="hasWidth ? imgWidth : undefined" :data-maizzle-img-width="hasWidth ? undefined : ''" :class="imgClass" data-juice-duplicates="false">
+      <img v-bind="restAttrs" :src="src" :alt="alt" :width="hasWidth ? imgWidth : undefined" :data-maizzle-img-width="hasWidth ? undefined : ''" :class="imgMergedClass" data-juice-duplicates="false">
     </picture>
   </a>
   <picture v-else-if="usePicture">
     <source v-if="darkSrc" :srcset="darkSrc" media="(prefers-color-scheme: dark)">
     <source v-if="motionSrc" :srcset="motionSrc" :type="motionType || undefined" media="(prefers-reduced-motion: no-preference)">
-    <img v-bind="attrs" :src="src" :alt="alt" :width="hasWidth ? imgWidth : undefined" :data-maizzle-img-width="hasWidth ? undefined : ''" :class="imgClass" data-juice-duplicates="false">
+    <img v-bind="restAttrs" :src="src" :alt="alt" :width="hasWidth ? imgWidth : undefined" :data-maizzle-img-width="hasWidth ? undefined : ''" :class="imgMergedClass" data-juice-duplicates="false">
   </picture>
   <a v-else-if="href" :href="href">
-    <img v-bind="attrs" :src="src" :alt="alt" :width="hasWidth ? imgWidth : undefined" :data-maizzle-img-width="hasWidth ? undefined : ''" :class="imgClass" data-juice-duplicates="false">
+    <img v-bind="restAttrs" :src="src" :alt="alt" :width="hasWidth ? imgWidth : undefined" :data-maizzle-img-width="hasWidth ? undefined : ''" :class="imgMergedClass" data-juice-duplicates="false">
   </a>
-  <img v-else v-bind="attrs" :src="src" :alt="alt" :width="hasWidth ? imgWidth : undefined" :data-maizzle-img-width="hasWidth ? undefined : ''" :class="imgClass" data-juice-duplicates="false">
+  <img v-else v-bind="restAttrs" :src="src" :alt="alt" :width="hasWidth ? imgWidth : undefined" :data-maizzle-img-width="hasWidth ? undefined : ''" :class="imgMergedClass" data-juice-duplicates="false">
 </template>

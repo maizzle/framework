@@ -888,8 +888,8 @@ const stripeBg = {
             <div class="w-1 h-12 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-gray-400 group-active:bg-gray-500 dark:group-hover:bg-gray-500 dark:group-active:bg-gray-400 transition-colors" />
           </div>
           <!-- Iframe -->
-          <div ref="wrapperEl" class="absolute inset-0 min-[430px]:inset-5 border border-gray-200 dark:border-gray-800">
-            <ScrollArea class="h-full w-full bg-white dark:bg-gray-950">
+          <div ref="wrapperEl" class="absolute inset-0 min-[430px]:inset-5 ring-1 ring-gray-200 dark:ring-gray-800">
+            <ScrollArea class="h-full w-full bg-white dark:bg-gray-950 [&_[data-slot=scroll-area-thumb]]:bg-black/40 [&_[data-slot=scroll-area-thumb]]:shadow-[0_0_0_1px_rgba(255,255,255,0.5)]">
               <iframe
                 ref="iframeEl"
                 :srcdoc="srcdoc"

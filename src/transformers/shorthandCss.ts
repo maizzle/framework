@@ -100,24 +100,33 @@ export function shorthandCssDom(dom: ChildNode[], options: ShorthandCssOptions =
   const hasTagFilter = allowedTags.length > 0
 
   /**
+   * Utility-generated inline styles repeat heavily across elements, so
+   * each distinct value only goes through postcss once per call.
+   */
+  const cache = new Map<string, string>()
+
+  /**
    * Merge longhand within a single inline-style value. Returns the merged
    * string when shorter, otherwise the original. Wraps the value in a
    * dummy selector since postcss-merge-longhand operates on rules.
    */
   const mergeStyleValue = (styleValue: string): string => {
+    let result = cache.get(styleValue)
+    if (result !== undefined) return result
+
+    result = styleValue
     try {
       const { css } = postcss()
         .use(mergeLonghand)
         .use(mergeBorder)
         .process(`div { ${styleValue} }`, { parser: safeParser })
       const match = css.match(/div\s*\{\s*([^}]+)\s*\}/)
-      if (match && match[1]) {
-        const merged = match[1].trim()
-        if (merged !== styleValue) return merged
-      }
+      if (match && match[1]) result = match[1].trim()
     }
     catch {}
-    return styleValue
+
+    cache.set(styleValue, result)
+    return result
   }
 
   walk(dom, (node) => {

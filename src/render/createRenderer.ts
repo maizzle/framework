@@ -266,6 +266,16 @@ export async function createRenderer(
   let virtualSfcSource = ''
 
   /**
+   * String templates share one virtual module id, so overlapping renders
+   * on the same renderer would overwrite each other's source before Vite
+   * loads it. Serialize the set-source → load critical section behind a
+   * promise chain; renderToString still runs concurrently outside it.
+   * One id keeps the module graph and plugin-vue's descriptor cache
+   * bounded, which per-render ids would not.
+   */
+  let virtualSfcLock: Promise<void> = Promise.resolve()
+
+  /**
    * Per-render source overrides keyed by absolute template path. Lets the
    * build's beforeRender event rewrite a template's source before compile
    * while keeping the real file id — so relative imports, asset URLs and
@@ -527,10 +537,18 @@ export async function createRenderer(
         contextKey = contextModule.RenderContextKey
 
         if (input.includes('<template') || input.includes('<script')) {
-          virtualSfcSource = input
-          const mod = server.moduleGraph.getModuleById(VIRTUAL_SFC_ID)
-          if (mod) server.moduleGraph.invalidateModule(mod)
-          component = (await server.ssrLoadModule(VIRTUAL_SFC_ID)).default
+          const previous = virtualSfcLock
+          let release!: () => void
+          virtualSfcLock = new Promise<void>(resolve => { release = resolve })
+          await previous
+          try {
+            virtualSfcSource = input
+            const mod = server.moduleGraph.getModuleById(VIRTUAL_SFC_ID)
+            if (mod) server.moduleGraph.invalidateModule(mod)
+            component = (await server.ssrLoadModule(VIRTUAL_SFC_ID)).default
+          } finally {
+            release()
+          }
         } else {
           /**
            * A beforeRender handler may have rewritten the source. Register it

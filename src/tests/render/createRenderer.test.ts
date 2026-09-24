@@ -30,6 +30,19 @@ describe('createRenderer', () => {
     }
   })
 
+  it('keeps overlapping string renders on one renderer isolated', async () => {
+    const renderer = await createRenderer({ root: tempDir })
+    const config = await resolveConfig({ root: tempDir })
+    try {
+      const results = await Promise.all(
+        Array.from({ length: 5 }, (_, i) => renderer.render(`<template><div>template-${i}</div></template>`, config)),
+      )
+      results.forEach((result, i) => expect(result.html).toContain(`template-${i}`))
+    } finally {
+      await renderer.close()
+    }
+  })
+
   it('invalidateAll clears the module graph without error', async () => {
     const renderer = await createRenderer({ root: tempDir })
     try {

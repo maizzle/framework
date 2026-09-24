@@ -18,6 +18,14 @@ describe('shorthandCss', () => {
       expect(result).not.toContain('margin-left:')
       expect(result).not.toContain('margin-right:')
     })
+
+    it('merges repeated identical style values on every element', () => {
+      const style = 'padding-top: 4px; padding-right: 8px; padding-bottom: 4px; padding-left: 8px'
+      const html = `<p style="${style}">A</p><td style="${style}">B</td><!--[if mso]><td style="${style}"><![endif]-->`
+      const result = shorthandCss(html)
+      expect(result.match(/padding: 4px 8px/g)).toHaveLength(3)
+      expect(result).not.toContain('padding-top:')
+    })
   })
 
   describe('margin shorthand', () => {

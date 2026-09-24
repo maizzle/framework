@@ -88,6 +88,22 @@ describe('createMaizzle', () => {
     }
   })
 
+  it('rejects renderer-level keys per render', async () => {
+    const maizzle = await createMaizzle({ root: tempDir })
+    try {
+      await expect(maizzle.render('<template><div /></template>', { root: tempDir, markdown: {} }))
+        .rejects.toThrow('root, markdown can only be set in createMaizzle()')
+      await expect(maizzle.render('<template><div /></template>', { components: { source: ['./x'] } }))
+        .rejects.toThrow('components.source')
+      await expect(maizzle.render('<template><div /></template>', { vue: { customElements: ['x-y'] } }))
+        .rejects.toThrow('vue.customElements')
+      await expect(maizzle.render('<template><div /></template>', { vue: { plugins: [] }, components: {} }))
+        .resolves.toBeDefined()
+    } finally {
+      await maizzle.close()
+    }
+  })
+
   it('rejects an invalid template', async () => {
     const maizzle = await createMaizzle({ root: tempDir })
     try {

@@ -23,11 +23,33 @@ export interface MaizzleInstance {
   /**
    * Render a template through the full pipeline, reusing this instance's
    * renderer. `config` is merged over the config the instance was created
-   * with. Safe to call concurrently.
+   * with. Keys that shape the renderer (`root`, `markdown`, `vite`,
+   * `components.source`, `vue.customElements`) can only be set when
+   * creating the instance and throw here. Safe to call concurrently.
    */
   render(template: string | Component, config?: Partial<MaizzleConfig>): Promise<RenderResult>
   /** Shut down the underlying Vite SSR server. */
   close(): Promise<void>
+}
+
+/**
+ * Keys read by rendererOptions() when the instance is created. Passing
+ * them per render would silently do nothing, so reject them instead.
+ */
+function assertNoRendererOverrides(config: Partial<MaizzleConfig>): void {
+  const overrides = [
+    config.root !== undefined && 'root',
+    config.markdown !== undefined && 'markdown',
+    config.vite !== undefined && 'vite',
+    config.components?.source !== undefined && 'components.source',
+    config.vue?.customElements !== undefined && 'vue.customElements',
+  ].filter(Boolean)
+
+  if (overrides.length) {
+    throw new Error(
+      `${overrides.join(', ')} can only be set in createMaizzle(), not per render.`,
+    )
+  }
 }
 
 function rendererOptions(config: MaizzleConfig) {
@@ -128,7 +150,8 @@ export async function createMaizzle(config?: Partial<MaizzleConfig>): Promise<Ma
   const renderer = await createRenderer(rendererOptions(resolveConfigObject(baseConfig)))
 
   return {
-    render(template, renderConfig) {
+    async render(template, renderConfig) {
+      if (renderConfig) assertNoRendererOverrides(renderConfig)
       return renderWith(renderer, template, resolveConfigObject(defu(renderConfig, baseConfig)))
     },
     close() {

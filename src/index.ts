@@ -2,8 +2,8 @@
 export { maizzle } from './plugin.ts'
 
 // Render
-export { render } from './render/index.ts'
-export type { RenderResult } from './render/index.ts'
+export { render, createMaizzle } from './render/index.ts'
+export type { RenderResult, MaizzleInstance } from './render/index.ts'
 export type { Renderer, RenderedTemplate, CreateRendererOptions } from './render/createRenderer.ts'
 export { createRenderer } from './render/createRenderer.ts'
 export { normalizeComponentSources } from './utils/componentSources.ts'

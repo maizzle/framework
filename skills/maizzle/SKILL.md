@@ -147,6 +147,8 @@ const { html, plaintext } = await render('emails/welcome.vue', {
 
 Accepts an SFC path, raw SFC string, or imported Vue component. Runs SSR + full transformer pipeline.
 
+Pass `props` to fill the template's `defineProps`. For dev server previews, export sample props from a plain `<script>` block: `export const previewProps = { name: 'Ava' }`. `render()` and `build` ignore it.
+
 ## Plaintext
 Enable globally:
 

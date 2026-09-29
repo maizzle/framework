@@ -67,7 +67,7 @@ Vue templates need a colon prefix to bind dynamic values (`:href="resetUrl"`); s
 - Drop all imports — Maizzle's components and composables auto-import.
 - Drop `<Tailwind>` and `pixelBasedPreset` — not needed.
 - Drop the `export default function` wrapper.
-- `Welcome.PreviewProps = {...}` → `defineProps({...})` with defaults.
+- `Welcome.PreviewProps = {...}` → `export const previewProps = {...}` in a plain `<script>` block — dev server only.
 
 ### 3. Document structure
 Recommended:
@@ -202,10 +202,14 @@ PasswordReset.PreviewProps = { resetUrl: 'https://...', email: 'a@b.com', expiry
 **Maizzle:**
 
 ```vue
+<script>
+export const previewProps = { resetUrl: 'https://example.com/reset/abc123', email: 'user@example.com', expiryHours: 1 }
+</script>
+
 <script setup>
 const props = defineProps({
-  resetUrl: { type: String, default: 'https://example.com/reset/abc123' },
-  email: { type: String, default: 'user@example.com' },
+  resetUrl: String,
+  email: String,
   expiryHours: { type: Number, default: 1 },
 })
 </script>
@@ -234,5 +238,5 @@ const props = defineProps({
 4. Manual `baseURL` concatenation for images — use `url.base` or `<WithUrl>`.
 5. Forgetting `:` for dynamic props (`:href="resetUrl"`, not `href={resetUrl}` or `href="resetUrl"`).
 6. `{variable}` instead of `{{ variable }}`.
-7. Not converting `PreviewProps` to `defineProps`.
+7. Putting `PreviewProps` values in `defineProps` defaults — use `export const previewProps` (defaults leak into real sends).
 8. Setting Button color via a non-existent `bg-color` prop — use Tailwind classes (`class="bg-red-600 text-white"`) or inline `style`.

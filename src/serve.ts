@@ -534,7 +534,9 @@ function getRendered(absolutePath: string, config: MaizzleConfig, renderer: Rend
          * Mirror the build's per-template event pipeline (see buildTemplate)
          * so dev preview fires the same beforeRender / afterRender /
          * afterTransform hooks and matches production output. Clone config so
-         * beforeRender mutations stay scoped to this render.
+         * beforeRender mutations stay scoped to this render. The one deliberate
+         * difference: `preview: true` fills props from the template's
+         * `previewProps` export.
          */
         const renderConfig = cloneConfig(config)
         const template = { source: readFileSync(absolutePath, 'utf-8'), path: parsePath(absolutePath) }
@@ -542,11 +544,10 @@ function getRendered(absolutePath: string, config: MaizzleConfig, renderer: Rend
 
         await events.fireBeforeRender({ config: renderConfig, template })
 
-        const rendered = await renderer.render(
-          absolutePath,
-          renderConfig,
-          template.source !== originalSource ? { source: template.source } : undefined,
-        )
+        const rendered = await renderer.render(absolutePath, renderConfig, {
+          source: template.source !== originalSource ? template.source : undefined,
+          preview: true,
+        })
 
         for (const { name, handler } of rendered.sfcEventHandlers) {
           events.on(name, handler)

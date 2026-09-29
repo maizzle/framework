@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import type { ViteDevServer } from 'vite'
 import { serve } from '../serve.ts'
+import { render } from '../render/index.ts'
 import { getActiveRenderer } from '../render/active.ts'
 import * as rendererMod from '../render/createRenderer.ts'
 import type { Renderer } from '../render/createRenderer.ts'
@@ -256,6 +257,24 @@ describe('serve dev server', () => {
     expect(html).toContain('AfterRender')
     expect(html).not.toContain('Original')
     expect(html).toContain('<!-- transformed -->')
+  }, 30000)
+
+  it('renders previewProps in the dev server but not in render()', async () => {
+    mkdirSync(join(tempDir, 'emails'), { recursive: true })
+    writeFileSync(join(tempDir, 'emails/welcome.vue'), `
+      <script>export const previewProps = { name: 'Ava' }</script>
+      <script setup>defineProps({ name: String })</script>
+      <template><div>Hi {{ name }}</div></template>
+    `)
+
+    server = await serve({ port: 3157, silent: true })
+
+    const res = await fetch(`${baseUrl()}/__maizzle/render/emails/welcome`)
+    expect(await res.text()).toContain('Hi Ava')
+
+    // render() reuses the dev server's renderer here (setActiveRenderer).
+    const { html } = await render('emails/welcome.vue')
+    expect(html).not.toContain('Ava')
   }, 30000)
 
   it('serves the project public/ directory so template image paths resolve', async () => {

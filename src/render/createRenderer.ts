@@ -51,7 +51,7 @@ export interface RenderedTemplate {
 }
 
 export interface Renderer {
-  render(input: string | Component, config: MaizzleConfig, opts?: { source?: string; props?: Record<string, any> }): Promise<RenderedTemplate>
+  render(input: string | Component, config: MaizzleConfig, opts?: { source?: string; props?: Record<string, any>; preview?: boolean }): Promise<RenderedTemplate>
   invalidate(filePath: string): Promise<void>
   invalidateAll(): Promise<void>
   close(): Promise<void>
@@ -521,8 +521,9 @@ export async function createRenderer(
   }
 
   return {
-    async render(input: string | Component, config: MaizzleConfig, opts?: { source?: string; props?: Record<string, any> }): Promise<RenderedTemplate> {
+    async render(input: string | Component, config: MaizzleConfig, opts?: { source?: string; props?: Record<string, any>; preview?: boolean }): Promise<RenderedTemplate> {
       let component: Component
+      let props = opts?.props
       let configKey: InjectionKey<MaizzleConfig>
       let contextKey: InjectionKey<RenderContext>
 
@@ -563,7 +564,15 @@ export async function createRenderer(
             if (mod) server.moduleGraph.invalidateModule(mod)
           }
           try {
-            component = (await server.ssrLoadModule(input)).default
+            const mod = await server.ssrLoadModule(input)
+            component = mod.default
+            /**
+             * Sample data exported from the template's plain `<script>` block
+             * as `previewProps`. Opt-in per call, never per renderer: the dev
+             * server shares this renderer with user-land render() calls (see
+             * setActiveRenderer), and those must never pick up sample data.
+             */
+            if (opts?.preview) props ??= mod.previewProps
           } finally {
             if (hasOverride) {
               sourceOverrides.delete(input)
@@ -586,7 +595,7 @@ export async function createRenderer(
       }
 
       const head = createHead({ disableDefaults: true })
-      const app = createSSRApp(component, opts?.props)
+      const app = createSSRApp(component, props)
       app.use(head)
 
       // Register user Vue plugins, directives, and global properties

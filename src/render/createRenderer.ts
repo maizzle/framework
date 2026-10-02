@@ -6,6 +6,7 @@ import { rowSourceLocation } from './plugins/rowSourceLocation.ts'
 import { rawExtract } from './plugins/rawExtract.ts'
 import { codeBlockExtract } from './plugins/codeBlockExtract.ts'
 import { markdownExtract } from './plugins/markdownExtract.ts'
+import { previewProps } from './plugins/previewProps.ts'
 import { createServer, mergeConfig, normalizePath, type InlineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Markdown from 'unplugin-vue-markdown/vite'
@@ -434,6 +435,7 @@ export async function createRenderer(
         resolvers: prefixedSources.length > 0 ? [prefixedResolver] : undefined,
         dts: dts ? resolve(dtsDir, 'components.d.ts') : false,
       }),
+      previewProps(resolve(__dirname, './withPreviewProps')),
       ...(prefixedSourceWatcher ? [prefixedSourceWatcher] : []),
     ],
     resolve: {

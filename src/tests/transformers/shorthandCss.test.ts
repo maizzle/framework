@@ -52,6 +52,15 @@ describe('shorthandCss', () => {
       shorthandCss(html)
       expect(mergeLonghandCalls.count).toBe(2)
     })
+
+    it('does not reuse cached style values across calls', () => {
+      const html = '<p style="padding-top: 4px; padding-right: 8px; padding-bottom: 4px; padding-left: 8px">A</p>'
+
+      mergeLonghandCalls.count = 0
+      shorthandCss(html)
+      shorthandCss(html)
+      expect(mergeLonghandCalls.count).toBe(2)
+    })
   })
 
   describe('margin shorthand', () => {

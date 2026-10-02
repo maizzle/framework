@@ -1,5 +1,21 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { shorthandCss, type ShorthandCssOptions } from '../../transformers/shorthandCss.ts'
+
+/**
+ * Count postcss runs: the transformer builds a fresh postcss
+ * processor per style value it merges, which calls this
+ * plugin creator once.
+ */
+const mergeLonghandCalls = vi.hoisted(() => ({ count: 0 }))
+
+vi.mock('postcss-merge-longhand', async (importOriginal) => {
+  const { default: plugin } = await importOriginal<typeof import('postcss-merge-longhand')>()
+  const counted = Object.assign((...args: Parameters<typeof plugin>) => {
+    mergeLonghandCalls.count++
+    return plugin(...args)
+  }, { postcss: true as const })
+  return { default: counted }
+})
 
 function run(html: string, options?: ShorthandCssOptions | boolean): string {
   if (options === false) return html
@@ -17,6 +33,33 @@ describe('shorthandCss', () => {
       expect(result).not.toContain('margin-bottom:')
       expect(result).not.toContain('margin-left:')
       expect(result).not.toContain('margin-right:')
+    })
+
+    it('merges repeated identical style values on every element', () => {
+      const style = 'padding-top: 4px; padding-right: 8px; padding-bottom: 4px; padding-left: 8px'
+      const html = `<p style="${style}">A</p><td style="${style}">B</td><!--[if mso]><td style="${style}"><![endif]-->`
+      const result = shorthandCss(html)
+      expect(result.match(/padding: 4px 8px/g)).toHaveLength(3)
+      expect(result).not.toContain('padding-top:')
+    })
+
+    it('runs postcss once per distinct style value', () => {
+      const a = 'padding-top: 4px; padding-right: 8px; padding-bottom: 4px; padding-left: 8px'
+      const b = 'margin-top: 2px; margin-right: 2px; margin-bottom: 2px; margin-left: 2px'
+      const html = `<p style="${a}">A</p><td style="${a}">B</td><div style="${b}">C</div><!--[if mso]><td style="${a}"><![endif]-->`
+
+      mergeLonghandCalls.count = 0
+      shorthandCss(html)
+      expect(mergeLonghandCalls.count).toBe(2)
+    })
+
+    it('does not reuse cached style values across calls', () => {
+      const html = '<p style="padding-top: 4px; padding-right: 8px; padding-bottom: 4px; padding-left: 8px">A</p>'
+
+      mergeLonghandCalls.count = 0
+      shorthandCss(html)
+      shorthandCss(html)
+      expect(mergeLonghandCalls.count).toBe(2)
     })
   })
 

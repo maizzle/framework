@@ -119,6 +119,37 @@ describe('createRenderer', () => {
   })
 
   it.each([
+    ['a local', `const prefix = 'Dr.'\ndefinePreviewProps({ name: prefix + sample.name })`, 'cannot use `prefix`'],
+    ['two calls', `definePreviewProps({ name: 'A' })\ndefinePreviewProps({ name: sample.name })`, 'can only be called once'],
+  ])('does not load definePreviewProps() imports when the macro uses %s', async (_, macro, message) => {
+    writeSfc(tempDir, 'fixtures.ts', `
+      throw new Error('fixtures loaded')
+      export const sample = { name: 'Ava' }
+    `)
+    writeSfc(tempDir, 'emails/invalid.vue', `
+      <script setup lang="ts">
+      import { sample } from '../fixtures'
+      defineProps({ name: String })
+      ${macro}
+      </script>
+      <template><div>Hi {{ $props.name }}</div></template>
+    `)
+
+    const renderer = await createRenderer({ root: tempDir })
+    const config = await resolveConfig({ root: tempDir })
+    const file = join(tempDir, 'emails/invalid.vue')
+    try {
+      const { html } = await renderer.render(file, config, { props: { name: 'Real' } })
+      expect(html).toContain('Hi Real')
+
+      await expect(renderer.render(file, { ...config, [PreviewPropsKey]: true }))
+        .rejects.toThrow(message)
+    } finally {
+      await renderer.close()
+    }
+  })
+
+  it.each([
     ['TS', ' lang="ts"'],
     ['JS', ''],
   ])('keeps definePreviewProps() imports the template also uses (%s)', async (_, lang) => {

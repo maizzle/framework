@@ -61,18 +61,18 @@ function referencedNames(root: any): string[] {
 }
 
 /**
- * Imports read only by the macro argument, plus the `__returned__` getters
+ * Imports read only by the macro arguments, plus the `__returned__` getters
  * Vue adds for them in non-TS templates. Every other identifier counts
  * as a use (even property names like `$setup.x`), so when in doubt
  * an import stays where it is.
  */
-function previewOnlyImports(ast: any, arg: any): { imports: any[]; getters: any[] } {
+function previewOnlyImports(ast: any, args: any[]): { imports: any[]; getters: any[] } {
   const imports = ast.body.filter((n: any) => n.type === 'ImportDeclaration' && n.specifiers.length && !n.attributes?.length)
   const names = new Set<string>(imports.flatMap((n: any) => n.specifiers.map((s: any) => s.local.name)))
 
   let getters: any[] = []
   const used = new Set<string>()
-  const skip = new Set([arg, ...imports])
+  const skip = new Set([...args, ...imports])
 
   const visit = (node: any, parent?: any, key?: string): void => {
     if (!node || typeof node.type !== 'string' || skip.has(node)) return
@@ -91,7 +91,7 @@ function previewOnlyImports(ast: any, arg: any): { imports: any[]; getters: any[
   }
   visit(ast)
 
-  const inArg = new Set(referencedNames(arg))
+  const inArg = new Set(args.flatMap(referencedNames))
   const moved = imports.filter((n: any) =>
     n.specifiers.every((s: any) => !used.has(s.local.name))
     && n.specifiers.some((s: any) => inArg.has(s.local.name)),
@@ -189,9 +189,10 @@ export function previewProps(runtimePath: string): Plugin {
       /**
        * Mistakes throw from the factory instead of failing the compile:
        * it only runs in the dev server, so preview data can never
-       * break `build` or a production `render()`.
+       * break `build` or a production `render()`. Macro-only imports
+       * are removed either way, and only loaded by a valid factory.
        */
-      const moved = !error && arg ? previewOnlyImports(ast, arg) : { imports: [], getters: [] }
+      const moved = previewOnlyImports(ast, calls.flatMap(({ node }) => node.expression.arguments))
 
       let factory = '() => ({})'
       if (error) {

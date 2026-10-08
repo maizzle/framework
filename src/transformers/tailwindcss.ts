@@ -183,11 +183,13 @@ export function rewriteImportsSourceNone(css: string): string {
  * transformers (inliner, purge, etc.) work with fully compiled CSS.
  */
 export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, filePath?: string, sourceFiles?: string[]): Promise<ChildNode[]> {
-  const styleTags: { node: Element; cssContent: string }[] = []
+  const styleTags: { node: Element; cssContent: string; position: number }[] = []
+  let styleCount = 0
 
   walk(dom, (node) => {
     if ((node as Element).name !== 'style') return
 
+    styleCount++
     const el = node as Element
     const attrs = el.attribs
 
@@ -210,7 +212,7 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
 
     if (!rawContent.trim()) return
 
-    styleTags.push({ node: el, cssContent: decodeStyleEntities(rawContent) })
+    styleTags.push({ node: el, cssContent: decodeStyleEntities(rawContent), position: styleCount })
   })
 
   if (!styleTags.length) return dom
@@ -236,7 +238,7 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
   const firstTailwindStyle = styleTags.findIndex(({ cssContent }) => usesTailwind(cssContent))
 
   for (let i = 0; i < styleTags.length; i++) {
-    const { node, cssContent } = styleTags[i]
+    const { node, cssContent, position } = styleTags[i]
 
     /**
      * Only add source directives to style tags that import Tailwind —
@@ -260,7 +262,7 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
         parent: node,
       } as any]
     } catch (error) {
-      console.warn(`[maizzle] Failed to compile <style> #${i + 1} in ${filePath ?? 'a string template'}, it was left uncompiled: ${(error as Error)?.message ?? error}`)
+      console.warn(`[maizzle] Failed to compile <style> #${position} in ${filePath ?? 'a string template'}, it was left uncompiled: ${(error as Error)?.message ?? error}`)
 
       /**
        * If CSS processing fails, still replace with decoded content

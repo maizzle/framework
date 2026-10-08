@@ -230,12 +230,14 @@ describe('tailwindcss', () => {
       console.error = () => {}
 
       try {
-        const result = await run('<style>.ok { color: red }</style><style>@import "./nonexistent.css";</style>', '/path/to/emails/welcome.vue')
+        // Raw and empty tags aren't compiled but still count towards the position
+        const html = '<style raw>.r { color: red }</style><style></style><style>.ok { color: red }</style><style>@import "./nonexistent.css";</style>'
+        const result = await run(html, '/path/to/emails/welcome.vue')
 
         expect(result).toContain('@import "./nonexistent.css"')
         expect(warnings).toHaveLength(1)
         expect(warnings[0]).toContain('[maizzle]')
-        expect(warnings[0]).toContain('<style> #2 in /path/to/emails/welcome.vue')
+        expect(warnings[0]).toContain('<style> #4 in /path/to/emails/welcome.vue')
         expect(warnings[0]).toContain('nonexistent.css')
       } finally {
         console.warn = warn

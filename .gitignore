@@ -3,6 +3,7 @@ dist
 *.tgz
 coverage
 .vite
+.vitest
 .vscode
 .idea
 Thumbs.db

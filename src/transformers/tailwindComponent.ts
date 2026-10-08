@@ -71,7 +71,7 @@ export async function tailwindComponent(
     }
   })
 
-  const fromPath = filePath ?? resolve(process.cwd(), 'template.vue')
+  const fromPath = filePath ?? resolve(config.root ?? process.cwd(), 'template.vue')
 
   let head: Element | undefined
   walk(dom, (n) => {

@@ -1,4 +1,6 @@
 import path from 'node:path'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { describe, it, expect } from 'vitest'
 import { tailwindComponent } from '../../transformers/tailwindComponent.ts'
 import { parse, serialize } from '../../utils/ast/index.ts'
@@ -34,6 +36,25 @@ describe('tailwindComponent', () => {
     const dom = parse('<head></head><!--mz-tw:a--><!--/mz-tw:b-->')
     const out = serialize(await tailwindComponent(dom, [{ id: 'a', css: '' }, { id: 'b', css: '' }], {}))
     expect(out).not.toContain('mz-tw:')
+  })
+
+  it('resolves imports from config.root when no filePath is given', async () => {
+    const originalCwd = process.cwd()
+    const cwd = mkdtempSync(path.join(tmpdir(), 'maizzle-cwd-'))
+    const root = mkdtempSync(path.join(tmpdir(), 'maizzle-root-'))
+    writeFileSync(path.join(root, 'brand.css'), '.brand { color: #123456 }')
+    process.chdir(cwd)
+
+    try {
+      const dom = parse('<head></head><!--mz-tw:b1--><div class="brand"></div><!--/mz-tw:b1-->')
+      const out = serialize(await tailwindComponent(dom, [{ id: 'b1', css: '@import "./brand.css";' }], { root }))
+
+      expect(out).toContain('color: #123456')
+    } finally {
+      process.chdir(originalCwd)
+      rmSync(cwd, { recursive: true, force: true })
+      rmSync(root, { recursive: true, force: true })
+    }
   })
 
   describe('css.scopedSources', () => {

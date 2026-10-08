@@ -24,10 +24,15 @@ export function resolveMaizzleImports(userRoot: string = process.cwd()): Plugin 
     return undefined
   }
 
+  /**
+   * `Once`, not an `AtRule` visitor: PostCSS runs every plugin's `Once`
+   * before any visitor, and @tailwindcss/postcss resolves imports
+   * in its own `Once`, so a visitor would always be too late.
+   */
   return {
     postcssPlugin: 'maizzle:resolve-tw-imports',
-    AtRule: {
-      import(rule) {
+    Once(root) {
+      root.walkAtRules('import', (rule) => {
         const m = rule.params.match(/^\s*["']([^"']+)["']/)
         if (!m) return
         const spec = m[1]
@@ -35,7 +40,7 @@ export function resolveMaizzleImports(userRoot: string = process.cwd()): Plugin 
 
         const abs = resolve(spec)
         if (abs) rule.params = rule.params.replace(m[0], `"${abs}"`)
-      },
+      })
     },
   }
 }

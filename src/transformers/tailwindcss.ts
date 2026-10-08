@@ -259,7 +259,9 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
         data: optimized,
         parent: node,
       } as any]
-    } catch {
+    } catch (error) {
+      console.warn(`[maizzle] Failed to compile <style> #${i + 1} in ${filePath ?? 'a string template'}, it was left uncompiled: ${(error as Error)?.message ?? error}`)
+
       /**
        * If CSS processing fails, still replace with decoded content
        * so HTML entities don't break the CSS.

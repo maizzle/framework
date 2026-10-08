@@ -222,6 +222,26 @@ describe('tailwindcss', () => {
       expect(result).toContain('@import "./nonexistent.css"')
       expect(result).not.toContain('&quot;')
     })
+
+    it('warns when a style tag fails to compile', async () => {
+      const { warn, error } = console
+      const warnings: string[] = []
+      console.warn = (message: string) => warnings.push(message)
+      console.error = () => {}
+
+      try {
+        const result = await run('<style>.ok { color: red }</style><style>@import "./nonexistent.css";</style>', '/path/to/emails/welcome.vue')
+
+        expect(result).toContain('@import "./nonexistent.css"')
+        expect(warnings).toHaveLength(1)
+        expect(warnings[0]).toContain('[maizzle]')
+        expect(warnings[0]).toContain('<style> #2 in /path/to/emails/welcome.vue')
+        expect(warnings[0]).toContain('nonexistent.css')
+      } finally {
+        console.warn = warn
+        console.error = error
+      }
+    })
   })
 
   describe('short-circuit', () => {

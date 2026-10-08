@@ -14,6 +14,7 @@ import { resolveConfig } from './config/index.ts'
 import { runTransformers } from './transformers/index.ts'
 import { EventManager } from './events/index.ts'
 import { cloneConfig } from './utils/cloneConfig.ts'
+import { PreviewPropsKey } from './render/withPreviewProps.ts'
 import { createRenderer, type Renderer, type RenderedTemplate } from './render/createRenderer.ts'
 import { _setCurrentTemplate } from './composables/useCurrentTemplate.ts'
 import { setActiveRenderer } from './render/active.ts'
@@ -534,9 +535,11 @@ function getRendered(absolutePath: string, config: MaizzleConfig, renderer: Rend
          * Mirror the build's per-template event pipeline (see buildTemplate)
          * so dev preview fires the same beforeRender / afterRender /
          * afterTransform hooks and matches production output. Clone config so
-         * beforeRender mutations stay scoped to this render.
+         * beforeRender mutations stay scoped to this render. The one deliberate
+         * difference: flag it so `definePreviewProps()` sample data applies.
          */
         const renderConfig = cloneConfig(config)
+        Object.assign(renderConfig, { [PreviewPropsKey]: true })
         const template = { source: readFileSync(absolutePath, 'utf-8'), path: parsePath(absolutePath) }
         const originalSource = template.source
 

@@ -38,6 +38,7 @@ export { usePreheader } from './composables/usePreheader.ts'
 export { useTransformers } from './composables/useTransformers.ts'
 export { useBaseUrl } from './composables/useBaseUrl.ts'
 export { useUrlQuery } from './composables/useUrlQuery.ts'
+export { definePreviewProps } from './composables/definePreviewProps.ts'
 export { useHead } from '@unhead/vue'
 
 // Utilities

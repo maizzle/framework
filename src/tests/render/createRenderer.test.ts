@@ -4,7 +4,8 @@ import { join } from 'node:path'
 import { render } from '../../render/index.ts'
 import { createRenderer } from '../../render/createRenderer.ts'
 import { resolveConfig } from '../../config/index.ts'
-import { createTempProject } from './_helpers.ts'
+import { PreviewPropsKey } from '../../render/withPreviewProps.ts'
+import { createTempProject, writeSfc } from './_helpers.ts'
 
 describe('createRenderer', () => {
   let tempDir: string
@@ -18,6 +19,183 @@ describe('createRenderer', () => {
   afterEach(() => {
     process.chdir(originalCwd)
     rmSync(tempDir, { recursive: true, force: true })
+  })
+
+  it('merges definePreviewProps() under real props only when the config is flagged', async () => {
+    writeSfc(tempDir, 'helpers.ts', `export const upper = (s: string) => s.toUpperCase()`)
+    writeSfc(tempDir, 'emails/welcome.vue', `
+      <script setup lang="ts">
+      import { upper } from '../helpers'
+      interface Props { name: string; plan: string }
+      const props = defineProps<Props>()
+      definePreviewProps<Props>({ name: upper('ava'), plan: 'Pro' })
+      const greeting = computed(() => 'Hi ' + props.name)
+      </script>
+      <template><div>{{ greeting }} on {{ plan }}</div></template>
+    `)
+
+    const renderer = await createRenderer({ root: tempDir })
+    const config = await resolveConfig({ root: tempDir })
+    const file = join(tempDir, 'emails/welcome.vue')
+    try {
+      const preview = await renderer.render(file, { ...config, [PreviewPropsKey]: true })
+      expect(preview.html).toContain('Hi AVA on Pro')
+
+      const merged = await renderer.render(file, { ...config, [PreviewPropsKey]: true }, { props: { name: 'Real' } })
+      expect(merged.html).toContain('Hi Real on Pro')
+
+      const plain = await renderer.render(file, config, { props: { name: 'Real', plan: 'Free' } })
+      expect(plain.html).toContain('Hi Real on Free')
+    } finally {
+      await renderer.close()
+    }
+  })
+
+  it.each([
+    ['a computed local', `const prefix = upper('dr.')`, `definePreviewProps({ name: prefix })`, 'cannot use `prefix` declared in this template'],
+    ['a literal local', `const prefix = 'Dr.'`, 'definePreviewProps({ name: `${prefix} Jane` })', 'cannot use `prefix` declared in this template'],
+    ['a shorthand property', `const name = 'Jane'`, `definePreviewProps({ name })`, 'cannot use `name` declared in this template'],
+    ['a whole local object', `const user = { name: 'Jane' }`, `definePreviewProps(user)`, 'cannot use `user` declared in this template'],
+    ['two calls', '', `definePreviewProps({ name: 'A' })\ndefinePreviewProps({ name: 'B' })`, 'can only be called once per template'],
+  ])('throws for definePreviewProps() with %s only in dev server renders', async (_, local, macro, message) => {
+    writeSfc(tempDir, 'helpers.ts', `export const upper = (s: string) => s.toUpperCase()`)
+    writeSfc(tempDir, 'emails/local.vue', `
+      <script setup lang="ts">
+      import { upper } from '../helpers'
+      ${local}
+      defineProps<{ name: string }>()
+      ${macro}
+      </script>
+      <template><div>Hi {{ $props.name }}</div></template>
+    `)
+
+    const renderer = await createRenderer({ root: tempDir })
+    const config = await resolveConfig({ root: tempDir })
+    const file = join(tempDir, 'emails/local.vue')
+    try {
+      const { html } = await renderer.render(file, config, { props: { name: 'Real' } })
+      expect(html).toContain('Hi Real')
+
+      await expect(renderer.render(file, { ...config, [PreviewPropsKey]: true }))
+        .rejects.toThrow(`definePreviewProps() ${message}`)
+    } finally {
+      await renderer.close()
+    }
+  })
+
+  it.each([
+    ['TS', ' lang="ts"'],
+    ['JS', ''],
+  ])('only loads definePreviewProps() imports in dev server renders (%s)', async (_, lang) => {
+    writeSfc(tempDir, 'fixtures.ts', `
+      if (!globalThis.__maizzlePreview) throw new Error('fixtures loaded')
+      export const sample = { name: 'Ava' }
+      export default { plan: 'Pro' }
+    `)
+    writeSfc(tempDir, 'emails/fixtures.vue', `
+      <script setup${lang}>
+      import plans, { sample } from '../fixtures'
+      import * as all from '../fixtures'
+      defineProps({ name: String, plan: String })
+      definePreviewProps({ name: sample.name, plan: plans.plan, more: all.sample })
+      </script>
+      <template><div>Hi {{ $props.name }} on {{ $props.plan }}</div></template>
+    `)
+
+    const renderer = await createRenderer({ root: tempDir })
+    const config = await resolveConfig({ root: tempDir })
+    const file = join(tempDir, 'emails/fixtures.vue')
+    try {
+      const { html } = await renderer.render(file, config, { props: { name: 'Real', plan: 'Free' } })
+      expect(html).toContain('Hi Real on Free')
+
+      ;(globalThis as any).__maizzlePreview = true
+      const preview = await renderer.render(file, { ...config, [PreviewPropsKey]: true })
+      expect(preview.html).toContain('Hi Ava on Pro')
+    } finally {
+      delete (globalThis as any).__maizzlePreview
+      await renderer.close()
+    }
+  })
+
+  it.each([
+    ['a local', `const prefix = 'Dr.'\ndefinePreviewProps({ name: prefix + sample.name })`, 'cannot use `prefix`'],
+    ['two calls', `definePreviewProps({ name: 'A' })\ndefinePreviewProps({ name: sample.name })`, 'can only be called once'],
+  ])('does not load definePreviewProps() imports when the macro uses %s', async (_, macro, message) => {
+    writeSfc(tempDir, 'fixtures.ts', `
+      throw new Error('fixtures loaded')
+      export const sample = { name: 'Ava' }
+    `)
+    writeSfc(tempDir, 'emails/invalid.vue', `
+      <script setup lang="ts">
+      import { sample } from '../fixtures'
+      defineProps({ name: String })
+      ${macro}
+      </script>
+      <template><div>Hi {{ $props.name }}</div></template>
+    `)
+
+    const renderer = await createRenderer({ root: tempDir })
+    const config = await resolveConfig({ root: tempDir })
+    const file = join(tempDir, 'emails/invalid.vue')
+    try {
+      const { html } = await renderer.render(file, config, { props: { name: 'Real' } })
+      expect(html).toContain('Hi Real')
+
+      await expect(renderer.render(file, { ...config, [PreviewPropsKey]: true }))
+        .rejects.toThrow(message)
+    } finally {
+      await renderer.close()
+    }
+  })
+
+  it.each([
+    ['TS', ' lang="ts"'],
+    ['JS', ''],
+  ])('keeps definePreviewProps() imports the template also uses (%s)', async (_, lang) => {
+    writeSfc(tempDir, 'labels.ts', `export const label = 'Plan'`)
+    writeSfc(tempDir, 'emails/shared.vue', `
+      <script setup${lang}>
+      import { label } from '../labels'
+      defineProps({ plan: String })
+      definePreviewProps({ plan: label + ' Pro' })
+      </script>
+      <template><div>{{ label }}: {{ $props.plan }}</div></template>
+    `)
+
+    const renderer = await createRenderer({ root: tempDir })
+    const config = await resolveConfig({ root: tempDir })
+    const file = join(tempDir, 'emails/shared.vue')
+    try {
+      const { html } = await renderer.render(file, config, { props: { plan: 'Free' } })
+      expect(html).toContain('Plan: Free')
+
+      const preview = await renderer.render(file, { ...config, [PreviewPropsKey]: true })
+      expect(preview.html).toContain('Plan: Plan Pro')
+    } finally {
+      await renderer.close()
+    }
+  })
+
+  it('allows definePreviewProps() names that only look like template locals', async () => {
+    writeSfc(tempDir, 'emails/shadow.vue', `
+      <script setup lang="ts">
+      const n = 10
+      const items = ['local']
+      defineProps<{ items: number[] }>()
+      definePreviewProps({ items: [1, 2].map(n => n * 2) })
+      </script>
+      <template><div>{{ $props.items.join(',') }}</div></template>
+    `)
+
+    const renderer = await createRenderer({ root: tempDir })
+    try {
+      const config = await resolveConfig({ root: tempDir })
+      const { html } = await renderer.render(join(tempDir, 'emails/shadow.vue'), { ...config, [PreviewPropsKey]: true })
+      expect(html).toContain('2,4')
+    } finally {
+      await renderer.close()
+    }
   })
 
   it('invalidate is a no-op for an unknown module path', async () => {

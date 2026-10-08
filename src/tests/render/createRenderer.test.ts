@@ -83,6 +83,69 @@ describe('createRenderer', () => {
     }
   })
 
+  it.each([
+    ['TS', ' lang="ts"'],
+    ['JS', ''],
+  ])('only loads definePreviewProps() imports in dev server renders (%s)', async (_, lang) => {
+    writeSfc(tempDir, 'fixtures.ts', `
+      if (!globalThis.__maizzlePreview) throw new Error('fixtures loaded')
+      export const sample = { name: 'Ava' }
+      export default { plan: 'Pro' }
+    `)
+    writeSfc(tempDir, 'emails/fixtures.vue', `
+      <script setup${lang}>
+      import plans, { sample } from '../fixtures'
+      import * as all from '../fixtures'
+      defineProps({ name: String, plan: String })
+      definePreviewProps({ name: sample.name, plan: plans.plan, more: all.sample })
+      </script>
+      <template><div>Hi {{ $props.name }} on {{ $props.plan }}</div></template>
+    `)
+
+    const renderer = await createRenderer({ root: tempDir })
+    const config = await resolveConfig({ root: tempDir })
+    const file = join(tempDir, 'emails/fixtures.vue')
+    try {
+      const { html } = await renderer.render(file, config, { props: { name: 'Real', plan: 'Free' } })
+      expect(html).toContain('Hi Real on Free')
+
+      ;(globalThis as any).__maizzlePreview = true
+      const preview = await renderer.render(file, { ...config, [PreviewPropsKey]: true })
+      expect(preview.html).toContain('Hi Ava on Pro')
+    } finally {
+      delete (globalThis as any).__maizzlePreview
+      await renderer.close()
+    }
+  })
+
+  it.each([
+    ['TS', ' lang="ts"'],
+    ['JS', ''],
+  ])('keeps definePreviewProps() imports the template also uses (%s)', async (_, lang) => {
+    writeSfc(tempDir, 'labels.ts', `export const label = 'Plan'`)
+    writeSfc(tempDir, 'emails/shared.vue', `
+      <script setup${lang}>
+      import { label } from '../labels'
+      defineProps({ plan: String })
+      definePreviewProps({ plan: label + ' Pro' })
+      </script>
+      <template><div>{{ label }}: {{ $props.plan }}</div></template>
+    `)
+
+    const renderer = await createRenderer({ root: tempDir })
+    const config = await resolveConfig({ root: tempDir })
+    const file = join(tempDir, 'emails/shared.vue')
+    try {
+      const { html } = await renderer.render(file, config, { props: { plan: 'Free' } })
+      expect(html).toContain('Plan: Free')
+
+      const preview = await renderer.render(file, { ...config, [PreviewPropsKey]: true })
+      expect(preview.html).toContain('Plan: Plan Pro')
+    } finally {
+      await renderer.close()
+    }
+  })
+
   it('allows definePreviewProps() names that only look like template locals', async () => {
     writeSfc(tempDir, 'emails/shadow.vue', `
       <script setup lang="ts">

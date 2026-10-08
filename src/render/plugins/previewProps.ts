@@ -61,6 +61,67 @@ function referencedNames(root: any): string[] {
 }
 
 /**
+ * Imports read only by the macro argument, plus the `__returned__` getters
+ * Vue adds for them in non-TS templates. Every other identifier counts
+ * as a use (even property names like `$setup.x`), so when in doubt
+ * an import stays where it is.
+ */
+function previewOnlyImports(ast: any, arg: any): { imports: any[]; getters: any[] } {
+  const imports = ast.body.filter((n: any) => n.type === 'ImportDeclaration' && n.specifiers.length && !n.attributes?.length)
+  const names = new Set<string>(imports.flatMap((n: any) => n.specifiers.map((s: any) => s.local.name)))
+
+  let getters: any[] = []
+  const used = new Set<string>()
+  const skip = new Set([arg, ...imports])
+
+  const visit = (node: any, parent?: any, key?: string): void => {
+    if (!node || typeof node.type !== 'string' || skip.has(node)) return
+    if (node.type === 'VariableDeclarator' && node.id.name === '__returned__' && node.init?.type === 'ObjectExpression') {
+      getters = node.init.properties.filter((p: any) => p.kind === 'get' && names.has(p.key?.name))
+      getters.forEach(p => skip.add(p))
+    }
+    if (node.type === 'Identifier') {
+      if (!(parent?.type === 'Property' && key === 'key' && !parent.computed)) used.add(node.name)
+      return
+    }
+    for (const [k, value] of Object.entries(node)) {
+      if (Array.isArray(value)) value.forEach(child => visit(child, node, k))
+      else if (value && typeof value === 'object') visit(value, node, k)
+    }
+  }
+  visit(ast)
+
+  const inArg = new Set(referencedNames(arg))
+  const moved = imports.filter((n: any) =>
+    n.specifiers.every((s: any) => !used.has(s.local.name))
+    && n.specifiers.some((s: any) => inArg.has(s.local.name)),
+  )
+  const movedNames = new Set(moved.flatMap((n: any) => n.specifiers.map((s: any) => s.local.name)))
+
+  return { imports: moved, getters: getters.filter(p => movedNames.has(p.key.name)) }
+}
+
+/**
+ * `import a, { b as c } from 'x'` -> `const { default: a, b: c } = await import('x')`
+ */
+function dynamicImport(node: any): string {
+  const source = JSON.stringify(node.source.value)
+  const namespace = node.specifiers.find((s: any) => s.type === 'ImportNamespaceSpecifier')
+  const named = node.specifiers
+    .filter((s: any) => s.type !== 'ImportNamespaceSpecifier')
+    .map((s: any) => {
+      if (s.type === 'ImportDefaultSpecifier') return `default: ${s.local.name}`
+      const imported = s.imported.type === 'Identifier' ? s.imported.name : JSON.stringify(s.imported.value)
+      return `${imported}: ${s.local.name}`
+    })
+
+  return [
+    namespace && `const ${namespace.local.name} = await import(${source})`,
+    named.length && `const { ${named.join(', ')} } = await import(${source})`,
+  ].filter(Boolean).join('; ')
+}
+
+/**
  * Vite plugin that compiles the `definePreviewProps()` macro.
  *
  * Runs after plugin-vue (and TS stripping), so it sees plain JS. Blanks
@@ -130,18 +191,34 @@ export function previewProps(runtimePath: string): Plugin {
        * it only runs in the dev server, so preview data can never
        * break `build` or a production `render()`.
        */
-      const factory = error
-        ? `() => { throw new Error(${JSON.stringify(`[maizzle] ${error}`)}) }`
-        : arg ? `() => (${code.slice(arg.start, arg.end)})` : '() => ({})'
+      const moved = !error && arg ? previewOnlyImports(ast, arg) : { imports: [], getters: [] }
 
-      // Blank the calls in place (keeping newlines) so line numbers don't shift.
+      let factory = '() => ({})'
+      if (error) {
+        factory = `() => { throw new Error(${JSON.stringify(`[maizzle] ${error}`)}) }`
+      } else if (moved.imports.length) {
+        factory = `async () => { ${moved.imports.map(dynamicImport).join('; ')}; return (${code.slice(arg.start, arg.end)}) }`
+      } else if (arg) {
+        factory = `() => (${code.slice(arg.start, arg.end)})`
+      }
+
+      /**
+       * Blank the calls, moved imports and their getters in place (keeping
+       * newlines) so line numbers don't shift. A getter takes its comma
+       * along, so the `__returned__` object stays valid.
+       */
       const blank = (s: string) => s.replace(/[^\n]/g, ' ')
+      const ranges = [
+        ...calls.map(({ node }) => [node.start, node.end]),
+        ...moved.imports.map(node => [node.start, node.end]),
+        ...moved.getters.map(node => [node.start, node.end + (/^\s*,/.exec(code.slice(node.end))?.[0].length ?? 0)]),
+      ].sort((a, b) => a[0] - b[0])
 
       let out = ''
       let cursor = 0
-      for (const { node } of calls) {
-        out += code.slice(cursor, node.start) + blank(code.slice(node.start, node.end))
-        cursor = node.end
+      for (const [start, end] of ranges) {
+        out += code.slice(cursor, start) + blank(code.slice(start, end))
+        cursor = end
       }
 
       out += code.slice(cursor, exportDefault.start)

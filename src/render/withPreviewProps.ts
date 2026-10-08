@@ -13,15 +13,29 @@ export const PreviewPropsKey = Symbol.for('maizzle.previewProps')
  * through untouched, and only in dev server renders merges the sample
  * props underneath them. The factory is never called otherwise.
  */
-export function withPreviewProps(component: Component, previewProps: () => Record<string, any>): Component {
+export function withPreviewProps(
+  component: Component,
+  previewProps: () => Record<string, any> | Promise<Record<string, any>>,
+): Component {
   return defineComponent({
     name: (component as { __name?: string }).__name,
     inheritAttrs: false,
     setup(_, { attrs, slots }) {
       const config = inject(MaizzleConfigKey) as Record<symbol, unknown> | undefined
-      const props = config?.[PreviewPropsKey] ? { ...previewProps(), ...attrs } : attrs
+      if (!config?.[PreviewPropsKey]) return () => h(component, attrs, slots)
 
-      return () => h(component, props, slots)
+      const withPreview = (preview: Record<string, any>) => {
+        const props = { ...preview, ...attrs }
+        return () => h(component, props, slots)
+      }
+
+      /**
+       * The factory is async when the sample data comes from imports,
+       * which it loads itself. Vue's SSR renderer awaits an async
+       * setup(), so those modules only load in the dev server.
+       */
+      const preview = previewProps()
+      return preview instanceof Promise ? preview.then(withPreview) : withPreview(preview)
     },
   })
 }

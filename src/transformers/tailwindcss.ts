@@ -215,7 +215,7 @@ export async function tailwindcss(dom: ChildNode[], config: MaizzleConfig, fileP
 
   if (!styleTags.length) return dom
 
-  const fromPath = filePath ?? resolve(process.cwd(), 'template.vue')
+  const fromPath = filePath ?? resolve(config.root ?? process.cwd(), 'template.vue')
   const fromDir = dirname(fromPath)
 
   // Only compute source directives if at least one style tag uses Tailwind

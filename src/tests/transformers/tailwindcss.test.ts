@@ -1,6 +1,8 @@
 import path from 'node:path'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { tailwindcss, rewriteImportsSourceNone } from '../../transformers/tailwindcss.ts'
 import { parse, serialize } from '../../utils/ast/index.ts'
 import type { MaizzleConfig } from '../../types/config.ts'
@@ -303,6 +305,40 @@ describe('tailwindcss', () => {
 
       expect(result).toContain('.foo')
       expect(result).toContain('color: red')
+    })
+  })
+
+  describe('without a filePath', () => {
+    const originalCwd = process.cwd()
+    let cwd: string
+    let root: string
+
+    beforeEach(() => {
+      cwd = mkdtempSync(path.join(tmpdir(), 'maizzle-cwd-'))
+      root = mkdtempSync(path.join(tmpdir(), 'maizzle-root-'))
+      writeFileSync(path.join(root, 'brand.css'), '.brand { color: #123456 }')
+      process.chdir(cwd)
+    })
+
+    afterEach(() => {
+      process.chdir(originalCwd)
+      rmSync(cwd, { recursive: true, force: true })
+      rmSync(root, { recursive: true, force: true })
+    })
+
+    it('resolves relative imports from config.root', async () => {
+      const html = '<style>@import "./brand.css";</style><div class="brand"></div>'
+      const result = serialize(await tailwindcss(parse(html), { root }))
+
+      expect(result).toContain('color: #123456')
+    })
+
+    it('resolves @maizzle/tailwindcss when neither cwd nor root can', async () => {
+      const html = '<style>@import "@maizzle/tailwindcss";</style><div class="text-red-500"></div>'
+      const result = serialize(await tailwindcss(parse(html), { root }))
+
+      expect(result).toContain('.text-red-500')
+      expect(result).not.toContain('@import')
     })
   })
 

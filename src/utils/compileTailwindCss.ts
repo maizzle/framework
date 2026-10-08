@@ -15,7 +15,7 @@ import type { MaizzleConfig } from '../types/config.ts'
 export function createTailwindProcessor(config: MaizzleConfig, gradientCombos: GradientCombo[] = []) {
   return postcss([
     // Must run before @tailwindcss/postcss so it sees absolute import paths
-    resolveMaizzleImports(),
+    resolveMaizzleImports(config.root),
     tailwindcssPostcss({
       base: config.css?.base,
       transformAssetUrls: false,

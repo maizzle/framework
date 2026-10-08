@@ -65,6 +65,14 @@ describe('resolveMaizzleImports', () => {
     expect(lines[2]).toBe('@import "tailwindcss";')
   })
 
+  it('rewrites before other plugins\' Once hooks run', async () => {
+    let seen = ''
+    const probe = { postcssPlugin: 'probe', Once(root: postcss.Root) { root.walkAtRules('import', rule => { seen = rule.params }) } }
+    await postcss([resolveMaizzleImports(), probe]).process('@import "@maizzle/tailwindcss";', { from: undefined })
+
+    expect(seen).toMatch(/^"\/.+@maizzle\/tailwindcss\/index\.css"$/)
+  })
+
   it('leaves the rule untouched when neither user nor framework can resolve', async () => {
     // Spec doesn't exist anywhere; plugin should silently no-op
     const css = '@import "@maizzle/tailwindcss/does-not-exist-xyz";'

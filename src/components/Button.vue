@@ -152,6 +152,15 @@ const baseClasses = computed(() => {
     classes.push('bg-indigo-700', 'text-white')
   }
 
+  /**
+   * Outlook sizes buttons with the MSO spacers below, but applies
+   * CSS padding as well when the button has borders, making it
+   * render larger than an identical button without borders.
+   */
+  if (outlookFallback) {
+    classes.push('mso-padding-alt-0')
+  }
+
   return classes.join(' ')
 })
 

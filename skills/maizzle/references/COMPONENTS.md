@@ -349,6 +349,8 @@ Affected attrs: `href`/`src`/`srcset`/`poster`/`data` on `a`/`img`/`video`/`sour
 
 Props: `base` (prepended to relative paths; slashes normalized), `parameters` (query string appended, e.g. `"utm_source=foo&bar=baz"`).
 
+`base` skips values starting with `{{`, `{%` or `<%`, and any descendant element or component with a `no-base-url` attribute. `parameters` still apply to those.
+
 ```vue
 <WithUrl base="https://cdn.example.com/emails/">
   <Img src="/logo.png" alt="Logo" width="70" />

@@ -76,7 +76,6 @@ const devicePresets: DevicePreset[] = [
   { name: 'iPhone 18 Pro', width: 402, height: 874 },
   { name: 'iPhone 18 Pro Max', width: 440, height: 956 },
   { name: 'iPad Pro 11"', width: 834, height: 1210 },
-  { name: 'iPad Pro 13"', width: 1032, height: 1376 },
   { name: 'Pixel 11 Pro', width: 410, height: 912 },
   { name: 'Galaxy A57', width: 412, height: 892 },
 ]

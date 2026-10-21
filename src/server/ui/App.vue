@@ -93,6 +93,13 @@ const isDragging = ref(false)
 const isFullSize = ref(true)
 const resetKey = ref(0)
 
+function resetPreviewSize() {
+  selectedDevice.value = null
+  isFullSize.value = true
+  viewMode.value = 'preview'
+  resetKey.value++
+}
+
 function selectDevice(device: DevicePreset) {
   selectedDevice.value = device
   viewMode.value = 'preview'
@@ -284,7 +291,32 @@ function openExternal(url: string) {
   window.open(url, '_blank', 'noopener')
 }
 
+let lastEscapeAt = 0
+
 function onKeydown(e: KeyboardEvent) {
+  /**
+   * Double-tap Escape resets a resized preview to full size. Any open
+   * dialog, menu or sheet gets the Escape instead, and its close
+   * press doesn't count towards a double-tap.
+   */
+  if (e.key === 'Escape' && isPreviewRoute.value) {
+    if (document.querySelector('[role="dialog"][data-state="open"], [role="menu"][data-state="open"]')) {
+      lastEscapeAt = 0
+      return
+    }
+
+    const now = Date.now()
+
+    if (now - lastEscapeAt < 400 && (!isFullSize.value || selectedDevice.value)) {
+      lastEscapeAt = 0
+      resetPreviewSize()
+      return
+    }
+
+    lastEscapeAt = now
+    return
+  }
+
   if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
     e.preventDefault()
     commandOpen.value = !commandOpen.value
@@ -456,7 +488,7 @@ onUnmounted(() => {
               aria-label="Preview width"
               class="bg-transparent border-0 outline-none p-0 m-0 text-inherit font-inherit text-center tabular-nums w-[4.5ch] focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             >
-            <button class="hover:text-gray-700 dark:hover:text-gray-300" @click="selectedDevice = null; isFullSize = true; viewMode = 'preview'; resetKey++">&times;</button>
+            <button class="hover:text-gray-700 dark:hover:text-gray-300" @click="resetPreviewSize">&times;</button>
             <input
               v-model.number="heightInput"
               type="number"
@@ -476,7 +508,7 @@ onUnmounted(() => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" class="min-w-52 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md dark:border-white/10">
-              <DropdownMenuItem class="text-xs font-medium text-gray-600 dark:text-gray-400 focus:text-gray-900 dark:focus:text-gray-200" @click="selectedDevice = null; isFullSize = true; viewMode = 'preview'; resetKey++">
+              <DropdownMenuItem class="text-xs font-medium text-gray-600 dark:text-gray-400 focus:text-gray-900 dark:focus:text-gray-200" @click="resetPreviewSize">
                 <Check v-if="!selectedDevice && isFullSize" class="size-3 text-gray-900 dark:text-gray-200" />
                 <span :class="[!selectedDevice && isFullSize ? 'text-gray-900 dark:text-gray-200' : 'pl-5']">Full size</span>
               </DropdownMenuItem>

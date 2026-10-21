@@ -77,7 +77,7 @@ const devicePresets: DevicePreset[] = [
   { name: 'iPhone 18 Pro Max', width: 440, height: 956 },
   { name: 'iPad Pro 11"', width: 834, height: 1210 },
   { name: 'Pixel 11 Pro', width: 410, height: 912 },
-  { name: 'Galaxy A57', width: 412, height: 892 },
+  { name: 'Galaxy S26', width: 360, height: 780 },
 ]
 
 const selectedDevice = ref<DevicePreset | null>(null)

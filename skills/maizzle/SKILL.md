@@ -121,6 +121,12 @@ export default defineConfig({
 
 Both skip absolute URLs, data URIs, protocol-relative, and fragments. UTM/query params: `url.query` globally or `<WithUrl parameters="utm_source=...">` scoped.
 
+Values starting with a template tag (`{{`, `{%`, `<%`, e.g. Twig/Liquid/Blade/ERB) are never prefixed. To keep a specific element's URLs as authored, add `no-base-url` to it (HTML tag or component). It applies to that element only, not its children, and is removed from the output:
+
+```vue
+<Img src="/logo.png" alt="Logo" width="120" no-base-url />
+```
+
 ## Styling overview
 Maizzle uses Tailwind CSS 4 via `@maizzle/tailwindcss` — email-safe resets, MSO utilities, client variants. `<Layout>` already imports it. For manual control:
 

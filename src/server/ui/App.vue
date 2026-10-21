@@ -73,8 +73,8 @@ interface DevicePreset {
 }
 
 const devicePresets: DevicePreset[] = [
-  { name: 'iPhone 17 Pro', width: 390, height: 844 },
-  { name: 'iPhone 17 Pro Max', width: 430, height: 932 },
+  { name: 'iPhone 18 Pro', width: 402, height: 874 },
+  { name: 'iPhone 18 Pro Max', width: 440, height: 956 },
   { name: 'iPad Pro 11"', width: 834, height: 1194 },
   { name: 'iPad Pro 12.9"', width: 1024, height: 1366 },
   { name: 'Galaxy S26 Ultra', width: 412, height: 915 },

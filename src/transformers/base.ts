@@ -3,7 +3,7 @@ import safeParser from 'postcss-safe-parser'
 import valueParser from 'postcss-value-parser'
 import { walk, serialize, parse } from '../utils/ast/index.ts'
 import { isAbsoluteUrl, defaultTags, processSrcset } from '../utils/url.ts'
-import type { ChildNode, Element } from 'domhandler'
+import type { ChildNode, Comment, Element } from 'domhandler'
 
 /**
  * Options for the `base` transformer.
@@ -43,6 +43,36 @@ export interface BaseUrlOptions {
 const sourceAttributes = ['src', 'href', 'srcset', 'poster', 'background', 'data']
 
 /**
+ * Elements with this attribute keep their URLs as authored. It is
+ * removed from the output, even when no base URL is configured.
+ */
+const ignoreAttribute = 'no-base-url'
+const ignoreAttributeRegex = /\sno-base-url(?=[\s=/>]|$)/i
+const ignoreAttributeStripRegex = /\s+no-base-url(?:=(?:"[^"]*"|'[^']*'|[^\s/>]*))?(?=[\s/>]|$)/gi
+
+/**
+ * Values that start with a template language tag (Twig, Liquid, Blade,
+ * ERB etc.) are resolved later by that language, so leave them alone.
+ */
+function isTemplateExpression(value: string): boolean {
+  return /^\s*(?:\{\{|\{%|<%)/.test(value)
+}
+
+function isSkippedUrl(value: string): boolean {
+  return isAbsoluteUrl(value) || isTemplateExpression(value)
+}
+
+/**
+ * The tag that contains the character at `offset` in `html`. Used by
+ * the regex passes to check a match's tag for the ignore attribute.
+ */
+function tagAround(html: string, offset: number): string {
+  const start = html.lastIndexOf('<', offset)
+  const end = html.indexOf('>', offset)
+  return html.slice(start, end === -1 ? undefined : end + 1)
+}
+
+/**
  * Convert the shared `defaultTags` (tag → string[]) into the richer format
  * the transformer needs (tag → Record<attr, true>).
  */
@@ -66,7 +96,7 @@ const postcssBaseUrl: postcss.PluginCreator<{ url: string }> = (opts) => {
       const urlNode = node.nodes[0]
       if (!urlNode) return
 
-      if (isAbsoluteUrl(urlNode.value)) return
+      if (isSkippedUrl(urlNode.value)) return
 
       urlNode.value = opts!.url + urlNode.value
       changed = true
@@ -178,13 +208,13 @@ export function base(html: string, options: string | BaseUrlOptions): string {
  */
 export function baseDom(dom: ChildNode[], options: string | BaseUrlOptions | undefined | null | false): ChildNode[] {
   const resolved = resolveOptions(options)
-  if (!resolved || !resolved.url) return dom
+  if (!resolved || !resolved.url) return removeIgnoreAttribute(dom)
 
   const { url: baseUrl, styleTag = true, inlineCss = true, attributes = {} } = resolved
 
   walk(dom, (node) => {
     const el = node as Element
-    if (!el.name) return
+    if (!el.name || ignoreAttribute in el.attribs) return
 
     // Process <style> tag content with PostCSS
     if (el.name === 'style' && styleTag && el.children) {
@@ -216,7 +246,7 @@ export function baseDom(dom: ChildNode[], options: string | BaseUrlOptions | und
 
     if (tagConfig || resolved.tags === undefined) {
       for (const [attr, value] of Object.entries(el.attribs)) {
-        if (!value || attr === 'style') continue
+        if (!value || attr === 'style' || isTemplateExpression(value)) continue
 
         const attrConfig = tagConfig?.[attr]
         if (!attrConfig) continue
@@ -236,7 +266,7 @@ export function baseDom(dom: ChildNode[], options: string | BaseUrlOptions | und
 
     // Process custom attributes (not affected by tags filter)
     for (const [attr, url] of Object.entries(attributes)) {
-      if (el.attribs[attr] && !isAbsoluteUrl(el.attribs[attr])) {
+      if (el.attribs[attr] && !isSkippedUrl(el.attribs[attr])) {
         el.attribs[attr] = url + el.attribs[attr]
       }
     }
@@ -251,8 +281,31 @@ export function baseDom(dom: ChildNode[], options: string | BaseUrlOptions | und
 
   // Only re-parse if the regex passes actually changed anything
   if (rewritten !== serialized) {
-    return parse(rewritten)
+    return removeIgnoreAttribute(parse(rewritten))
   }
+
+  return removeIgnoreAttribute(dom)
+}
+
+/**
+ * Drop the ignore attribute from elements and from tags inside
+ * comments, like the ones in MSO conditionals.
+ */
+function removeIgnoreAttribute(dom: ChildNode[]): ChildNode[] {
+  walk(dom, (node) => {
+    if (node.type === 'comment') {
+      const comment = node as Comment
+      if (comment.data.includes(ignoreAttribute)) {
+        comment.data = comment.data.replace(/<[^<>]+>/g, tag => tag.replace(ignoreAttributeStripRegex, ''))
+      }
+      return
+    }
+
+    const el = node as Element
+    if (el.attribs && ignoreAttribute in el.attribs) {
+      delete el.attribs[ignoreAttribute]
+    }
+  })
 
   return dom
 }
@@ -268,13 +321,13 @@ function isUnderBase(value: string, url: string): boolean {
 }
 
 function rewriteVMLs(html: string, url: string): string {
-  html = html.replace(/<v:image[^>]+src="?([^"\s]+)"/gi, (match, src) => {
-    if (isAbsoluteUrl(src) || isUnderBase(src, url)) return match
+  html = html.replace(/<v:image[^>]+src="?([^"\s]+)"/gi, (match, src, offset, input) => {
+    if (isSkippedUrl(src) || isUnderBase(src, url) || ignoreAttributeRegex.test(tagAround(input, offset))) return match
     return match.replace(src, url + src)
   })
 
-  html = html.replace(/<v:fill[^>]+src="?([^"\s]+)"/gi, (match, src) => {
-    if (isAbsoluteUrl(src) || isUnderBase(src, url)) return match
+  html = html.replace(/<v:fill[^>]+src="?([^"\s]+)"/gi, (match, src, offset, input) => {
+    if (isSkippedUrl(src) || isUnderBase(src, url) || ignoreAttributeRegex.test(tagAround(input, offset))) return match
     return match.replace(src, url + src)
   })
 
@@ -287,7 +340,9 @@ function rewriteMsoComments(html: string, url: string): string {
 
     for (const attr of sourceAttributes) {
       const attrRegex = new RegExp(`\\b${attr}="([^"]+)"`, 'gi')
-      result = result.replace(attrRegex, (match, value) => {
+      result = result.replace(attrRegex, (match, value, offset, input) => {
+        if (ignoreAttributeRegex.test(tagAround(input, offset))) return match
+
         /**
          * `isUnderBase` guards against a relative base being prepended twice:
          * `rewriteVMLs` runs first and prefixes `v:image`/`v:fill` `src`; this
@@ -295,7 +350,7 @@ function rewriteMsoComments(html: string, url: string): string {
          * (`/images//images/…`) since a relative base never trips
          * `isAbsoluteUrl`. Absolute bases self-guard via `isAbsoluteUrl`.
          */
-        if (isAbsoluteUrl(value) || isUnderBase(value, url)) return match
+        if (isSkippedUrl(value) || isUnderBase(value, url)) return match
 
         if (attr === 'srcset') {
           return `srcset="${processSrcset(value, url)}"`
@@ -306,8 +361,8 @@ function rewriteMsoComments(html: string, url: string): string {
     }
 
     // Use PostCSS for style attribute url() rewriting inside MSO comments
-    result = result.replace(/style="([^"]+)"/gi, (match, style) => {
-      if (!style.includes('url(')) return match
+    result = result.replace(/style="([^"]+)"/gi, (match, style, offset, input) => {
+      if (!style.includes('url(') || ignoreAttributeRegex.test(tagAround(input, offset))) return match
       const processed = processInlineStyle(style, url)
       return `style="${processed}"`
     })

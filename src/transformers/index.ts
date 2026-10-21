@@ -165,7 +165,7 @@ export async function runTransformers(
   if (enabled('filters')) dom = filtersDom(dom, effective.filters)
 
   // 10. Base URL (serializes/parses internally for VML/MSO regex passes)
-  if (enabled('baseURL') && effective.url?.base) dom = baseDom(dom, effective.url.base)
+  if (enabled('baseURL')) dom = baseDom(dom, effective.url?.base)
 
   // 11. URL query
   if (enabled('urlQuery') && effective.url?.query && Object.keys(effective.url.query).length > 0) {

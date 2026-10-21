@@ -108,6 +108,43 @@ describe('render', () => {
       // tags: ['a'] limits to anchors → img stays as-is
       expect(result.html).toMatch(/src="logo\.png"/)
     })
+
+    it('skips elements and components marked with no-base-url', async () => {
+      const result = await render(`
+        <script setup>
+        useBaseUrl('https://cdn.example.com/')
+        </script>
+        <template>
+          <html><head></head><body>
+            <a href="page.html" no-base-url>link</a>
+            <Img src="{{ image.getUrl() }}" alt="" />
+            <Img src="logo.png" alt="" no-base-url />
+            <img src="other.png" alt="">
+          </body></html>
+        </template>
+      `)
+
+      expect(result.html).toContain('href="page.html"')
+      expect(result.html).toContain('src="{{ image.getUrl() }}"')
+      expect(result.html).toContain('src="logo.png"')
+      expect(result.html).toContain('src="https://cdn.example.com/other.png"')
+      expect(result.html).not.toContain('no-base-url')
+    })
+
+    it('removes no-base-url from the output when no base URL is set', async () => {
+      const result = await render(`
+        <template>
+          <html><head></head><body>
+            <a href="page.html" no-base-url>link</a>
+            <WithUrl base="https://cdn.example.com/"><img src="logo.png" alt="" no-base-url></WithUrl>
+          </body></html>
+        </template>
+      `)
+
+      expect(result.html).toContain('href="page.html"')
+      expect(result.html).toContain('src="logo.png"')
+      expect(result.html).not.toContain('no-base-url')
+    })
   })
 
   describe('useUrlQuery', () => {

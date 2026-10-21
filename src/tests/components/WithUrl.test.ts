@@ -321,6 +321,73 @@ describe('WithUrl', () => {
 
   // ─── parameters prop (query params) ──────────────────────────────────────
 
+  describe('base — no-base-url', () => {
+    it('skips elements with the attribute', () => {
+      const wrapper = mount(WithUrl, {
+        props: { base: 'https://cdn.example.com/' },
+        slots: {
+          default: () => [
+            h('img', { src: 'a.jpg', 'no-base-url': '' }),
+            h('img', { src: 'b.jpg' }),
+          ],
+        },
+      })
+
+      const imgs = wrapper.findAll('img')
+      expect(imgs[0]!.attributes('src')).toBe('a.jpg')
+      expect(imgs[1]!.attributes('src')).toBe('https://cdn.example.com/b.jpg')
+    })
+
+    it('skips child components with the attribute', () => {
+      const Image = defineComponent({
+        props: { src: String },
+        setup(props) {
+          return () => h('img', { src: props.src })
+        },
+      })
+
+      const wrapper = mount(WithUrl, {
+        props: { base: 'https://cdn.example.com/' },
+        slots: {
+          default: () => h(Image, { src: 'a.jpg', 'no-base-url': '' }),
+        },
+      })
+
+      expect(wrapper.find('img').attributes('src')).toBe('a.jpg')
+    })
+
+    it('still appends parameters', () => {
+      const wrapper = mount(WithUrl, {
+        props: { base: 'https://example.com/', parameters: 'utm_source=x' },
+        slots: {
+          default: () => h('a', { href: 'page', 'no-base-url': '' }, 'Link'),
+        },
+      })
+
+      expect(wrapper.find('a').attributes('href')).toBe('page?utm_source=x')
+    })
+  })
+
+  describe('base — template expressions', () => {
+    it('skips values that start with a template tag', () => {
+      const wrapper = mount(WithUrl, {
+        props: { base: 'https://cdn.example.com/' },
+        slots: {
+          default: () => [
+            h('img', { src: '{{ image.getUrl({ width: 1200 }) }}' }),
+            h('a', { href: '{% url "home" %}' }, 'Link'),
+            h('img', { src: 'img/{{ name }}.png' }),
+          ],
+        },
+      })
+
+      const imgs = wrapper.findAll('img')
+      expect(imgs[0]!.attributes('src')).toBe('{{ image.getUrl({ width: 1200 }) }}')
+      expect(wrapper.find('a').attributes('href')).toBe('{% url "home" %}')
+      expect(imgs[1]!.attributes('src')).toBe('https://cdn.example.com/img/{{ name }}.png')
+    })
+  })
+
   describe('parameters — anchor href', () => {
     it('appends query params to anchor href', () => {
       const wrapper = mount(WithUrl, {

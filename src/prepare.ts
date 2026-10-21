@@ -12,7 +12,7 @@ export interface PrepareOptions {
 
 /**
  * Generate IDE type definitions in `.maizzle/`
- * (`auto-imports.d.ts` and `components.d.ts`).
+ * (`auto-imports.d.ts`, `components.d.ts` and `attributes.d.ts`).
  *
  * Intended as a `postinstall` step so editors get autocompletion before the
  * user runs `dev` or `build`. Spins up the renderer with `dts: true`, runs

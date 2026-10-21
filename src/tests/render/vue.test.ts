@@ -510,6 +510,22 @@ describe('render', () => {
       }
     })
 
+    it('emits an attributes.d.ts typing no-base-url when dts: true', async () => {
+      const renderer = await createRenderer({ dts: true, root: tempDir })
+
+      try {
+        const dtsPath = join(tempDir, '.maizzle/attributes.d.ts')
+        expect(existsSync(dtsPath)).toBe(true)
+
+        const content = readFileSync(dtsPath, 'utf-8')
+        expect(content).toContain(`declare module 'vue'`)
+        expect(content).toMatch(/interface HTMLAttributes \{[^}]*'no-base-url'\?: boolean/)
+        expect(content).toMatch(/interface AllowedComponentProps \{[^}]*'no-base-url'\?: boolean/)
+      } finally {
+        await renderer.close()
+      }
+    })
+
     it('user component overrides a built-in with the same name', async () => {
       /**
        * Heading is a built-in framework component; the user's local

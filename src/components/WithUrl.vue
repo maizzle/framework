@@ -25,6 +25,14 @@ function isAbsoluteUrl(url: string): boolean {
   return url.startsWith('//') || url.startsWith('#') || url.startsWith('?') || isUrl(url)
 }
 
+/**
+ * Values that start with a template language tag (Twig, Liquid, Blade,
+ * ERB etc.) are resolved later by that language, so leave them alone.
+ */
+function isTemplateExpression(url: string): boolean {
+  return /^\s*(?:\{\{|\{%|<%)/.test(url)
+}
+
 function processSrcset(srcset: string, baseUrl: string): string {
   return srcset.split(',').map(entry => {
     const parts = entry.trim().split(/\s+/)
@@ -61,7 +69,7 @@ function applyBaseUrl(attrs: string[], props: Record<string, any> | null, baseUr
   for (const attr of attrs) {
     const value = props[attr]
 
-    if (typeof value !== 'string' || isAbsoluteUrl(value)) continue
+    if (typeof value !== 'string' || isAbsoluteUrl(value) || isTemplateExpression(value)) continue
 
     if (!newProps) newProps = { ...props }
 
@@ -71,6 +79,14 @@ function applyBaseUrl(attrs: string[], props: Record<string, any> | null, baseUr
   }
 
   return newProps ?? props
+}
+
+/**
+ * Elements marked with `no-base-url` keep their URLs as authored. The
+ * attribute is left in place for the `base` transformer to remove.
+ */
+function hasNoBaseUrl(props: Record<string, any> | null): boolean {
+  return !!props && 'no-base-url' in props
 }
 
 // ─── Query parameter helpers ──────────────────────────────────────────────────
@@ -120,7 +136,7 @@ function processVNode(vnode: any, baseUrl: string | undefined, params: Record<st
     let newProps = vnode.props
 
     if (attrs) {
-      if (baseUrl) newProps = applyBaseUrl(attrs, newProps, baseUrl)
+      if (baseUrl && !hasNoBaseUrl(newProps)) newProps = applyBaseUrl(attrs, newProps, baseUrl)
       if (params) newProps = applyQueryParams(attrs, newProps, params)
     }
 
@@ -135,7 +151,7 @@ function processVNode(vnode: any, baseUrl: string | undefined, params: Record<st
   if (typeof vnode.type === 'object' || typeof vnode.type === 'function') {
     let newProps = vnode.props
 
-    if (baseUrl) newProps = applyBaseUrl(urlAttributes, newProps, baseUrl)
+    if (baseUrl && !hasNoBaseUrl(newProps)) newProps = applyBaseUrl(urlAttributes, newProps, baseUrl)
     if (params) newProps = applyQueryParams(urlAttributes, newProps, params)
 
     return h(vnode.type, newProps, vnode.children)

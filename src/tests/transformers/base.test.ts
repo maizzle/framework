@@ -623,4 +623,107 @@ describe('base URL', () => {
       expect(result).toBe(html)
     })
   })
+  describe('no-base-url attribute', () => {
+    const url = 'https://cdn.example.com/'
+
+    it('skips the element and removes the attribute', () => {
+      expect(base('<img src="logo.png" no-base-url>', url)).toBe('<img src="logo.png">')
+    })
+
+    it('still rewrites elements without the attribute', () => {
+      const result = base('<img src="a.png" no-base-url><img src="b.png">', url)
+      expect(result).toBe('<img src="a.png"><img src="https://cdn.example.com/b.png">')
+    })
+
+    it('removes the attribute when it has a value', () => {
+      expect(base('<a href="page.html" no-base-url="true">x</a>', url)).toBe('<a href="page.html">x</a>')
+    })
+
+    it('skips every URL attribute on the element', () => {
+      const result = base('<img src="a.png" srcset="a.png 1x, a@2x.png 2x" no-base-url>', url)
+      expect(result).toBe('<img src="a.png" srcset="a.png 1x, a@2x.png 2x">')
+    })
+
+    it('skips url() in the element\'s inline style', () => {
+      const result = base('<td style="background-image: url(bg.jpg)" no-base-url></td>', url)
+      expect(result).toBe('<td style="background-image: url(bg.jpg)"></td>')
+    })
+
+    it('skips a <style> tag with the attribute', () => {
+      const result = base('<style no-base-url>.a { background: url(bg.jpg) }</style>', url)
+      expect(result).toBe('<style>.a { background: url(bg.jpg) }</style>')
+    })
+
+    it('skips custom attributes on the element', () => {
+      const result = base('<div data-bg="bg.jpg" no-base-url></div>', {
+        url,
+        attributes: { 'data-bg': url },
+      })
+      expect(result).toBe('<div data-bg="bg.jpg"></div>')
+    })
+
+    it('only applies to the element, not its children', () => {
+      const result = base('<a href="page.html" no-base-url><img src="a.png"></a>', url)
+      expect(result).toBe('<a href="page.html"><img src="https://cdn.example.com/a.png"></a>')
+    })
+
+    it('skips VML tags with the attribute', () => {
+      const result = base('<v:fill type="frame" src="bg.jpg" no-base-url /><v:fill type="frame" src="bg2.jpg" />', url)
+      expect(result).toContain('src="bg.jpg"')
+      expect(result).toContain('src="https://cdn.example.com/bg2.jpg"')
+      expect(result).not.toContain('no-base-url')
+    })
+
+    it('skips tags with the attribute inside MSO comments', () => {
+      const result = base('<!--[if mso]><img src="a.png" no-base-url><img src="b.png"><![endif]-->', url)
+      expect(result).toBe('<!--[if mso]><img src="a.png"><img src="https://cdn.example.com/b.png"><![endif]-->')
+    })
+
+    it('skips VML and inline style inside MSO comments', () => {
+      const result = base(
+        '<!--[if mso]><v:image src="a.png" no-base-url /><td style="background: url(bg.jpg)" no-base-url></td><![endif]-->',
+        url,
+      )
+      expect(result).toBe('<!--[if mso]><v:image src="a.png" /><td style="background: url(bg.jpg)"></td><![endif]-->')
+    })
+
+    it('removes the attribute when no base URL is set', () => {
+      expect(base('<img src="logo.png" no-base-url>', '')).toBe('<img src="logo.png">')
+      expect(base('<!--[if mso]><img src="a.png" no-base-url><![endif]-->', '')).toBe('<!--[if mso]><img src="a.png"><![endif]-->')
+    })
+
+    it('leaves text that mentions the attribute alone', () => {
+      const html = '<p>Use the no-base-url attribute</p>'
+      expect(base(html, url)).toBe(html)
+    })
+  })
+
+  describe('template expressions', () => {
+    const url = 'https://cdn.example.com/'
+
+    it('skips values that start with a template tag', () => {
+      expect(base('<img src="{{ image.getUrl({ width: 1200 }) }}">', url)).toBe('<img src="{{ image.getUrl({ width: 1200 }) }}">')
+      expect(base('<a href="{% url \'home\' %}">x</a>', url)).toBe('<a href="{% url \'home\' %}">x</a>')
+      expect(base('<img src="<%= logo_url %>">', url)).toBe('<img src="<%= logo_url %>">')
+    })
+
+    it('skips a srcset that starts with a template tag', () => {
+      const html = '<img srcset="{{ a }} 1x, {{ b }} 2x">'
+      expect(base(html, url)).toBe(html)
+    })
+
+    it('still prepends to relative paths that contain a template tag', () => {
+      expect(base('<img src="img/{{ name }}.png">', url)).toBe('<img src="https://cdn.example.com/img/{{ name }}.png">')
+    })
+
+    it('skips template tags in url() and custom attributes', () => {
+      expect(base('<td style="background: url({{ bg }})"></td>', url)).toBe('<td style="background: url({{ bg }})"></td>')
+      expect(base('<div data-bg="{{ bg }}"></div>', { url, attributes: { 'data-bg': url } })).toBe('<div data-bg="{{ bg }}"></div>')
+    })
+
+    it('skips template tags inside MSO comments and VML', () => {
+      const html = '<!--[if mso]><v:fill src="{{bg}}" /><img src="{{ logo }}"><![endif]-->'
+      expect(base(html, url)).toBe(html)
+    })
+  })
 })

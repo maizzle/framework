@@ -92,7 +92,7 @@
     "@types/postcss-safe-parser": "^5.0.4",
     "@vitest/coverage-v8": "^5.0.1",
     "@vue/test-utils": "^2.4.6",
-    "happy-dom": "^20.6.3",
+    "happy-dom": "^21.0.4",
     "oxlint": "^1.50.0",
     "shiki": "^4.0.2",
     "tailwind-merge": "^3.5.0",

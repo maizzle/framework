@@ -60,6 +60,14 @@ describe('output-markers', () => {
       expect(out).toContain('<a href="/x">y</a>')
       expect(out).not.toContain('data-maizzle-plaintext-only')
     })
+
+    it('keeps HTML entities as written', () => {
+      const html = '<p>a&nbsp;b &mdash; c&zwj;</p><div data-maizzle-html-only>html-only</div>'
+      const out = stripForPlaintext(html)
+
+      expect(out).toContain('<p>a&nbsp;b &mdash; c&zwj;</p>')
+      expect(out).not.toContain('html-only')
+    })
   })
 
   describe('symmetry', () => {

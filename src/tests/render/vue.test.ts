@@ -426,7 +426,7 @@ describe('render', () => {
             <AlertHeader />
           </div>
         </template>
-      `, { root: tempDir })
+      `, { root: tempDir, css: { purge: false } })
 
       expect(result.html).toContain('class="card-header"')
       expect(result.html).toContain('class="alert-header"')
@@ -439,7 +439,7 @@ describe('render', () => {
 
       const result = await render(`
         <template><CardFooter /></template>
-      `, { root: tempDir })
+      `, { root: tempDir, css: { purge: false } })
 
       expect(result.html).toContain('class="card-footer"')
     })
@@ -453,6 +453,7 @@ describe('render', () => {
         <template><WButton /></template>
       `, {
         root: tempDir,
+        css: { purge: false },
         components: { source: [{ path: 'widgets', prefix: 'W' }] },
       })
 
@@ -476,6 +477,7 @@ describe('render', () => {
         </template>
       `, {
         root: tempDir,
+        css: { purge: false },
         components: { source: [{ path: 'icons', prefix: 'Icon', pathPrefix: false }] },
       })
 
@@ -540,7 +542,7 @@ describe('render', () => {
       console.warn = (...args: any[]) => { captured.push(args.join(' ')) }
 
       try {
-        const result = await render(`<template><Heading /></template>`, { root: tempDir })
+        const result = await render(`<template><Heading /></template>`, { root: tempDir, css: { purge: false } })
         expect(result.html).toContain('class="user-heading"')
         expect(result.html).toContain('override')
         expect(captured.join('\n')).not.toMatch(/naming conflicts/)
@@ -624,7 +626,7 @@ describe('render', () => {
         </template>
       `)
 
-      const result = await render(join(tempDir, 'emails/test.vue'))
+      const result = await render(join(tempDir, 'emails/test.vue'), { css: { purge: false } })
 
       // PascalCase reference renders the user's component.
       expect(result.html).toContain('class="vue-wrapper"')
@@ -668,7 +670,7 @@ describe('render', () => {
         <template><custom-box>content</custom-box></template>
       `)
 
-      const result = await render(join(tempDir, 'emails/test.vue'))
+      const result = await render(join(tempDir, 'emails/test.vue'), { css: { purge: false } })
 
       // Kebab tag resolves to the PascalCase component.
       expect(result.html).toContain('class="vue-wrapper"')
@@ -686,6 +688,7 @@ describe('render', () => {
 
       const result = await render(join(tempDir, 'emails/test.vue'), {
         vue: { customElements: ['custom-box'] },
+        css: { purge: false },
       })
 
       // Marked custom → stays a raw element, the component is not used.

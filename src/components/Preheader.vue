@@ -40,6 +40,8 @@ const fillerCount = computed(() =>
 
 <template>
   <Teleport to="body:start">
-    <div style="display: none">{{ text }}<template v-for="i in fillerCount" :key="i">&#8199;&#65279;&#847; </template>&nbsp;</div>
+    <div data-maizzle-html-only>
+      <div style="display: none">{{ text }}<template v-for="i in fillerCount" :key="i">&#8199;&#65279;&#847; </template>&nbsp;</div>
+    </div>
   </Teleport>
 </template>

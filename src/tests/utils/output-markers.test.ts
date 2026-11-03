@@ -21,6 +21,13 @@ describe('output-markers', () => {
       expect(out).not.toContain('data-maizzle-html-only')
     })
 
+    it('keeps HTML entities as written', () => {
+      const html = '<p>a&nbsp;b &mdash; c&zwj;</p><div data-maizzle-html-only>x</div>'
+      const out = stripForHtml(html)
+
+      expect(out).toContain('<p>a&nbsp;b &mdash; c&zwj;</p>')
+    })
+
     it('handles nested opposite-marker — outer drop wins', () => {
       const html = '<div data-maizzle-plaintext-only><div data-maizzle-html-only>z</div></div>'
       const out = stripForHtml(html)

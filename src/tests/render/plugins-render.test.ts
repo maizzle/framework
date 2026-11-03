@@ -217,6 +217,7 @@ describe('render', () => {
       const result = await render(join(tempDir, 'page.md'), {
         root: tempDir,
         components: { source: ['components'] },
+        css: { purge: false },
       })
 
       expect(result.html).toContain('class="md-shell"')

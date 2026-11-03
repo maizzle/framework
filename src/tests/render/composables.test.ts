@@ -296,6 +296,25 @@ describe('render', () => {
       expect(result.plaintext).not.toContain('<div>')
     })
 
+    it('excludes the preheader from plaintext', async () => {
+      const result = await render(`
+        <script setup>
+        usePreheader('From usePreheader')
+        </script>
+        <template>
+          <Layout>
+            <Preheader>From component</Preheader>
+            <p>Body</p>
+          </Layout>
+        </template>
+      `, { plaintext: true })
+
+      expect(result.plaintext).toBe('Body')
+      expect(result.html).toContain('From usePreheader')
+      expect(result.html).toContain('From component')
+      expect(result.html).not.toContain('data-maizzle-html-only')
+    })
+
     it('passes strip options via plaintext.options', async () => {
       const result = await render(`
         <template>

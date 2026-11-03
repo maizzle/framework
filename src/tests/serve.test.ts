@@ -7,6 +7,7 @@ import { serve } from '../serve.ts'
 import { render } from '../render/index.ts'
 import { getActiveRenderer } from '../render/active.ts'
 import * as rendererMod from '../render/createRenderer.ts'
+import * as emailMod from '../server/email.ts'
 import type { Renderer } from '../render/createRenderer.ts'
 
 const realCreateRenderer = rendererMod.createRenderer
@@ -257,6 +258,74 @@ describe('serve dev server', () => {
     expect(html).toContain('AfterRender')
     expect(html).not.toContain('Original')
     expect(html).toContain('<!-- transformed -->')
+  }, 30000)
+
+  it('applies plaintext.options in the plaintext preview', async () => {
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      export default {
+        plaintext: { options: { ignoreTags: ['b'] } },
+      }
+    `)
+    mkdirSync(join(tempDir, 'emails'), { recursive: true })
+    writeFileSync(join(tempDir, 'emails/welcome.vue'), '<template><p>Hello <b>World</b></p></template>\n')
+
+    server = await serve({ port: 3157, silent: true })
+
+    const res = await fetch('http://localhost:3157/__maizzle/plaintext/emails/welcome')
+    const text = await res.text()
+
+    expect(text).toContain('<b>World</b>')
+  }, 30000)
+
+  it('prefers usePlaintext() options over global ones in the plaintext preview', async () => {
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      export default {
+        plaintext: { options: { dumpLinkHrefsNearby: { enabled: true } } },
+      }
+    `)
+    mkdirSync(join(tempDir, 'emails'), { recursive: true })
+    writeFileSync(join(tempDir, 'emails/welcome.vue'), `
+      <script setup>
+      usePlaintext({ options: { dumpLinkHrefsNearby: { enabled: false } } })
+      </script>
+      <template><p><a href="https://example.com">Visit</a></p></template>
+    `)
+
+    server = await serve({ port: 3157, silent: true })
+
+    const res = await fetch('http://localhost:3157/__maizzle/plaintext/emails/welcome')
+    const text = await res.text()
+
+    expect(text).toContain('Visit')
+    expect(text).not.toContain('https://example.com')
+  }, 30000)
+
+  it('applies plaintext.options to the test email text', async () => {
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      export default {
+        plaintext: { options: { ignoreTags: ['b'] } },
+      }
+    `)
+    mkdirSync(join(tempDir, 'emails'), { recursive: true })
+    writeFileSync(join(tempDir, 'emails/welcome.vue'), '<template><p>Hello <b>World</b></p></template>\n')
+
+    const spy = vi.spyOn(emailMod, 'sendEmail').mockResolvedValue({ success: true } as any)
+
+    try {
+      server = await serve({ port: 3157, silent: true })
+
+      const res = await fetch('http://localhost:3157/__maizzle/email/emails/welcome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: ['test@example.com'], subject: 'Test' }),
+      })
+
+      expect(res.status).toBe(200)
+      expect(spy).toHaveBeenCalledOnce()
+      expect(spy.mock.calls[0][0].text).toContain('<b>World</b>')
+    } finally {
+      spy.mockRestore()
+    }
   }, 30000)
 
   it('renders definePreviewProps() sample data in the dev server but not in render()', async () => {

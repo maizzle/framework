@@ -7,6 +7,7 @@ import { renderUnicodeCompact } from 'uqr'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { glob } from 'tinyglobby'
+import defu from 'defu'
 import { createHighlighter, type Highlighter } from 'shiki'
 import { createPlaintext } from './plaintext.ts'
 import { stripForHtml, stripForPlaintext } from './utils/output-markers.ts'
@@ -707,8 +708,9 @@ async function servePlaintext(url: string, config: MaizzleConfig, renderer: Rend
   const absolutePath = resolve(match)
 
   try {
-    const { rawHtml } = await getRendered(absolutePath, config, renderer, events)
-    const plaintext = createPlaintext(stripForPlaintext(rawHtml))
+    const { rawHtml, templateConfig, rendered } = await getRendered(absolutePath, config, renderer, events)
+    const globalPlaintext = typeof templateConfig.plaintext === 'object' ? templateConfig.plaintext : {}
+    const plaintext = createPlaintext(stripForPlaintext(rawHtml), defu(rendered.plaintext?.options, globalPlaintext.options))
 
     res.setHeader('Content-Type', 'text/plain')
     res.end(plaintext)
@@ -816,10 +818,11 @@ async function serveEmailEndpoint(url: string, req: any, res: any, config: Maizz
   const absolutePath = resolve(match)
 
   try {
-    const { rawHtml, doctype, templateConfig } = await getRendered(absolutePath, config, renderer, events)
+    const { rawHtml, doctype, templateConfig, rendered } = await getRendered(absolutePath, config, renderer, events)
     let html = doctype ? `${doctype}\n${rawHtml}` : rawHtml
 
-    const text = createPlaintext(stripForPlaintext(html))
+    const globalPlaintext = typeof templateConfig.plaintext === 'object' ? templateConfig.plaintext : {}
+    const text = createPlaintext(stripForPlaintext(html), defu(rendered.plaintext?.options, globalPlaintext.options))
     html = stripForHtml(html)
 
     const result = await sendEmail(

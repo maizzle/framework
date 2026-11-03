@@ -25,7 +25,7 @@ export function createTailwindProcessor(config: MaizzleConfig, gradientCombos: G
     // before the var()/color resolution steps run.
     flattenGradients(gradientCombos),
     resolveProps(),
-    postcssCalc({}),
+    postcssCalc({ unwrapSingleValue: true }),
     pruneVars(),
   ])
 }

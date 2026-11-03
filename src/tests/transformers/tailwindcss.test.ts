@@ -177,6 +177,25 @@ describe('tailwindcss', () => {
     })
   })
 
+  describe('calc() resolution', () => {
+    it('unwraps fully resolved calc() values', async () => {
+      const html = '<style>@import "@maizzle/tailwindcss" source(none); @source inline("mso-padding-alt-0 mso-padding-alt-4 mso-margin-alt-3");</style>'
+      const result = await run(html)
+
+      expect(result).toContain('mso-padding-alt: 0px')
+      expect(result).toContain('mso-padding-alt: 16px')
+      expect(result).toContain('mso-margin-alt: 12px')
+      expect(result).not.toContain('calc(')
+    })
+
+    it('keeps calc() when the value cannot be resolved', async () => {
+      const html = '<style>.foo { width: calc(100% - 20px) }</style>'
+      const result = await run(html)
+
+      expect(result).toContain('width: calc(100% - 20px)')
+    })
+  })
+
   describe('HTML entity decoding', () => {
     it('decodes &quot; to double quotes in CSS selectors', async () => {
       const html = '<style>.foo[data=&quot;bar&quot;] { background-image: url(&quot;test.jpg&quot;) }</style>'

@@ -23,10 +23,11 @@ const BLOCK_TAGS = new Set([
 const PRESERVE_WHITESPACE_TAGS = new Set(['pre', 'textarea', 'script', 'style'])
 
 /**
- * Zero-width and filler characters used for spacing in HTML emails
- * (`&zwj;` in Spacer/Hr, Preheader fillers, MSO button padding).
+ * Text that only holds zero-width filler characters, like the `&zwj;`
+ * in Spacer/Hr. Joiners inside real text are left alone, since
+ * emoji sequences and some scripts depend on them.
  */
-const INVISIBLE_CHARS = /[\u00AD\u034F\u200B-\u200D\u2060\uFEFF]/g
+const FILLER_ONLY = /^[\s\u00AD\u034F\u200B-\u200D\u2060\uFEFF]+$/
 
 /**
  * Collapse source whitespace like a browser would, then surround
@@ -37,7 +38,8 @@ function addLineBreaks(nodes: ChildNode[], preserveWhitespace = false): ChildNod
   return nodes.flatMap<ChildNode>((node) => {
     if (node.type === 'text') {
       if (!preserveWhitespace) {
-        (node as Text).data = (node as Text).data.replace(/[ \t\n\r\f]+/g, ' ')
+        const text = node as Text
+        text.data = FILLER_ONLY.test(text.data) ? ' ' : text.data.replace(/[ \t\n\r\f]+/g, ' ')
       }
       return [node]
     }
@@ -59,7 +61,6 @@ export function createPlaintext(html: string, options?: Record<string, unknown>)
   const { result } = stripHtml(serialize(addLineBreaks(parse(html))), defu(options, defaults))
 
   return result
-    .replace(INVISIBLE_CHARS, '')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim()

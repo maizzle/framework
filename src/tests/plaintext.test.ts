@@ -58,9 +58,14 @@ describe('createPlaintext', () => {
     expect(createPlaintext('<pre>a\nb</pre>')).toBe('a\nb')
   })
 
-  it('removes zero-width spacing characters', () => {
-    const result = createPlaintext('<p>Hello</p><div role="separator">&zwj;</div><p>World&#8203;</p>')
+  it('removes zero-width filler text', () => {
+    const result = createPlaintext('<p>Hello</p><div role="separator">&zwj;</div><p>World</p><div>&zwj;</div>')
     expect(result).toBe('Hello\n\nWorld')
+  })
+
+  it('keeps joiners inside text', () => {
+    expect(createPlaintext('<p>&#x1F469;&zwj;&#x1F4BB;</p>')).toBe(String.fromCodePoint(0x1F469, 0x200D, 0x1F4BB))
+    expect(createPlaintext('<p>&#x645;&#x6CC;&zwnj;&#x62E;</p>')).toBe(String.fromCodePoint(0x645, 0x6CC, 0x200C, 0x62E))
   })
 
   it('strips a full email template', () => {

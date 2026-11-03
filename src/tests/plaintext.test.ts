@@ -28,7 +28,39 @@ describe('createPlaintext', () => {
       '<div>Hello</div><br/>World',
       { ignoreTags: ['br'] },
     )
-    expect(result).toContain('<br/>')
+    expect(result).toContain('<br>')
+  })
+
+  it('separates block-level elements with blank lines', () => {
+    const result = createPlaintext('<h1>Hello Jane</h1><p>You were invited to join <strong>Acme</strong>.</p><div><a href="https://example.com">Accept</a></div><p>Acme Inc.</p>')
+    expect(result).toBe('Hello Jane\n\nYou were invited to join Acme.\n\nAccept\n\nhttps://example.com\n\nAcme Inc.')
+  })
+
+  it('breaks lines at <br> and list items', () => {
+    expect(createPlaintext('<p>One<br>Two</p>')).toBe('One\nTwo')
+    expect(createPlaintext('<ul><li>One</li><li>Two</li></ul>')).toBe('One\nTwo')
+  })
+
+  it('does not depend on source formatting', () => {
+    const minified = '<div><p>Hello <strong>Jane</strong>,</p><p>Welcome!</p></div>'
+    const formatted = `<div>
+  <p>
+    Hello
+    <strong>Jane</strong>,
+  </p>
+  <p>Welcome!</p>
+</div>`
+    expect(createPlaintext(formatted)).toBe(createPlaintext(minified))
+    expect(createPlaintext(minified)).toBe('Hello Jane,\n\nWelcome!')
+  })
+
+  it('keeps line breaks in <pre>', () => {
+    expect(createPlaintext('<pre>a\nb</pre>')).toBe('a\nb')
+  })
+
+  it('removes zero-width spacing characters', () => {
+    const result = createPlaintext('<p>Hello</p><div role="separator">&zwj;</div><p>World&#8203;</p>')
+    expect(result).toBe('Hello\n\nWorld')
   })
 
   it('strips a full email template', () => {

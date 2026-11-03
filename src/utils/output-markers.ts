@@ -58,7 +58,7 @@ const hasMarkers = (html: string): boolean =>
 export function stripForHtml(html: string): string {
   if (!hasMarkers(html)) return html
   const isXhtml = /<!DOCTYPE\s+[^>]*xhtml/i.test(html)
-  return serialize(applyRules(parse(html), [
+  return serialize(applyRules(parse(html, { decodeEntities: false }), [
     [PLAINTEXT_ONLY_ATTR, 'drop'],
     [HTML_ONLY_ATTR, 'unwrap'],
   ]), { selfClosingTags: isXhtml })
@@ -73,7 +73,7 @@ export function stripForHtml(html: string): string {
  */
 export function stripForPlaintext(html: string): string {
   if (!hasMarkers(html)) return html
-  return serialize(applyRules(parse(html), [
+  return serialize(applyRules(parse(html, { decodeEntities: false }), [
     [HTML_ONLY_ATTR, 'drop'],
     [PLAINTEXT_ONLY_ATTR, 'unwrap'],
   ]))

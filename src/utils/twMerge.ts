@@ -84,6 +84,13 @@ const sides = ['top', 'right', 'bottom', 'left'] as const
 
 export const twMerge = extendTailwindMerge({
   extend: {
+    /**
+     * Font sizes from `@maizzle/tailwindcss` that aren't t-shirt sizes,
+     * so tailwind-merge would otherwise see them as text colors.
+     */
+    theme: {
+      text: ['0', 'xxs'],
+    },
     classGroups: {
       ...Object.fromEntries(utilities.map((name) => [name, [{ [name]: [() => true] }]])),
       'prose-size': [{ prose: ['sm', 'base', 'lg', 'xl'] }],

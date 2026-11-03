@@ -712,7 +712,7 @@ export async function createRenderer(
       if (renderContext.preheader) {
         const { text, fillerCount } = renderContext.preheader
         const filler = '\u2007\uFEFF\u034F '.repeat(fillerCount)
-        const previewHtml = `<div style="display:none">${text}${filler}\u00A0</div>`
+        const previewHtml = `<div data-maizzle-html-only><div style="display:none">${text}${filler}\u00A0</div></div>`
         html = html.replace(/<body([^>]*)>/, `<body$1>${previewHtml}`)
       }
 

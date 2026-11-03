@@ -259,6 +259,23 @@ describe('serve dev server', () => {
     expect(html).toContain('<!-- transformed -->')
   }, 30000)
 
+  it('applies plaintext.options in the plaintext preview', async () => {
+    writeFileSync(join(tempDir, 'maizzle.config.js'), `
+      export default {
+        plaintext: { options: { ignoreTags: ['b'] } },
+      }
+    `)
+    mkdirSync(join(tempDir, 'emails'), { recursive: true })
+    writeFileSync(join(tempDir, 'emails/welcome.vue'), '<template><p>Hello <b>World</b></p></template>\n')
+
+    server = await serve({ port: 3157, silent: true })
+
+    const res = await fetch('http://localhost:3157/__maizzle/plaintext/emails/welcome')
+    const text = await res.text()
+
+    expect(text).toContain('<b>World</b>')
+  }, 30000)
+
   it('renders definePreviewProps() sample data in the dev server but not in render()', async () => {
     mkdirSync(join(tempDir, 'emails'), { recursive: true })
     writeFileSync(join(tempDir, 'emails/welcome.vue'), `

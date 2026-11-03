@@ -11,6 +11,16 @@ describe('twMerge', () => {
     expect(twMerge('text-underline-color-red-500', 'text-blue-500')).toBe('text-underline-color-red-500 text-blue-500')
   })
 
+  it('does not treat custom font sizes as a text color', () => {
+    expect(twMerge('text-xxs/4', 'text-[#0d0d0d]')).toBe('text-xxs/4 text-[#0d0d0d]')
+    expect(twMerge('text-0', 'text-red-500')).toBe('text-0 text-red-500')
+  })
+
+  it('merges custom font sizes with other font sizes', () => {
+    expect(twMerge('text-xxs', 'text-lg')).toBe('text-lg')
+    expect(twMerge('text-lg', 'text-0')).toBe('text-0')
+  })
+
   it('merges text-underline-* utilities within their own group', () => {
     expect(twMerge('text-underline-1', 'text-underline-2')).toBe('text-underline-2')
     expect(twMerge('text-underline-style-dotted', 'text-underline-style-solid')).toBe('text-underline-style-solid')

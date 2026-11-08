@@ -148,6 +148,8 @@ Props: `href` (required), `variant` (`'solid'`(default)/`'outline'`/`'ghost'`/`'
 <Button href="https://example.com" icon="/arrow.png" icon-position="left">With icon</Button>
 ```
 
+`align` is fixed across breakpoints and `class` goes on the `<a>`, not the wrapper. For responsive alignment, omit `align` and set it on a parent: `<div class="text-center sm:text-left"><Button …/></div>`.
+
 ## Img
 Plain `<img>`, or `<picture>` when `darkSrc`/`motionSrc` is set. Defaults: `max-width: 100%`, `vertical-align: middle`. `width` renders unitless.
 

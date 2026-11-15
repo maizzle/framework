@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { outputMarkers, protectMarkers, stripForHtml, stripForPlaintext } from '../../utils/output-markers.ts'
+import { outputMarkers, outsideMarkers, protectMarkers, stripForHtml, stripForPlaintext } from '../../utils/output-markers.ts'
 import type { RenderContext } from '../../composables/renderContext.ts'
 
 function setup() {
@@ -116,6 +116,27 @@ describe('output-markers', () => {
 
     it('calls the transform directly when there are no markers', () => {
       expect(protectMarkers('a_b', s => s.replace('_', '-'))).toBe('a-b')
+    })
+  })
+
+  describe('outsideMarkers', () => {
+    it('keeps markers out of the transform input', () => {
+      const ctx: RenderContext = { sfcEventHandlers: [] }
+      const [s, e] = outputMarkers(ctx, 'PT')
+      const raw = `__MZRAW_${ctx.nonce}_0__`
+      const seen: string[] = []
+
+      const out = outsideMarkers(`a_é${s}b_é${e}c${raw}d_é`, (str) => {
+        seen.push(str)
+        return str.replace(/[^\x00-\x7F]|_/g, '')
+      })
+
+      expect(out).toBe(`a${s}b${e}c${raw}d`)
+      expect(seen.join('')).not.toContain('__MZ')
+    })
+
+    it('calls the transform directly when there are no markers', () => {
+      expect(outsideMarkers('a_b', s => s.replace('_', '-'))).toBe('a-b')
     })
   })
 

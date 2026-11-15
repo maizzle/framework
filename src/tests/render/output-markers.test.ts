@@ -131,4 +131,26 @@ describe('Plaintext / NotPlaintext via render()', () => {
     expect(result.plaintext).toContain('snake-case {{ $a->b_c }}')
     expect(result.plaintext).not.toMatch(/MZ(PT|HO|RAW)/)
   })
+
+  it('survives replaceStrings removing non-ASCII characters', async () => {
+    const result = await render(`
+      <template>
+        <div>
+          <Plaintext>only-pt café</Plaintext>
+          <NotPlaintext>only-html café</NotPlaintext>
+          <p>shared café <Raw>{{ $a->b }} – raw</Raw></p>
+        </div>
+      </template>
+    `, { plaintext: true, replaceStrings: { '[^\\x00-\\x7F]': '' } })
+
+    expect(result.html).not.toContain('only-pt')
+    expect(result.html).toContain('only-html caf')
+    expect(result.html).toContain('shared caf {{ $a->b }} – raw')
+    expect(result.html).not.toMatch(/MZ(PT|HO|RAW)/)
+
+    expect(result.plaintext).toContain('only-pt caf')
+    expect(result.plaintext).not.toContain('only-html')
+    expect(result.plaintext).toContain('shared caf {{ $a->b }} – raw')
+    expect(result.plaintext).not.toMatch(/MZ(PT|HO|RAW)/)
+  })
 })

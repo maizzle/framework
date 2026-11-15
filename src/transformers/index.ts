@@ -24,7 +24,7 @@ import { minifyCodeInline } from './minifyCodeInline.ts'
 import { minify } from './minify.ts'
 import type { MaizzleConfig } from '../types/config.ts'
 import { restoreRaw } from '../utils/raw.ts'
-import { protectMarkers } from '../utils/output-markers.ts'
+import { outsideMarkers } from '../utils/output-markers.ts'
 import type { RawBlocks, TailwindBlock } from '../composables/renderContext.ts'
 
 /**
@@ -205,7 +205,7 @@ export async function runTransformers(
   result = msoConditionals(result)
 
   // 14. Replace strings
-  if (enabled('replaceStrings')) result = protectMarkers(result, str => replaceStrings(str, effective))
+  if (enabled('replaceStrings')) result = outsideMarkers(result, str => replaceStrings(str, effective))
 
   // 15. Format — skipped when `minify` is enabled
   const minifyWillRun = enabled('minify') && !!effective.html?.minify

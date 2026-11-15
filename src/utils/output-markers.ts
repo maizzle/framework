@@ -27,11 +27,11 @@ const ANY_MARKER = /__MZ(?:PT|HO)_[a-f0-9]{32}_\d+_[SE]__|__MZRAW_[a-f0-9]{32}_\
 const PLACEHOLDER = /([-]+)/g
 
 /**
- * Run a user-defined string transform (filters, `replaceStrings`)
- * without letting it alter output or `<Raw>` markers. They're
- * swapped for placeholders made of private-use characters,
- * which case changes and typical patterns won't touch,
- * while the content between them is still transformed.
+ * Run a filter without letting it alter output or `<Raw>` markers.
+ * They're swapped for placeholders made of private-use characters,
+ * which case changes and literal-string filters won't touch,
+ * while the filter still sees the content as one string
+ * (so `append`, `truncate` etc. keep working).
  */
 export function protectMarkers(str: string, fn: (str: string) => string): string {
   if (!str.includes('__MZ')) return fn(str)
@@ -46,6 +46,21 @@ export function protectMarkers(str: string, fn: (str: string) => string): string
     const index = Number.parseInt([...encoded].map(c => (c.charCodeAt(0) - 0xE010).toString(16)).join(''), 16)
     return markers[index] ?? match
   })
+}
+
+/**
+ * Run a document-wide transform (`replaceStrings`) only on the text
+ * between output and `<Raw>` markers. Its user-defined patterns
+ * can match any character, so markers are kept out of its
+ * input entirely instead of being swapped for placeholders.
+ */
+export function outsideMarkers(str: string, fn: (str: string) => string): string {
+  if (!str.includes('__MZ')) return fn(str)
+
+  return str
+    .split(new RegExp(`(${ANY_MARKER.source})`))
+    .map((part, i) => i % 2 ? part : fn(part))
+    .join('')
 }
 
 /**

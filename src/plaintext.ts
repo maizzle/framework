@@ -64,7 +64,8 @@ function addLineBreaks(nodes: ChildNode[], preserveWhitespace = false): ChildNod
  */
 const ESP_CONTROL = /\{%|\{\{[~-]?\s*(?:[#/^]|(?:if|else|end|range|with)\b)|<%|@(?:if|elseif|else|endif|unless|endunless|isset|endisset|foreach|endforeach|for|endfor|switch|endswitch)\b|\*\|(?:IF|ELSEIF|ELSE|END):|%%\[/
 
-const ANCHOR_OPEN = /<a\b[^>]*>/gi
+// Quoted attribute values may contain `>`, like Blade's `{{ $obj->url }}`
+const ANCHOR_OPEN = /<a\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi
 const ANCHOR_CLOSE = /<\/a\s*>/gi
 const HREF_ATTR = /\shref\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/i
 

@@ -57,8 +57,46 @@ function addLineBreaks(nodes: ChildNode[], preserveWhitespace = false): ChildNod
   })
 }
 
+/**
+ * Control-flow tags of common ESP template languages: Liquid, Twig,
+ * Jinja, Nunjucks (`{% %}`), Handlebars, Mustache and Go templates,
+ * ERB/EJS, Blade directives, Mailchimp merge tags, AMPscript.
+ */
+const ESP_CONTROL = /\{%|\{\{[~-]?\s*(?:[#/^]|(?:if|else|end|range|with)\b)|<%|@(?:if|elseif|else|endif|unless|endunless|isset|endisset|foreach|endforeach|for|endfor|switch|endswitch)\b|\*\|(?:IF|ELSEIF|ELSE|END):|%%\[/
+
+const ANCHOR_OPEN = /<a\b[^>]*>/gi
+const ANCHOR_CLOSE = /<\/a\s*>/gi
+const HREF_ATTR = /\shref\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/i
+
+/**
+ * Link URLs are written out where a link closes. When a link's
+ * content contains ESP control flow or another link, its
+ * closing tag may sit in a different conditional branch
+ * than its opening tag, so the URL would end up in the
+ * wrong branch. For those links, emit an empty link
+ * with the same `href` in place of the opening tag,
+ * so the URL is written out where the link opens.
+ */
+function hoistSplitLinkHrefs(html: string): string {
+  if (!html.includes('<a') && !html.includes('<A')) return html
+
+  return html.replace(ANCHOR_OPEN, (tag, offset: number) => {
+    const href = tag.match(HREF_ATTR)
+    if (!href) return tag
+
+    const start = offset + tag.length
+    ANCHOR_CLOSE.lastIndex = start
+    const close = ANCHOR_CLOSE.exec(html)
+    const content = html.slice(start, close ? close.index : undefined)
+
+    if (!/<a\b/i.test(content) && !ESP_CONTROL.test(content)) return tag
+
+    return `<a${href[0]}></a>`
+  })
+}
+
 export function createPlaintext(html: string, options?: Record<string, unknown>): string {
-  const { result } = stripHtml(serialize(addLineBreaks(parse(html))), defu(options, defaults))
+  const { result } = stripHtml(serialize(addLineBreaks(parse(hoistSplitLinkHrefs(html)))), defu(options, defaults))
 
   return result
     .replace(/[ \t]+\n/g, '\n')

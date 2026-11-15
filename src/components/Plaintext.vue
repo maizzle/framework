@@ -1,14 +1,19 @@
 <script lang="ts">
-import { h } from 'vue'
+import { inject } from 'vue'
+import { RenderContextKey } from '../composables/renderContext'
+import { outputMarkers } from '../utils/output-markers'
 
 export default {
   name: 'Plaintext',
   setup(_, { slots }) {
-    return () => h(
-      'div',
-      { 'data-maizzle-plaintext-only': '' },
-      slots.default?.(),
-    )
+    const ctx = inject(RenderContextKey, null)
+
+    // Outside a Maizzle render there is no plaintext output
+    if (!ctx) return () => null
+
+    const [start, end] = outputMarkers(ctx, 'PT')
+
+    return () => [start, slots.default?.(), end]
   },
 }
 </script>

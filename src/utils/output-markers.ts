@@ -1,80 +1,54 @@
-import { parse, serialize } from './ast/index.ts'
-import type { ChildNode, Element } from 'domhandler'
+import { renderNonce } from '../composables/renderContext.ts'
+import type { RenderContext } from '../composables/renderContext.ts'
 
 /**
- * Sentinel attributes the `<Plaintext>` and `<NotPlaintext>`
- * components stamp on their wrapper `<div>` so the build step
- * can route their slot content to one output and remove it
- * entirely from the other.
+ * `PT` marks plaintext-only content (`<Plaintext>`), `HO` marks
+ * HTML-only content (`<NotPlaintext>`, preheaders).
  */
-export const PLAINTEXT_ONLY_ATTR = 'data-maizzle-plaintext-only'
-export const HTML_ONLY_ATTR = 'data-maizzle-html-only'
-
-type Op = 'drop' | 'unwrap'
-type Rule = readonly [attr: string, op: Op]
-
-const isElement = (n: ChildNode): n is Element => n.type === 'tag'
+export type OutputMarkerKind = 'PT' | 'HO'
 
 /**
- * Apply marker rules to a forest of nodes.
+ * Start/end tokens that components wrap their content in, so the
+ * build can route it to one output and remove it from the other.
  *
- * - `drop` removes the matched element and its descendants.
- * - `unwrap` removes the wrapper element but keeps its children,
- *   splicing them into the parent's child list in place.
- *
- * Non-matching elements recurse so nested markers are handled.
+ * Plain text tokens rather than wrapper elements: stripping them
+ * is a string replace, so the document never goes through a
+ * DOM round-trip that would restructure `<Raw>` content
+ * or undo formatting applied by the transformers.
  */
-function applyRules(nodes: ChildNode[], rules: readonly Rule[]): ChildNode[] {
-  const out: ChildNode[] = []
-  for (const n of nodes) {
-    if (isElement(n)) {
-      const match = rules.find(([attr]) => n.attribs?.[attr] !== undefined)
-      if (match) {
-        const [, op] = match
-        if (op === 'drop') continue
-        out.push(...applyRules((n.children ?? []) as ChildNode[], rules))
-        continue
-      }
-      if (n.children?.length) {
-        n.children = applyRules(n.children as ChildNode[], rules) as Element['children']
-      }
-    }
-    out.push(n)
-  }
-  return out
-}
+export function outputMarkers(ctx: RenderContext, kind: OutputMarkerKind): [start: string, end: string] {
+  const nonce = renderNonce(ctx)
+  const id = ctx.outputMarkerCount = (ctx.outputMarkerCount ?? 0) + 1
 
-const hasMarkers = (html: string): boolean =>
-  html.includes(PLAINTEXT_ONLY_ATTR) || html.includes(HTML_ONLY_ATTR)
-
-/**
- * Strip output markers for the HTML output: drop plaintext-only
- * subtrees entirely, unwrap html-only wrappers (keep children).
- *
- * When no markers are present, the input is returned unchanged so
- * the post-transformer formatting (prettify, XHTML self-closing
- * slashes, etc.) survives intact for the typical case.
- */
-export function stripForHtml(html: string): string {
-  if (!hasMarkers(html)) return html
-  const isXhtml = /<!DOCTYPE\s+[^>]*xhtml/i.test(html)
-  return serialize(applyRules(parse(html, { decodeEntities: false }), [
-    [PLAINTEXT_ONLY_ATTR, 'drop'],
-    [HTML_ONLY_ATTR, 'unwrap'],
-  ]), { selfClosingTags: isXhtml })
+  return [`__MZ${kind}_${nonce}_${id}_S__`, `__MZ${kind}_${nonce}_${id}_E__`]
 }
 
 /**
- * Strip output markers for the plaintext source: drop html-only
- * subtrees entirely, unwrap plaintext-only wrappers (keep children).
- *
- * The result is fed to `createPlaintext`, which then strips all
- * remaining tags via `string-strip-html`.
+ * Matches a whole marked block, from its start token to the end
+ * token with the same id. Nested blocks of any kind are
+ * dropped along with the block that contains them.
  */
-export function stripForPlaintext(html: string): string {
-  if (!hasMarkers(html)) return html
-  return serialize(applyRules(parse(html, { decodeEntities: false }), [
-    [HTML_ONLY_ATTR, 'drop'],
-    [PLAINTEXT_ONLY_ATTR, 'unwrap'],
-  ]))
+const blockRe = (kind: OutputMarkerKind, nonce: string) =>
+  new RegExp(`__MZ${kind}_${nonce}_(\\d+)_S__[\\s\\S]*?__MZ${kind}_${nonce}_\\1_E__`, 'g')
+
+const tokenRe = (kind: OutputMarkerKind, nonce: string) =>
+  new RegExp(`__MZ${kind}_${nonce}_\\d+_[SE]__`, 'g')
+
+/**
+ * HTML output: drop plaintext-only blocks entirely,
+ * keep HTML-only content but remove its tokens.
+ */
+export function stripForHtml(html: string, nonce?: string): string {
+  if (!nonce) return html
+  return html.replace(blockRe('PT', nonce), '').replace(tokenRe('HO', nonce), '')
+}
+
+/**
+ * Plaintext source: drop HTML-only blocks entirely, keep
+ * plaintext-only content but remove its tokens. The
+ * result is fed to `createPlaintext`.
+ */
+export function stripForPlaintext(html: string, nonce?: string): string {
+  if (!nonce) return html
+  return html.replace(blockRe('HO', nonce), '').replace(tokenRe('PT', nonce), '')
 }

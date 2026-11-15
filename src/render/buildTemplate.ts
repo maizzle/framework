@@ -86,12 +86,12 @@ export async function buildTemplate(
 
     const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
 
-    html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks, rendered.sourceFiles)
+    html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks, rendered.sourceFiles, rendered.raw)
 
     html = await events.fireAfterTransform({ config: templateConfig, template, html })
     if (doctype) html = `${doctype}\n${html}`
 
-    const htmlOut = stripForHtml(html)
+    const htmlOut = stripForHtml(html, rendered.nonce)
     const sfcOutputPath = rendered.outputPath
     let outputFilePath: string
 
@@ -114,7 +114,7 @@ export async function buildTemplate(
     if (globalPlaintext || sfcPlaintext) {
       const globalCfg = typeof globalPlaintext === 'object' ? globalPlaintext : {}
       const stripOptions = defu(sfcPlaintext?.options, globalCfg.options)
-      const plaintext = createPlaintext(stripForPlaintext(html), stripOptions)
+      const plaintext = createPlaintext(stripForPlaintext(html, rendered.nonce), stripOptions)
       const ptExtension = sfcPlaintext?.extension ?? globalCfg.extension ?? 'txt'
 
       let ptOutputPath: string

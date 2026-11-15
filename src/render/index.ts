@@ -94,7 +94,7 @@ async function renderWith(
 
   const doctype = rendered.doctype ?? rendered.templateConfig.doctype ?? '<!DOCTYPE html>'
 
-  html = await runTransformers(html, rendered.templateConfig, isFile ? resolve(template) : undefined, doctype, rendered.tailwindBlocks)
+  html = await runTransformers(html, rendered.templateConfig, isFile ? resolve(template) : undefined, doctype, rendered.tailwindBlocks, undefined, rendered.raw)
   if (doctype) html = `${doctype}\n${html}`
 
   const globalPlaintext = rendered.templateConfig.plaintext
@@ -105,10 +105,10 @@ async function renderWith(
   if (globalPlaintext || sfcPlaintext) {
     const globalCfg = typeof globalPlaintext === 'object' ? globalPlaintext : {}
     const stripOptions = defu(sfcPlaintext?.options, globalCfg.options)
-    plaintextResult = createPlaintext(stripForPlaintext(html), stripOptions)
+    plaintextResult = createPlaintext(stripForPlaintext(html, rendered.nonce), stripOptions)
   }
 
-  return { html: stripForHtml(html), config: rendered.templateConfig, plaintext: plaintextResult }
+  return { html: stripForHtml(html, rendered.nonce), config: rendered.templateConfig, plaintext: plaintextResult }
 }
 
 /**

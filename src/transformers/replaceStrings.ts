@@ -26,15 +26,22 @@ export function replaceStrings(html: string, config: MaizzleConfig = {}, skip?: 
       if (spans.length === 0) return result.replace(new RegExp(pattern, 'gi'), replacement)
 
       const sticky = new RegExp(pattern, 'iy')
+      let cursor = 0
 
       return result.replace(new RegExp(pattern, 'gi'), (match: string, ...args: unknown[]) => {
         const groupsLast = typeof args.at(-1) !== 'string'
         const offset = args.at(groupsLast ? -3 : -2) as number
         const end = offset + match.length
 
-        const overlaps = spans.some(([start, stop]) => match.length
-          ? offset < stop && end > start
-          : offset > start && offset < stop)
+        /**
+         * Matches come in increasing offset order and spans are sorted,
+         * so spans ending at or before this match can't overlap any
+         * later match either: skip them for good.
+         */
+        while (cursor < spans.length && spans[cursor][1] <= offset) cursor++
+
+        const span = spans[cursor]
+        const overlaps = span !== undefined && (match.length ? end > span[0] : offset > span[0])
 
         if (overlaps) return match
         if (!replacement.includes('$')) return replacement

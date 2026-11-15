@@ -153,4 +153,15 @@ describe('Plaintext / NotPlaintext via render()', () => {
     expect(result.plaintext).toContain('shared caf {{ $a->b }} – raw')
     expect(result.plaintext).not.toMatch(/MZ(PT|HO|RAW)/)
   })
+
+  it('keeps document-wide anchors in replaceStrings patterns', async () => {
+    const result = await render(`
+      <template>
+        <p>A<Plaintext>P</Plaintext><NotPlaintext>H</NotPlaintext><Raw>R</Raw>Z</p>
+      </template>
+    `, { plaintext: true, replaceStrings: { '^': '[', '$': ']' } })
+
+    expect(result.html).toBe('<!DOCTYPE html>\n[<p>AHRZ</p>]')
+    expect(result.plaintext).toBe('[\n\nAPRZ\n\n]')
+  })
 })

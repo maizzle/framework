@@ -68,4 +68,34 @@ describe('replaceStrings', () => {
       expect(run('', { 'foo': 'bar' })).toBe('')
     })
   })
+
+  describe('skip', () => {
+    const skip = /<M\d>/g
+    const run = (html: string, replacements: Record<string, string>) =>
+      replaceStrings(html, { replaceStrings: replacements }, skip)
+
+    it('leaves skipped spans untouched', () => {
+      expect(run('a_<M1>b_<M2>', { '_|M|\\d': '-' })).toBe('a-<M1>b-<M2>')
+    })
+
+    it('keeps document-wide anchors', () => {
+      expect(run('a<M1>b<M2>c', { '^': '[', '$': ']' })).toBe('[a<M1>b<M2>c]')
+    })
+
+    it('keeps lookaround context across skipped spans', () => {
+      expect(run('a<M1>b', { '(?<=1>)b': 'B' })).toBe('a<M1>B')
+    })
+
+    it('expands replacement patterns', () => {
+      expect(run('ab<M1>ab', { '(a)(?<second>b)': '$2$1$<second>[$&]$$' })).toBe('bab[ab]$<M1>bab[ab]$')
+    })
+
+    it('expands context patterns using the whole document', () => {
+      expect(run('xay', { 'a': '($`|$\')' })).toBe('x(x|y)y')
+    })
+
+    it('skips matches that overlap a span', () => {
+      expect(run('a<M1>b', { 'a<M': 'X' })).toBe('a<M1>b')
+    })
+  })
 })

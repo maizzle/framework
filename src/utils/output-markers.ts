@@ -23,7 +23,8 @@ export function outputMarkers(ctx: RenderContext, kind: OutputMarkerKind): [star
   return [`__MZ${kind}_${nonce}_${id}_S__`, `__MZ${kind}_${nonce}_${id}_E__`]
 }
 
-const ANY_MARKER = /__MZ(?:PT|HO)_[a-f0-9]{32}_\d+_[SE]__|__MZRAW_[a-f0-9]{32}_\d+__/g
+/** Any output or `<Raw>` marker. */
+export const ANY_MARKER = /__MZ(?:PT|HO)_[a-f0-9]{32}_\d+_[SE]__|__MZRAW_[a-f0-9]{32}_\d+__/g
 const PLACEHOLDER = /([-]+)/g
 
 /**
@@ -46,21 +47,6 @@ export function protectMarkers(str: string, fn: (str: string) => string): string
     const index = Number.parseInt([...encoded].map(c => (c.charCodeAt(0) - 0xE010).toString(16)).join(''), 16)
     return markers[index] ?? match
   })
-}
-
-/**
- * Run a document-wide transform (`replaceStrings`) only on the text
- * between output and `<Raw>` markers. Its user-defined patterns
- * can match any character, so markers are kept out of its
- * input entirely instead of being swapped for placeholders.
- */
-export function outsideMarkers(str: string, fn: (str: string) => string): string {
-  if (!str.includes('__MZ')) return fn(str)
-
-  return str
-    .split(new RegExp(`(${ANY_MARKER.source})`))
-    .map((part, i) => i % 2 ? part : fn(part))
-    .join('')
 }
 
 /**

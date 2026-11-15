@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { outputMarkers, stripForHtml, stripForPlaintext } from '../../utils/output-markers.ts'
+import { outputMarkers, protectMarkers, stripForHtml, stripForPlaintext } from '../../utils/output-markers.ts'
 import type { RenderContext } from '../../composables/renderContext.ts'
 
 function setup() {
@@ -98,6 +98,24 @@ describe('output-markers', () => {
       const out = stripForPlaintext(`a${ho(`b${pt('c')}`)}d`, ctx.nonce)
 
       expect(out).toBe('ad')
+    })
+  })
+
+  describe('protectMarkers', () => {
+    it('keeps markers intact while transforming the content around them', () => {
+      const ctx: RenderContext = { sfcEventHandlers: [] }
+      // 20 blocks, so placeholder indexes go past a single hex digit
+      const blocks = Array.from({ length: 20 }, () => outputMarkers(ctx, 'PT'))
+      const raw = `__MZRAW_${ctx.nonce}_0__`
+      const html = blocks.map(([s, e]) => `${s}item_1${e}`).join('') + raw
+
+      const out = protectMarkers(html, s => s.toUpperCase().replaceAll('_', '-').replace(/\d/g, '#'))
+
+      expect(out).toBe(blocks.map(([s, e]) => `${s}ITEM-#${e}`).join('') + raw)
+    })
+
+    it('calls the transform directly when there are no markers', () => {
+      expect(protectMarkers('a_b', s => s.replace('_', '-'))).toBe('a-b')
     })
   })
 

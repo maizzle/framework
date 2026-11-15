@@ -87,4 +87,48 @@ describe('Plaintext / NotPlaintext via render()', () => {
     expect(result.plaintext).toContain('label')
     expect(result.plaintext).toContain('https://example.com/path')
   })
+
+  it('survives a filter on an ancestor of Plaintext', async () => {
+    const result = await render(`
+      <template>
+        <div uppercase>
+          <Plaintext>only-pt</Plaintext>
+          <NotPlaintext>only-html</NotPlaintext>
+          <p>shared <Raw>{{ $a->b }}</Raw></p>
+        </div>
+      </template>
+    `, { plaintext: true })
+
+    expect(result.html).not.toMatch(/only-pt/i)
+    expect(result.html).toContain('ONLY-HTML')
+    expect(result.html).toContain('SHARED {{ $a->b }}')
+    expect(result.html).not.toMatch(/__MZ/i)
+
+    expect(result.plaintext).toContain('ONLY-PT')
+    expect(result.plaintext).not.toMatch(/only-html/i)
+    expect(result.plaintext).toContain('SHARED {{ $a->b }}')
+    expect(result.plaintext).not.toMatch(/__MZ/i)
+  })
+
+  it('survives replaceStrings replacing underscores', async () => {
+    const result = await render(`
+      <template>
+        <div>
+          <Plaintext>only_pt</Plaintext>
+          <NotPlaintext>only_html</NotPlaintext>
+          <p>snake_case <Raw>{{ $a->b_c }}</Raw></p>
+        </div>
+      </template>
+    `, { plaintext: true, replaceStrings: { _: '-' } })
+
+    expect(result.html).not.toMatch(/only.pt/)
+    expect(result.html).toContain('only-html')
+    expect(result.html).toContain('snake-case {{ $a->b_c }}')
+    expect(result.html).not.toMatch(/MZ(PT|HO|RAW)/)
+
+    expect(result.plaintext).toContain('only-pt')
+    expect(result.plaintext).not.toMatch(/only.html/)
+    expect(result.plaintext).toContain('snake-case {{ $a->b_c }}')
+    expect(result.plaintext).not.toMatch(/MZ(PT|HO|RAW)/)
+  })
 })

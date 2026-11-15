@@ -23,6 +23,31 @@ export function outputMarkers(ctx: RenderContext, kind: OutputMarkerKind): [star
   return [`__MZ${kind}_${nonce}_${id}_S__`, `__MZ${kind}_${nonce}_${id}_E__`]
 }
 
+const ANY_MARKER = /__MZ(?:PT|HO)_[a-f0-9]{32}_\d+_[SE]__|__MZRAW_[a-f0-9]{32}_\d+__/g
+const PLACEHOLDER = /([-]+)/g
+
+/**
+ * Run a user-defined string transform (filters, `replaceStrings`)
+ * without letting it alter output or `<Raw>` markers. They're
+ * swapped for placeholders made of private-use characters,
+ * which case changes and typical patterns won't touch,
+ * while the content between them is still transformed.
+ */
+export function protectMarkers(str: string, fn: (str: string) => string): string {
+  if (!str.includes('__MZ')) return fn(str)
+
+  const markers: string[] = []
+  const hidden = str.replace(ANY_MARKER, (marker) => {
+    const index = (markers.push(marker) - 1).toString(16)
+    return `${[...index].map(c => String.fromCharCode(0xE010 + Number.parseInt(c, 16))).join('')}`
+  })
+
+  return fn(hidden).replace(PLACEHOLDER, (match, encoded: string) => {
+    const index = Number.parseInt([...encoded].map(c => (c.charCodeAt(0) - 0xE010).toString(16)).join(''), 16)
+    return markers[index] ?? match
+  })
+}
+
 /**
  * Matches a whole marked block, from its start token to the end
  * token with the same id. Nested blocks of any kind are

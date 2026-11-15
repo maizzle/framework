@@ -1,6 +1,7 @@
 import { Text } from 'domhandler'
 import type { ChildNode, Element } from 'domhandler'
 import { parse, serialize } from '../../utils/ast/index.ts'
+import { protectMarkers } from '../../utils/output-markers.ts'
 import { defaults } from './defaults.ts'
 
 export type { FilterFunction } from './defaults.ts'
@@ -81,9 +82,12 @@ export function filtersDom(dom: ChildNode[], custom: FiltersConfig = {}): ChildN
     // Serialize children to get innerHTML
     let content = serialize(el.children as ChildNode[])
 
-    // Apply each filter in attribute order
-    for (const { name, value } of matched) {
-      content = allFilters[name](content, value)
+    // Apply each filter in attribute order, leaving output and <Raw> markers intact
+    content = protectMarkers(content, str =>
+      matched.reduce((acc, { name, value }) => allFilters[name](acc, value), str),
+    )
+
+    for (const { name } of matched) {
       delete el.attribs[name]
     }
 

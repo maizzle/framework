@@ -40,16 +40,7 @@ function encodeTextNodes(dom: ChildNode[], inRawText = false): void {
   }
 }
 
-/**
- * Stands in for `"` in attribute values that have no `'`, so they can be
- * written single-quoted. dom-serializer always double-quotes values,
- * writing inner `"` as `&quot;`, which breaks ESP tags that take
- * string arguments, like `href='{{ url "vip" }}'`.
- */
-const QUOTE = String.fromCharCode(0xE000)
-const QUOTED_ATTR = new RegExp(`="([^"]*${QUOTE}[^"]*)"`, 'g')
-
-function hideDoubleQuotes(dom: ChildNode[], hidden: Array<[Element, string, string]>): void {
+function hideDoubleQuotes(dom: ChildNode[], token: string, hidden: Array<[Element, string, string]>): void {
   for (const node of dom) {
     if (!('children' in node)) continue
 
@@ -57,11 +48,11 @@ function hideDoubleQuotes(dom: ChildNode[], hidden: Array<[Element, string, stri
     for (const [name, value] of Object.entries(el.attribs ?? {})) {
       if (value.includes('"') && !value.includes("'")) {
         hidden.push([el, name, value])
-        el.attribs[name] = value.replaceAll('"', QUOTE)
+        el.attribs[name] = value.replaceAll('"', token)
       }
     }
 
-    hideDoubleQuotes(el.children as ChildNode[], hidden)
+    hideDoubleQuotes(el.children as ChildNode[], token, hidden)
   }
 }
 
@@ -79,13 +70,26 @@ export function serialize(dom: ChildNode[], options: SerializeOptions = {}): str
 
   encodeTextNodes(dom)
 
+  if (!singleQuoteAttributes) return render(dom, { encodeEntities: false, ...renderOptions })
+
+  /**
+   * dom-serializer always double-quotes values and writes inner `"` as
+   * `&quot;`, which breaks ESP tags that take string arguments, like
+   * `href='{{ url "vip" }}'`. Swap those quotes for a random ASCII
+   * token that no encoding mode alters, and single-quote only
+   * the values that end up holding the token.
+   */
+  const token = `__MZQ_${crypto.randomUUID().replaceAll('-', '')}__`
   const hidden: Array<[Element, string, string]> = []
-  if (singleQuoteAttributes) hideDoubleQuotes(dom, hidden)
+  hideDoubleQuotes(dom, token, hidden)
 
   const html = render(dom, { encodeEntities: false, ...renderOptions })
   if (!hidden.length) return html
 
   for (const [el, name, value] of hidden) el.attribs[name] = value
 
-  return html.replace(QUOTED_ATTR, (_, value: string) => `='${value.replaceAll(QUOTE, '"')}'`)
+  return html.replace(
+    new RegExp(`="([^"]*${token}[^"]*)"`, 'g'),
+    (_, value: string) => `='${value.replaceAll(token, '"')}'`,
+  )
 }

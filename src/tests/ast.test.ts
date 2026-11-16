@@ -178,6 +178,18 @@ describe('serialize', () => {
     expect(serialize(dom, { singleQuoteAttributes: true })).toBe(`<a title="it's &quot;x&quot;">X</a>`)
   })
 
+  it('leaves private-use characters in other attributes alone', () => {
+    const dom = parse(`<i data-icon="\uE000" title="it's"></i><a href='{{ url "vip" }}'>VIP</a>`)
+
+    expect(serialize(dom, { singleQuoteAttributes: true })).toBe(`<i data-icon="\uE000" title="it's"></i><a href='{{ url "vip" }}'>VIP</a>`)
+  })
+
+  it('single-quotes attribute values when encoding entities', () => {
+    const dom = parse(`<a href='{{ url "vip" }}'>VIP</a>`)
+
+    expect(serialize(dom, { singleQuoteAttributes: true, encodeEntities: true })).toBe(`<a href='{{ url "vip" }}'>VIP</a>`)
+  })
+
   it('leaves attribute values in the AST unchanged', () => {
     const dom = parse(`<a href='{{ url "vip" }}'>VIP</a>`)
     serialize(dom, { singleQuoteAttributes: true })

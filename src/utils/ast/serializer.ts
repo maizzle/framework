@@ -40,7 +40,56 @@ function encodeTextNodes(dom: ChildNode[], inRawText = false): void {
   }
 }
 
-export function serialize(dom: ChildNode[], options?: DomSerializerOptions): string {
+function hideDoubleQuotes(dom: ChildNode[], token: string, hidden: Array<[Element, string, string]>): void {
+  for (const node of dom) {
+    if (!('children' in node)) continue
+
+    const el = node as Element
+    for (const [name, value] of Object.entries(el.attribs ?? {})) {
+      if (value.includes('"') && !value.includes("'")) {
+        hidden.push([el, name, value])
+        el.attribs[name] = value.replaceAll('"', token)
+      }
+    }
+
+    hideDoubleQuotes(el.children as ChildNode[], token, hidden)
+  }
+}
+
+export interface SerializeOptions extends DomSerializerOptions {
+  /**
+   * Single-quote attribute values that contain `"` but no `'`. Only
+   * for final output: juice rewrites single-quoted attributes
+   * as double-quoted, so intermediate passes can't use it.
+   */
+  singleQuoteAttributes?: boolean
+}
+
+export function serialize(dom: ChildNode[], options: SerializeOptions = {}): string {
+  const { singleQuoteAttributes, ...renderOptions } = options
+
   encodeTextNodes(dom)
-  return render(dom, { encodeEntities: false, ...options })
+
+  if (!singleQuoteAttributes) return render(dom, { encodeEntities: false, ...renderOptions })
+
+  /**
+   * dom-serializer always double-quotes values and writes inner `"` as
+   * `&quot;`, which breaks ESP tags that take string arguments, like
+   * `href='{{ url "vip" }}'`. Swap those quotes for a random ASCII
+   * token that no encoding mode alters, and single-quote only
+   * the values that end up holding the token.
+   */
+  const token = `__MZQ_${crypto.randomUUID().replaceAll('-', '')}__`
+  const hidden: Array<[Element, string, string]> = []
+  hideDoubleQuotes(dom, token, hidden)
+
+  const html = render(dom, { encodeEntities: false, ...renderOptions })
+  if (!hidden.length) return html
+
+  for (const [el, name, value] of hidden) el.attribs[name] = value
+
+  return html.replace(
+    new RegExp(`="([^"]*${token}[^"]*)"`, 'g'),
+    (_, value: string) => `='${value.replaceAll(token, '"')}'`,
+  )
 }

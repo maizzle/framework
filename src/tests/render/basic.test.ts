@@ -294,4 +294,17 @@ describe('render', () => {
       await expect(render(123 as any)).rejects.toThrow(/expected a file path or SFC source/)
     })
   })
+
+  describe('attribute quotes', () => {
+    it('keeps double quotes inside single-quoted attributes', async () => {
+      const result = await render(`
+        <template>
+          <p><a href='{{ url "vip" }}'>VIP</a></p>
+        </template>
+      `, { plaintext: true })
+
+      expect(result.html).toContain(`<a href='{{ url "vip" }}'>VIP</a>`)
+      expect(result.plaintext).toBe('VIP\n\n{{ url "vip" }}')
+    })
+  })
 })

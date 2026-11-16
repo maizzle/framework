@@ -199,7 +199,7 @@ export async function runTransformers(
 
   // Serialize once — remaining transformers operate on the HTML string
   const isXhtml = doctype ? /xhtml/i.test(doctype) : false
-  let result = serialize(dom, { selfClosingTags: isXhtml })
+  let result = serialize(dom, { selfClosingTags: isXhtml, singleQuoteAttributes: true })
 
   // 13.5. Collapse <Outlook> placeholders into MSO conditional comments
   result = msoConditionals(result)

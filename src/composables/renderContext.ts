@@ -16,6 +16,16 @@ export interface TailwindBlock {
   css?: string
 }
 
+/**
+ * `<Raw>` contents, keyed by marker index. Lives on the
+ * per-render context, never at module level, so
+ * concurrent renders can't see each other's.
+ */
+export interface RawBlocks {
+  nonce: string
+  blocks: string[]
+}
+
 export interface RenderContext {
   doctype?: string
   preheader?: { text: string; fillerCount: number }
@@ -25,6 +35,18 @@ export interface RenderContext {
   outputPath?: string
   fonts?: FontRegistration[]
   tailwindBlocks?: TailwindBlock[]
+  raw?: RawBlocks
+  nonce?: string
+  outputMarkerCount?: number
+}
+
+/**
+ * Per-render random nonce for the markers that components
+ * emit for the build to act on later, so they can't be
+ * forged from data rendered into the template.
+ */
+export function renderNonce(ctx: RenderContext): string {
+  return ctx.nonce ??= crypto.randomUUID().replaceAll('-', '')
 }
 
 // Global symbol registry — same rationale as MaizzleConfigKey in useConfig.ts.

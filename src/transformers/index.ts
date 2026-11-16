@@ -23,7 +23,9 @@ import { format } from './format.ts'
 import { minifyCodeInline } from './minifyCodeInline.ts'
 import { minify } from './minify.ts'
 import type { MaizzleConfig } from '../types/config.ts'
-import type { TailwindBlock } from '../composables/renderContext.ts'
+import { restoreRaw } from '../utils/raw.ts'
+import { ANY_MARKER } from '../utils/output-markers.ts'
+import type { RawBlocks, TailwindBlock } from '../composables/renderContext.ts'
 
 /**
  * Run all Maizzle transformers on the rendered HTML.
@@ -56,6 +58,7 @@ import type { TailwindBlock } from '../composables/renderContext.ts'
  * 14. Replace strings
  * 15. Prettify
  * 16. Minify
+ * 17. Restore <Raw> content
  */
 export async function runTransformers(
   html: string,
@@ -64,12 +67,14 @@ export async function runTransformers(
   doctype?: string,
   tailwindBlocks?: TailwindBlock[],
   sourceFiles?: string[],
+  raw?: RawBlocks,
 ): Promise<string> {
   /**
    * Whole-pipeline opt-out. `<Outlook>` placeholders still have to
-   * become real conditional comments, so that one step always runs.
+   * become real conditional comments, and `<Raw>` markers still
+   * have to be restored, so those steps always run.
    */
-  if (config.useTransformers === false) return msoConditionals(html)
+  if (config.useTransformers === false) return restoreRaw(msoConditionals(html), raw)
 
   /**
    * Per-transformer skip map — only honored when useTransformers is an object.
@@ -200,7 +205,8 @@ export async function runTransformers(
   result = msoConditionals(result)
 
   // 14. Replace strings
-  if (enabled('replaceStrings')) result = replaceStrings(result, effective)
+  // Output and <Raw> markers must survive any user-defined pattern
+  if (enabled('replaceStrings')) result = replaceStrings(result, effective, ANY_MARKER)
 
   // 15. Format — skipped when `minify` is enabled
   const minifyWillRun = enabled('minify') && !!effective.html?.minify
@@ -238,5 +244,10 @@ export async function runTransformers(
    */
   result = minifyCodeInline(result)
 
-  return result
+  /**
+   * 17. Restore <Raw> content. Must be last: anything that runs
+   * after this point would see (and could alter) the content
+   * that <Raw> promises to output verbatim.
+   */
+  return restoreRaw(result, raw)
 }

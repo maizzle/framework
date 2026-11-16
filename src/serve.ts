@@ -560,7 +560,7 @@ function getRendered(absolutePath: string, config: MaizzleConfig, renderer: Rend
         let html = await events.fireAfterRender({ config: templateConfig, template, html: rendered.html })
         const doctype = rendered.doctype ?? templateConfig.doctype ?? '<!DOCTYPE html>'
 
-        html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks, rendered.sourceFiles)
+        html = await runTransformers(html, templateConfig, absolutePath, doctype, rendered.tailwindBlocks, rendered.sourceFiles, rendered.raw)
 
         const rawHtml = await events.fireAfterTransform({ config: templateConfig, template, html })
 
@@ -594,12 +594,12 @@ async function serveRenderedTemplate(url: string, config: MaizzleConfig, rendere
   const absolutePath = resolve(match)
 
   try {
-    const { rawHtml, doctype } = await getRendered(absolutePath, config, renderer, events)
+    const { rawHtml, doctype, rendered } = await getRendered(absolutePath, config, renderer, events)
     let html = rawHtml
     if (doctype) html = `${doctype}\n${html}`
 
     res.setHeader('Content-Type', 'text/html')
-    res.end(stripForHtml(html))
+    res.end(stripForHtml(html, rendered.nonce))
   } catch (error: any) {
     res.statusCode = 500
     res.end(`<pre>${error.stack || error.message}</pre>`)
@@ -634,8 +634,8 @@ async function serveHighlightedSource(url: string, config: MaizzleConfig, render
   const absolutePath = resolve(match)
 
   try {
-    const { rawHtml, doctype } = await getRendered(absolutePath, config, renderer, events)
-    const html = stripForHtml(doctype ? `${doctype}\n${rawHtml}` : rawHtml)
+    const { rawHtml, doctype, rendered } = await getRendered(absolutePath, config, renderer, events)
+    const html = stripForHtml(doctype ? `${doctype}\n${rawHtml}` : rawHtml, rendered.nonce)
 
     const hl = await getHighlighter()
     const highlighted = hl.codeToHtml(html, {
@@ -710,7 +710,7 @@ async function servePlaintext(url: string, config: MaizzleConfig, renderer: Rend
   try {
     const { rawHtml, templateConfig, rendered } = await getRendered(absolutePath, config, renderer, events)
     const globalPlaintext = typeof templateConfig.plaintext === 'object' ? templateConfig.plaintext : {}
-    const plaintext = createPlaintext(stripForPlaintext(rawHtml), defu(rendered.plaintext?.options, globalPlaintext.options))
+    const plaintext = createPlaintext(stripForPlaintext(rawHtml, rendered.nonce), defu(rendered.plaintext?.options, globalPlaintext.options))
 
     res.setHeader('Content-Type', 'text/plain')
     res.end(plaintext)
@@ -755,8 +755,8 @@ async function serveStats(url: string, config: MaizzleConfig, renderer: Renderer
   const absolutePath = resolve(match)
 
   try {
-    const { rawHtml } = await getRendered(absolutePath, config, renderer, events)
-    const html = stripForHtml(rawHtml)
+    const { rawHtml, rendered } = await getRendered(absolutePath, config, renderer, events)
+    const html = stripForHtml(rawHtml, rendered.nonce)
 
     const sizeBytes = new TextEncoder().encode(html).length
 
@@ -822,8 +822,8 @@ async function serveEmailEndpoint(url: string, req: any, res: any, config: Maizz
     let html = doctype ? `${doctype}\n${rawHtml}` : rawHtml
 
     const globalPlaintext = typeof templateConfig.plaintext === 'object' ? templateConfig.plaintext : {}
-    const text = createPlaintext(stripForPlaintext(html), defu(rendered.plaintext?.options, globalPlaintext.options))
-    html = stripForHtml(html)
+    const text = createPlaintext(stripForPlaintext(html, rendered.nonce), defu(rendered.plaintext?.options, globalPlaintext.options))
+    html = stripForHtml(html, rendered.nonce)
 
     const result = await sendEmail(
       { to: payload.to, subject: payload.subject, html, text },

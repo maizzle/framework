@@ -88,3 +88,54 @@ describe('createPlaintext', () => {
     expect(result).not.toContain('color: red')
   })
 })
+
+describe('createPlaintext with links split across ESP conditionals', () => {
+  it('keeps each URL inside the branch its link opens in (Liquid)', () => {
+    const html = '<p>{% if vip %}<a href="https://a.com">{% else %}<a href="https://b.com">{% endif %}VIP{% if vip %}</a>{% else %}</a>{% endif %}</p>'
+    expect(createPlaintext(html)).toBe('{% if vip %}\n\nhttps://a.com\n\n{% else %}\n\nhttps://b.com\n\n{% endif %}VIP{% if vip %}{% else %}{% endif %}')
+  })
+
+  it('keeps each URL inside its branch when closing tags are in a separate conditional', () => {
+    const html = '<p>{% if vip %}<a href="a">{% else %}<a href="b">{% endif %}\n{% if vip %}</a>{% else %}</a>{% endif %}</p>'
+    const result = createPlaintext(html)
+    expect(result).toMatch(/^\{% if vip %\}\s+a\s+\{% else %\}\s+b\s+\{% endif %\}/)
+  })
+
+  it.each([
+    ['Handlebars', '{{#if vip}}', '{{else}}', '{{/if}}'],
+    ['Blade', '@if($vip)', '@else', '@endif'],
+    ['ERB', '<% if vip %>', '<% else %>', '<% end %>'],
+    ['Mailchimp', '*|IF:VIP|*', '*|ELSE:|*', '*|END:IF|*'],
+    ['AMPscript', '%%[ IF @vip THEN ]%%', '%%[ ELSE ]%%', '%%[ ENDIF ]%%'],
+  ])('handles %s conditionals', (_, open, otherwise, close) => {
+    const html = `<p>${open}<a href="a">${otherwise}<a href="b">${close}VIP${open}</a>${otherwise}</a>${close}</p>`
+    const result = createPlaintext(html)
+    const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    expect(result).toMatch(new RegExp(`^${escape(open)}\\s+a\\s+${escape(otherwise)}\\s+b\\s+${escape(close)}VIP`))
+  })
+
+  it('keeps the URL after the text for regular links', () => {
+    const html = '<p>{% if vip %}<a href="a">VIP</a>{% else %}<a href="b">Shop {{ name }}</a>{% endif %}</p>'
+    expect(createPlaintext(html)).toBe('{% if vip %}VIP\n\na\n\n{% else %}Shop {{ name }}\n\nb\n\n{% endif %}')
+  })
+
+  it('preserves the original href quoting', () => {
+    const html = `<p>{% if vip %}<a class="x" href='{{ vip_url }}'>{% endif %}VIP{% if vip %}</a>{% endif %}</p>`
+    expect(createPlaintext(html)).toContain('{% if vip %}\n\n{{ vip_url }}\n\n{% endif %}VIP')
+  })
+
+  it('handles `>` inside quoted attributes', () => {
+    const html = `<p>{% if vip %}<a title='a > b' href="{{ $obj->url }}">{% endif %}VIP{% if vip %}</a>{% endif %}</p>`
+    expect(createPlaintext(html)).toBe('{% if vip %}\n\n{{ $obj->url }}\n\n{% endif %}VIP{% if vip %}{% endif %}')
+  })
+
+  it('handles an encoded `>` inside a quoted href', () => {
+    const html = '<p>{% if vip %}<a href="{{ $obj-&gt;url }}">{% endif %}VIP{% if vip %}</a>{% endif %}</p>'
+    expect(createPlaintext(html)).toBe('{% if vip %}\n\n{{ $obj->url }}\n\n{% endif %}VIP{% if vip %}{% endif %}')
+  })
+
+  it('leaves links without an href alone', () => {
+    const html = '<p>{% if vip %}<a name="top">{% endif %}VIP{% if vip %}</a>{% endif %}</p>'
+    expect(createPlaintext(html)).toBe('{% if vip %}{% endif %}VIP{% if vip %}{% endif %}')
+  })
+})

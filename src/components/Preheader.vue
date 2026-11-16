@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { useSlots, computed } from 'vue'
+import { useSlots, computed, inject } from 'vue'
+import { RenderContextKey } from '../composables/renderContext'
+import { outputMarkers } from '../utils/output-markers'
 
 const props = defineProps({
   /**
@@ -36,12 +38,13 @@ const fillerCount = computed(() =>
     ? Math.max(0, props.spaces)
     : Math.max(0, PREVIEW_LENGTH - text.value.length),
 )
+
+const ctx = inject(RenderContextKey, null)
+const [start, end] = ctx ? outputMarkers(ctx, 'HO') : ['', '']
 </script>
 
 <template>
   <Teleport to="body:start">
-    <div data-maizzle-html-only>
-      <div style="display: none">{{ text }}<template v-for="i in fillerCount" :key="i">&#8199;&#65279;&#847; </template>&nbsp;</div>
-    </div>
+    {{ start }}<div style="display: none">{{ text }}<template v-for="i in fillerCount" :key="i">&#8199;&#65279;&#847; </template>&nbsp;</div>{{ end }}
   </Teleport>
 </template>

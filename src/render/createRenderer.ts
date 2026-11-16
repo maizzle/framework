@@ -22,6 +22,7 @@ import { MaizzleConfigKey } from '../composables/useConfig.ts'
 import { RenderContextKey } from '../composables/renderContext.ts'
 import { componentNameFromPath, type NormalizedComponentSource } from '../utils/componentSources.ts'
 import { shikiToCodeBlock } from '../components/utils.ts'
+import { outputMarkers } from '../utils/output-markers.ts'
 import type { Component, InjectionKey } from 'vue'
 import type { MaizzleConfig, MarkdownConfig, VueConfig } from '../types/index.ts'
 import type { MarkdownExit } from 'markdown-exit'
@@ -42,6 +43,9 @@ export interface RenderedTemplate {
   plaintext?: RenderContext['plaintext']
   outputPath?: RenderContext['outputPath']
   tailwindBlocks?: RenderContext['tailwindBlocks']
+  raw?: RenderContext['raw']
+  /** Per-render nonce of the output markers, for `stripForHtml` / `stripForPlaintext`. */
+  nonce?: RenderContext['nonce']
   /**
    * Absolute paths of every project file in the template's module
    * import closure (the template itself, its components, imported
@@ -712,7 +716,8 @@ export async function createRenderer(
       if (renderContext.preheader) {
         const { text, fillerCount } = renderContext.preheader
         const filler = '\u2007\uFEFF\u034F '.repeat(fillerCount)
-        const previewHtml = `<div data-maizzle-html-only><div style="display:none">${text}${filler}\u00A0</div></div>`
+        const [start, end] = outputMarkers(renderContext, 'HO')
+        const previewHtml = `${start}<div style="display:none">${text}${filler}\u00A0</div>${end}`
         html = html.replace(/<body([^>]*)>/, `<body$1>${previewHtml}`)
       }
 
@@ -739,6 +744,8 @@ export async function createRenderer(
         plaintext: renderContext.plaintext,
         outputPath: renderContext.outputPath,
         tailwindBlocks: renderContext.tailwindBlocks,
+        raw: renderContext.raw,
+        nonce: renderContext.nonce,
       }
     },
 

@@ -333,6 +333,18 @@ Props: `content` (auto-populated from slot; set explicitly when rendering a stri
 <Text>Order <Raw :content="liquidSnippet" /></Text>
 ```
 
+**Heads-up:** content inside `<Raw>` is output as-is. Vue components in it aren't rendered, and no transformer touches it (no CSS inlining, purging, URL rewriting, etc.), so CSS for classes used only inside `<Raw>` gets purged. Wrap just the expression, not the markup around it:
+
+```vue
+<!-- ✗ <Text> is output literally, m-0 is never inlined -->
+<Raw><Text class="m-0">{{ company.address }}</Text></Raw>
+
+<!-- ✓ -->
+<Text class="m-0"><Raw>{{ company.address }}</Raw></Text>
+```
+
+Static attributes don't need `<Raw>`, since Vue doesn't interpolate them: `<Link href="{{ unsubscribeUrl }}">` is output as written.
+
 ## NoWidows
 
 Replaces the last space with `&nbsp;` in text nodes to prevent orphans. Walks children recursively. Skips template expressions (`{{ }}`, `{% %}`, `<%= %>`, …).

@@ -147,9 +147,9 @@ Address + copyright + unsubscribe with Handlebars syntax passed through to the E
 
 ```vue
 <Section class="text-center text-sm text-gray-500 mt-8">
-  <Raw><Text class="m-0">{{ company.address }}</Text></Raw>
+  <Text class="m-0"><Raw>{{ company.address }}</Raw></Text>
   <Text class="m-0">&copy; {{ new Date().getFullYear() }} <Raw>{{ company.name }}</Raw></Text>
-  <Raw><Link href="{{ unsubscribeUrl }}" class="text-gray-500 underline">Unsubscribe</Link></Raw>
+  <Link href="{{ unsubscribeUrl }}" class="text-gray-500 underline">Unsubscribe</Link>
 </Section>
 ```
 

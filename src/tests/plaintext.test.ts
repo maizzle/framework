@@ -134,6 +134,11 @@ describe('createPlaintext with links split across ESP conditionals', () => {
     expect(createPlaintext(html)).toBe('{% if vip %}\n\n{{ $obj->url }}\n\n{% endif %}VIP{% if vip %}{% endif %}')
   })
 
+  it('keeps double quotes inside an href', () => {
+    const html = '<p><a href="{{ url &quot;vip&quot; }}">VIP</a></p>'
+    expect(createPlaintext(html)).toBe('VIP\n\n{{ url "vip" }}')
+  })
+
   it('leaves links without an href alone', () => {
     const html = '<p>{% if vip %}<a name="top">{% endif %}VIP{% if vip %}</a>{% endif %}</p>'
     expect(createPlaintext(html)).toBe('{% if vip %}{% endif %}VIP{% if vip %}{% endif %}')

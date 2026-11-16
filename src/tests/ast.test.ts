@@ -159,4 +159,29 @@ describe('serialize', () => {
 
     expect(serialize(dom)).toBe('<style>a > b { color: red; }</style>')
   })
+
+  it('encodes double quotes in attribute values by default', () => {
+    const dom = parse(`<a href='{{ url "vip" }}'>VIP</a>`)
+
+    expect(serialize(dom)).toBe('<a href="{{ url &quot;vip&quot; }}">VIP</a>')
+  })
+
+  it('single-quotes attribute values that contain double quotes', () => {
+    const dom = parse(`<a title="x" href='{{ url "vip" }}'>VIP</a>`)
+
+    expect(serialize(dom, { singleQuoteAttributes: true })).toBe(`<a title="x" href='{{ url "vip" }}'>VIP</a>`)
+  })
+
+  it('keeps encoded double quotes when the value also has single quotes', () => {
+    const dom = parse(`<a title="it's &quot;x&quot;">X</a>`)
+
+    expect(serialize(dom, { singleQuoteAttributes: true })).toBe(`<a title="it's &quot;x&quot;">X</a>`)
+  })
+
+  it('leaves attribute values in the AST unchanged', () => {
+    const dom = parse(`<a href='{{ url "vip" }}'>VIP</a>`)
+    serialize(dom, { singleQuoteAttributes: true })
+
+    expect((dom[0] as any).attribs.href).toBe('{{ url "vip" }}')
+  })
 })

@@ -40,7 +40,52 @@ function encodeTextNodes(dom: ChildNode[], inRawText = false): void {
   }
 }
 
-export function serialize(dom: ChildNode[], options?: DomSerializerOptions): string {
+/**
+ * Stands in for `"` in attribute values that have no `'`, so they can be
+ * written single-quoted. dom-serializer always double-quotes values,
+ * writing inner `"` as `&quot;`, which breaks ESP tags that take
+ * string arguments, like `href='{{ url "vip" }}'`.
+ */
+const QUOTE = String.fromCharCode(0xE000)
+const QUOTED_ATTR = new RegExp(`="([^"]*${QUOTE}[^"]*)"`, 'g')
+
+function hideDoubleQuotes(dom: ChildNode[], hidden: Array<[Element, string, string]>): void {
+  for (const node of dom) {
+    if (!('children' in node)) continue
+
+    const el = node as Element
+    for (const [name, value] of Object.entries(el.attribs ?? {})) {
+      if (value.includes('"') && !value.includes("'")) {
+        hidden.push([el, name, value])
+        el.attribs[name] = value.replaceAll('"', QUOTE)
+      }
+    }
+
+    hideDoubleQuotes(el.children as ChildNode[], hidden)
+  }
+}
+
+export interface SerializeOptions extends DomSerializerOptions {
+  /**
+   * Single-quote attribute values that contain `"` but no `'`. Only
+   * for final output: juice rewrites single-quoted attributes
+   * as double-quoted, so intermediate passes can't use it.
+   */
+  singleQuoteAttributes?: boolean
+}
+
+export function serialize(dom: ChildNode[], options: SerializeOptions = {}): string {
+  const { singleQuoteAttributes, ...renderOptions } = options
+
   encodeTextNodes(dom)
-  return render(dom, { encodeEntities: false, ...options })
+
+  const hidden: Array<[Element, string, string]> = []
+  if (singleQuoteAttributes) hideDoubleQuotes(dom, hidden)
+
+  const html = render(dom, { encodeEntities: false, ...renderOptions })
+  if (!hidden.length) return html
+
+  for (const [el, name, value] of hidden) el.attribs[name] = value
+
+  return html.replace(QUOTED_ATTR, (_, value: string) => `='${value.replaceAll(QUOTE, '"')}'`)
 }

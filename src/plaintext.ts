@@ -97,7 +97,7 @@ function hoistSplitLinkHrefs(html: string): string {
 }
 
 export function createPlaintext(html: string, options?: Record<string, unknown>): string {
-  const { result } = stripHtml(serialize(addLineBreaks(parse(hoistSplitLinkHrefs(html)))), defu(options, defaults))
+  const { result } = stripHtml(serialize(addLineBreaks(parse(hoistSplitLinkHrefs(html))), { singleQuoteAttributes: true }), defu(options, defaults))
 
   return result
     .replace(/[ \t]+\n/g, '\n')

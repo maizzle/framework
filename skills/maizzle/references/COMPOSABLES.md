@@ -13,6 +13,26 @@ defineConfig({
 </script>
 ```
 
+## definePreviewProps
+Sample props for the dev server, which passes no props to templates (required props would otherwise be `undefined`). Merged under real props; never used by `build` or `render()`, so a forgotten production prop can't silently render sample data (unlike `withDefaults()`). Argument is `Partial<Props>`.
+
+```vue
+<script setup lang="ts">
+import { sampleUser } from '../fixtures/users'
+
+type Props = { name: string, plan: string }
+
+defineProps<Props>()
+definePreviewProps<Props>({ name: sampleUser.name, plan: 'Pro' })
+</script>
+```
+
+Compiler macro, like `defineProps()`:
+- Call once per template.
+- Can't reference variables declared in `<script setup>`; use inline values or imports. Imports used only here load only in the dev server.
+- Breaking these rules errors in the dev server only; never fails `build` or `render()`.
+- `.vue` templates only, not Markdown templates.
+
 ## useConfig
 Read the resolved config (global + per-template `defineConfig` overrides up the tree). Useful inside child components for accessing custom data.
 

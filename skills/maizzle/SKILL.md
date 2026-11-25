@@ -42,7 +42,7 @@ The dev server generates `.maizzle/` (typed `.d.ts` for auto-imported components
 ## Basic template
 ```vue
 <script setup>
-defineConfig({
+defineProps({
   name: { type: String, default: 'friend' },
 })
 </script>
@@ -170,7 +170,7 @@ Or per-template via `usePlaintext()` in `<script setup>`. Customize destination/
 - `references/PATTERNS.md` — column / responsive layout patterns.
 - `references/STYLING.md` — Tailwind, color tokens, brand brief, authoring principles.
 - `references/CONFIGURATION.md` — every config key, defaults, examples.
-- `references/COMPOSABLES.md` — `defineConfig`, `useConfig`, `useTransformers`, `useBaseUrl`, `useUrlQuery`, `useEvent`, `useDoctype`, `usePlaintext`, `usePreheader`, `useHead`.
+- `references/COMPOSABLES.md` — `defineConfig`, `definePreviewProps`, `useConfig`, `useTransformers`, `useBaseUrl`, `useUrlQuery`, `useEvent`, `useDoctype`, `usePlaintext`, `usePreheader`, `useHead`.
 - `references/TRANSFORMERS.md` — pipeline order, per-stage behavior.
 - `references/CLI.md` — every CLI command, flags, and usage.
 - `references/CONVERT-REACT-EMAIL.md` — porting guide from React Email.

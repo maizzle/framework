@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { rmSync } from 'node:fs'
 import { render } from '../../render/index.ts'
 import { createTempProject } from './_helpers.ts'
+import { findOne, textContent } from 'domutils'
+import { parse } from '../../utils/ast/index.ts'
 
 describe('render props', () => {
   let tempDir: string
@@ -30,6 +32,24 @@ describe('render props', () => {
     })
 
     expect(result.html).toContain('Hello Ava')
+  })
+
+  it('renders prop values literally in text and attributes', async () => {
+    const value = `javascript&colon;alert(1) &amp;copy; &lt;b&gt; <i>raw</i> it's "quoted"`
+    const result = await render(`
+      <script setup>
+      defineProps(['value'])
+      </script>
+      <template>
+        <a :href="value">{{ value }}</a>
+      </template>
+    `, {
+      props: { value },
+    })
+
+    const link = findOne(el => el.name === 'a', parse(result.html))
+    expect(link?.attribs.href).toBe(value)
+    expect(textContent(link!)).toBe(value)
   })
 
   it('does not leak props into useConfig() or the returned config', async () => {

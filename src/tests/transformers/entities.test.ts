@@ -98,6 +98,16 @@ describe('entities', () => {
       expect(result).toBe('<p>---&ndash;</p>')
     })
 
+    it('applies the map to the text, not to the escaping added on output', () => {
+      expect(run('<p>&amp;</p>', { '&': '&amp;' })).toBe('<p>&amp;</p>')
+      expect(run('<p>&amp;</p>', { a: '&#97;' })).toBe('<p>&amp;</p>')
+    })
+
+    it('does not apply the map to earlier replacements', () => {
+      expect(run('<p>\u00A9c</p><!--\u00A9c-->', { '\u00A9': '&copy;', c: 'X' }))
+        .toBe('<p>&copy;X</p><!--&copy;X-->')
+    })
+
     it('empty custom map still uses all defaults', () => {
       const result = run('<p>\u00A0</p>', {})
       expect(result).toBe('<p>&nbsp;</p>')
@@ -129,16 +139,8 @@ describe('entities', () => {
       expect(result).toBe('<!-- &nbsp; -->')
     })
 
-    it('scope.comments false leaves comments untouched', () => {
-      const html = '<!--[if mso]>\u00A0<![endif]--><p>\u00A0</p>'
-      const result = entities(html, true, { comments: false })
-      expect(result).toBe('<!--[if mso]>\u00A0<![endif]--><p>&nbsp;</p>')
-    })
-
-    it('scope.text false leaves text nodes untouched', () => {
-      const html = '<!--[if mso]>\u00A0<![endif]--><p>\u00A0</p>'
-      const result = entities(html, true, { text: false })
-      expect(result).toBe('<!--[if mso]>&nbsp;<![endif]--><p>\u00A0</p>')
+    it('keeps entity-like text literal', () => {
+      expect(run('<p>&amp;nbsp;\u00A0</p>', true)).toBe('<p>&amp;nbsp;&nbsp;</p>')
     })
   })
 

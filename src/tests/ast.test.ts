@@ -200,6 +200,12 @@ describe('serialize', () => {
     expect(serialize(parse(html))).toBe(html)
   })
 
+  it('escapes raw-text element names in XML mode, which the parser decodes', () => {
+    const html = '<xmp>&lt;b&gt;</xmp>'
+
+    expect(serialize(parse(html, { xmlMode: true } as any), { xmlMode: true })).toBe(html)
+  })
+
   it('writes CDATA content unescaped', () => {
     const html = '<r><![CDATA[A & B]]></r>'
 

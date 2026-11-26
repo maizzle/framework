@@ -57,7 +57,9 @@ export function serialize(dom: ChildNode[], options: SerializeOptions = {}): str
     clone.parent = node.parent
     return clone
   })
-  escapeNodes(copy, isRawText(dom[0]?.parent), entities, quote)
+  // The parser has no raw-text elements in XML mode.
+  const xml = Boolean(renderOptions.xmlMode)
+  escapeNodes(copy, !xml && isRawText(dom[0]?.parent), entities, xml, quote)
 
   // Text and attributes are escaped above; dom-serializer only quotes attributes.
   const html = render(copy, { ...renderOptions, encodeEntities: false })
@@ -82,7 +84,7 @@ export function isRawText(node: ParentNode | null | undefined): boolean {
   return true
 }
 
-function escapeNodes(nodes: ChildNode[], inRawText: boolean, entities: Record<string, string>, quote?: string): void {
+function escapeNodes(nodes: ChildNode[], inRawText: boolean, entities: Record<string, string>, xml: boolean, quote?: string): void {
   for (const node of nodes) {
     // CDATA content is literal
     if (node.type === 'cdata') continue
@@ -94,7 +96,7 @@ function escapeNodes(nodes: ChildNode[], inRawText: boolean, entities: Record<st
         node.attribs[name] = value
       }
     }
-    if ('children' in node) escapeNodes(node.children, isRawText(node), entities, quote)
+    if ('children' in node) escapeNodes(node.children, !xml && isRawText(node), entities, xml, quote)
   }
 }
 

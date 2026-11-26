@@ -14,7 +14,7 @@ import { sixHexDom } from './sixHex.ts'
 import { addAttributesDom } from './addAttributes.ts'
 import { filtersDom } from './filters/index.ts'
 import { baseDom } from './base.ts'
-import { entitiesDom } from './entities.ts'
+import { commentEntitiesDom, entityMap } from './entities.ts'
 import { urlQueryDom } from './urlQuery.ts'
 import { purgeCssDom } from './purgeCss.ts'
 import { msoConditionals } from './msoConditionals.ts'
@@ -183,10 +183,9 @@ export async function runTransformers(
    * invisible chars (e.g. U+00A0 from Vue decoding &nbsp; at compile
    * time) inside MSO conditionals make email-comb remove the whole
    * "whitespace-only" conditional and html-crush collapse the chars.
-   * Text nodes are skipped here — purge's internal parse round-trip
-   * would decode them again — comment data survives un-decoded.
+   * Text node entities are written by the final serialize below.
    */
-  if (enabled('entities')) dom = entitiesDom(dom, effective.html?.decodeEntities, { text: false })
+  if (enabled('entities')) dom = commentEntitiesDom(dom, effective.html?.decodeEntities)
 
   // 12. Remove unused CSS (serializes/parses internally around email-comb)
   if (enabled('purgeCss') && effective.css?.purge) {
@@ -194,12 +193,10 @@ export async function runTransformers(
     dom = purgeCssDom(dom, purgeOptions)
   }
 
-  // 13. Entities
-  if (enabled('entities')) dom = entitiesDom(dom, effective.html?.decodeEntities)
-
-  // Serialize once — remaining transformers operate on the HTML string
+  // 13. Serialize once, writing text entities — remaining transformers operate on the HTML string
   const isXhtml = doctype ? /xhtml/i.test(doctype) : false
-  let result = serialize(dom, { selfClosingTags: isXhtml, singleQuoteAttributes: true })
+  const entities = enabled('entities') ? entityMap(effective.html?.decodeEntities) ?? {} : {}
+  let result = serialize(dom, { selfClosingTags: isXhtml, singleQuoteAttributes: true, entities })
 
   // 13.5. Collapse <Outlook> placeholders into MSO conditional comments
   result = msoConditionals(result)

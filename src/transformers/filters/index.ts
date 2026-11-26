@@ -2,10 +2,22 @@ import { Text } from 'domhandler'
 import type { ChildNode, Element } from 'domhandler'
 import { parse, serialize } from '../../utils/ast/index.ts'
 import { protectMarkers } from '../../utils/output-markers.ts'
+import { isRawText } from '../../utils/ast/serializer.ts'
 import { defaults } from './defaults.ts'
 
 export type { FilterFunction } from './defaults.ts'
 export type FiltersConfig = false | Record<string, (str: string, value: string) => string>
+
+/**
+ * Filters that take and return HTML source. All other default filters take
+ * and return text, so they see `&` rather than `&amp;`. Custom filters are
+ * treated as HTML filters, so they may return markup.
+ */
+const HTML_FILTERS = ['escape', 'escape-once', 'newline-to-br']
+
+function textOf(nodes: ChildNode[]): string {
+  return nodes.map(node => (node as Text).data).join('')
+}
 
 /**
  * Process children before parents so nested filter elements work correctly.
@@ -62,6 +74,7 @@ export function filtersDom(dom: ChildNode[], custom: FiltersConfig = {}): ChildN
 
   const allFilters = { ...defaults, ...custom }
   const filterNames = new Set(Object.keys(allFilters))
+  const htmlFilters = new Set([...HTML_FILTERS, ...Object.keys(custom)])
 
   walkBottomUp(dom, (node) => {
     const el = node as Element
@@ -79,36 +92,35 @@ export function filtersDom(dom: ChildNode[], custom: FiltersConfig = {}): ChildN
 
     if (matched.length === 0) return
 
-    // Serialize children to get innerHTML
-    let content = serialize(el.children as ChildNode[])
+    // CSS and JS are raw text, not HTML: every filter works on the text as-is.
+    const raw = isRawText(el)
+    let isText = raw || el.children.every(child => child.type === 'text')
+    let content = isText ? textOf(el.children) : serialize(el.children as ChildNode[])
 
-    // Apply each filter in attribute order, leaving output and <Raw> markers intact
-    content = protectMarkers(content, str =>
-      matched.reduce((acc, { name, value }) => allFilters[name](acc, value), str),
-    )
+    // Apply each filter in attribute order, converting the content between
+    // text and HTML source as each filter expects. Elements with child
+    // elements stay HTML source, so text filters see their markup too.
+    for (const { name, value } of matched) {
+      const textFilter = !htmlFilters.has(name)
+      if (!raw && textFilter && !isText) {
+        const nodes = parse(content)
+        if (nodes.every(child => child.type === 'text')) {
+          content = textOf(nodes)
+          isText = true
+        }
+      } else if (!raw && !textFilter && isText) {
+        content = serialize([new Text(content)])
+        isText = false
+      }
 
-    for (const { name } of matched) {
+      // Leave output and <Raw> markers intact
+      content = protectMarkers(content, str => allFilters[name](str, value))
       delete el.attribs[name]
     }
 
     // Replace children with the filtered content
-    if (content === '') {
-      el.children = []
-    } else if (/<[a-z/!]/i.test(content)) {
-      // Result contains HTML elements — parse back to DOM
-      const newChildren = parse(content)
-
-      for (const child of newChildren) {
-        child.parent = el as any
-      }
-
-      el.children = newChildren as ChildNode[]
-    } else {
-      // Text-only result — create a text node directly to preserve entity strings
-      const textNode = new Text(content)
-      textNode.parent = el as any
-      el.children = [textNode]
-    }
+    el.children = isText ? [new Text(content)] : parse(content)
+    for (const child of el.children) child.parent = el
   })
 
   return dom

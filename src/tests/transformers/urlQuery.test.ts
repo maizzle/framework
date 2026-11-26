@@ -23,12 +23,12 @@ describe('urlQuery — core behaviour', () => {
       utm_source: 'maizzle',
       utm_campaign: 'launch',
     })
-    expect(result).toBe('<a href="https://example.com?utm_campaign=launch&utm_source=maizzle">x</a>')
+    expect(result).toBe('<a href="https://example.com?utm_campaign=launch&amp;utm_source=maizzle">x</a>')
   })
 
   it('merges with pre-existing query parameters', () => {
     expect(run('<a href="https://example.com?foo=bar">x</a>'))
-      .toBe('<a href="https://example.com?foo=bar&utm_source=maizzle">x</a>')
+      .toBe('<a href="https://example.com?foo=bar&amp;utm_source=maizzle">x</a>')
   })
 
   it('does not encode special chars by default', () => {

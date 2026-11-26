@@ -300,9 +300,9 @@ describe('inlineCss', () => {
     })
 
     it('preserves URLs with query strings containing colons or ampersands', () => {
-      const html = `<div style="background-image:url('https://cdn.example.com/img.jpg?expires=1700000000&sig=abc')">x</div>`
-      const result = run(html, true)
-      expect(result).toContain("url('https://cdn.example.com/img.jpg?expires=1700000000&sig=abc')")
+      const url = "url('https://cdn.example.com/img.jpg?expires=1700000000&amp;sig=abc')"
+      const result = run(`<div style="background-image:${url}">x</div>`, true)
+      expect(result).toContain(url)
     })
   })
 })

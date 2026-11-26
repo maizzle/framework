@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { findOne } from 'domutils'
 import { parse, serialize, walk } from '../../utils/ast/index.ts'
 import { injectFonts } from '../../render/injectFonts.ts'
 import type { FontRegistration } from '../../composables/renderContext.ts'
@@ -19,8 +20,9 @@ function run(html: string, fonts: FontRegistration[]): string {
 describe('injectFonts', () => {
   it('appends a <link> tag inside <head>', () => {
     const out = run('<html><head></head><body></body></html>', [ROBOTO])
-    expect(out).toContain(`<link href="${ROBOTO.url}" rel="stylesheet" media="screen">`)
-    expect(out.indexOf('<link')).toBeLessThan(out.indexOf('</head>'))
+    const link = findOne(el => el.name === 'link', parse(out))
+    expect(link?.parent).toMatchObject({ name: 'head' })
+    expect(link?.attribs).toEqual({ href: ROBOTO.url, rel: 'stylesheet', media: 'screen' })
   })
 
   it('merges @theme into the existing Tailwind <style> block', () => {

@@ -1,62 +1,24 @@
 import render from 'dom-serializer'
-import type { ChildNode, Element, Text } from 'domhandler'
+import { cloneNode } from 'domhandler'
+import type { ChildNode, Element, ParentNode } from 'domhandler'
 import type { DomSerializerOptions } from 'dom-serializer'
 
-const RAW_TEXT_ELEMENTS = new Set(['script', 'style'])
-
 /**
- * Re-encode `<` and `>` in text nodes before serialization.
- *
- * The parser decodes entities like `&lt;` into raw `<` in text nodes. With
- * `encodeEntities: false` (needed so other transformers can emit entity
- * strings such as `&nbsp;` verbatim), the serializer would write those raw
- * `<` characters as-is, turning escaped text (e.g. a Vue `{{ html }}`
- * interpolation containing `<p>...</p>`) into real DOM downstream.
- *
- * `&` is intentionally not re-encoded: the `entities` transformer writes
- * literal entity strings (`&nbsp;`, `&mdash;`) directly into text-node data
- * and relies on the serializer leaving them alone.
- *
- * Skip `<script>` / `<style>` — their children are raw-text containers, and
- * CSS/JS legitimately contains `<` and `>`.
+ * Elements whose text htmlparser2 keeps raw (undecoded) in HTML content, so it
+ * must be written back unescaped. Must match the parser exactly: escaping more
+ * breaks CSS/JS, escaping less lets decoded text become markup.
  */
-function encodeTextNodes(dom: ChildNode[], inRawText = false): void {
-  for (const node of dom) {
-    if (node.type === 'text') {
-      if (!inRawText) {
-        const text = node as Text
-        text.data = text.data
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-      }
-      continue
-    }
+const RAW_TEXT_ELEMENTS = new Set(['style', 'script', 'xmp', 'iframe', 'noembed', 'noframes', 'plaintext'])
 
-    if ('children' in node && (node as Element).children?.length) {
-      const el = node as Element
-      const nextRaw = inRawText || RAW_TEXT_ELEMENTS.has(el.name)
-      encodeTextNodes(el.children as ChildNode[], nextRaw)
-    }
-  }
-}
+/** Elements that start SVG/MathML content, where nothing is raw text. */
+const FOREIGN_ELEMENTS = new Set(['svg', 'math'])
 
-function hideDoubleQuotes(dom: ChildNode[], token: string, hidden: Array<[Element, string, string]>): void {
-  for (const node of dom) {
-    if (!('children' in node)) continue
-
-    const el = node as Element
-    for (const [name, value] of Object.entries(el.attribs ?? {})) {
-      if (value.includes('"') && !value.includes("'")) {
-        hidden.push([el, name, value])
-        el.attribs[name] = value.replaceAll('"', token)
-      }
-    }
-
-    hideDoubleQuotes(el.children as ChildNode[], token, hidden)
-  }
-}
+/** Elements that switch back to HTML content inside SVG/MathML, as in htmlparser2. */
+const HTML_INTEGRATION_ELEMENTS = new Set(['mi', 'mo', 'mn', 'ms', 'mtext', 'annotation-xml', 'foreignObject', 'desc', 'title'])
 
 export interface SerializeOptions extends DomSerializerOptions {
+  /** Characters to write as entities in text nodes, e.g. `{ '\u00A0': '&nbsp;' }`. */
+  entities?: Record<string, string>
   /**
    * Single-quote attribute values that contain `"` but no `'`. Only
    * for final output: juice rewrites single-quoted attributes
@@ -65,12 +27,20 @@ export interface SerializeOptions extends DomSerializerOptions {
   singleQuoteAttributes?: boolean
 }
 
+/**
+ * Serialize a DOM to HTML.
+ *
+ * The parser decodes entities, so text and attribute values hold the
+ * characters they represent. Escaping them again here keeps every
+ * parse/serialize round trip lossless: a caller's `&amp;colon;` stays
+ * literal text instead of becoming `&colon;` and, after another pass, `:`.
+ *
+ * Text nodes are written with `entities` applied after escaping, so generated
+ * entities are never confused with caller data. Comments (including MSO
+ * conditionals) and raw-text elements are written verbatim.
+ */
 export function serialize(dom: ChildNode[], options: SerializeOptions = {}): string {
-  const { singleQuoteAttributes, ...renderOptions } = options
-
-  encodeTextNodes(dom)
-
-  if (!singleQuoteAttributes) return render(dom, { encodeEntities: false, ...renderOptions })
+  const { entities = {}, singleQuoteAttributes, ...renderOptions } = options
 
   /**
    * dom-serializer always double-quotes values and writes inner `"` as
@@ -79,17 +49,71 @@ export function serialize(dom: ChildNode[], options: SerializeOptions = {}): str
    * token that no encoding mode alters, and single-quote only
    * the values that end up holding the token.
    */
-  const token = `__MZQ_${crypto.randomUUID().replaceAll('-', '')}__`
-  const hidden: Array<[Element, string, string]> = []
-  hideDoubleQuotes(dom, token, hidden)
+  const quote = singleQuoteAttributes ? `__MZQ_${crypto.randomUUID().replaceAll('-', '')}__` : undefined
 
-  const html = render(dom, { encodeEntities: false, ...renderOptions })
-  if (!hidden.length) return html
+  // Keep the original parents so isRawText can see the copy's ancestors.
+  const copy = dom.map((node) => {
+    const clone = cloneNode(node, true)
+    clone.parent = node.parent
+    return clone
+  })
+  // The parser has no raw-text elements in XML mode.
+  const xml = Boolean(renderOptions.xmlMode)
+  escapeNodes(copy, !xml && isRawText(dom[0]?.parent), entities, xml, quote)
 
-  for (const [el, name, value] of hidden) el.attribs[name] = value
+  // Text and attributes are escaped above; dom-serializer only quotes attributes.
+  const html = render(copy, { ...renderOptions, encodeEntities: false })
+  if (!quote || !html.includes(quote)) return html
 
   return html.replace(
-    new RegExp(`="([^"]*${token}[^"]*)"`, 'g'),
-    (_, value: string) => `='${value.replaceAll(token, '"')}'`,
+    new RegExp(`="([^"]*${quote}[^"]*)"`, 'g'),
+    (_, value: string) => `='${value.replaceAll(quote, '"')}'`,
   )
+}
+
+/** Whether the parser kept this element's text raw. */
+export function isRawText(node: ParentNode | null | undefined): boolean {
+  if (!RAW_TEXT_ELEMENTS.has((node as Element | null)?.name ?? '')) return false
+
+  for (let ancestor = node!.parent; ancestor; ancestor = ancestor.parent) {
+    const name = (ancestor as Element).name
+    if (FOREIGN_ELEMENTS.has(name)) return false
+    if (HTML_INTEGRATION_ELEMENTS.has(name)) return true
+  }
+
+  return true
+}
+
+function escapeNodes(nodes: ChildNode[], inRawText: boolean, entities: Record<string, string>, xml: boolean, quote?: string): void {
+  for (const node of nodes) {
+    // CDATA content is literal
+    if (node.type === 'cdata') continue
+    if (node.type === 'text' && !inRawText) node.data = escapeText(node.data, entities)
+    if ('attribs' in node) {
+      for (const name in node.attribs) {
+        let value = node.attribs[name].replace(/&/g, '&amp;')
+        if (quote && value.includes('"') && !value.includes("'")) value = value.replaceAll('"', quote)
+        node.attribs[name] = value
+      }
+    }
+    if ('children' in node) escapeNodes(node.children, !xml && isRawText(node), entities, xml, quote)
+  }
+}
+
+const ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;' }
+
+function escapeText(text: string, entities: Record<string, string>): string {
+  return replaceChars(text, { ...ESCAPES, ...entities })
+}
+
+/**
+ * Replace every occurrence of the map's keys in one pass, so replacements are
+ * never matched again: `{ '©': '&copy;', c: 'X' }` turns `©c` into `&copy;X`.
+ * Longer keys win over shorter ones that start at the same position.
+ */
+export function replaceChars(text: string, map: Record<string, string>): string {
+  const keys = Object.keys(map).filter(Boolean).sort((a, b) => b.length - a.length)
+  if (keys.length === 0) return text
+  const pattern = new RegExp(keys.map(key => key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g')
+  return text.replace(pattern, match => map[match])
 }

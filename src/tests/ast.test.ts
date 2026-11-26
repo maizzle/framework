@@ -146,12 +146,70 @@ describe('serialize', () => {
     expect(serialize(dom)).toBe('<div>&lt;p&gt;Hello&lt;/p&gt;</div>')
   })
 
-  it('leaves & in text nodes untouched (entities transformer relies on it)', () => {
-    const dom = parse('<p>foo</p>')
-    const p = dom[0] as any
-    p.children[0].data = '&nbsp;'
+  it('re-encodes & in text so entity-like caller text stays literal', () => {
+    const html = '<p>&amp;nbsp; &amp;lt;b&amp;gt;</p>'
 
-    expect(serialize(dom)).toBe('<p>&nbsp;</p>')
+    expect(serialize(parse(html))).toBe(html)
+    expect(serialize(parse(serialize(parse(html))))).toBe(html)
+  })
+
+  it('re-encodes & in attributes so URLs cannot change meaning', () => {
+    const html = '<a href="javascript&amp;colon;alert(1)" title="&amp;copy;">x</a>'
+
+    expect(serialize(parse(html))).toBe(html)
+    expect(serialize(parse(serialize(parse(html))))).toBe(html)
+  })
+
+  it('writes the given entities in text nodes only', () => {
+    const dom = parse('<p title="\u00A0">a\u00A0&amp;nbsp;</p><style>\u00A0</style><!--\u00A0-->')
+
+    expect(serialize(dom, { entities: { '\u00A0': '&nbsp;' } }))
+      .toBe('<p title="\u00A0">a&nbsp;&amp;nbsp;</p><style>\u00A0</style><!--\u00A0-->')
+  })
+
+  it('does not mutate the DOM', () => {
+    const dom = parse('<p title="&amp;">&amp;</p>') as any
+    serialize(dom)
+
+    expect(dom[0].attribs.title).toBe('&')
+    expect(dom[0].children[0].data).toBe('&')
+  })
+
+  it('keeps raw text unescaped when serializing raw-text element children', () => {
+    const dom = parse('<style>a > b { content: "&" }</style>') as any
+
+    expect(serialize(dom[0].children)).toBe('a > b { content: "&" }')
+  })
+
+  it('escapes <noscript> and <title> text, which the parser decodes', () => {
+    const html = '<noscript>&lt;/noscript&gt;&lt;img src=x&gt;</noscript><title>&lt;/title&gt;&amp;</title>'
+
+    expect(serialize(parse(html))).toBe(html)
+  })
+
+  it('escapes raw-text elements inside SVG and MathML, which the parser decodes', () => {
+    const html = '<svg><style>&lt;/style&gt;</style><iframe>&lt;/iframe&gt;</iframe></svg><math><xmp>&lt;/xmp&gt;</xmp></math>'
+
+    expect(serialize(parse(html))).toBe(html)
+    expect(serialize((parse(html)[0] as any).children)).toBe('<style>&lt;/style&gt;</style><iframe>&lt;/iframe&gt;</iframe>')
+  })
+
+  it('keeps raw text inside HTML integration points in SVG', () => {
+    const html = '<svg><foreignObject><style>a > b { content: "&" }</style></foreignObject></svg>'
+
+    expect(serialize(parse(html))).toBe(html)
+  })
+
+  it('escapes raw-text element names in XML mode, which the parser decodes', () => {
+    const html = '<xmp>&lt;b&gt;</xmp>'
+
+    expect(serialize(parse(html, { xmlMode: true } as any), { xmlMode: true })).toBe(html)
+  })
+
+  it('writes CDATA content unescaped', () => {
+    const html = '<r><![CDATA[A & B]]></r>'
+
+    expect(serialize(parse(html, { xmlMode: true } as any), { xmlMode: true })).toBe(html)
   })
 
   it('does not re-encode < or > inside <script> or <style>', () => {

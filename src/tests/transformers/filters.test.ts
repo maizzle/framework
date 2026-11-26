@@ -126,6 +126,38 @@ describe('filters', () => {
       expect(run('<p uppercase></p>')).toBe('<p></p>')
     })
 
+    it('gives text filters the text, not its HTML escaping', () => {
+      expect(run('<p size>&amp;</p>')).toBe('<p>1</p>')
+      expect(run('<p url-encode>A&amp;B</p>')).toBe('<p>A%26B</p>')
+      expect(run('<p remove="&amp;">A&amp;B</p>')).toBe('<p>AB</p>')
+    })
+
+    it('keeps text filter output as text', () => {
+      expect(run('<p uppercase>&lt;b&gt;</p>')).toBe('<p>&lt;B&gt;</p>')
+    })
+
+    it('escapes text before HTML filters add markup', () => {
+      expect(run('<p newline-to-br>&lt;b&gt;\nx</p>')).toBe('<p>&lt;b&gt;<br>x</p>')
+    })
+
+    it('gives text filters the HTML source when the element has child elements', () => {
+      expect(run('<p uppercase>Hi <b>x</b></p>')).toBe('<p>HI <b>X</b></p>')
+    })
+
+    it('gives custom filters the HTML source and keeps their markup', () => {
+      const received: string[] = []
+      const result = run('<p bold>A&amp;B</p>', {
+        bold: str => (received.push(str), `<b>${str}</b>`),
+      })
+      expect(received).toEqual(['A&amp;B'])
+      expect(result).toBe('<p><b>A&amp;B</b></p>')
+    })
+
+    it('filters <style> and <script> content as raw text', () => {
+      expect(run('<style trim> .x{content:"&copy;"} </style>')).toBe('<style>.x{content:"&copy;"}</style>')
+      expect(run('<script trim> a = "&lt;/script&gt;&lt;b&gt;" </script>')).toBe('<script>a = "&lt;/script&gt;&lt;b&gt;"</script>')
+    })
+
     it('handles self-closing elements', () => {
       expect(run('<br><p uppercase>test</p>')).toBe('<br><p>TEST</p>')
     })
@@ -189,13 +221,16 @@ describe('filters', () => {
     })
 
     describe('escape', () => {
-      it('escapes HTML entities', () => {
-        // Parser decodes &amp; to &, then escape re-encodes it
-        expect(run('<p escape>foo &amp; bar</p>')).toBe('<p>foo &amp; bar</p>')
+      it('escapes markup so it displays as source', () => {
+        expect(run('<p escape><b>foo</b></p>')).toBe('<p>&lt;b&gt;foo&lt;/b&gt;</p>')
       })
 
-      it('escapes quotes', () => {
-        expect(run('<p escape>say "hello"</p>')).toBe('<p>say &#34;hello&#34;</p>')
+      it('escapes entities again, unlike escape-once', () => {
+        expect(run('<p escape>foo &amp; bar</p>')).toBe('<p>foo &amp;amp; bar</p>')
+      })
+
+      it('keeps quotes as plain text', () => {
+        expect(run('<p escape>say "hello"</p>')).toBe('<p>say "hello"</p>')
       })
     })
 

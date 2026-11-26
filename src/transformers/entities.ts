@@ -1,6 +1,7 @@
 import { defu as merge } from 'defu'
 import type { ChildNode } from 'domhandler'
 import { parse, serialize, walk } from '../utils/ast/index.ts'
+import { replaceChars } from '../utils/ast/serializer.ts'
 import type { EntitiesConfig } from '../types/index.ts'
 
 const DEFAULT_ENTITIES: Record<string, string> = {
@@ -30,19 +31,14 @@ const DEFAULT_ENTITIES: Record<string, string> = {
 }
 
 /**
- * Node types {@link entitiesDom} encodes. Both default to `true`.
+ * Resolve the entity map for a `html.decodeEntities` config value: the
+ * built-in map, merged with custom entries, or `null` when disabled.
  */
-export interface EntitiesScope {
-  /** Encode entities in text nodes */
-  text?: boolean
-  /**
-   * Encode entities in comment nodes. MSO conditional comment content is
-   * rendered by Outlook, and comment data survives parse round-trips
-   * un-decoded — so encoding here protects whitespace-only conditionals
-   * (e.g. `<Outlook>&nbsp;</Outlook>` spacers) from being collapsed
-   * or removed by email-comb and html-crush downstream.
-   */
-  comments?: boolean
+export function entityMap(custom: EntitiesConfig = true): Record<string, string> | null {
+  if (!custom) return null
+  return typeof custom === 'object'
+    ? merge(custom as Record<string, string>, DEFAULT_ENTITIES)
+    : DEFAULT_ENTITIES
 }
 
 /**
@@ -60,39 +56,34 @@ export interface EntitiesScope {
  * import { entities } from '@maizzle/framework'
  *
  * // Defaults only
- * entities('hello world') // → 'hello&nbsp;world'
+ * entities('hello world') // → 'hello&nbsp;world'
  *
  * // Add a custom mapping
  * entities('© Maizzle', { '©': '&copy;' })
  *
  * // Disable the transform
- * entities('hello world', false)
+ * entities('hello world', false)
  */
-export function entities(html: string, custom: EntitiesConfig = true, scope: EntitiesScope = {}): string {
-  return serialize(entitiesDom(parse(html), custom, scope))
+export function entities(html: string, custom: EntitiesConfig = true): string {
+  return serialize(commentEntitiesDom(parse(html), custom), { entities: entityMap(custom) ?? {} })
 }
 
 /**
- * DOM-form of {@link entities} used by the internal transformer pipeline.
- * Takes a parsed DOM, returns a parsed DOM — avoids redundant
- * serialize/parse round-trips when chained with other transformers.
+ * Encode entities in comment nodes. Text nodes get their entities from
+ * {@link serialize}, which escapes caller text first; comment data is written
+ * verbatim, so it can hold entity strings directly.
+ *
+ * MSO conditional comment content is rendered by Outlook, and comment data
+ * survives parse round-trips un-decoded — so encoding here protects
+ * whitespace-only conditionals (e.g. `<Outlook>&nbsp;</Outlook>` spacers)
+ * from being collapsed or removed by email-comb and html-crush downstream.
  */
-export function entitiesDom(dom: ChildNode[], custom: EntitiesConfig = true, scope: EntitiesScope = {}): ChildNode[] {
-  if (!custom) return dom
-
-  const map = typeof custom === 'object'
-    ? merge(custom as Record<string, string>, DEFAULT_ENTITIES)
-    : DEFAULT_ENTITIES
+export function commentEntitiesDom(dom: ChildNode[], custom: EntitiesConfig = true): ChildNode[] {
+  const map = entityMap(custom)
+  if (!map) return dom
 
   walk(dom, (node) => {
-    if (
-      (node.type === 'text' && scope.text !== false)
-      || (node.type === 'comment' && scope.comments !== false)
-    ) {
-      for (const [char, entity] of Object.entries(map)) {
-        node.data = node.data.split(char).join(entity)
-      }
-    }
+    if (node.type === 'comment') node.data = replaceChars(node.data, map)
   })
 
   return dom

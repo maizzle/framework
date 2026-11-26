@@ -1,14 +1,20 @@
 import render from 'dom-serializer'
 import { cloneNode } from 'domhandler'
-import type { ChildNode, Element } from 'domhandler'
+import type { ChildNode, Element, ParentNode } from 'domhandler'
 import type { DomSerializerOptions } from 'dom-serializer'
 
 /**
- * Elements whose text htmlparser2 keeps raw (undecoded), so it must be written
- * back unescaped. Must match the parser exactly: escaping more breaks CSS/JS,
- * escaping less lets decoded text become markup.
+ * Elements whose text htmlparser2 keeps raw (undecoded) in HTML content, so it
+ * must be written back unescaped. Must match the parser exactly: escaping more
+ * breaks CSS/JS, escaping less lets decoded text become markup.
  */
-export const RAW_TEXT_ELEMENTS = new Set(['style', 'script', 'xmp', 'iframe', 'noembed', 'noframes', 'plaintext'])
+const RAW_TEXT_ELEMENTS = new Set(['style', 'script', 'xmp', 'iframe', 'noembed', 'noframes', 'plaintext'])
+
+/** Elements that start SVG/MathML content, where nothing is raw text. */
+const FOREIGN_ELEMENTS = new Set(['svg', 'math'])
+
+/** Elements that switch back to HTML content inside SVG/MathML, as in htmlparser2. */
+const HTML_INTEGRATION_ELEMENTS = new Set(['mi', 'mo', 'mn', 'ms', 'mtext', 'annotation-xml', 'foreignObject', 'desc', 'title'])
 
 export interface SerializeOptions extends DomSerializerOptions {
   /** Characters to write as entities in text nodes, e.g. `{ '\u00A0': '&nbsp;' }`. */
@@ -45,7 +51,12 @@ export function serialize(dom: ChildNode[], options: SerializeOptions = {}): str
    */
   const quote = singleQuoteAttributes ? `__MZQ_${crypto.randomUUID().replaceAll('-', '')}__` : undefined
 
-  const copy = dom.map(node => cloneNode(node, true))
+  // Keep the original parents so isRawText can see the copy's ancestors.
+  const copy = dom.map((node) => {
+    const clone = cloneNode(node, true)
+    clone.parent = node.parent
+    return clone
+  })
   escapeNodes(copy, isRawText(dom[0]?.parent), entities, quote)
 
   // Text and attributes are escaped above; dom-serializer only quotes attributes.
@@ -58,12 +69,23 @@ export function serialize(dom: ChildNode[], options: SerializeOptions = {}): str
   )
 }
 
-export function isRawText(node: ChildNode['parent']): boolean {
-  return RAW_TEXT_ELEMENTS.has((node as Element | null)?.name ?? '')
+/** Whether the parser kept this element's text raw. */
+export function isRawText(node: ParentNode | null | undefined): boolean {
+  if (!RAW_TEXT_ELEMENTS.has((node as Element | null)?.name ?? '')) return false
+
+  for (let ancestor = node!.parent; ancestor; ancestor = ancestor.parent) {
+    const name = (ancestor as Element).name
+    if (FOREIGN_ELEMENTS.has(name)) return false
+    if (HTML_INTEGRATION_ELEMENTS.has(name)) return true
+  }
+
+  return true
 }
 
 function escapeNodes(nodes: ChildNode[], inRawText: boolean, entities: Record<string, string>, quote?: string): void {
   for (const node of nodes) {
+    // CDATA content is literal
+    if (node.type === 'cdata') continue
     if (node.type === 'text' && !inRawText) node.data = escapeText(node.data, entities)
     if ('attribs' in node) {
       for (const name in node.attribs) {

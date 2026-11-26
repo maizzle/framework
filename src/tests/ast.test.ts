@@ -187,6 +187,25 @@ describe('serialize', () => {
     expect(serialize(parse(html))).toBe(html)
   })
 
+  it('escapes raw-text elements inside SVG and MathML, which the parser decodes', () => {
+    const html = '<svg><style>&lt;/style&gt;</style><iframe>&lt;/iframe&gt;</iframe></svg><math><xmp>&lt;/xmp&gt;</xmp></math>'
+
+    expect(serialize(parse(html))).toBe(html)
+    expect(serialize((parse(html)[0] as any).children)).toBe('<style>&lt;/style&gt;</style><iframe>&lt;/iframe&gt;</iframe>')
+  })
+
+  it('keeps raw text inside HTML integration points in SVG', () => {
+    const html = '<svg><foreignObject><style>a > b { content: "&" }</style></foreignObject></svg>'
+
+    expect(serialize(parse(html))).toBe(html)
+  })
+
+  it('writes CDATA content unescaped', () => {
+    const html = '<r><![CDATA[A & B]]></r>'
+
+    expect(serialize(parse(html, { xmlMode: true } as any), { xmlMode: true })).toBe(html)
+  })
+
   it('does not re-encode < or > inside <script> or <style>', () => {
     const dom = parse('<style>a > b { color: red; }</style>')
 
